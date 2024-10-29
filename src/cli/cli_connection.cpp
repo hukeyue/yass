@@ -248,6 +248,9 @@ bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_i
   }
   LOG(INFO) << "Connection (client) " << connection_id() << " for " << remote_domain() << " Padding support "
             << (padding_support_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
+
+  // we're done
+  request_map_.clear();
   return true;
 }
 
@@ -282,13 +285,15 @@ void CliConnection::OnConnectionError(ConnectionError error) {
 }
 
 bool CliConnection::OnFrameHeader(StreamId stream_id, size_t /*length*/, uint8_t /*type*/, uint8_t /*flags*/) {
+  if (stream_id && stream_id != stream_id_) {
+    LOG(WARNING) << "Connection (client) " << connection_id() << " refused unexpected HTTP/2 Push";
+    return false;
+  }
   return true;
 }
 
 bool CliConnection::OnBeginHeadersForStream(StreamId stream_id) {
-  if (stream_id) {
-    DCHECK_EQ(stream_id, stream_id_) << "Client only support one stream";
-  }
+  DCHECK_EQ(stream_id, stream_id_) << "Unexpected http2 request stream: " << stream_id << " expected: " << stream_id_;
   return true;
 }
 

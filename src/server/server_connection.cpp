@@ -353,6 +353,9 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
     padding_support_ = false;
   }
 
+  // we're done
+  request_map_.clear();
+
   SetState(state_stream);
   OnConnect();
   return true;
@@ -389,16 +392,19 @@ void ServerConnection::OnConnectionError(ConnectionError error) {
 }
 
 bool ServerConnection::OnFrameHeader(StreamId stream_id, size_t /*length*/, uint8_t /*type*/, uint8_t /*flags*/) {
+  // we begin with new stream
+  if (!stream_id_) {
+    stream_id_ = stream_id;
+  }
+  if (stream_id && stream_id != stream_id_) {
+    LOG(INFO) << "Connection (server) " << connection_id() << " refused new stream: " << stream_id;
+    return false;
+  }
   return true;
 }
 
 bool ServerConnection::OnBeginHeadersForStream(StreamId stream_id) {
-  if (!stream_id_) {
-    stream_id_ = stream_id;
-  }
-  if (stream_id) {
-    DCHECK_EQ(stream_id, stream_id_) << "Server only support one stream";
-  }
+  DCHECK_EQ(stream_id, stream_id_) << "Unexpected http2 request stream: " << stream_id << " expected: " << stream_id_;
   return true;
 }
 
