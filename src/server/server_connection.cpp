@@ -362,12 +362,6 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
 }
 
 bool ServerConnection::OnEndStream(StreamId stream_id) {
-  if (stream_id == stream_id_) {
-    data_frame_ = nullptr;
-    stream_id_ = 0;
-    adapter_->SubmitGoAway(0, http2::adapter::Http2ErrorCode::HTTP2_NO_ERROR, ""sv);
-    DCHECK(adapter_->want_write());
-  }
   return true;
 }
 
