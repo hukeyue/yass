@@ -255,12 +255,7 @@ bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_i
 }
 
 bool CliConnection::OnEndStream(StreamId stream_id) {
-  if (stream_id == stream_id_) {
-    data_frame_ = nullptr;
-    stream_id_ = 0;
-    adapter_->SubmitGoAway(0, http2::adapter::Http2ErrorCode::HTTP2_NO_ERROR, ""sv);
-    DCHECK(adapter_->want_write());
-  }
+  http2_stream_recv_eof_ = true;
   return true;
 }
 
@@ -1113,6 +1108,12 @@ out:
     // Send Control Streams
     SendIfNotProcessing();
     WriteUpstreamInPipe();
+  }
+  if (http2_stream_recv_eof_ && downstream_.empty() && !shutdown_) {
+    VLOG(2) << "Connection (client) " << connection_id() << " last data sent: shutting down";
+    shutdown_ = true;
+    asio::error_code ec;
+    downlink_->shutdown(ec);
   }
 #endif
   if (downstream_.empty()) {
@@ -2093,8 +2094,12 @@ void CliConnection::OnStreamRead(std::shared_ptr<IOBuf> buf) {
 void CliConnection::OnStreamWrite() {
   OnDownstreamWriteFlush();
 
-  /* shutdown the socket if upstream is eof and all remaining data sent */
+  /* shutdown the socket if upstream/http2 stream is eof and all remaining data sent */
+#ifdef HAVE_QUICHE
+  if (channel_ && (channel_->eof() || http2_stream_recv_eof_) && downstream_.empty() && !shutdown_) {
+#else
   if (channel_ && channel_->eof() && downstream_.empty() && !shutdown_) {
+#endif
     VLOG(2) << "Connection (client) " << connection_id() << " last data sent: shutting down";
     shutdown_ = true;
     asio::error_code ec;
