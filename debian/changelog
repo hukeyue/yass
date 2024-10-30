@@ -1,3 +1,13 @@
+yass (1.14.5-1) UNRELEASED; urgency=medium
+
+  * build: add an option to enable/disable assertions.
+  * tls: enable post quantum option for server-side.
+  * tls: support both of mlkem and kyber for server-side.
+  * tls: enable ALPS for HTTP/2 only.
+  * core: move logging and other modules to googleurl.
+  * http2: handle HTTP/2 Push as soft error.
+
+ -- Chilledheart <keeyou-cn@outlook.com>  Wed, 30 Oct 2024 09:46:13 +0800
 yass (1.14.4-1) UNRELEASED; urgency=medium
 
   * net: fix http proxy integration with telegram.
