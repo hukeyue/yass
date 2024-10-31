@@ -1035,8 +1035,14 @@ if (NOT MSVC)
   # see ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES for ndk >= 27
   if (ANDROID)
     add_definitions(-D__BIONIC_NO_PAGE_SIZE_MACRO)
+
+    # Reduce the page size from 65536 in order to reduce binary size slightly
+    # by shrinking the alignment gap between segments. This also causes all
+    # segments to be mapped adjacently, which breakpad relies on.
     if(ANDROID_ABI STREQUAL arm64-v8a OR ANDROID_ABI STREQUAL x86_64)
       add_link_options(-Wl,-z,max-page-size=16384)
+    else()
+      add_link_options(-Wl,-z,max-page-size=4096)
     endif()
   endif()
 
@@ -1498,15 +1504,6 @@ endif()
 
 # Linux-specific compiler flags setup.
 # ------------------------------------
-if ((UNIX AND NOT APPLE) AND USE_LLD)
-  if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" AND NOT ANDROID)
-    # Reduce the page size from 65536 in order to reduce binary size slightly
-    # by shrinking the alignment gap between segments. This also causes all
-    # segments to be mapped adjacently, which breakpad relies on.
-    add_link_options(-Wl,-z,max-page-size=4096)
-  endif()
-endif()
-
 if (USE_ICF AND (NOT APPLE OR COMPILER_CLANG) AND NOT MSVC)
   # Gold doesn't respect section alignment and breaks gcc builds with icf
   # https://sourceware.org/bugzilla/show_bug.cgi?id=17704
@@ -1874,13 +1871,6 @@ if (ANDROID)
   # assembly code with symbols that aren't hidden properly.
   # http://crbug.com/448386
   add_link_options(-Wl,--exclude-libs=libvpx_assembly_arm.a)
-
-  # Reduce the page size from 65536 in order to reduce binary size slightly
-  # by shrinking the alignment gap between segments. This also causes all
-  # segments to be mapped adjacently, which breakpad relies on.
-  if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm64.*" AND NOT ANDROID)
-    add_link_options(-Wl,-z,max-page-size=4096)
-  endif()
 
   # Instead of using an unwind lib from the toolchain,
   # buildtools/third_party/libunwind will be built and used directly.
