@@ -505,9 +505,66 @@ static int load_ca_to_ssl_ctx_yass_ca_bundle(SSL_CTX* ssl_ctx) {
 }
 
 #ifdef _WIN32
+// Returns true if the cert can be used for server authentication, based on
+// certificate properties.
+//
+// While there are a variety of certificate properties that can affect how
+// trust is computed, the main property is CERT_ENHKEY_USAGE_PROP_ID, which
+// is intersected with the certificate's EKU extension (if present).
+// The intersection is documented in the Remarks section of
+// CertGetEnhancedKeyUsage, and is as follows:
+// - No EKU property, and no EKU extension = Trusted for all purpose
+// - Either an EKU property, or EKU extension, but not both = Trusted only
+//   for the listed purposes
+// - Both an EKU property and an EKU extension = Trusted for the set
+//   intersection of the listed purposes
+// CertGetEnhancedKeyUsage handles this logic, and if an empty set is
+// returned, the distinction between the first and third case can be
+// determined by GetLastError() returning CRYPT_E_NOT_FOUND.
+//
+// See:
+// https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-certgetenhancedkeyusage
+//
+// If we run into any errors reading the certificate properties, we fail
+// closed.
+bool IsCertTrustedForServerAuth(PCCERT_CONTEXT cert) {
+  DWORD usage_size = 0;
+
+  if (!CertGetEnhancedKeyUsage(cert, 0, nullptr, &usage_size)) {
+    return false;
+  }
+
+  std::vector<BYTE> usage_bytes(usage_size);
+  CERT_ENHKEY_USAGE* usage = reinterpret_cast<CERT_ENHKEY_USAGE*>(usage_bytes.data());
+  if (!CertGetEnhancedKeyUsage(cert, 0, usage, &usage_size)) {
+    return false;
+  }
+
+  if (usage->cUsageIdentifier == 0) {
+    // check GetLastError
+    HRESULT error_code = GetLastError();
+
+    switch (error_code) {
+      case CRYPT_E_NOT_FOUND:
+        return true;
+      case S_OK:
+        return false;
+      default:
+        return false;
+    }
+  }
+  for (DWORD i = 0; i < usage->cUsageIdentifier; i++) {
+    std::string_view eku = std::string_view(usage->rgpszUsageIdentifier[i]);
+    if ((eku == szOID_PKIX_KP_SERVER_AUTH) || (eku == szOID_ANY_ENHANCED_KEY_USAGE)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* store_name) {
   HCERTSTORE cert_store = NULL;
-  PCCERT_CONTEXT cert = nullptr;
+  PCCERT_CONTEXT cert_context = NULL;
   int count = 0;
 
   cert_store = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, NULL, CERT_SYSTEM_STORE_CURRENT_USER, store_name);
@@ -516,14 +573,20 @@ int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* s
     goto out;
   }
 
-  while ((cert = CertEnumCertificatesInStore(cert_store, cert))) {
-    const char* data = (const char*)cert->pbCertEncoded;
-    size_t len = cert->cbCertEncoded;
+  while ((cert_context = CertEnumCertificatesInStore(cert_store, cert_context))) {
+    const char* data = reinterpret_cast<const char*>(cert_context->pbCertEncoded);
+    size_t len = cert_context->cbCertEncoded;
     bssl::UniquePtr<CRYPTO_BUFFER> buffer = net::x509_util::CreateCryptoBuffer(std::string_view(data, len));
     bssl::UniquePtr<X509> cert(X509_parse_from_buffer(buffer.get()));
     if (!cert) {
       print_openssl_error();
       LOG(WARNING) << "Loading ca failure from: cert store " << SysWideToUTF8(store_name);
+      continue;
+    }
+    if (!IsCertTrustedForServerAuth(cert_context)) {
+      char buf[4096] = {};
+      const char* const subject_name = X509_NAME_oneline(X509_get_subject_name(cert.get()), buf, sizeof(buf));
+      LOG(WARNING) << "Skip cert without server auth support: " << subject_name;
       continue;
     }
     if (load_ca_cert_to_x509_trust(store, std::move(cert))) {
