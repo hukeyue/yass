@@ -567,16 +567,9 @@ bool IsCertTrustedForServerAuth(PCCERT_CONTEXT cert) {
   return false;
 }
 
-int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* store_name) {
-  HCERTSTORE cert_store = NULL;
+int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, HCERTSTORE cert_store) {
   PCCERT_CONTEXT cert_context = NULL;
   int count = 0;
-
-  cert_store = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, NULL, CERT_SYSTEM_STORE_CURRENT_USER, store_name);
-  if (!cert_store) {
-    PLOG(WARNING) << "CertOpenStore failed on store " << SysWideToUTF8(store_name);
-    goto out;
-  }
 
   while ((cert_context = CertEnumCertificatesInStore(cert_store, cert_context))) {
     const char* data = reinterpret_cast<const char*>(cert_context->pbCertEncoded);
@@ -585,7 +578,7 @@ int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* s
     bssl::UniquePtr<X509> cert(X509_parse_from_buffer(buffer.get()));
     if (!cert) {
       print_openssl_error();
-      LOG(WARNING) << "Loading ca failure from: cert store " << SysWideToUTF8(store_name);
+      LOG(WARNING) << "Loading ca failure from: cert store";
       continue;
     }
     if (!IsCertTrustedForServerAuth(cert_context)) {
@@ -599,17 +592,37 @@ int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* s
     }
   }
 
-  VLOG(1) << "Loaded ca from SChannel Store: " << SysWideToUTF8(store_name) << " with " << count << " certificates";
-out:
-  if (cert_store) {
-    CertCloseStore(cert_store, CERT_CLOSE_STORE_FORCE_FLAG);
-  }
   return count;
+}
+
+void GatherEnterpriseCertsForLocation(HCERTSTORE cert_store, DWORD location, LPCWSTR store_name) {
+  if (!(location == CERT_SYSTEM_STORE_LOCAL_MACHINE || location == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
+        location == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE || location == CERT_SYSTEM_STORE_CURRENT_USER ||
+        location == CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY)) {
+    return;
+  }
+
+  DWORD flags = location | CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG;
+
+  HCERTSTORE enterprise_root_store = NULL;
+
+  enterprise_root_store = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, NULL, flags, store_name);
+  if (!enterprise_root_store) {
+    return;
+  }
+  // Priority of the opened cert store in the collection does not matter, so set
+  // everything to priority 0.
+  CertAddStoreToCollection(cert_store, enterprise_root_store,
+                           /*dwUpdateFlags=*/0, /*dwPriority=*/0);
+  if (!CertCloseStore(enterprise_root_store, 0)) {
+    PLOG(WARNING) << "CertCloseStore() call failed";
+  }
 }
 #endif
 
 int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
 #ifdef _WIN32
+  HCERTSTORE root_store = NULL;
   int count = 0;
 
   X509_STORE* store = SSL_CTX_get_cert_store(ssl_ctx);
@@ -617,9 +630,30 @@ int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
     LOG(WARNING) << "Can't get SSL CTX cert store";
     goto out;
   }
-  count += load_ca_to_ssl_store_from_schannel_store(store, L"Root");
-  count += load_ca_to_ssl_store_from_schannel_store(store, L"AuthRoot");
-  count += load_ca_to_ssl_store_from_schannel_store(store, L"CA");
+  root_store = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, NULL, 0, nullptr);
+  if (!root_store) {
+    LOG(WARNING) << "Can't get cert store";
+    goto out;
+  }
+  // Grab the user-added roots.
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"ROOT");
+
+  // Grab the user-added intermediates (optional).
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"CA");
+
+  count = load_ca_to_ssl_store_from_schannel_store(store, root_store);
+
+  if (!CertCloseStore(root_store, 0)) {
+    PLOG(WARNING) << "CertCloseStore() call failed";
+  }
 
 out:
   LOG(INFO) << "Loaded ca from SChannel: " << count << " certificates";
