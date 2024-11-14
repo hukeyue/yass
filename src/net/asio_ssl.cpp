@@ -504,23 +504,15 @@ static int load_ca_to_ssl_ctx_yass_ca_bundle(SSL_CTX* ssl_ctx) {
   return 0;
 }
 
-int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
 #ifdef _WIN32
+int load_ca_to_ssl_store_from_schannel_store(X509_STORE* store, const wchar_t* store_name) {
   HCERTSTORE cert_store = NULL;
-  asio::error_code ec;
   PCCERT_CONTEXT cert = nullptr;
-  X509_STORE* store = nullptr;
   int count = 0;
 
-  cert_store = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, NULL, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
+  cert_store = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, NULL, CERT_SYSTEM_STORE_CURRENT_USER, store_name);
   if (!cert_store) {
-    PLOG(WARNING) << "CertOpenStore failed";
-    goto out;
-  }
-
-  store = SSL_CTX_get_cert_store(ssl_ctx);
-  if (!store) {
-    LOG(WARNING) << "Can't get SSL CTX cert store";
+    PLOG(WARNING) << "CertOpenStore failed on store " << SysWideToUTF8(store_name);
     goto out;
   }
 
@@ -531,7 +523,7 @@ int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
     bssl::UniquePtr<X509> cert(X509_parse_from_buffer(buffer.get()));
     if (!cert) {
       print_openssl_error();
-      LOG(WARNING) << "Loading ca failure from: cert store";
+      LOG(WARNING) << "Loading ca failure from: cert store " << SysWideToUTF8(store_name);
       continue;
     }
     if (load_ca_cert_to_x509_trust(store, std::move(cert))) {
@@ -539,10 +531,29 @@ int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
     }
   }
 
+  VLOG(1) << "Loaded ca from SChannel Store: " << SysWideToUTF8(store_name) << " with " << count << " certificates";
 out:
   if (cert_store) {
     CertCloseStore(cert_store, CERT_CLOSE_STORE_FORCE_FLAG);
   }
+  return count;
+}
+#endif
+
+int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
+#ifdef _WIN32
+  int count = 0;
+
+  X509_STORE* store = SSL_CTX_get_cert_store(ssl_ctx);
+  if (!store) {
+    LOG(WARNING) << "Can't get SSL CTX cert store";
+    goto out;
+  }
+  count += load_ca_to_ssl_store_from_schannel_store(store, L"Root");
+  count += load_ca_to_ssl_store_from_schannel_store(store, L"AuthRoot");
+  count += load_ca_to_ssl_store_from_schannel_store(store, L"CA");
+
+out:
   LOG(INFO) << "Loaded ca from SChannel: " << count << " certificates";
   return count;
 #elif BUILDFLAG(IS_IOS)
