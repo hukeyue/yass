@@ -252,6 +252,7 @@ bool IsNotAcceptableIntermediate(const bssl::ParsedCertificate* cert, const CFSt
 static bool found_isrg_root_x1 = false;
 static bool found_isrg_root_x2 = false;
 static bool found_digicert_root_g2 = false;
+static bool found_gts_root_r4 = false;
 
 void print_openssl_error() {
   const char* file;
@@ -294,6 +295,10 @@ static bool load_ca_cert_to_x509_trust(X509_STORE* store, bssl::UniquePtr<X509> 
       if (commonName == "DigiCert Global Root G2"sv) {
         VLOG(1) << "Loading DigiCert Global Root G2 CA";
         found_digicert_root_g2 = true;
+      }
+      if (commonName == "GTS Root R4"sv) {
+        VLOG(1) << "Loading GTS Root R4 CA";
+        found_gts_root_r4 = true;
       }
     }
 
@@ -746,6 +751,7 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   found_isrg_root_x1 = false;
   found_isrg_root_x2 = false;
   found_digicert_root_g2 = false;
+  found_gts_root_r4 = false;
   load_ca_to_ssl_ctx_cacert(ssl_ctx);
 
 #ifdef HAVE_BUILTIN_CA_BUNDLE_CRT
@@ -782,7 +788,7 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   }
 
   // TODO we can add the missing CA if required
-  if (!found_isrg_root_x1 || !found_isrg_root_x2 || !found_digicert_root_g2) {
+  if (!found_isrg_root_x1 || !found_isrg_root_x2 || !found_digicert_root_g2 || !found_gts_root_r4) {
     if (!found_isrg_root_x1) {
       LOG(INFO) << "Missing ISRG Root X1 CA";
     }
@@ -791,6 +797,9 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
     }
     if (!found_digicert_root_g2) {
       LOG(INFO) << "Missing DigiCert Global Root G2 CA";
+    }
+    if (!found_gts_root_r4) {
+      LOG(INFO) << "Missing GTS Root R4 CA";
     }
     std::string_view ca_content(_binary_supplementary_ca_bundle_crt_start,
                                 _binary_supplementary_ca_bundle_crt_end - _binary_supplementary_ca_bundle_crt_start);
