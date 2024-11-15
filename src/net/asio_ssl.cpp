@@ -618,67 +618,24 @@ void GatherEnterpriseCertsForLocation(HCERTSTORE cert_store, DWORD location, LPC
     PLOG(WARNING) << "CertCloseStore() call failed";
   }
 }
-#endif
-
-int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
-#ifdef _WIN32
-  HCERTSTORE root_store = NULL;
-  int count = 0;
-
-  X509_STORE* store = SSL_CTX_get_cert_store(ssl_ctx);
-  if (!store) {
-    LOG(WARNING) << "Can't get SSL CTX cert store";
-    goto out;
-  }
-  root_store = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, NULL, 0, nullptr);
-  if (!root_store) {
-    LOG(WARNING) << "Can't get cert store";
-    goto out;
-  }
-  // Grab the user-added roots.
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"ROOT");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"ROOT");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"ROOT");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"ROOT");
-
-  // Grab the user-added intermediates (optional).
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"CA");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"CA");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"CA");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"CA");
-  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"CA");
-
-  count = load_ca_to_ssl_store_from_schannel_store(store, root_store);
-
-  if (!CertCloseStore(root_store, 0)) {
-    PLOG(WARNING) << "CertCloseStore() call failed";
-  }
-
-out:
-  LOG(INFO) << "Loaded ca from SChannel: " << count << " certificates";
-  return count;
-#elif BUILDFLAG(IS_IOS)
-  return 0;
-#elif BUILDFLAG(IS_MAC)
-  const SecTrustSettingsDomain domain = kSecTrustSettingsDomainSystem;
+#endif  // _WIN32
+#if BUILDFLAG(IS_MAC)
+int load_ca_to_ssl_store_from_sec_trust_domain(X509_STORE* store, SecTrustSettingsDomain domain) {
   const CFStringRef policy_oid = kSecPolicyAppleSSL;
   CFArrayRef certs;
   OSStatus err;
-  asio::error_code ec;
   CFIndex size;
-  X509_STORE* store = nullptr;
   int count = 0;
 
   err = SecTrustSettingsCopyCertificates(domain, &certs);
-  if (err != errSecSuccess) {
-    LOG(ERROR) << "SecTrustSettingsCopyCertificates error: " << DescriptionFromOSStatus(err);
+  // Note: SecTrustSettingsCopyCertificates can legitimately return
+  // errSecNoTrustSettings if there are no trust settings in |domain|.
+  if (err == errSecNoTrustSettings) {
     goto out;
   }
-
-  store = SSL_CTX_get_cert_store(ssl_ctx);
-  if (!store) {
-    LOG(WARNING) << "Can't get SSL CTX cert store";
+  if (err != errSecSuccess) {
+    LOG(ERROR) << "SecTrustSettingsCopyCertificates error: " << DescriptionFromOSStatus(err) << " at domain 0x"
+               << std::hex << domain;
     goto out;
   }
 
@@ -733,9 +690,68 @@ out:
       ++count;
     }
   }
-out:
+
   CFRelease(certs);
-  LOG(INFO) << "Loaded ca from Sec: " << count << " certificates";
+
+out:
+  VLOG(1) << "Loaded ca from SecTrust: " << count << " certificates at domain 0x" << std::hex << domain;
+  return count;
+}
+#endif  // BUILDFLAG(IS_MAC)
+
+int load_ca_to_ssl_ctx_system(SSL_CTX* ssl_ctx) {
+#ifdef _WIN32
+  HCERTSTORE root_store = NULL;
+  int count = 0;
+
+  X509_STORE* store = SSL_CTX_get_cert_store(ssl_ctx);
+  if (!store) {
+    LOG(WARNING) << "Can't get SSL CTX cert store";
+    goto out;
+  }
+  root_store = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, NULL, 0, nullptr);
+  if (!root_store) {
+    LOG(WARNING) << "Can't get cert store";
+    goto out;
+  }
+  // Grab the user-added roots.
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"ROOT");
+
+  // Grab the user-added intermediates (optional).
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER, L"CA");
+  GatherEnterpriseCertsForLocation(root_store, CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"CA");
+
+  count = load_ca_to_ssl_store_from_schannel_store(store, root_store);
+
+  if (!CertCloseStore(root_store, 0)) {
+    PLOG(WARNING) << "CertCloseStore() call failed";
+  }
+
+out:
+  LOG(INFO) << "Loaded ca from SChannel: " << count << " certificates";
+  return count;
+#elif BUILDFLAG(IS_IOS)
+  return 0;
+#elif BUILDFLAG(IS_MAC)
+  X509_STORE* store = SSL_CTX_get_cert_store(ssl_ctx);
+  int count = 0;
+  if (!store) {
+    LOG(WARNING) << "Can't get SSL CTX cert store";
+    goto out;
+  }
+  count += load_ca_to_ssl_store_from_sec_trust_domain(store, kSecTrustSettingsDomainSystem);
+  count += load_ca_to_ssl_store_from_sec_trust_domain(store, kSecTrustSettingsDomainAdmin);
+  count += load_ca_to_ssl_store_from_sec_trust_domain(store, kSecTrustSettingsDomainUser);
+
+out:
+  LOG(INFO) << "Loaded ca from SecTrust: " << count << " certificates";
   return count;
 #else
   int count = 0;
