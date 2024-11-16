@@ -1724,7 +1724,7 @@ std::shared_ptr<IOBuf> CliConnection::GetNextUpstreamBuf(asio::error_code& ec,
 
   if (http_is_keep_alive_) {
     if (http_keep_alive_remaining_bytes_ < (int64_t)read) {
-      VLOG(1) << "Connection (client) " << connection_id() << " attempt to be re-used";
+      LOG(INFO) << "Connection (client) " << connection_id() << " re-used";
       upstream_readable_ = false;
       upstream_writable_ = false;
       ss_request_.reset();
