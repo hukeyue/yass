@@ -26,6 +26,11 @@ class IoQueue {
     rhs.end_idx_ = {};
     rhs.dirty_front_ = {};
     DCHECK(rhs.empty());
+#if DCHECK_IS_ON()
+    for (auto buf : rhs.queue_) {
+      DCHECK(!buf);
+    }
+#endif
   }
   IoQueue& operator=(IoQueue&& rhs) {
     idx_ = rhs.idx_;
@@ -36,6 +41,11 @@ class IoQueue {
     rhs.end_idx_ = {};
     rhs.dirty_front_ = {};
     DCHECK(rhs.empty());
+#if DCHECK_IS_ON()
+    for (auto buf : rhs.queue_) {
+      DCHECK(!buf);
+    }
+#endif
     return *this;
   }
 
