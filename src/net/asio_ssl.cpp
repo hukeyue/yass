@@ -953,12 +953,15 @@ out:
 }
 
 // loading ca certificates:
-// 1. load --capath and --cacert certificates
-// 2. load ca bundle from in sequence
-//    - builtin ca bundle if specified
-//    - yass-ca-bundle.crt if present (windows)
-//    - system ca certificates
-// 3. force fallback to builtin ca bundle if step 2 failes
+// 1. load --ca_native, --capath and --cacert certificates in sequence if specified
+// 2. if step 1 succeeds, then goto step x.
+// 3. load yass-ca-bundle.crt in path if present (windows-only)
+// 4. if step 3 succeeds, then goto step x.
+// 5. load ca bundle from in sequence
+//    - load user-added ca certificates on system
+//    - load builtin ca bundle
+//    - goto step x.
+// x. load supplementary ca bundle if necessary
 void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   found_isrg_root_x1 = false;
   found_isrg_root_x2 = false;
