@@ -771,14 +771,25 @@ out:
   int count = 0;
   // cert list copied from golang src/crypto/x509/root_unix.go
   static const char* ca_bundle_paths[] = {
-      "/etc/ssl/certs/ca-certificates.crt",      // Debian/Ubuntu/Gentoo etc.
-      "/etc/pki/tls/certs/ca-bundle.crt",        // Fedora/RHEL
-      "/etc/ssl/ca-bundle.pem",                  // OpenSUSE
-      "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
-      "/etc/ssl/cert.pem",                       // OpenBSD
-      "/usr/local/share/certs/ca-root-nss.crt",  // FreeBSD/DragonFly
-      "/etc/pki/tls/cacert.pem",                 // OpenELEC
-      "/etc/certs/ca-certificates.crt",          // Solaris 11.2+
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+    "/etc/ssl/certs/ca-certificates.crt",                 // Debian/Ubuntu/Gentoo etc.
+    "/etc/pki/tls/certs/ca-bundle.crt",                   // Fedora/RHEL
+    "/etc/ssl/ca-bundle.pem",                             // OpenSUSE
+    "/etc/pki/tls/cacert.pem",                            // OpenELEC
+    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",  // CentOS/RHEL 7
+    "/etc/ssl/cert.pem",                                  // Alpine Linux
+#endif
+#if BUILDFLAG(IS_BSD)
+    "/usr/local/etc/ssl/cert.pem",             // FreeBSD
+    "/etc/ssl/cert.pem",                       // OpenBSD
+    "/usr/local/share/certs/ca-root-nss.crt",  // DragonFly
+    "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
+#endif
+#if BUILDFLAG(IS_SOLARIS)
+    "/etc/certs/ca-certificates.crt",      // Solaris 11.2+
+    "/etc/ssl/certs/ca-certificates.crt",  // Joyent SmartOS
+    "/etc/ssl/cacert.pem",                 // OmniOS
+#endif
   };
   for (auto ca_bundle : ca_bundle_paths) {
     int result = load_ca_to_ssl_ctx_bundle(ssl_ctx, ca_bundle);
@@ -788,9 +799,22 @@ out:
     }
   }
   static const char* ca_paths[] = {
-      "/etc/ssl/certs",                // SLES10/SLES11, https://golang.org/issue/12139
-      "/etc/pki/tls/certs",            // Fedora/RHEL
-      "/system/etc/security/cacerts",  // Android
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+    "/etc/ssl/certs",      // SLES10/SLES11, https://golang.org/issue/12139
+    "/etc/pki/tls/certs",  // Fedora/RHEL
+#endif
+#if BUILDFLAG(IS_ANDROID)
+    "/system/etc/security/cacerts",     // Android system roots
+    "/data/misc/keychain/certs-added",  // User trusted CA folder
+#endif
+#if BUILDFLAG(IS_BSD)
+    "/etc/ssl/certs",          // FreeBSD 12.2+
+    "/usr/local/share/certs",  // FreeBSD
+    "/etc/openssl/certs",      // NetBSD
+#endif
+#if BUILDFLAG(IS_SOLARIS)
+    "/etc/certs/CA",  // Solaris
+#endif
   };
 
   for (auto ca_path : ca_paths) {
@@ -871,14 +895,25 @@ out:
   int count = 0;
   // cert list copied from golang src/crypto/x509/root_unix.go
   static const char* ca_bundle_paths[] = {
-      "/etc/ssl/certs/ca-certificates.crt",      // Debian/Ubuntu/Gentoo etc.
-      "/etc/pki/tls/certs/ca-bundle.crt",        // Fedora/RHEL
-      "/etc/ssl/ca-bundle.pem",                  // OpenSUSE
-      "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
-      "/etc/ssl/cert.pem",                       // OpenBSD
-      "/usr/local/share/certs/ca-root-nss.crt",  // FreeBSD/DragonFly
-      "/etc/pki/tls/cacert.pem",                 // OpenELEC
-      "/etc/certs/ca-certificates.crt",          // Solaris 11.2+
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+    "/etc/ssl/certs/ca-certificates.crt",                 // Debian/Ubuntu/Gentoo etc.
+    "/etc/pki/tls/certs/ca-bundle.crt",                   // Fedora/RHEL
+    "/etc/ssl/ca-bundle.pem",                             // OpenSUSE
+    "/etc/pki/tls/cacert.pem",                            // OpenELEC
+    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",  // CentOS/RHEL 7
+    "/etc/ssl/cert.pem",                                  // Alpine Linux
+#endif
+#if BUILDFLAG(IS_BSD)
+    "/usr/local/etc/ssl/cert.pem",             // FreeBSD
+    "/etc/ssl/cert.pem",                       // OpenBSD
+    "/usr/local/share/certs/ca-root-nss.crt",  // DragonFly
+    "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
+#endif
+#if BUILDFLAG(IS_SOLARIS)
+    "/etc/certs/ca-certificates.crt",      // Solaris 11.2+
+    "/etc/ssl/certs/ca-certificates.crt",  // Joyent SmartOS
+    "/etc/ssl/cacert.pem",                 // OmniOS
+#endif
   };
   for (auto ca_bundle : ca_bundle_paths) {
     int result = load_ca_to_ssl_ctx_bundle(ssl_ctx, ca_bundle);
@@ -888,9 +923,22 @@ out:
     }
   }
   static const char* ca_paths[] = {
-      "/etc/ssl/certs",                // SLES10/SLES11, https://golang.org/issue/12139
-      "/etc/pki/tls/certs",            // Fedora/RHEL
-      "/system/etc/security/cacerts",  // Android
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+    "/etc/ssl/certs",      // SLES10/SLES11, https://golang.org/issue/12139
+    "/etc/pki/tls/certs",  // Fedora/RHEL
+#endif
+#if BUILDFLAG(IS_ANDROID)
+    "/system/etc/security/cacerts",     // Android system roots
+    "/data/misc/keychain/certs-added",  // User trusted CA folder
+#endif
+#if BUILDFLAG(IS_BSD)
+    "/etc/ssl/certs",          // FreeBSD 12.2+
+    "/usr/local/share/certs",  // FreeBSD
+    "/etc/openssl/certs",      // NetBSD
+#endif
+#if BUILDFLAG(IS_SOLARIS)
+    "/etc/certs/CA",  // Solaris
+#endif
   };
 
   for (auto ca_path : ca_paths) {
