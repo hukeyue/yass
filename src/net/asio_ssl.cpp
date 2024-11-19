@@ -567,7 +567,7 @@ int load_ca_to_ssl_ctx_from_unix_store(SSL_CTX* ssl_ctx) {
   int count = 0;
   // cert list copied from golang src/crypto/x509/root_unix.go
   static const char* ca_bundle_paths[] = {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_LINUX)
     "/etc/ssl/certs/ca-certificates.crt",                 // Debian/Ubuntu/Gentoo etc.
     "/etc/pki/tls/certs/ca-bundle.crt",                   // Fedora/RHEL
     "/etc/ssl/ca-bundle.pem",                             // OpenSUSE
@@ -596,9 +596,12 @@ int load_ca_to_ssl_ctx_from_unix_store(SSL_CTX* ssl_ctx) {
     }
   }
   static const char* ca_paths[] = {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_LINUX)
     "/etc/ssl/certs",      // SLES10/SLES11, https://golang.org/issue/12139
     "/etc/pki/tls/certs",  // Fedora/RHEL
+#endif
+#if BUILDFLAG(IS_OHOS)
+    "/etc/ssl/certs",  // OpenHarmony
 #endif
 #if BUILDFLAG(IS_ANDROID)
     "/system/etc/security/cacerts",     // Android system roots
