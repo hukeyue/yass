@@ -796,6 +796,7 @@ out:
     if (result > 0) {
       LOG(INFO) << "Loaded ca bundle from: " << ca_bundle << " with " << result << " certificates";
       count += result;
+      break;
     }
   }
   static const char* ca_paths[] = {
@@ -920,6 +921,7 @@ out:
     if (result > 0) {
       LOG(INFO) << "Loaded ca bundle from: " << ca_bundle << " with " << result << " certificates";
       count += result;
+      break;
     }
   }
   static const char* ca_paths[] = {
