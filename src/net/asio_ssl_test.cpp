@@ -31,8 +31,8 @@ TEST(SSL_TEST, LoadSystemCa) {
   bssl::UniquePtr<SSL_CTX> ssl_ctx;
   ssl_ctx.reset(::SSL_CTX_new(::TLS_client_method()));
   int result = load_ca_to_ssl_ctx_from_system(ssl_ctx.get());
-#if BUILDFLAG(IS_IOS) ||  BUILDFLAG(IS_ANDROID)
-  // we don't test on iOS and Android (under QEMU emulator)
+#if BUILDFLAG(IS_IOS)
+  // we don't test on iOS
   GTEST_SKIP() << "skipped as system is not supported";
 #else
   ASSERT_NE(result, 0);
