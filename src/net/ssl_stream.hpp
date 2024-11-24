@@ -89,7 +89,7 @@ class ssl_stream : public stream {
       asio::error_code ec;
       if (rv < 0) {
         ec = asio::error::connection_refused;
-        on_async_connected(channel, ec);
+        stream::on_async_connected(channel, ec);
         return;
       }
 
