@@ -401,10 +401,6 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
     VLOG(1) << "trying endpoint (" << domain() << "): " << endpoint;
     endpoints_.pop_front();
     endpoint_ = std::move(endpoint);
-    if (socket_.is_open()) {
-      asio::error_code ec;
-      socket_.close(ec);
-    }
     on_resolve(channel);
   }
 
@@ -417,6 +413,11 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
       closed_ = true;
       on_async_connect_callback(asio::error::network_unreachable);
       return;
+    }
+    // avoid asio::error::already_open error
+    if (socket_.is_open()) {
+      asio::error_code ec;
+      socket_.close(ec);
     }
     asio::error_code ec;
     socket_.open(endpoint_.protocol(), ec);
