@@ -417,7 +417,7 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
     // avoid asio::error::already_open error
     if (socket_.is_open()) {
       asio::error_code ec;
-      socket_.close(ec);
+      s_close(ec);
     }
     asio::error_code ec;
     socket_.open(endpoint_.protocol(), ec);
@@ -573,9 +573,9 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
   net::Resolver resolver_;
 
  protected:
-  std::string host_ips_;
-  std::string host_sni_;
-  uint16_t port_;
+  const std::string host_ips_;
+  const std::string host_sni_;
+  const uint16_t port_;
   asio::ip::tcp::endpoint endpoint_;
   asio::io_context& io_context_;
   asio::ip::tcp::socket socket_;
