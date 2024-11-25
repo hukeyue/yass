@@ -418,7 +418,6 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
       on_async_connect_callback(asio::error::network_unreachable);
       return;
     }
-    DCHECK(!socket_.is_open());
     asio::error_code ec;
     socket_.open(endpoint_.protocol(), ec);
     if (ec) {
@@ -443,10 +442,6 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
         if (UNLIKELY(ec == asio::error::operation_aborted)) {
           return;
         }
-        {
-          asio::error_code ec;
-          socket_.close(ec);
-        }
         on_async_connect_expired(channel, ec);
       });
     }
@@ -467,9 +462,6 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
   virtual void on_async_connected(Channel* channel, asio::error_code ec) {
     connect_timer_.cancel();
     if (ec) {
-      DCHECK(socket_.is_open());
-      asio::error_code ec;
-      socket_.close(ec);
       if (!endpoints_.empty()) {
         on_try_next_endpoint(channel);
         return;
