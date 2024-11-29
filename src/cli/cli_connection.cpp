@@ -805,7 +805,8 @@ void CliConnection::ReadStream(bool yield) {
 void CliConnection::WriteMethodSelect(std::unique_ptr<socks5::method_select_response> reply) {
   scoped_refptr<CliConnection> self(this);
   DCHECK_EQ(state_method_select, CurrentState());
-  asio::async_write(downlink_->socket_, asio::buffer(reply.get(), sizeof(*reply.get())),
+  const auto buffer = asio::buffer(reply.get(), sizeof(*reply.get()));  // workaround with clang-cl's compiler bugs
+  asio::async_write(downlink_->socket_, buffer,
                     [this, self, r = std::move(reply)](asio::error_code ec, size_t bytes_transferred) {
                       if (closed_) {
                         return;
@@ -818,7 +819,8 @@ void CliConnection::WriteHandshakeSocks5(std::unique_ptr<socks5::reply> reply) {
   scoped_refptr<CliConnection> self(this);
   DCHECK_EQ(state_socks5_handshake, CurrentState());
   SetState(state_stream);
-  asio::async_write(downlink_->socket_, reply->buffers(),
+  const auto buffers = reply->buffers();  // workaround with clang-cl's compiler bugs
+  asio::async_write(downlink_->socket_, buffers,
                     [this, self, r = std::move(reply)](asio::error_code ec, size_t bytes_transferred) {
                       if (closed_) {
                         return;
@@ -837,7 +839,8 @@ void CliConnection::WriteHandshakeSocks4(std::unique_ptr<socks4::reply> reply) {
   scoped_refptr<CliConnection> self(this);
   DCHECK_EQ(state_socks4_handshake, CurrentState());
   SetState(state_stream);
-  asio::async_write(downlink_->socket_, reply->buffers(),
+  const auto buffers = reply->buffers();  // workaround with clang-cl's compiler bugs
+  asio::async_write(downlink_->socket_, buffers,
                     [this, self, r = std::move(reply)](asio::error_code ec, size_t bytes_transferred) {
                       if (closed_) {
                         return;
