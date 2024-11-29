@@ -820,6 +820,10 @@ if (CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
   add_definitions(-D_LOONGARCH_SZLONG=64)
 endif()
 
+if (USE_MUSL)
+  add_definitions(-D__MUSL__)
+endif()
+
 include(CrossCompile)
 # when crosscompiling import the executable targets from a file
 if (USE_HOST_TOOLS)
