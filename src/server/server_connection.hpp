@@ -297,10 +297,6 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// copy of handshake request
   ss::request request_;
 
-  /// copy of parsed connect host or host field
-  std::string http_host_;
-  /// copy of parsed connect host or host field
-  uint16_t http_port_ = 0U;
   /// copy of connect method
   bool http_is_connect_ = false;
   /// copy of connect response

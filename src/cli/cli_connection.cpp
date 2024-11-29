@@ -1738,7 +1738,6 @@ std::shared_ptr<IOBuf> CliConnection::GetNextUpstreamBuf(asio::error_code& ec,
 
   if (http_is_keep_alive_) {
     if (http_keep_alive_remaining_bytes_ < (int64_t)read) {
-      DCHECK_EQ(ss::domain, ss_request_->address_type());
       DCHECK_EQ(http_host_, ss_request_->domain_name());
       DCHECK_EQ(http_port_, ss_request_->port());
       ec = OnReadHttpRequest(buf);
@@ -2044,10 +2043,24 @@ void CliConnection::OnCmdConnect(const asio::ip::tcp::endpoint& endpoint) {
   DCHECK(!endpoint.address().is_unspecified());
   DCHECK_NE(0u, endpoint.port());
   ss_request_ = std::make_unique<ss::request>(endpoint);
+#if DCHECK_IS_ON()
+  if (!http_host_.empty()) {
+    CHECK_EQ(http_host_, ss_request_->domain_name());
+    CHECK_EQ(http_port_, ss_request_->port());
+  }
+#endif
   OnConnect();
 }
 
 void CliConnection::OnCmdConnect(const std::string& domain_name, uint16_t port) {
+  asio::error_code _ec;
+  auto addr = asio::ip::make_address(domain_name.c_str(), _ec);
+  bool host_is_ip_address = !_ec;
+  if (host_is_ip_address) {
+    asio::ip::tcp::endpoint endpoint(addr, port);
+    return OnCmdConnect(endpoint);
+  }
+
   DCHECK_LE(domain_name.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
   if (CIPHER_METHOD_IS_SOCKS_NON_DOMAIN_NAME(method())) {
