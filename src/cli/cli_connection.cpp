@@ -2481,7 +2481,7 @@ void CliConnection::disconnected(asio::error_code ec) {
   }
 }
 
-void CliConnection::EncryptData(IoQueue* queue, std::shared_ptr<IOBuf> plaintext) {
+void CliConnection::EncryptData(IoQueue<>* queue, std::shared_ptr<IOBuf> plaintext) {
   std::shared_ptr<IOBuf> cipherbuf;
   if (queue->empty()) {
     cipherbuf = IOBuf::create(SOCKET_DEBUF_SIZE);

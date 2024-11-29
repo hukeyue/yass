@@ -435,7 +435,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   void OnUpstreamWrite(std::shared_ptr<IOBuf> buf);
 
   /// the queue to write upstream
-  IoQueue upstream_;
+  IoQueue<> upstream_;
   /// the flag to mark current write
   bool upstream_writable_ = false;
   /// the flag to mark current read
@@ -457,7 +457,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
 #endif
 
   /// the queue to write downstream
-  IoQueue downstream_;
+  IoQueue<> downstream_;
   /// the flag to mark current read
   bool downstream_readable_ = false;
   /// the flag to mark current read in progress
@@ -480,10 +480,10 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
 
  private:
   /// pending data
-  IoQueue pending_data_;
+  IoQueue<IOBuf, 4> pending_data_;
 
   /// encrypt data
-  void EncryptData(IoQueue* queue, std::shared_ptr<IOBuf> plaintext);
+  void EncryptData(IoQueue<>* queue, std::shared_ptr<IOBuf> plaintext);
 
   /// encode cipher to perform data encoder for upstream
   std::unique_ptr<cipher> encoder_;
