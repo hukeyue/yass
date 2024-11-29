@@ -4,9 +4,9 @@
 #ifndef CORE_IO_QUEUE_HPP
 #define CORE_IO_QUEUE_HPP
 
+#include <absl/container/inlined_vector.h>
 #include <build/build_config.h>
 #include <memory>
-#include <vector>
 #include "net/iobuf.hpp"
 
 namespace net {
@@ -21,6 +21,7 @@ template <typename X = IOBuf,
           >
 class IoQueue {
   using T = std::shared_ptr<X>;
+  using Vector = absl::InlinedVector<T, DEFAULT_QUEUE_LENGTH>;
 
  public:
   IoQueue() { queue_.resize(DEFAULT_QUEUE_LENGTH); }
@@ -115,7 +116,7 @@ class IoQueue {
   void enlarge_queue_by_2x() {
     DCHECK(queue_.size());
     DCHECK_LE(queue_.size(), 32u << 10);
-    std::vector<T> new_queue;
+    Vector new_queue;
     new_queue.reserve(queue_.size() << 1);
     if (idx_ < end_idx_) {
       new_queue.insert(new_queue.end(), queue_.begin() + idx_, queue_.begin() + end_idx_);
@@ -132,7 +133,7 @@ class IoQueue {
  private:
   int idx_ = 0;
   int end_idx_ = 0;
-  std::vector<T> queue_;
+  Vector queue_;
   bool dirty_front_ = false;
 };
 
