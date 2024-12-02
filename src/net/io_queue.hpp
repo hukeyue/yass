@@ -22,6 +22,7 @@ template <typename X = IOBuf,
 class IoQueue {
   using T = std::shared_ptr<X>;
   using Vector = absl::InlinedVector<T, DEFAULT_QUEUE_LENGTH>;
+  static_assert(DEFAULT_QUEUE_LENGTH >= 2, "Default Queue Depth is too small");
 
  public:
   IoQueue() { DCHECK_EQ(DEFAULT_QUEUE_LENGTH, queue_.size()); }
@@ -40,11 +41,6 @@ class IoQueue {
     DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     DCHECK(rhs.empty());
     DCHECK_EQ(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
-#if DCHECK_IS_ON()
-    for (auto buf : rhs.queue_) {
-      DCHECK(!buf);
-    }
-#endif
   }
   IoQueue& operator=(IoQueue&& rhs) {
     idx_ = rhs.idx_;
@@ -55,21 +51,29 @@ class IoQueue {
     dirty_front_ = rhs.dirty_front_;
     rhs.idx_ = {};
     rhs.end_idx_ = {};
+    // better way to optimize below code
+    // rhs.queue_.clear();
+    // rhs.queue_.resize(DEFAULT_QUEUE_LENGTH);
+    Vector empty_queue{DEFAULT_QUEUE_LENGTH};
+    std::swap(empty_queue, rhs.queue_);
     rhs.dirty_front_ = {};
     DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     DCHECK(rhs.empty());
-    DCHECK_LE(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
-#if DCHECK_IS_ON()
-    for (auto buf : rhs.queue_) {
-      DCHECK(!buf);
-    }
-#endif
+    DCHECK_EQ(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
     return *this;
   }
 
   bool empty() const {
     DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
-    return idx_ == end_idx_;
+    if (idx_ == end_idx_) {
+#if DCHECK_IS_ON()
+      for (auto buf : queue_) {
+        DCHECK(!buf);
+      }
+#endif
+      return true;
+    }
+    return false;
   }
 
   void replace_front(T buf) {
@@ -131,6 +135,17 @@ class IoQueue {
   void clear() {
     DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     *this = IoQueue();
+    DCHECK_EQ(DEFAULT_QUEUE_LENGTH, queue_.size());
+    DCHECK(empty());
+  }
+
+  void swap(IoQueue& other) {
+    if (this != std::addressof(other)) {
+      std::swap(idx_, other.idx_);
+      std::swap(end_idx_, other.end_idx_);
+      std::swap(queue_, other.queue_);
+      std::swap(dirty_front_, other.dirty_front_);
+    }
   }
 
  private:
@@ -162,6 +177,11 @@ class IoQueue {
   Vector queue_{static_cast<Vector::size_type>(DEFAULT_QUEUE_LENGTH)};
   bool dirty_front_ = false;
 };
+
+template <typename X, unsigned int DEFAULT_QUEUE_LENGTH>
+void swap(IoQueue<X, DEFAULT_QUEUE_LENGTH>& lhs, IoQueue<X, DEFAULT_QUEUE_LENGTH>& rhs) {
+  lhs.swap(rhs);
+}
 
 }  // namespace net
 
