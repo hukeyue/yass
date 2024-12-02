@@ -12,7 +12,7 @@
 namespace net {
 
 template <typename X = IOBuf,
-          int DEFAULT_QUEUE_LENGTH =
+          unsigned int DEFAULT_QUEUE_LENGTH =
 #if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS) || defined(__MUSL__)
               8
 #else
@@ -24,19 +24,22 @@ class IoQueue {
   using Vector = absl::InlinedVector<T, DEFAULT_QUEUE_LENGTH>;
 
  public:
-  IoQueue() { queue_.resize(DEFAULT_QUEUE_LENGTH); }
+  IoQueue() { DCHECK_EQ(DEFAULT_QUEUE_LENGTH, queue_.size()); }
   IoQueue(const IoQueue&) = delete;
   IoQueue& operator=(const IoQueue&) = delete;
   IoQueue(IoQueue&& rhs) {
     idx_ = rhs.idx_;
     end_idx_ = rhs.end_idx_;
-    queue_.resize(DEFAULT_QUEUE_LENGTH);
+    DCHECK_EQ(DEFAULT_QUEUE_LENGTH, queue_.size());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
     std::swap(queue_, rhs.queue_);
     dirty_front_ = rhs.dirty_front_;
     rhs.idx_ = {};
     rhs.end_idx_ = {};
     rhs.dirty_front_ = {};
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     DCHECK(rhs.empty());
+    DCHECK_EQ(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
 #if DCHECK_IS_ON()
     for (auto buf : rhs.queue_) {
       DCHECK(!buf);
@@ -46,13 +49,16 @@ class IoQueue {
   IoQueue& operator=(IoQueue&& rhs) {
     idx_ = rhs.idx_;
     end_idx_ = rhs.end_idx_;
-    DCHECK(queue_.size());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
     std::swap(queue_, rhs.queue_);
     dirty_front_ = rhs.dirty_front_;
     rhs.idx_ = {};
     rhs.end_idx_ = {};
     rhs.dirty_front_ = {};
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     DCHECK(rhs.empty());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, rhs.queue_.size());
 #if DCHECK_IS_ON()
     for (auto buf : rhs.queue_) {
       DCHECK(!buf);
@@ -61,19 +67,24 @@ class IoQueue {
     return *this;
   }
 
-  bool empty() const { return idx_ == end_idx_; }
+  bool empty() const {
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
+    return idx_ == end_idx_;
+  }
 
   void replace_front(T buf) {
     DCHECK(!empty());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     dirty_front_ = true;
     queue_[idx_] = buf;
   }
 
   void push_back(T buf) {
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     queue_[end_idx_] = buf;
     end_idx_ = (end_idx_ + 1) % queue_.size();
     if (end_idx_ == idx_) {
-      LOG(INFO) << "Current IO queue is full, enlarging by 2x to " << 2 * queue_.size();
+      VLOG(1) << "Current IO queue is full, enlarging by 2x to " << 2 * queue_.size();
       enlarge_queue_by_2x();
     }
   }
@@ -82,12 +93,14 @@ class IoQueue {
 
   T front() {
     DCHECK(!empty());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     dirty_front_ = true;
     return queue_[idx_];
   }
 
   void pop_front() {
     DCHECK(!empty());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     dirty_front_ = false;
     queue_[idx_] = nullptr;
     idx_ = (idx_ + 1) % queue_.size();
@@ -95,12 +108,17 @@ class IoQueue {
 
   T back() {
     DCHECK(!empty());
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     return queue_[(end_idx_ + queue_.size() - 1) % queue_.size()];
   }
 
-  size_t length() const { return (end_idx_ + queue_.size() - idx_) % queue_.size(); }
+  size_t length() const {
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
+    return (end_idx_ + queue_.size() - idx_) % queue_.size();
+  }
 
   size_t byte_length() const {
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
     if (empty()) {
       return 0u;
     }
@@ -110,14 +128,20 @@ class IoQueue {
     return ret;
   }
 
-  void clear() { *this = IoQueue(); }
+  void clear() {
+    DCHECK_LE(DEFAULT_QUEUE_LENGTH, queue_.size());
+    *this = IoQueue();
+  }
 
  private:
   void enlarge_queue_by_2x() {
     DCHECK(queue_.size());
+    DCHECK_EQ(idx_, end_idx_);
     DCHECK_LE(queue_.size(), 32u << 10);
     Vector new_queue;
+    DCHECK_EQ(0u, new_queue.size());
     new_queue.reserve(queue_.size() << 1);
+    DCHECK_LE(queue_.size() << 1, new_queue.capacity());
     if (idx_ < end_idx_) {
       new_queue.insert(new_queue.end(), queue_.begin() + idx_, queue_.begin() + end_idx_);
     } else /* if (idx_ >= end_idx_) */ {
@@ -127,13 +151,15 @@ class IoQueue {
     idx_ = 0;
     end_idx_ = queue_.size();
     new_queue.resize(queue_.size() << 1);
+    DCHECK_EQ(queue_.size() << 1, new_queue.size());
     std::swap(queue_, new_queue);
+    DCHECK_EQ(new_queue.size() << 1, queue_.size());
   }
 
  private:
   int idx_ = 0;
   int end_idx_ = 0;
-  Vector queue_;
+  Vector queue_{static_cast<Vector::size_type>(DEFAULT_QUEUE_LENGTH)};
   bool dirty_front_ = false;
 };
 
