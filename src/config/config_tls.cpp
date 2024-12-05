@@ -44,7 +44,7 @@ ABSL_FLAG(bool, tls13_early_data, true, "Enable 0RTTI Early Data (risk at produc
 
 ABSL_FLAG(bool,
           enable_post_quantum_kyber,
-          true,
+          false,
           "Enables post-quantum key-agreements in TLS 1.3 connections. "
           "The use_ml_kem flag controls whether ML-KEM or Kyber is used.");
 ABSL_FLAG(bool,
