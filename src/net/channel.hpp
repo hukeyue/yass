@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "net/asio.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 
 namespace net {
 

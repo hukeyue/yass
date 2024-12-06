@@ -14,17 +14,17 @@
 using namespace net;
 
 namespace {
-std::unique_ptr<IOBuf> GenerateRandContent(int size) {
-  auto buf = IOBuf::create(size);
+scoped_refptr<GrowableIOBuffer> GenerateRandContent(int size) {
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(size);
 
-  gurl_base::RandBytes(buf->mutable_data(), std::min(256, size));
+  gurl_base::RandBytes(buf->data(), std::min(256, size));
   for (int i = 1; i < size / 256; ++i) {
-    memcpy(buf->mutable_data() + 256 * i, buf->data(), 256);
+    memcpy(buf->data() + 256 * i, buf->data(), 256);
   }
   if (size % 256) {
-    memcpy(buf->mutable_data() + 256 * (size / 256), buf->data(), std::min(256, size % 256));
+    memcpy(buf->data() + 256 * (size / 256), buf->data(), std::min(256, size % 256));
   }
-  buf->append(size);
 
   return buf;
 }
@@ -35,13 +35,18 @@ class CipherTest : public ::testing::TestWithParam<size_t>, public cipher_visito
   void SetUp() override {}
   void TearDown() override {}
 
-  bool on_received_data(std::shared_ptr<IOBuf> buf) override {
-    if (!recv_buf_) {
-      recv_buf_ = IOBuf::create(SOCKET_DEBUF_SIZE);
+  bool on_received_data(GrowableIOBuffer* buf) override {
+    if (recv_buf_) {
+      const int recv_buf_size = recv_buf_->RemainingCapacity() + buf->size();
+      auto previous_chunk = recv_buf_;
+      recv_buf_ = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+      recv_buf_->SetCapacity(recv_buf_size);
+      memcpy(recv_buf_->data(), previous_chunk->data(), previous_chunk->RemainingCapacity());
+      memcpy(recv_buf_->data() + previous_chunk->RemainingCapacity(), buf->data(), buf->RemainingCapacity());
+    } else {
+      recv_buf_ = buf;
     }
-    recv_buf_->reserve(0, buf->length());
-    memcpy(recv_buf_->mutable_tail(), buf->data(), buf->length());
-    recv_buf_->append(buf->length());
+
     return true;
   }
 
@@ -52,17 +57,19 @@ class CipherTest : public ::testing::TestWithParam<size_t>, public cipher_visito
     auto encoder = std::make_unique<cipher>(key, password, crypto_method, this, true);
     auto decoder = std::make_unique<cipher>(key, password, crypto_method, this, false);
     auto send_buf = GenerateRandContent(size);
-    std::shared_ptr<IOBuf> cipherbuf = IOBuf::create(size + 100);
-    encoder->encrypt(send_buf->data(), send_buf->length(), cipherbuf);
-    decoder->process_bytes(cipherbuf);
+
+    auto cipherbuf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+
+    encoder->encrypt(send_buf->bytes(), send_buf->size(), cipherbuf.get());
+    decoder->process_bytes(cipherbuf.get());
     ASSERT_EQ(ec_, asio::error_code());
 
-    ASSERT_EQ(send_buf->length(), recv_buf_->length());
-    ASSERT_EQ(::testing::Bytes(send_buf->data(), size), ::testing::Bytes(recv_buf_->data(), size));
+    ASSERT_EQ(send_buf->capacity(), recv_buf_->capacity());
+    ASSERT_EQ(::testing::Bytes(send_buf->everything()), ::testing::Bytes(recv_buf_->everything()));
   }
 
   asio::error_code ec_;
-  std::shared_ptr<IOBuf> recv_buf_;
+  scoped_refptr<GrowableIOBuffer> recv_buf_;
 };
 
 #define XX(num, name, string)                                           \

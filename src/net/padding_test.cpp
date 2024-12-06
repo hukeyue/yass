@@ -12,21 +12,19 @@
 using namespace net;
 
 TEST(NetworkTest, AddAndRemovePadding) {
-  std::shared_ptr<IOBuf> buf = IOBuf::create(256);
-  for (size_t i = 0; i < buf->capacity(); ++i) {
-    buf->mutable_buffer()[i] = i & 255;
+  uint8_t buffer[256];
+  for (int i = 0; i < (int)sizeof(buffer); ++i) {
+    buffer[i] = i & 255;
   }
-  buf->append(256);
 
-  std::shared_ptr<IOBuf> send_buf = IOBuf::copyBuffer(buf->data(), buf->length());
-
-  AddPadding(send_buf);
+  auto origin_buf = gurl_base::MakeRefCounted<WrappedIOBuffer>(reinterpret_cast<char*>(buffer), sizeof(buffer));
+  auto send_buf = AddPadding(origin_buf.get());
 
   asio::error_code ec;
-  auto recv_buf = RemovePadding(send_buf, ec);
-  EXPECT_TRUE(send_buf->empty());
-  EXPECT_FALSE(ec);
-  EXPECT_EQ(recv_buf->length(), buf->length());
+  auto recv_buf = RemovePadding(send_buf.get(), ec);
+  EXPECT_FALSE(ec) << ec;
+  EXPECT_EQ(send_buf->size(), 0);
+  EXPECT_EQ((int)sizeof(buffer), recv_buf->size());
 
-  ASSERT_EQ(::testing::Bytes(recv_buf->data(), recv_buf->length()), ::testing::Bytes(buf->data(), buf->length()));
+  ASSERT_EQ(::testing::Bytes(origin_buf->span()), ::testing::Bytes(recv_buf->span()));
 }

@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "base/containers/span.h"
 #include "base/memory/free_deleter.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
@@ -78,12 +79,19 @@ namespace net {
 class IOBuffer : public gurl_base::RefCountedThreadSafe<IOBuffer> {
  public:
   int size() const { return size_; }
+  bool empty() const { return size_ == 0; }
 
   char* data() { return data_; }
   const char* data() const { return data_; }
 
   uint8_t* bytes() { return reinterpret_cast<uint8_t*>(data()); }
   const uint8_t* bytes() const { return reinterpret_cast<const uint8_t*>(data()); }
+
+  gurl_base::span<uint8_t> span() { return gurl_base::make_span(bytes(), static_cast<size_t>(size_)); }
+  gurl_base::span<const uint8_t> span() const { return gurl_base::make_span(bytes(), static_cast<size_t>(size_)); }
+
+  // added
+  static scoped_refptr<IOBuffer> copyBuffer(const void* data, int size);
 
  protected:
   friend class gurl_base::RefCountedThreadSafe<IOBuffer>;
@@ -92,6 +100,8 @@ class IOBuffer : public gurl_base::RefCountedThreadSafe<IOBuffer> {
 
   IOBuffer();
   IOBuffer(char* data, size_t size);
+  explicit IOBuffer(gurl_base::span<char> data);
+  explicit IOBuffer(gurl_base::span<uint8_t> data);
 
   virtual ~IOBuffer();
 
@@ -194,6 +204,25 @@ class GrowableIOBuffer : public IOBuffer {
 
   int RemainingCapacity();
   char* StartOfBuffer();
+  const char* StartOfBuffer() const;
+
+  // Returns the entire buffer, including the bytes before the `offset()`.
+  //
+  // The `span()` method in the base class only gives the part of the buffer
+  // after `offset()`.
+  gurl_base::span<uint8_t> everything();
+  gurl_base::span<const uint8_t> everything() const;
+
+  // Return a span before the `offset()`.
+  gurl_base::span<uint8_t> span_before_offset();
+  gurl_base::span<const uint8_t> span_before_offset() const;
+
+  // added
+  static scoped_refptr<GrowableIOBuffer> copyBuffer(const void* data, int size);
+  static scoped_refptr<GrowableIOBuffer> copyFrom(const IOBuffer* buffer);
+
+  // added twice
+  void appendBytesAtEnd(const void* bytes, int length);
 
  private:
   ~GrowableIOBuffer() override;
@@ -229,10 +258,30 @@ class PickledIOBuffer : public IOBuffer {
 class WrappedIOBuffer : public IOBuffer {
  public:
   WrappedIOBuffer(const char* data, size_t size);
+  explicit WrappedIOBuffer(gurl_base::span<const char> data);
+  explicit WrappedIOBuffer(gurl_base::span<const uint8_t> data);
 
  protected:
   ~WrappedIOBuffer() override;
 };
+
+inline scoped_refptr<IOBuffer> IOBuffer::copyBuffer(const void* data, int size) {
+  auto buf = gurl_base::MakeRefCounted<PickledIOBuffer>();
+  buf->pickle()->WriteBytes(data, size);
+  buf->Done();
+  return buf;
+}
+
+inline scoped_refptr<GrowableIOBuffer> GrowableIOBuffer::copyBuffer(const void* data, int size) {
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(size);
+  memcpy(buf->data(), data, size);
+  return buf;
+}
+
+inline scoped_refptr<GrowableIOBuffer> GrowableIOBuffer::copyFrom(const IOBuffer* buffer) {
+  return copyBuffer(buffer->data(), buffer->size());
+}
 
 }  // namespace net
 

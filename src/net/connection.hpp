@@ -47,14 +47,14 @@ class Downlink {
 
   virtual void async_read_some(handle_t&& cb) { socket_.async_wait(asio::ip::tcp::socket::wait_read, std::move(cb)); }
 
-  virtual size_t read_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-    return socket_.read_some(tail_buffer(*buf), ec);
+  virtual size_t read_some(GrowableIOBuffer* buf, asio::error_code& ec) {
+    return socket_.read_some(tail_buffer(buf), ec);
   }
 
   virtual void async_write_some(handle_t&& cb) { socket_.async_wait(asio::ip::tcp::socket::wait_write, std::move(cb)); }
 
-  virtual size_t write_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-    return socket_.write_some(const_buffer(*buf), ec);
+  virtual size_t write_some(GrowableIOBuffer* buf, asio::error_code& ec) {
+    return socket_.write_some(const_buffer(buf), ec);
   }
 
   virtual void async_shutdown(handle_t&& cb) {
@@ -128,11 +128,11 @@ class SSLDownlink : public Downlink {
 
   void async_read_some(handle_t&& cb) override { ssl_socket_->WaitRead(std::move(cb)); }
 
-  size_t read_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) override { return ssl_socket_->Read(buf, ec); }
+  size_t read_some(GrowableIOBuffer* buf, asio::error_code& ec) override { return ssl_socket_->Read(buf, ec); }
 
   void async_write_some(handle_t&& cb) override { ssl_socket_->WaitWrite(std::move(cb)); }
 
-  size_t write_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) override { return ssl_socket_->Write(buf, ec); }
+  size_t write_some(GrowableIOBuffer* buf, asio::error_code& ec) override { return ssl_socket_->Write(buf, ec); }
 
   void async_shutdown(handle_t&& cb) override { ssl_socket_->Shutdown(std::move(cb)); }
 

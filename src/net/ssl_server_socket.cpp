@@ -151,9 +151,9 @@ void SSLServerSocket::Disconnect() {
   stream_socket_->close(ec);
 }
 
-size_t SSLServerSocket::Read(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-  DCHECK(buf->tailroom());
-  int buf_len = buf->tailroom();
+size_t SSLServerSocket::Read(GrowableIOBuffer* buf, asio::error_code& ec) {
+  DCHECK(buf->RemainingCapacity());
+  int buf_len = buf->RemainingCapacity();
   int rv = DoPayloadRead(buf, buf_len);
   if (rv == ERR_IO_PENDING) {
     ec = asio::error::try_again;
@@ -174,10 +174,10 @@ size_t SSLServerSocket::Read(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
   return rv;
 }
 
-size_t SSLServerSocket::Write(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-  DCHECK(buf->length());
+size_t SSLServerSocket::Write(GrowableIOBuffer* buf, asio::error_code& ec) {
+  DCHECK(buf->RemainingCapacity());
 
-  int rv = DoPayloadWrite(buf, buf->length());
+  int rv = DoPayloadWrite(buf, buf->RemainingCapacity());
 
   if (rv == ERR_IO_PENDING) {
     ec = asio::error::try_again;
@@ -413,13 +413,13 @@ int SSLServerSocket::DoHandshakeLoop(int last_io_result, int last_sslerr) {
   return rv;
 }
 
-int SSLServerSocket::DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len) {
+int SSLServerSocket::DoPayloadRead(GrowableIOBuffer* buf, int buf_len) {
   DCHECK(completed_handshake_);
   DCHECK_EQ(STATE_NONE, next_handshake_state_);
   DCHECK(buf);
   DCHECK_GT(buf_len, 0);
 
-  int rv = SSL_read(ssl_.get(), buf->mutable_tail(), buf_len);
+  int rv = SSL_read(ssl_.get(), buf->data(), buf_len);
   if (rv >= 0) {
     if (SSL_in_early_data(ssl_.get()))
       early_data_received_ = true;
@@ -436,7 +436,7 @@ int SSLServerSocket::DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len) {
   return net_error;
 }
 
-int SSLServerSocket::DoPayloadWrite(std::shared_ptr<IOBuf> buf, int buf_len) {
+int SSLServerSocket::DoPayloadWrite(GrowableIOBuffer* buf, int buf_len) {
   DCHECK(completed_handshake_);
   DCHECK_EQ(STATE_NONE, next_handshake_state_);
 

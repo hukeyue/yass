@@ -15,7 +15,7 @@
 #include <build/build_config.h>
 #include "core/logging.hpp"
 #include "net/asio.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 
 #define SOCKET_BUF_SIZE (16384)
 #define SOCKET_DEBUF_SIZE (16384)
@@ -85,9 +85,9 @@ done:
   ::gurl_base::logging::LogMessage(file, line, -4).stream() << hex_buffer;
 }
 
-inline void DumpHex_Impl(const char* file, int line, const char* prefix, const net::IOBuf* buf) {
-  const uint8_t* data = buf->data();
-  uint32_t length = buf->length();
+inline void DumpHex_Impl(const char* file, int line, const char* prefix, const net::IOBuffer* buf) {
+  const uint8_t* data = buf->bytes();
+  uint32_t length = buf->size();
   DumpHex_Impl(file, line, prefix, data, length);
 }
 #endif  // DCHECK_IS_ON()

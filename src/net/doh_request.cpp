@@ -53,12 +53,11 @@ void DoHRequest::DoRequest(dns_message::DNStype dns_type, const std::string& hos
     OnDoneRequest(asio::error::host_unreachable, nullptr);
     return;
   }
-  buf_ = IOBuf::create(SOCKET_BUF_SIZE);
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
 
+  int payload_size = 0;
   for (auto buffer : msg.buffers()) {
-    buf_->reserve(0, buffer.size());
-    memcpy(buf_->mutable_tail(), buffer.data(), buffer.size());
-    buf_->append(buffer.size());
+    payload_size += buffer.size();
   }
 
   {
@@ -67,13 +66,17 @@ void DoHRequest::DoRequest(dns_message::DNStype dns_type, const std::string& hos
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
         "Content-Type: application/dns-message\r\n"
-        "Content-Length: %lu\r\n"
+        "Content-Length: %d\r\n"
         "\r\n",
-        doh_path_, doh_host_, doh_port_, buf_->length());
-    buf_->reserve(request_header.size(), 0);
-    memcpy(buf_->mutable_buffer(), request_header.c_str(), request_header.size());
-    buf_->prepend(request_header.size());
+        doh_path_, doh_host_, doh_port_, payload_size);
+    buf->appendBytesAtEnd(request_header.c_str(), request_header.size());
   }
+
+  for (auto buffer : msg.buffers()) {
+    buf->appendBytesAtEnd(buffer.data(), buffer.size());
+  }
+
+  send_buf_ = buf;
 
   asio::error_code ec;
   socket_.open(endpoint_.protocol(), ec);
@@ -136,7 +139,7 @@ void DoHRequest::OnSSLConnect() {
     return;
   }
 
-  recv_buf_ = IOBuf::create(UINT16_MAX);
+  recv_buf_ = gurl_base::MakeRefCounted<GrowableIOBuffer>();
   ssl_socket_->WaitWrite([this, self](asio::error_code ec) { OnSSLWritable(ec); });
   ssl_socket_->WaitRead([this, self](asio::error_code ec) { OnSSLReadable(ec); });
 }
@@ -146,14 +149,14 @@ void DoHRequest::OnSSLWritable(asio::error_code ec) {
     OnDoneRequest(ec, nullptr);
     return;
   }
-  size_t written = ssl_socket_->Write(buf_, ec);
+  size_t written = ssl_socket_->Write(send_buf_.get(), ec);
   if (ec) {
     OnDoneRequest(ec, nullptr);
     return;
   }
-  buf_->trimStart(written);
-  VLOG(3) << "DoH Request Sent: " << written << " bytes Remaining: " << buf_->length() << " bytes";
-  if (UNLIKELY(!buf_->empty())) {
+  send_buf_->set_offset(send_buf_->offset() + written);
+  VLOG(3) << "DoH Request Sent: " << written << " bytes Remaining: " << send_buf_->RemainingCapacity() << " bytes";
+  if (UNLIKELY(!send_buf_->empty())) {
     scoped_refptr<DoHRequest> self(this);
     ssl_socket_->WaitWrite([this, self](asio::error_code ec) { OnSSLWritable(ec); });
     return;
@@ -167,9 +170,11 @@ void DoHRequest::OnSSLReadable(asio::error_code ec) {
     return;
   }
   size_t read;
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(UINT16_MAX);
   do {
     ec = asio::error_code();
-    read = ssl_socket_->Read(recv_buf_, ec);
+    read = ssl_socket_->Read(buf.get(), ec);
     if (ec == asio::error::interrupted) {
       continue;
     }
@@ -179,7 +184,10 @@ void DoHRequest::OnSSLReadable(asio::error_code ec) {
     OnDoneRequest(ec, nullptr);
     return;
   }
-  recv_buf_->append(read);
+  // append buf to the end of recv_buf
+  int previous_capacity = recv_buf_->capacity();
+  recv_buf_->SetCapacity(previous_capacity + read);
+  memcpy(recv_buf_->StartOfBuffer() + previous_capacity, buf->data(), read);
 
   VLOG(3) << "DoH Response Received: " << read << " bytes";
 
@@ -198,7 +206,7 @@ void DoHRequest::OnReadHeader() {
   HttpResponseParser parser;
 
   bool ok;
-  int nparsed = parser.Parse(*recv_buf_, &ok);
+  int nparsed = parser.Parse(recv_buf_->span(), &ok);
   if (nparsed) {
     VLOG(3) << "Connection (doh resolver) "
             << " http: " << std::string_view(reinterpret_cast<const char*>(recv_buf_->data()), nparsed);
@@ -210,8 +218,7 @@ void DoHRequest::OnReadHeader() {
   }
 
   VLOG(3) << "DoH Response Header Parsed: " << nparsed << " bytes";
-  recv_buf_->trimStart(nparsed);
-  recv_buf_->retreat(nparsed);
+  recv_buf_->set_offset(recv_buf_->offset() + nparsed);
 
   if (UNLIKELY(parser.status_code() != 200)) {
     LOG(WARNING) << "DoH Response Unexpected HTTP Response Status Code: " << parser.status_code();
@@ -245,11 +252,10 @@ void DoHRequest::OnReadHeader() {
 
 void DoHRequest::OnReadBody() {
   DCHECK_EQ(read_state_, Read_Body);
-  if (UNLIKELY(recv_buf_->length() < body_length_)) {
-    VLOG(3) << "DoH Response Expected Data: " << body_length_ << " bytes Current: " << recv_buf_->length() << " bytes";
+  if (UNLIKELY(recv_buf_->RemainingCapacity() < body_length_)) {
+    VLOG(3) << "DoH Response Expected Data: " << body_length_ << " bytes Current: " << recv_buf_->size() << " bytes";
 
     scoped_refptr<DoHRequest> self(this);
-    recv_buf_->reserve(0, body_length_ - recv_buf_->length());
     ssl_socket_->WaitRead([this, self](asio::error_code ec) { OnSSLReadable(ec); });
     return;
   }
@@ -259,7 +265,7 @@ void DoHRequest::OnReadBody() {
 
 void DoHRequest::OnParseDnsResponse() {
   DCHECK_EQ(read_state_, Read_Body);
-  DCHECK_GE(recv_buf_->length(), body_length_);
+  DCHECK_GE(recv_buf_->RemainingCapacity(), body_length_);
 
   dns_message::response_parser response_parser;
   dns_message::response response;
@@ -273,8 +279,7 @@ void DoHRequest::OnParseDnsResponse() {
     return;
   }
   VLOG(3) << "DoH Response Body Parsed: " << body_length_ << " bytes";
-  recv_buf_->trimStart(body_length_);
-  recv_buf_->retreat(body_length_);
+  recv_buf_->set_offset(recv_buf_->offset() + body_length_);
 
   struct addrinfo* addrinfo = addrinfo_dup(dns_type_ == dns_message::DNS_TYPE_AAAA, response, port_);
 

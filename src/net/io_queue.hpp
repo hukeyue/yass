@@ -7,11 +7,11 @@
 #include <absl/container/inlined_vector.h>
 #include <build/build_config.h>
 #include <memory>
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 
 namespace net {
 
-template <typename X = IOBuf,
+template <typename X = GrowableIOBuffer,
           unsigned int DEFAULT_QUEUE_LENGTH =
 #if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS) || defined(__MUSL__)
               8
@@ -20,7 +20,7 @@ template <typename X = IOBuf,
 #endif
           >
 class IoQueue {
-  using T = std::shared_ptr<X>;
+  using T = scoped_refptr<X>;
   using Vector = absl::InlinedVector<T, DEFAULT_QUEUE_LENGTH>;
   static_assert(DEFAULT_QUEUE_LENGTH >= 2, "Default Queue Depth is too small");
 
@@ -86,7 +86,7 @@ class IoQueue {
     }
   }
 
-  void push_back(const char* data, size_t length) { push_back(IOBuf::copyBuffer(data, length)); }
+  void push_back(const char* data, size_t length) { push_back(GrowableIOBuffer::copyBuffer(data, length)); }
 
   T front() {
     DCHECK(!empty());
@@ -119,7 +119,7 @@ class IoQueue {
     }
     size_t ret = 0u;
     for (int i = idx_; i != end_idx_; i = (i + 1) % queue_.size())
-      ret += queue_[i]->length();
+      ret += queue_[i]->size();
     return ret;
   }
 

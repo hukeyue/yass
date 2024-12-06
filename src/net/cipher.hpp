@@ -14,14 +14,14 @@
 #endif
 
 #include "crypto/crypter_export.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 #include "net/protocol.hpp"
 
 namespace net {
 
 class cipher_visitor_interface {
  public:
-  virtual bool on_received_data(std::shared_ptr<IOBuf> buf) = 0;
+  virtual bool on_received_data(GrowableIOBuffer* buf) = 0;
   virtual void on_protocol_error() = 0;
 };
 class cipher_impl;
@@ -77,52 +77,52 @@ class cipher {
          bool enc = false);
   ~cipher();
 
-  void process_bytes(std::shared_ptr<IOBuf> ciphertext);
+  void process_bytes(GrowableIOBuffer* ciphertext);
 
-  void encrypt(const uint8_t* plaintext_data, size_t plaintext_size, std::shared_ptr<IOBuf> ciphertext);
+  void encrypt(const uint8_t* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext);
 
  private:
-  void decrypt_salt(IOBuf* chunk);
+  void decrypt_salt(GrowableIOBuffer* chunk);
 
-  void encrypt_salt(IOBuf* chunk);
+  void encrypt_salt(GrowableIOBuffer* chunk);
 
-  int chunk_decrypt_frame_aead(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const;
+  int chunk_decrypt_frame_aead(uint64_t* counter, GrowableIOBuffer* plaintext, GrowableIOBuffer* ciphertext) const;
 
-  int chunk_decrypt_frame_stream(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const;
+  int chunk_decrypt_frame_stream(uint64_t* counter, GrowableIOBuffer* plaintext, GrowableIOBuffer* ciphertext) const;
 
-  int chunk_decrypt_frame(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const;
+  int chunk_decrypt_frame(uint64_t* counter, GrowableIOBuffer* plaintext, GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame_aead(uint64_t* counter,
                                const uint8_t* plaintext_data,
                                size_t plaintext_size,
-                               IOBuf* ciphertext) const;
+                               GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame_stream(uint64_t* counter,
                                  const uint8_t* plaintext_data,
                                  size_t plaintext_size,
-                                 IOBuf* ciphertext) const;
+                                 GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame(uint64_t* counter,
                           const uint8_t* plaintext_data,
                           size_t plaintext_size,
-                          IOBuf* ciphertext) const;
+                          GrowableIOBuffer* ciphertext) const;
 
-  void set_key_stream(const uint8_t* nonce, size_t nonce_len);
-  void set_key_aead(const uint8_t* salt, size_t salt_len);
+  void set_key_stream(const uint8_t* nonce, int nonce_len);
+  void set_key_aead(const uint8_t* salt, int salt_len);
 
  private:
   uint8_t salt_[MAX_KEY_LENGTH];
 
   uint8_t key_[MAX_KEY_LENGTH];
   uint32_t key_bitlen_;
-  uint32_t key_len_;
-  uint32_t tag_len_;
+  int32_t key_len_;
+  int32_t tag_len_;
 
   std::unique_ptr<cipher_impl> impl_;
   uint64_t counter_;
 
   bool init_;
-  std::unique_ptr<IOBuf> chunk_;
+  scoped_refptr<GrowableIOBuffer> chunk_;
 
   cipher_visitor_interface* visitor_;
 };

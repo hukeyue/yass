@@ -200,16 +200,20 @@ cipher::cipher(const std::string& key,
 
 cipher::~cipher() = default;
 
-void cipher::process_bytes(std::shared_ptr<IOBuf> ciphertext) {
-  if (!chunk_) {
-    chunk_ = IOBuf::create(SOCKET_DEBUF_SIZE);
+void cipher::process_bytes(GrowableIOBuffer* ciphertext) {
+  if (chunk_) {
+    const int chunk_size = chunk_->RemainingCapacity() + ciphertext->size();
+    auto previous_chunk = chunk_;
+    chunk_ = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    chunk_->SetCapacity(chunk_size);
+    memcpy(chunk_->data(), previous_chunk->data(), previous_chunk->RemainingCapacity());
+    memcpy(chunk_->data() + previous_chunk->RemainingCapacity(), ciphertext->data(), ciphertext->RemainingCapacity());
+  } else {
+    chunk_ = ciphertext;
   }
-  chunk_->reserve(0, ciphertext->length());
-  memcpy(chunk_->mutable_tail(), ciphertext->data(), ciphertext->length());
-  chunk_->append(ciphertext->length());
 
   if (!init_) {
-    if (chunk_->length() < key_len_) {
+    if (chunk_->size() < key_len_) {
       return;
     }
     decrypt_salt(chunk_.get());
@@ -218,7 +222,8 @@ void cipher::process_bytes(std::shared_ptr<IOBuf> ciphertext) {
   }
 
   while (!chunk_->empty()) {
-    std::shared_ptr<IOBuf> plaintext = IOBuf::create(SOCKET_BUF_SIZE);
+    auto plaintext = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    plaintext->SetCapacity(SOCKET_BUF_SIZE);
 
     uint64_t counter = counter_;
 
@@ -235,32 +240,29 @@ void cipher::process_bytes(std::shared_ptr<IOBuf> ciphertext) {
 
     counter_ = counter;
 
+    // ready to deliver plaintext
+    plaintext->SetCapacity(plaintext->offset());
+    plaintext->set_offset(0);
+
     // DISCARD
-    if (!visitor_->on_received_data(plaintext)) {
+    if (!visitor_->on_received_data(plaintext.get())) {
       break;
     }
   }
-  chunk_->retreat(chunk_->headroom());
 }
 
-void cipher::encrypt(const uint8_t* plaintext_data, size_t plaintext_size, std::shared_ptr<IOBuf> ciphertext) {
+void cipher::encrypt(const uint8_t* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext) {
   DCHECK(ciphertext);
 
   if (!init_) {
-    encrypt_salt(ciphertext.get());
+    encrypt_salt(ciphertext);
     init_ = true;
   }
 
-  size_t clen = 2 * tag_len_ + CHUNK_SIZE_LEN + plaintext_size;
-
-  ciphertext->reserve(0, clen);
-
   uint64_t counter = counter_;
 
-  counter = counter_;
-
   // TBD better to apply MTU-like things
-  int ret = chunk_encrypt_frame(&counter, plaintext_data, plaintext_size, ciphertext.get());
+  int ret = chunk_encrypt_frame(&counter, plaintext_data, plaintext_size, ciphertext);
   if (ret < 0) {
     visitor_->on_protocol_error();
     return;
@@ -269,64 +271,64 @@ void cipher::encrypt(const uint8_t* plaintext_data, size_t plaintext_size, std::
   counter_ = counter;
 }
 
-void cipher::decrypt_salt(IOBuf* chunk) {
+void cipher::decrypt_salt(GrowableIOBuffer* chunk) {
   DCHECK(!init_);
+  DCHECK_EQ(chunk->offset(), 0);
 
 #ifdef HAVE_MBEDTLS
   if (impl_->cipher_id() >= CRYPTO_AES_128_CFB && impl_->cipher_id() <= CRYPTO_CAMELLIA_256_CFB) {
-    size_t nonce_len = impl_->GetIVSize();
+    const size_t nonce_len = impl_->GetIVSize();
     VLOG(4) << "decrypt: nonce: " << nonce_len;
     uint8_t nonce[MAX_NONCE_LENGTH] = {};
     memcpy(nonce, chunk->data(), nonce_len);
-    chunk->trimStart(nonce_len);
-    chunk->retreat(nonce_len);
+    chunk->set_offset(chunk->offset() + nonce_len);
     set_key_stream(nonce, nonce_len);
     DumpHex("DE-NONCE", nonce, nonce_len);
     return;
   }
 #endif
 
-  size_t salt_len = key_len_;
+  const size_t salt_len = key_len_;
   VLOG(4) << "decrypt: salt: " << salt_len;
 
   memcpy(salt_, chunk->data(), salt_len);
-  chunk->trimStart(salt_len);
-  chunk->retreat(salt_len);
+  chunk->set_offset(chunk->offset() + salt_len);
   set_key_aead(salt_, salt_len);
 
   DumpHex("DE-SALT", salt_, salt_len);
 }
 
-void cipher::encrypt_salt(IOBuf* chunk) {
+void cipher::encrypt_salt(GrowableIOBuffer* chunk) {
   DCHECK(!init_);
+  DCHECK_EQ(chunk->offset(), 0);
 
 #ifdef HAVE_MBEDTLS
   if (impl_->cipher_id() >= CRYPTO_AES_128_CFB && impl_->cipher_id() <= CRYPTO_CAMELLIA_256_CFB) {
-    size_t nonce_len = impl_->GetIVSize();
+    const size_t nonce_len = impl_->GetIVSize();
     VLOG(4) << "encrypt: nonce: " << nonce_len;
     uint8_t nonce[MAX_NONCE_LENGTH] = {};
     gurl_base::RandBytes(nonce, nonce_len);
-    chunk->reserve(nonce_len, 0);
-    chunk->prepend(nonce_len);
-    memcpy(chunk->mutable_data(), nonce, nonce_len);
+    auto previous_capacity = chunk->capacity();
+    chunk->SetCapacity(previous_capacity + nonce_len);
+    memcpy(chunk->bytes(), nonce, nonce_len);
     set_key_stream(nonce, nonce_len);
     DumpHex("EN-NONCE", nonce, nonce_len);
     return;
   }
 #endif
 
-  size_t salt_len = key_len_;
+  const size_t salt_len = key_len_;
   VLOG(4) << "encrypt: salt: " << salt_len;
   gurl_base::RandBytes(salt_, key_len_);
-  chunk->reserve(salt_len, 0);
-  chunk->prepend(salt_len);
-  memcpy(chunk->mutable_data(), salt_, salt_len);
+  auto previous_capacity = chunk->capacity();
+  chunk->SetCapacity(previous_capacity + salt_len);
+  memcpy(chunk->StartOfBuffer() + previous_capacity, salt_, salt_len);
   set_key_aead(salt_, salt_len);
 
   DumpHex("EN-SALT", salt_, salt_len);
 }
 
-int cipher::chunk_decrypt_frame(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const {
+int cipher::chunk_decrypt_frame(uint64_t* counter, GrowableIOBuffer* plaintext, GrowableIOBuffer* ciphertext) const {
 #ifdef HAVE_MBEDTLS
   if (impl_->cipher_id() >= CRYPTO_AES_128_CFB && impl_->cipher_id() <= CRYPTO_CAMELLIA_256_CFB) {
     return chunk_decrypt_frame_stream(counter, plaintext, ciphertext);
@@ -338,17 +340,19 @@ int cipher::chunk_decrypt_frame(uint64_t* counter, IOBuf* plaintext, IOBuf* ciph
 #endif
 }
 
-int cipher::chunk_decrypt_frame_aead(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const {
+int cipher::chunk_decrypt_frame_aead(uint64_t* counter,
+                                     GrowableIOBuffer* plaintext,
+                                     GrowableIOBuffer* ciphertext) const {
   int err;
-  size_t mlen;
-  size_t tlen = tag_len_;
+  int mlen;
+  int tlen = tag_len_;
   size_t plen = 0;
-  size_t clen = CHUNK_SIZE_LEN + tlen;
+  int clen = CHUNK_SIZE_LEN + tlen;
 
   VLOG(4) << "decrypt: 1st chunk: origin: " << CHUNK_SIZE_LEN << " encrypted: " << clen
-          << " actual: " << ciphertext->length();
+          << " actual: " << ciphertext->size();
 
-  if (ciphertext->length() < tlen + CHUNK_SIZE_LEN + tlen) {
+  if (ciphertext->size() < tlen + static_cast<int>(CHUNK_SIZE_LEN) + tlen) {
     return -EAGAIN;
   }
 
@@ -361,7 +365,7 @@ int cipher::chunk_decrypt_frame_aead(uint64_t* counter, IOBuf* plaintext, IOBuf*
 
   plen = sizeof(len.cover);
 
-  err = impl_->DecryptPacket(*counter, len.buf, &plen, ciphertext->data(), clen);
+  err = impl_->DecryptPacket(*counter, len.buf, &plen, ciphertext->bytes(), clen);
 
   if (err) {
     return -EBADMSG;
@@ -376,51 +380,52 @@ int cipher::chunk_decrypt_frame_aead(uint64_t* counter, IOBuf* plaintext, IOBuf*
     return -EBADMSG;
   }
 
-  ciphertext->trimStart(clen);
-  plaintext->reserve(0, mlen);
+  ciphertext->set_offset(ciphertext->offset() + clen);
+  plaintext->SetCapacity(plaintext->offset() + mlen);
 
   clen = tlen + mlen;
 
-  VLOG(4) << "decrypt: 2nd chunk: origin: " << mlen << " encrypted: " << clen << " actual: " << ciphertext->length();
+  VLOG(4) << "decrypt: 2nd chunk: origin: " << mlen << " encrypted: " << clen << " actual: " << ciphertext->size();
 
-  if (ciphertext->length() < clen) {
-    ciphertext->prepend(CHUNK_SIZE_LEN + tlen);
+  if (ciphertext->size() < clen) {
+    ciphertext->set_offset(ciphertext->offset() - CHUNK_SIZE_LEN - tlen);
     return -EAGAIN;
   }
 
   (*counter)++;
 
   plen = plaintext->capacity();
-  err = impl_->DecryptPacket(*counter, plaintext->mutable_tail(), &plen, ciphertext->data(), clen);
+  err = impl_->DecryptPacket(*counter, plaintext->bytes(), &plen, ciphertext->bytes(), clen);
   if (err) {
-    ciphertext->prepend(CHUNK_SIZE_LEN + tlen);
+    ciphertext->set_offset(ciphertext->offset() - CHUNK_SIZE_LEN - tlen);
     return -EBADMSG;
   }
 
-  DCHECK_EQ(plen, mlen);
+  DCHECK_EQ(static_cast<int>(plen), mlen);
 
   (*counter)++;
 
-  ciphertext->trimStart(clen);
-
-  plaintext->append(plen);
+  ciphertext->set_offset(ciphertext->offset() + clen);
+  plaintext->set_offset(plaintext->offset() + plen);
 
   return 0;
 }
 
-int cipher::chunk_decrypt_frame_stream(uint64_t* counter, IOBuf* plaintext, IOBuf* ciphertext) const {
+int cipher::chunk_decrypt_frame_stream(uint64_t* counter,
+                                       GrowableIOBuffer* plaintext,
+                                       GrowableIOBuffer* ciphertext) const {
   int err;
-  size_t plen = ciphertext->length();
-  plaintext->reserve(0, ciphertext->length());
+  size_t plen = ciphertext->size();
+  plaintext->SetCapacity(plaintext->offset() + ciphertext->size());
 
-  VLOG(4) << "decrypt: stream chunk: origin: " << plen << " actual: " << ciphertext->length();
+  VLOG(4) << "decrypt: stream chunk: " << plen << " bytes";
 
-  err = impl_->DecryptPacket(*counter, plaintext->mutable_tail(), &plen, ciphertext->data(), ciphertext->length());
+  err = impl_->DecryptPacket(*counter, plaintext->bytes(), &plen, ciphertext->bytes(), ciphertext->size());
   if (err) {
     return -EBADMSG;
   }
-  plaintext->append(plen);
-  ciphertext->trimStart(ciphertext->length());
+  plaintext->set_offset(plaintext->offset() + plen);
+  ciphertext->set_offset(ciphertext->offset() + ciphertext->size());
   (*counter)++;
   return 0;
 }
@@ -428,7 +433,7 @@ int cipher::chunk_decrypt_frame_stream(uint64_t* counter, IOBuf* plaintext, IOBu
 int cipher::chunk_encrypt_frame(uint64_t* counter,
                                 const uint8_t* plaintext_data,
                                 size_t plaintext_size,
-                                IOBuf* ciphertext) const {
+                                GrowableIOBuffer* ciphertext) const {
 #ifdef HAVE_MBEDTLS
   if (impl_->cipher_id() >= CRYPTO_AES_128_CFB && impl_->cipher_id() <= CRYPTO_CAMELLIA_256_CFB) {
     return chunk_encrypt_frame_stream(counter, plaintext_data, plaintext_size, ciphertext);
@@ -443,13 +448,17 @@ int cipher::chunk_encrypt_frame(uint64_t* counter,
 int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
                                      const uint8_t* plaintext_data,
                                      size_t plaintext_size,
-                                     IOBuf* ciphertext) const {
-  size_t tlen = tag_len_;
-
+                                     GrowableIOBuffer* ciphertext) const {
+  const int tlen = tag_len_;
+  const int c_total_len = 2 * tlen + CHUNK_SIZE_LEN + plaintext_size;
   DCHECK_LE(plaintext_size, CHUNK_SIZE_MASK);
 
   int err;
+  int previous_capacity = ciphertext->capacity();
   size_t clen = CHUNK_SIZE_LEN + tlen;
+  int headroom = ciphertext->RemainingCapacity();
+
+  ciphertext->SetCapacity(previous_capacity + c_total_len);
 
   union {
     uint8_t buf[2];
@@ -462,16 +471,16 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 
   VLOG(4) << "encrypt: 1st chunk: origin: " << CHUNK_SIZE_LEN << " encrypted: " << clen;
 
-  ciphertext->reserve(0, clen);
+  DCHECK_GE(c_total_len, static_cast<int>(clen));
 
-  err = impl_->EncryptPacket(*counter, ciphertext->mutable_tail(), &clen, len.buf, CHUNK_SIZE_LEN);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, len.buf, CHUNK_SIZE_LEN);
   if (err) {
+    ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
   }
 
   DCHECK_EQ(clen, CHUNK_SIZE_LEN + tlen);
-
-  ciphertext->append(clen);
+  headroom += clen;
 
   (*counter)++;
 
@@ -479,19 +488,20 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 
   VLOG(4) << "encrypt: 2nd chunk: origin: " << plaintext_size << " encrypted: " << clen;
 
-  ciphertext->reserve(0, clen);
+  DCHECK_GE(ciphertext->RemainingCapacity(), static_cast<int>(clen));
   // FIXME it is a bug with crypto layer
-  memset(ciphertext->mutable_tail(), 0, clen);
+  memset(ciphertext->bytes() + headroom, 0, clen);
 
-  err = impl_->EncryptPacket(*counter, ciphertext->mutable_tail(), &clen, plaintext_data, plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, plaintext_data, plaintext_size);
   if (err) {
-    ciphertext->trimEnd(CHUNK_SIZE_LEN + tlen);
+    ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
   }
 
+  headroom += clen;
   DCHECK_EQ(clen, plaintext_size + tlen);
 
-  ciphertext->append(clen);
+  DCHECK_EQ(ciphertext->offset() + headroom, ciphertext->capacity());
 
   (*counter)++;
 
@@ -501,24 +511,29 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 int cipher::chunk_encrypt_frame_stream(uint64_t* counter,
                                        const uint8_t* plaintext_data,
                                        size_t plaintext_size,
-                                       IOBuf* ciphertext) const {
+                                       GrowableIOBuffer* ciphertext) const {
   int err;
+  const int previous_capacity = ciphertext->capacity();
+  int headroom = previous_capacity - ciphertext->offset();
   size_t clen = plaintext_size;
-  ciphertext->reserve(0, clen);
+
+  ciphertext->SetCapacity(previous_capacity + clen);
 
   VLOG(4) << "encrypt: stream chunk: origin: " << plaintext_size << " actual: " << clen;
 
-  err = impl_->EncryptPacket(*counter, ciphertext->mutable_tail(), &clen, plaintext_data, plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, plaintext_data, plaintext_size);
   if (err) {
+    ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
   }
-  ciphertext->append(clen);
+  DCHECK_EQ(ciphertext->capacity(), previous_capacity + static_cast<int>(clen));
+  // nop: ciphertext->SetCapacity(previous_capacity + clen);
   (*counter)++;
 
   return 0;
 }
 
-void cipher::set_key_stream(const uint8_t* nonce, size_t nonce_len) {
+void cipher::set_key_stream(const uint8_t* nonce, int nonce_len) {
   counter_ = 0;
 
   if (!impl_->SetIV(nonce, nonce_len)) {
@@ -533,7 +548,7 @@ void cipher::set_key_stream(const uint8_t* nonce, size_t nonce_len) {
   DumpHex("IV", impl_->GetIV(), impl_->GetIVSize());
 }
 
-void cipher::set_key_aead(const uint8_t* salt, size_t salt_len) {
+void cipher::set_key_aead(const uint8_t* salt, int salt_len) {
   DCHECK_EQ(salt_len, key_len_);
   uint8_t skey[MAX_KEY_LENGTH] = {};
   int err = crypto_hkdf(salt, salt_len, key_, key_len_, reinterpret_cast<const uint8_t*>(SUBKEY_INFO),

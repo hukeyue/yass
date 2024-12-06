@@ -352,9 +352,9 @@ int SSLSocket::Shutdown(WaitCallback&& callback, bool force) {
   return OK;
 }
 
-size_t SSLSocket::Read(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-  DCHECK(buf->tailroom());
-  int buf_len = buf->tailroom();
+size_t SSLSocket::Read(GrowableIOBuffer* buf, asio::error_code& ec) {
+  DCHECK(buf->RemainingCapacity());
+  int buf_len = buf->RemainingCapacity();
   int rv = DoPayloadRead(buf, buf_len);
   if (rv == ERR_IO_PENDING) {
     ec = asio::error::try_again;
@@ -375,10 +375,10 @@ size_t SSLSocket::Read(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
   return rv;
 }
 
-size_t SSLSocket::Write(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-  DCHECK(buf->length());
+size_t SSLSocket::Write(GrowableIOBuffer* buf, asio::error_code& ec) {
+  DCHECK(buf->RemainingCapacity());
 
-  int rv = DoPayloadWrite(buf, buf->length());
+  int rv = DoPayloadWrite(buf, buf->RemainingCapacity());
 
   if (rv == ERR_IO_PENDING) {
     ec = asio::error::try_again;
@@ -710,7 +710,7 @@ int SSLSocket::DoHandshakeLoop(int last_io_result, int last_sslerr) {
   return rv;
 }
 
-int SSLSocket::DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len) {
+int SSLSocket::DoPayloadRead(GrowableIOBuffer* buf, int buf_len) {
   DCHECK_LT(0, buf_len);
   DCHECK(buf);
 
@@ -734,7 +734,7 @@ int SSLSocket::DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len) {
   int total_bytes_read = 0;
   int ssl_ret, ssl_err;
   do {
-    ssl_ret = SSL_read(ssl_.get(), buf->mutable_tail() + total_bytes_read, buf_len - total_bytes_read);
+    ssl_ret = SSL_read(ssl_.get(), buf->data() + total_bytes_read, buf_len - total_bytes_read);
     ssl_err = SSL_get_error(ssl_.get(), ssl_ret);
     if (ssl_ret > 0) {
       total_bytes_read += ssl_ret;
@@ -806,7 +806,7 @@ int SSLSocket::DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len) {
   return rv;
 }
 
-int SSLSocket::DoPayloadWrite(std::shared_ptr<IOBuf> buf, int buf_len) {
+int SSLSocket::DoPayloadWrite(GrowableIOBuffer* buf, int buf_len) {
   int rv = SSL_write(ssl_.get(), buf->data(), buf_len);
 
   if (rv >= 0) {

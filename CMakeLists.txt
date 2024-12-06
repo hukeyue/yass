@@ -4143,7 +4143,6 @@ set(files
     src/net/openssl_util.cpp
     src/net/base64.cpp
     src/net/cipher.cpp
-    src/net/iobuf.cpp
     src/net/io_buffer.cpp
     src/net/hkdf_sha1.cpp
     src/net/hmac_sha1.cpp
@@ -4210,7 +4209,6 @@ set(hfiles
     src/net/openssl_util.hpp
     src/net/base64.hpp
     src/net/cipher.hpp
-    src/net/iobuf.hpp
     src/net/io_buffer.hpp
     src/net/hkdf_sha1.hpp
     src/net/hmac_sha1.hpp
