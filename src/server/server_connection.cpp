@@ -94,7 +94,7 @@ bool DataFrameSource::Send(absl::string_view frame_header, size_t payload_length
     return true;
   }
 
-  chunks_.front()->trimStart(payload_length);
+  chunks_.front()->set_offset(chunks_.front()->offset() + payload_length);
 
   if (chunks_.front()->empty()) {
     chunks_.pop_front();
@@ -251,17 +251,22 @@ void ServerConnection::SendIfNotProcessing() {
 //
 // cipher_visitor_interface
 //
-bool ServerConnection::on_received_data(std::shared_ptr<IOBuf> buf) {
+bool ServerConnection::on_received_data(GrowableIOBuffer* buf) {
+  DCHECK(buf);
   if (state_ == state_stream) {
     if (buf->empty()) {
       return false;
     }
     upstream_.push_back(buf);
   } else if (state_ == state_handshake) {
+    // Append buf to handshake
     if (handshake_) {
-      handshake_->reserve(0, buf->length());
-      memcpy(handshake_->mutable_tail(), buf->data(), buf->length());
-      handshake_->append(buf->length());
+      const int size = handshake_->RemainingCapacity() + buf->size();
+      auto previous_chunk = handshake_;
+      handshake_ = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+      handshake_->SetCapacity(size);
+      memcpy(handshake_->data(), previous_chunk->data(), previous_chunk->RemainingCapacity());
+      memcpy(handshake_->data() + previous_chunk->RemainingCapacity(), buf->data(), buf->size());
     } else {
       handshake_ = buf;
     }
@@ -423,23 +428,29 @@ bool ServerConnection::OnDataForStream(StreamId stream_id, absl::string_view dat
     asio::error_code ec;
     // Append buf to in_middle_buf
     if (padding_in_middle_buf_) {
-      padding_in_middle_buf_->reserve(0, data.size());
-      memcpy(padding_in_middle_buf_->mutable_tail(), data.data(), data.size());
-      padding_in_middle_buf_->append(data.size());
+      const int size = padding_in_middle_buf_->RemainingCapacity() + data.size();
+      auto previous_chunk = padding_in_middle_buf_;
+      padding_in_middle_buf_ = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+      padding_in_middle_buf_->SetCapacity(size);
+      memcpy(padding_in_middle_buf_->data(), previous_chunk->data(), previous_chunk->RemainingCapacity());
+      memcpy(padding_in_middle_buf_->data() + previous_chunk->RemainingCapacity(), data.data(), data.size());
     } else {
-      padding_in_middle_buf_ = IOBuf::copyBuffer(data.data(), data.size());
+      padding_in_middle_buf_ = GrowableIOBuffer::copyBuffer(data.data(), data.size());
     }
+    DCHECK_EQ(padding_in_middle_buf_->offset(), 0);
     adapter_->MarkDataConsumedForStream(stream_id, data.size());
 
     // Deal with in_middle_buf
     while (num_padding_recv_ < kFirstPaddings) {
-      auto buf = RemovePadding(padding_in_middle_buf_, ec);
+      auto buf = RemovePadding(padding_in_middle_buf_.get(), ec);
       if (ec) {
         return true;
       }
-      DCHECK(buf && buf->length());
+      DCHECK(buf && buf->size());
       upstream_.push_back(buf);
       ++num_padding_recv_;
+      VLOG(2) << "Connection (server) " << connection_id() << " removed padding for: received " << num_padding_recv_
+              << "th chunk";
     }
     // Deal with in_middle_buf outside paddings
     if (num_padding_recv_ >= kFirstPaddings && !padding_in_middle_buf_->empty()) {
@@ -509,10 +520,11 @@ void ServerConnection::ReadHandshake() {
       ProcessReceivedData(nullptr, ec, 0);
       return;
     }
-    std::shared_ptr<IOBuf> cipherbuf = IOBuf::create(SOCKET_DEBUF_SIZE);
+    auto cipherbuf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    cipherbuf->SetCapacity(SOCKET_DEBUF_SIZE);
     size_t bytes_transferred;
     do {
-      bytes_transferred = downlink_->read_some(cipherbuf, ec);
+      bytes_transferred = downlink_->read_some(cipherbuf.get(), ec);
       if (ec == asio::error::interrupted) {
         continue;
       }
@@ -526,8 +538,8 @@ void ServerConnection::ReadHandshake() {
       OnDisconnect(ec);
       return;
     }
-    cipherbuf->append(bytes_transferred);
-    decoder_->process_bytes(cipherbuf);
+    cipherbuf->SetCapacity(bytes_transferred);
+    decoder_->process_bytes(cipherbuf.get());
     if (!handshake_) {
       ReadHandshake();
       return;
@@ -541,8 +553,7 @@ void ServerConnection::ReadHandshake() {
     std::tie(result, std::ignore) = parser.parse(request_, buf->data(), buf->data() + bytes_transferred);
 
     if (result == ss::request_parser::good) {
-      buf->trimStart(request_.length());
-      buf->retreat(request_.length());
+      buf->set_offset(buf->offset() + request_.length());
       DCHECK_LE(request_.length(), bytes_transferred);
 
       if (request_.port() == 0u || (request_.address_type() == ss::domain && request_.domain_name().empty()) ||
@@ -553,7 +564,7 @@ void ServerConnection::ReadHandshake() {
         return;
       }
 
-      ProcessReceivedData(buf, ec, buf->length());
+      ProcessReceivedData(buf.get(), ec, buf->size());
     } else {
       LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint_ << " malformed ss request";
       OnDisconnect(asio::error::invalid_argument);
@@ -587,9 +598,10 @@ void ServerConnection::ReadHandshakeViaHttps() {
 void ServerConnection::OnReadHandshakeViaHttps() {
   asio::error_code ec;
   size_t bytes_transferred;
-  std::shared_ptr<IOBuf> buf = IOBuf::create(SOCKET_DEBUF_SIZE);
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(SOCKET_DEBUF_SIZE);
   do {
-    bytes_transferred = downlink_->read_some(buf, ec);
+    bytes_transferred = downlink_->read_some(buf.get(), ec);
     if (ec == asio::error::interrupted) {
       continue;
     }
@@ -603,22 +615,22 @@ void ServerConnection::OnReadHandshakeViaHttps() {
     OnDisconnect(ec);
     return;
   }
-  buf->append(bytes_transferred);
+  buf->SetCapacity(bytes_transferred);
 
   DumpHex("HANDSHAKE->", buf.get());
 
   HttpRequestParser parser;
 
   bool ok;
-  int nparsed = parser.Parse(*buf, &ok);
+  int nparsed = parser.Parse(buf->span(), &ok);
   if (nparsed) {
     VLOG(3) << "Connection (server) " << connection_id()
             << " http: " << std::string(reinterpret_cast<const char*>(buf->data()), nparsed);
   }
 
   if (ok) {
-    buf->trimStart(nparsed);
-    buf->retreat(nparsed);
+    const int previous_offset = buf->offset();
+    buf->set_offset(buf->offset() + nparsed);
 
     std::string hostname = parser.host();
     uint16_t portnum = parser.port();
@@ -674,14 +686,18 @@ void ServerConnection::OnReadHandshakeViaHttps() {
       std::string header;
       parser.ReforgeHttpRequest(&header, &via_headers);
 
-      buf->reserve(header.size(), 0);
-      buf->prepend(header.size());
-      memcpy(buf->mutable_data(), header.c_str(), header.size());
+      buf->SetCapacity(previous_offset + std::max<int>(nparsed, header.size()) + buf->size());
+      memmove(buf->StartOfBuffer() + header.size(), buf->data(), buf->size());
+      const auto payload_size = buf->size();
+      buf->set_offset(0);
+      buf->SetCapacity(header.size() + payload_size);
+      memcpy(buf->data(), header.c_str(), header.size());
+
       VLOG(3) << "Connection (server) " << connection_id() << " Host: " << hostname << " Port: " << portnum;
     } else {
       VLOG(3) << "Connection (server) " << connection_id() << " CONNECT: " << hostname << " Port: " << portnum;
     }
-    ProcessReceivedData(buf, ec, buf->length());
+    ProcessReceivedData(buf.get(), ec, buf->size());
   } else {
     OnDisconnect(asio::error::invalid_argument);
   }
@@ -713,9 +729,10 @@ void ServerConnection::ReadHandshakeViaSocks() {
 void ServerConnection::OnReadHandshakeViaSocks() {
   asio::error_code ec;
   size_t bytes_transferred;
-  std::shared_ptr<IOBuf> buf = IOBuf::create(SOCKET_DEBUF_SIZE);
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(SOCKET_DEBUF_SIZE);
   do {
-    bytes_transferred = downlink_->read_some(buf, ec);
+    bytes_transferred = downlink_->read_some(buf.get(), ec);
     if (ec == asio::error::interrupted) {
       continue;
     }
@@ -729,7 +746,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
     OnDisconnect(ec);
     return;
   }
-  buf->append(bytes_transferred);
+  buf->SetCapacity(bytes_transferred);
 
   switch (method()) {
     case CRYPTO_SOCKS4:
@@ -743,11 +760,10 @@ void ServerConnection::OnReadHandshakeViaSocks() {
       socks4::request request;
 
       socks4::request_parser::result_type result;
-      std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->length());
+      std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
       if (result == socks4::request_parser::good) {
-        DCHECK_LE(request.length(), buf->length());
-        buf->trimStart(request.length());
-        buf->retreat(request.length());
+        DCHECK_LE((int)request.length(), buf->size());
+        buf->set_offset(buf->offset() + request.length());
       } else {
         LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint_
                   << " malformed socks4/socks4a request.";
@@ -781,12 +797,11 @@ void ServerConnection::OnReadHandshakeViaSocks() {
       socks5::method_select_request_parser::result_type result;
 
       bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
-      std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->length());
+      std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
 
       if (result == socks5::method_select_request_parser::good) {
-        DCHECK_LE(request.length(), buf->length());
-        buf->trimStart(request.length());
-        buf->retreat(request.length());
+        DCHECK_LE((int)request.length(), buf->size());
+        buf->set_offset(buf->offset() + request.length());
       } else {
         LOG(INFO) << "Connection (server) " << connection_id() << " malformed socks5 method select request.";
         OnDisconnect(asio::error::invalid_argument);
@@ -836,18 +851,15 @@ void ServerConnection::WriteHandshakeResponse() {
       ProcessSentData(ec, 0);
       return;
     }
-    std::shared_ptr<IOBuf> buf;
+    auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
     DCHECK(CIPHER_METHOD_IS_SOCKS(method()));
     if (method() == CRYPTO_SOCKS4 || method() == CRYPTO_SOCKS4A) {
       socks4::reply reply;
       asio::ip::tcp::endpoint endpoint{asio::ip::tcp::v4(), 0};
       reply.set_endpoint(endpoint);
       reply.mutable_status() = socks4::reply::request_granted;
-      buf = IOBuf::create(SOCKET_DEBUF_SIZE);
       for (const auto& buffer : reply.buffers()) {
-        buf->reserve(0, buffer.size());
-        memcpy(buf->mutable_tail(), buffer.data(), buffer.size());
-        buf->append(buffer.size());
+        buf->appendBytesAtEnd(buffer.data(), buffer.size());
       }
     } else {
       socks5::reply reply;
@@ -859,21 +871,18 @@ void ServerConnection::WriteHandshakeResponse() {
       }
       reply.set_endpoint(endpoint);
       reply.mutable_status() = socks5::reply::request_granted;
-      buf = IOBuf::create(SOCKET_DEBUF_SIZE);
       for (const auto& buffer : reply.buffers()) {
-        buf->reserve(0, buffer.size());
-        memcpy(buf->mutable_tail(), buffer.data(), buffer.size());
-        buf->append(buffer.size());
+        buf->appendBytesAtEnd(buffer.data(), buffer.size());
       }
     }
-    auto written = downlink_->write_some(buf, ec);
+    int written = downlink_->write_some(buf.get(), ec);
     // TODO improve it
-    if (ec || written != buf->length()) {
+    if (ec || written != buf->size()) {
       OnDisconnect(asio::error::connection_refused);
       return;
     }
     buf = std::move(handshake_pending_buf_);
-    ProcessReceivedData(buf, {}, buf->length());
+    ProcessReceivedData(buf.get(), {}, buf->size());
   });
 }
 
@@ -894,10 +903,10 @@ void ServerConnection::WriteMethodSelectResponse() {
     bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
     auto method_select_reply = socks5::method_select_response_stock_reply(auth_required ? socks5::username_or_password
                                                                                         : socks5::no_auth_required);
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(&method_select_reply, sizeof(method_select_reply));
-    auto written = downlink_->write_some(buf, ec);
+    auto buf = GrowableIOBuffer::copyBuffer(&method_select_reply, sizeof(method_select_reply));
+    int written = downlink_->write_some(buf.get(), ec);
     // TODO improve it
-    if (ec || written != buf->length()) {
+    if (ec || written != buf->size()) {
       OnDisconnect(asio::error::connection_refused);
       return;
     }
@@ -933,13 +942,14 @@ void ServerConnection::ReadSocks5UsernamePasswordAuth() {
 }
 
 void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
-  std::shared_ptr<IOBuf> buf = std::move(handshake_pending_buf_);
+  auto buf = std::move(handshake_pending_buf_);
   if (buf->empty()) {
     asio::error_code ec;
     size_t bytes_transferred;
-    buf = IOBuf::create(SOCKET_DEBUF_SIZE);
+    buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    buf->SetCapacity(SOCKET_DEBUF_SIZE);
     do {
-      bytes_transferred = downlink_->read_some(buf, ec);
+      bytes_transferred = downlink_->read_some(buf.get(), ec);
       if (ec == asio::error::interrupted) {
         continue;
       }
@@ -953,7 +963,7 @@ void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
       OnDisconnect(ec);
       return;
     }
-    buf->append(bytes_transferred);
+    buf->SetCapacity(bytes_transferred);
   }
 
   DCHECK(CIPHER_METHOD_IS_SOCKS5(method()));
@@ -962,11 +972,10 @@ void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
   socks5::auth_request auth_request;
 
   socks5::auth_request_parser::result_type result;
-  std::tie(result, std::ignore) = parser.parse(auth_request, buf->data(), buf->data() + buf->length());
+  std::tie(result, std::ignore) = parser.parse(auth_request, buf->data(), buf->data() + buf->size());
   if (result == socks5::auth_request_parser::good) {
-    DCHECK_LE(auth_request.length(), buf->length());
-    buf->trimStart(auth_request.length());
-    buf->retreat(auth_request.length());
+    DCHECK_LE((int)auth_request.length(), buf->size());
+    buf->set_offset(buf->offset() + auth_request.length());
   } else {
     LOG(INFO) << "Connection (server) " << connection_id() << " malformed socks5 auth request.";
     OnDisconnect(asio::error::invalid_argument);
@@ -1001,10 +1010,10 @@ void ServerConnection::WriteUsernamePasswordAuthResponse() {
       return;
     }
     auto reply = socks5::auth_response_stock_reply();
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(&reply, sizeof(reply));
-    auto written = downlink_->write_some(buf, ec);
+    auto buf = GrowableIOBuffer::copyBuffer(&reply, sizeof(reply));
+    int written = downlink_->write_some(buf.get(), ec);
     // TODO improve it
-    if (ec || written != buf->length()) {
+    if (ec || written != buf->size()) {
       OnDisconnect(asio::error::connection_refused);
       return;
     }
@@ -1036,13 +1045,14 @@ void ServerConnection::ReadHandshakeViaSocks5() {
 }
 
 void ServerConnection::OnReadHandshakeViaSocks5() {
-  std::shared_ptr<IOBuf> buf = std::move(handshake_pending_buf_);
+  auto buf = std::move(handshake_pending_buf_);
   if (buf->empty()) {
     asio::error_code ec;
     size_t bytes_transferred;
-    buf = IOBuf::create(SOCKET_DEBUF_SIZE);
+    buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    buf->SetCapacity(SOCKET_DEBUF_SIZE);
     do {
-      bytes_transferred = downlink_->read_some(buf, ec);
+      bytes_transferred = downlink_->read_some(buf.get(), ec);
       if (ec == asio::error::interrupted) {
         continue;
       }
@@ -1056,7 +1066,7 @@ void ServerConnection::OnReadHandshakeViaSocks5() {
       OnDisconnect(ec);
       return;
     }
-    buf->append(bytes_transferred);
+    buf->SetCapacity(bytes_transferred);
   }
 
   DCHECK(CIPHER_METHOD_IS_SOCKS5(method()));
@@ -1064,11 +1074,10 @@ void ServerConnection::OnReadHandshakeViaSocks5() {
   socks5::request request;
 
   socks5::request_parser::result_type result;
-  std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->length());
+  std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
   if (result == socks5::request_parser::good) {
-    DCHECK_LE(request.length(), buf->length());
-    buf->trimStart(request.length());
-    buf->retreat(request.length());
+    DCHECK_LE((int)request.length(), buf->size());
+    buf->set_offset(buf->offset() + request.length());
   } else {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint_
               << " malformed socks5 request.";
@@ -1186,7 +1195,7 @@ void ServerConnection::WriteStreamInPipe() {
   while (true) {
     bool downstream_blocked;
     auto buf = GetNextDownstreamBuf(ec, &bytes_transferred, &downstream_blocked);
-    size_t read = buf ? buf->length() : 0;
+    size_t read = buf ? buf->size() : 0;
     if (ec == asio::error::try_again || ec == asio::error::would_block) {
       if (!downstream_blocked) {
         ec = asio::error_code();
@@ -1206,12 +1215,12 @@ void ServerConnection::WriteStreamInPipe() {
     ec = asio::error_code();
     size_t written;
     do {
-      written = downlink_->write_some(buf, ec);
+      written = downlink_->write_some(buf.get(), ec);
       if (ec == asio::error::interrupted) {
         continue;
       }
     } while (false);
-    buf->trimStart(written);
+    buf->set_offset(buf->offset() + written);
     bytes_read_without_yielding += written;
     wbytes_transferred += written;
     // continue to resume
@@ -1269,9 +1278,9 @@ void ServerConnection::WriteStreamInPipe() {
   ProcessSentData(ec, wbytes_transferred);
 }
 
-std::shared_ptr<IOBuf> ServerConnection::GetNextDownstreamBuf(asio::error_code& ec,
-                                                              size_t* bytes_transferred,
-                                                              bool* downstream_blocked) {
+scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::error_code& ec,
+                                                                       size_t* bytes_transferred,
+                                                                       bool* downstream_blocked) {
   *downstream_blocked = false;
   if (!downstream_.empty()) {
     DCHECK(!downstream_.front()->empty());
@@ -1295,7 +1304,7 @@ std::shared_ptr<IOBuf> ServerConnection::GetNextDownstreamBuf(asio::error_code& 
     return nullptr;
   }
 
-  std::shared_ptr<IOBuf> buf;
+  scoped_refptr<GrowableIOBuffer> buf;
   size_t read;
 
 #ifdef HAVE_QUICHE
@@ -1308,14 +1317,15 @@ std::shared_ptr<IOBuf> ServerConnection::GetNextDownstreamBuf(asio::error_code& 
 #endif
 
   do {
-    buf = IOBuf::create(SOCKET_BUF_SIZE);
+    buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    buf->SetCapacity(SOCKET_BUF_SIZE);
     ec = asio::error_code();
-    read = channel_->read_some(buf, ec);
+    read = channel_->read_some(buf.get(), ec);
     if (ec == asio::error::interrupted) {
       continue;
     }
   } while (false);
-  buf->append(read);
+  buf->SetCapacity(read);
   if (ec && ec != asio::error::try_again && ec != asio::error::would_block) {
     // handled in channel_->read_some func
     // disconnected(ec);
@@ -1337,7 +1347,9 @@ std::shared_ptr<IOBuf> ServerConnection::GetNextDownstreamBuf(asio::error_code& 
     }
     if (padding_support_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
-      AddPadding(buf);
+      buf = AddPadding(buf.get());
+      VLOG(2) << "Connection (server) " << connection_id() << " added padding for: " << num_padding_send_
+              << "th chunk to be sent";
     }
     data_frame_->AddChunk(buf);
   } else
@@ -1391,8 +1403,8 @@ void ServerConnection::WriteUpstreamInPipe() {
   /* recursively send the remainings */
   while (true) {
     size_t read;
-    std::shared_ptr<IOBuf> buf = GetNextUpstreamBuf(ec, &bytes_transferred);
-    read = buf ? buf->length() : 0;
+    auto buf = GetNextUpstreamBuf(ec, &bytes_transferred);
+    read = buf ? buf->size() : 0;
     if (ec == asio::error::try_again || ec == asio::error::would_block) {
       ec = asio::error_code();
       try_again = true;
@@ -1410,12 +1422,12 @@ void ServerConnection::WriteUpstreamInPipe() {
     ec = asio::error_code();
     size_t written;
     do {
-      written = channel_->write_some(buf, ec);
+      written = channel_->write_some(buf.get(), ec);
       if (ec == asio::error::interrupted) {
         continue;
       }
     } while (false);
-    buf->trimStart(written);
+    buf->set_offset(buf->offset() + written);
     wbytes_transferred += written;
     if (ec == asio::error::try_again || ec == asio::error::would_block) {
       DCHECK_EQ(0u, written);
@@ -1457,7 +1469,7 @@ void ServerConnection::WriteUpstreamInPipe() {
   }
 }
 
-std::shared_ptr<IOBuf> ServerConnection::GetNextUpstreamBuf(asio::error_code& ec, size_t* bytes_transferred) {
+scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextUpstreamBuf(asio::error_code& ec, size_t* bytes_transferred) {
   if (!upstream_.empty()) {
     DCHECK(!upstream_.front()->empty());
     ec = asio::error_code();
@@ -1476,15 +1488,16 @@ try_again:
     ec = asio::error::eof;
     return nullptr;
   }
-  std::shared_ptr<IOBuf> buf = IOBuf::create(SOCKET_DEBUF_SIZE);
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  buf->SetCapacity(SOCKET_DEBUF_SIZE);
   size_t read;
   do {
-    read = downlink_->read_some(buf, ec);
+    read = downlink_->read_some(buf.get(), ec);
     if (ec == asio::error::interrupted) {
       continue;
     }
   } while (false);
-  buf->append(read);
+  buf->SetCapacity(read);
   if (ec && ec != asio::error::try_again && ec != asio::error::would_block) {
     /* safe to return, socket will handle this error later */
     ProcessReceivedData(nullptr, ec, read);
@@ -1501,7 +1514,7 @@ try_again:
 
 #ifdef HAVE_QUICHE
   if (adapter_) {
-    absl::string_view remaining_buffer(reinterpret_cast<const char*>(buf->data()), buf->length());
+    absl::string_view remaining_buffer(reinterpret_cast<const char*>(buf->data()), buf->size());
     while (!remaining_buffer.empty() && adapter_->want_read()) {
       http2_in_recv_callback_ = true;
       int64_t result = adapter_->ProcessBytes(remaining_buffer);
@@ -1530,7 +1543,7 @@ try_again:
     if (CIPHER_METHOD_IS_SOCKS(method())) {
       upstream_.push_back(buf);
     } else {
-      decoder_->process_bytes(buf);
+      decoder_->process_bytes(buf.get());
     }
   }
 
@@ -1554,26 +1567,22 @@ out:
   return upstream_.front();
 }
 
-void ServerConnection::ProcessReceivedData(std::shared_ptr<IOBuf> buf, asio::error_code ec, size_t bytes_transferred) {
+void ServerConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code ec, size_t bytes_transferred) {
   rbytes_transferred_ += bytes_transferred;
   VLOG(2) << "Connection (server) " << connection_id() << " received data: " << bytes_transferred << " bytes"
           << " done: " << rbytes_transferred_ << " bytes."
           << " ec: " << ec;
-
-  if (buf) {
-    DCHECK_LE(bytes_transferred, buf->length());
-  }
 
   if (!ec) {
     switch (CurrentState()) {
       case state_handshake:
         SetState(state_stream);
         OnConnect();
-        DCHECK_EQ(buf->length(), bytes_transferred);
+        DCHECK_EQ(buf->size(), (int)bytes_transferred);
         ABSL_FALLTHROUGH_INTENDED;
         /* fall through */
       case state_stream:
-        DCHECK_EQ(bytes_transferred, buf->length());
+        DCHECK_EQ(buf->size(), (int)bytes_transferred);
         if (bytes_transferred) {
           OnStreamRead(buf);
           return;
@@ -1683,12 +1692,12 @@ void ServerConnection::OnConnect() {
   } else
 #endif
       if (downlink_->https_fallback() && http_is_connect_) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(http_connect_reply_.data(), http_connect_reply_.size());
-    OnDownstreamWrite(buf);
+    auto buf = GrowableIOBuffer::copyBuffer(http_connect_reply_.data(), http_connect_reply_.size());
+    OnDownstreamWrite(buf.get());
   }
 }
 
-void ServerConnection::OnStreamRead(std::shared_ptr<IOBuf> buf) {
+void ServerConnection::OnStreamRead(GrowableIOBuffer* buf) {
   OnUpstreamWrite(buf);
 }
 
@@ -1762,7 +1771,7 @@ void ServerConnection::OnDownstreamWriteFlush() {
   }
 }
 
-void ServerConnection::OnDownstreamWrite(std::shared_ptr<IOBuf> buf) {
+void ServerConnection::OnDownstreamWrite(GrowableIOBuffer* buf) {
   if (buf && !buf->empty()) {
     downstream_.push_back(buf);
   }
@@ -1776,7 +1785,7 @@ void ServerConnection::OnUpstreamWriteFlush() {
   OnUpstreamWrite(nullptr);
 }
 
-void ServerConnection::OnUpstreamWrite(std::shared_ptr<IOBuf> buf) {
+void ServerConnection::OnUpstreamWrite(GrowableIOBuffer* buf) {
   if (buf && !buf->empty()) {
     upstream_.push_back(buf);
   }
@@ -1870,20 +1879,20 @@ void ServerConnection::disconnected(asio::error_code ec) {
   }
 }
 
-void ServerConnection::EncryptData(IoQueue<>* queue, std::shared_ptr<IOBuf> plaintext) {
-  std::shared_ptr<IOBuf> cipherbuf;
+void ServerConnection::EncryptData(IoQueue<>* queue, scoped_refptr<GrowableIOBuffer> plaintext) {
+  scoped_refptr<GrowableIOBuffer> cipherbuf;
   if (queue->empty()) {
-    cipherbuf = IOBuf::create(SOCKET_DEBUF_SIZE);
+    cipherbuf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
     queue->push_back(cipherbuf);
   } else {
     cipherbuf = queue->back();
   }
-  cipherbuf->reserve(0, plaintext->length() + (plaintext->length() / SS_FRAME_SIZE + 1) * 100);
+  // cipherbuf->reserve(0, plaintext->length() + (plaintext->length() / SS_FRAME_SIZE + 1) * 100);
 
-  size_t plaintext_offset = 0;
-  while (plaintext_offset < plaintext->length()) {
-    size_t plaintext_size = std::min<int>(plaintext->length() - plaintext_offset, SS_FRAME_SIZE);
-    encoder_->encrypt(plaintext->data() + plaintext_offset, plaintext_size, cipherbuf);
+  int plaintext_offset = 0;
+  while (plaintext_offset < plaintext->size()) {
+    size_t plaintext_size = std::min<int>(plaintext->size() - plaintext_offset, SS_FRAME_SIZE);
+    encoder_->encrypt(plaintext->bytes() + plaintext_offset, plaintext_size, cipherbuf.get());
     plaintext_offset += plaintext_size;
   }
 }

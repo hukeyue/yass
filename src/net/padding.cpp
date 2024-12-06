@@ -12,22 +12,29 @@
 /// p[0] << 8 + p[1]       p[2]           *         *
 ABSL_FLAG(bool, padding_support, true, "Enable padding support");
 
+static char kEmptyPadding[net::kMaxPaddingSize] = {};
+
 namespace net {
 
-void AddPadding(std::shared_ptr<net::IOBuf> buf) {
-  size_t payload_size = buf->length();
-  DCHECK_LE(payload_size, 0xffffu);
+scoped_refptr<GrowableIOBuffer> AddPadding(IOBuffer* buf) {
+  auto ret = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  DCHECK_LE(buf->size(), 0xffff);
+  uint16_t payload_size = buf->size();
   size_t padding_size = gurl_base::RandInt(0, kMaxPaddingSize);
-  buf->reserve(kPaddingHeaderSize, padding_size);
 
-  uint8_t* p = buf->mutable_buffer();
+  ret->SetCapacity(kPaddingHeaderSize + payload_size + padding_size);
+
+  uint8_t p[kPaddingHeaderSize];
   p[0] = payload_size >> 8;
   p[1] = payload_size & 0xff;
   p[2] = padding_size;
-  memset(buf->mutable_tail(), 0, padding_size);
+  memcpy(ret->data(), p, sizeof(p));
+  memcpy(ret->data() + kPaddingHeaderSize, buf->data(), payload_size);
+  memset(ret->data() + kPaddingHeaderSize + payload_size, 0, padding_size);
 
-  buf->prepend(kPaddingHeaderSize);
-  buf->append(padding_size);
+  DCHECK_EQ(ret->size(), int(kPaddingHeaderSize + payload_size + padding_size));
+
+  return ret;
 }
 
 /// <payload_length> <padding length> <payload> <padding>
@@ -35,28 +42,29 @@ void AddPadding(std::shared_ptr<net::IOBuf> buf) {
 /// p[0] << 8 + p[1]       p[2]           *         *
 /// output:
 ///                                       *
-std::shared_ptr<net::IOBuf> RemovePadding(std::shared_ptr<net::IOBuf> buf, asio::error_code& ec) {
-  if (buf->length() < kPaddingHeaderSize) {
+scoped_refptr<GrowableIOBuffer> RemovePadding(GrowableIOBuffer* buf, asio::error_code& ec) {
+  if (buf->size() < kPaddingHeaderSize) {
     ec = asio::error::try_again;
     return nullptr;
   }
-  const uint8_t* p = buf->data();
-  size_t payload_size = (p[0] << 8) + p[1];
+  const uint8_t* p = buf->bytes();
+  int payload_size = (p[0] << 8) + p[1];
   if (payload_size == 0) {
     ec = asio::error::invalid_argument;
     return nullptr;
   }
-  size_t padding_size = p[2];
-  if (buf->length() < kPaddingHeaderSize + payload_size + padding_size) {
+  int padding_size = p[2];
+  if (buf->size() < kPaddingHeaderSize + payload_size + padding_size) {
     ec = asio::error::try_again;
     return nullptr;
   }
-  buf->trimStart(kPaddingHeaderSize);
-  std::shared_ptr<net::IOBuf> result = net::IOBuf::copyBuffer(buf->data(), payload_size);
-  buf->trimStart(payload_size + padding_size);
-  buf->retreat(kPaddingHeaderSize + payload_size + padding_size);
   ec = asio::error_code();
-  return result;
+  buf->set_offset(buf->offset() + kPaddingHeaderSize);
+  auto ret = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  ret->SetCapacity(payload_size);
+  memcpy(ret->data(), buf->data(), payload_size);
+  buf->set_offset(buf->offset() + payload_size + padding_size);
+  return ret;
 }
 
 }  // namespace net

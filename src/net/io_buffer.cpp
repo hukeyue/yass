@@ -26,6 +26,12 @@ IOBuffer::IOBuffer(char* data, size_t size) : data_(data), size_(size) {
   AssertValidBufferSize(size);
 }
 
+IOBuffer::IOBuffer(gurl_base::span<char> data) : data_(data.data()), size_(data.size()) {
+  AssertValidBufferSize(size_);
+}
+
+IOBuffer::IOBuffer(gurl_base::span<uint8_t> data) : data_(reinterpret_cast<char*>(data.data())), size_(data.size()) {}
+
 IOBuffer::~IOBuffer() = default;
 
 IOBufferWithSize::IOBufferWithSize() = default;
@@ -94,6 +100,12 @@ GrowableIOBuffer::GrowableIOBuffer() = default;
 
 void GrowableIOBuffer::SetCapacity(int capacity) {
   CHECK_GE(capacity, 0);
+  // small optimization on shrink buffer
+  if (capacity <= capacity_) {
+    capacity_ = capacity;
+    set_offset(offset_);
+    return;
+  }
   // this will get reset in `set_offset`.
   data_ = nullptr;
   size_ = 0;
@@ -124,6 +136,33 @@ char* GrowableIOBuffer::StartOfBuffer() {
   return real_data_.get();
 }
 
+const char* GrowableIOBuffer::StartOfBuffer() const {
+  return real_data_.get();
+}
+
+gurl_base::span<uint8_t> GrowableIOBuffer::everything() {
+  return gurl_base::as_writable_bytes(gurl_base::span(real_data_.get(), gurl_base::checked_cast<size_t>(capacity_)));
+}
+
+gurl_base::span<const uint8_t> GrowableIOBuffer::everything() const {
+  return gurl_base::as_bytes(gurl_base::span(real_data_.get(), gurl_base::checked_cast<size_t>(capacity_)));
+}
+
+gurl_base::span<uint8_t> GrowableIOBuffer::span_before_offset() {
+  return everything().first(gurl_base::checked_cast<size_t>(offset_));
+}
+
+gurl_base::span<const uint8_t> GrowableIOBuffer::span_before_offset() const {
+  return everything().first(gurl_base::checked_cast<size_t>(offset_));
+}
+
+// added twice
+void GrowableIOBuffer::appendBytesAtEnd(const void* bytes, int length) {
+  int old_capacity = capacity();
+  SetCapacity(old_capacity + length);
+  memcpy(StartOfBuffer() + old_capacity, bytes, length);
+}
+
 GrowableIOBuffer::~GrowableIOBuffer() {
   data_ = nullptr;
 }
@@ -141,6 +180,12 @@ PickledIOBuffer::~PickledIOBuffer() {
 }
 
 WrappedIOBuffer::WrappedIOBuffer(const char* data, size_t size) : IOBuffer(const_cast<char*>(data), size) {}
+
+WrappedIOBuffer::WrappedIOBuffer(gurl_base::span<const char> data)
+    : IOBuffer(gurl_base::make_span(const_cast<char*>(data.data()), data.size())) {}
+
+WrappedIOBuffer::WrappedIOBuffer(gurl_base::span<const uint8_t> data)
+    : IOBuffer(gurl_base::make_span(const_cast<uint8_t*>(data.data()), data.size())) {}
 
 WrappedIOBuffer::~WrappedIOBuffer() = default;
 

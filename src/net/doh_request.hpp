@@ -68,7 +68,7 @@ class DoHRequest : public gurl_base::RefCountedThreadSafe<DoHRequest> {
     Read_Body,
   };
   ReadState read_state_ = Read_Header;
-  size_t body_length_ = 0;
+  int body_length_ = 0;
 
  private:
   asio::io_context& io_context_;
@@ -88,8 +88,8 @@ class DoHRequest : public gurl_base::RefCountedThreadSafe<DoHRequest> {
   int port_;
   std::string service_;
   AsyncResolveCallback cb_;
-  std::shared_ptr<IOBuf> buf_;
-  std::shared_ptr<IOBuf> recv_buf_;
+  scoped_refptr<GrowableIOBuffer> send_buf_;
+  scoped_refptr<GrowableIOBuffer> recv_buf_;
 };
 
 }  // namespace net

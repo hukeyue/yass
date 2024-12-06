@@ -15,8 +15,8 @@ constexpr const int kFirstPaddings = 8;
 constexpr const int kPaddingHeaderSize = 3;
 constexpr const int kMaxPaddingSize = 255;
 
-void AddPadding(std::shared_ptr<IOBuf> buf);
-std::shared_ptr<IOBuf> RemovePadding(std::shared_ptr<IOBuf> buf, asio::error_code& ec);
+scoped_refptr<GrowableIOBuffer> AddPadding(IOBuffer* buf);
+scoped_refptr<GrowableIOBuffer> RemovePadding(GrowableIOBuffer* buf, asio::error_code& ec);
 
 }  // namespace net
 

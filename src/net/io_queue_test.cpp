@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "core/utils.hpp"
+#include "net/io_buffer.hpp"
 #include "net/io_queue.hpp"
-#include "net/iobuf.hpp"
 
 using namespace net;
 
@@ -17,12 +17,12 @@ static constexpr unsigned int kBufferSize = 4096u;
 static constexpr const char kBuffer[kBufferSize * 10] = {};
 
 TEST(IoQueueTest, Construct) {
-  IoQueue<IOBuf, kDefaultDepth> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth> queue;
   ASSERT_TRUE(queue.empty());
 }
 
 TEST(IoQueueTest, PushBackAndPopFrontVariant0) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     queue.push_back(kBuffer, kBufferSize);
   }
@@ -40,9 +40,9 @@ TEST(IoQueueTest, PushBackAndPopFrontVariant0) {
 }
 
 TEST(IoQueueTest, PushBackAndPopFrontVariant1) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
-    queue.push_back(IOBuf::copyBuffer(std::string(kBuffer, kBufferSize)));
+    queue.push_back(GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize));
   }
   ASSERT_EQ(kDefaultDepth, queue.length());
   ASSERT_EQ(kDefaultDepth * kBufferSize, queue.byte_length());
@@ -58,7 +58,7 @@ TEST(IoQueueTest, PushBackAndPopFrontVariant1) {
 }
 
 TEST(IoQueueTest, MoveConstruct) {
-  IoQueue<IOBuf, kDefaultDepth * 2> pending_data;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> pending_data;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     pending_data.push_back(kBuffer, kBufferSize);
   }
@@ -68,7 +68,7 @@ TEST(IoQueueTest, MoveConstruct) {
 }
 
 TEST(IoQueueTest, MoveConstructOverInlinedStorage) {
-  IoQueue<IOBuf, kDefaultDepth * 2> pending_data;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> pending_data;
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
     pending_data.push_back(kBuffer, kBufferSize);
   }
@@ -78,7 +78,7 @@ TEST(IoQueueTest, MoveConstructOverInlinedStorage) {
 }
 
 TEST(IoQueueTest, MoveAssignment) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue, pending_data;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue, pending_data;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     queue.push_back(kBuffer, kBufferSize);
   }
@@ -91,7 +91,7 @@ TEST(IoQueueTest, MoveAssignment) {
 }
 
 TEST(IoQueueTest, MoveAssignmentLhsOverInlinedStorage) {
-  IoQueue<IOBuf, kDefaultDepth * 2> pending_data, queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> pending_data, queue;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     pending_data.push_back(kBuffer, kBufferSize);
   }
@@ -104,7 +104,7 @@ TEST(IoQueueTest, MoveAssignmentLhsOverInlinedStorage) {
 }
 
 TEST(IoQueueTest, MoveAssignmentRhsOverInlinedStorage) {
-  IoQueue<IOBuf, kDefaultDepth * 2> pending_data, queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> pending_data, queue;
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
     pending_data.push_back(kBuffer, kBufferSize);
   }
@@ -117,7 +117,7 @@ TEST(IoQueueTest, MoveAssignmentRhsOverInlinedStorage) {
 }
 
 TEST(IoQueueTest, MoveAssignmentBothOverInlinedStorage) {
-  IoQueue<IOBuf, kDefaultDepth * 2> pending_data, queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> pending_data, queue;
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
     pending_data.push_back(kBuffer, kBufferSize);
   }
@@ -130,7 +130,7 @@ TEST(IoQueueTest, MoveAssignmentBothOverInlinedStorage) {
 }
 
 TEST(IoQueueTest, Clear) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     queue.push_back(kBuffer, kBufferSize);
   }
@@ -141,7 +141,7 @@ TEST(IoQueueTest, Clear) {
 }
 
 TEST(IoQueueTest, ClearOverInlinedStorage) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
     queue.push_back(kBuffer, kBufferSize);
   }
@@ -151,7 +151,7 @@ TEST(IoQueueTest, ClearOverInlinedStorage) {
 }
 
 TEST(IoQueueTest, SwapEmptyWith) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue, empty_queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue, empty_queue;
 
   ASSERT_TRUE(queue.empty());
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
@@ -168,7 +168,7 @@ TEST(IoQueueTest, SwapEmptyWith) {
 }
 
 TEST(IoQueueTest, SwapWithEmpty) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue, empty_queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue, empty_queue;
 
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     empty_queue.push_back(kBuffer, kBufferSize);
@@ -184,7 +184,7 @@ TEST(IoQueueTest, SwapWithEmpty) {
 }
 
 TEST(IoQueueTest, SwapNonEmpty) {
-  IoQueue<IOBuf, kDefaultDepth * 10> lhs, rhs;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 10> lhs, rhs;
 
   for (unsigned int i = 0u; i < kDefaultDepth * 3; ++i) {
     lhs.push_back(kBuffer, kBufferSize * 5);
@@ -203,9 +203,9 @@ TEST(IoQueueTest, SwapNonEmpty) {
 }
 
 TEST(IoQueueTest, EnlargeVariant0) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   ASSERT_TRUE(queue.empty());
-  std::vector<std::shared_ptr<IOBuf>> v;
+  std::vector<scoped_refptr<GrowableIOBuffer>> v;
 
   // push idx_ to kDefaultDepth - 1
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
@@ -215,7 +215,7 @@ TEST(IoQueueTest, EnlargeVariant0) {
   ASSERT_TRUE(queue.empty());
 
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(kBuffer, kBufferSize);
+    scoped_refptr<GrowableIOBuffer> buf = GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize);
     v.push_back(buf);
     queue.push_back(buf);
   }
@@ -231,14 +231,14 @@ TEST(IoQueueTest, EnlargeVariant0) {
 }
 
 TEST(IoQueueTest, EnlargeVariant1) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   ASSERT_TRUE(queue.empty());
-  std::vector<std::shared_ptr<IOBuf>> v;
+  std::vector<scoped_refptr<GrowableIOBuffer>> v;
 
   // push idx_ to 0
 
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(kBuffer, kBufferSize);
+    scoped_refptr<GrowableIOBuffer> buf = GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize);
     v.push_back(buf);
     queue.push_back(buf);
   }
@@ -254,9 +254,9 @@ TEST(IoQueueTest, EnlargeVariant1) {
 }
 
 TEST(IoQueueTest, EnlargeVariant2) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   ASSERT_TRUE(queue.empty());
-  std::vector<std::shared_ptr<IOBuf>> v;
+  std::vector<scoped_refptr<GrowableIOBuffer>> v;
 
   // push idx_ to kDefaultDepth * 2 - 1
   for (unsigned int i = 0u; i < kDefaultDepth * 2 - 1; ++i) {
@@ -267,7 +267,7 @@ TEST(IoQueueTest, EnlargeVariant2) {
   ASSERT_TRUE(queue.empty());
 
   for (unsigned int i = 0u; i < kDefaultDepth * 2; ++i) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(kBuffer, kBufferSize);
+    scoped_refptr<GrowableIOBuffer> buf = GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize);
     v.push_back(buf);
     queue.push_back(buf);
   }
@@ -283,9 +283,9 @@ TEST(IoQueueTest, EnlargeVariant2) {
 }
 
 TEST(IoQueueTest, EnlargeTwice) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   ASSERT_TRUE(queue.empty());
-  std::vector<std::shared_ptr<IOBuf>> v;
+  std::vector<scoped_refptr<GrowableIOBuffer>> v;
 
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     queue.push_back(kBuffer, kBufferSize);
@@ -293,7 +293,7 @@ TEST(IoQueueTest, EnlargeTwice) {
   }
 
   for (unsigned int i = 0u; i < kDefaultDepth * 4; ++i) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(kBuffer, kBufferSize);
+    scoped_refptr<GrowableIOBuffer> buf = GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize);
     v.push_back(buf);
     queue.push_back(buf);
   }
@@ -309,9 +309,9 @@ TEST(IoQueueTest, EnlargeTwice) {
 }
 
 TEST(IoQueueTest, EnlargeThird) {
-  IoQueue<IOBuf, kDefaultDepth * 2> queue;
+  IoQueue<GrowableIOBuffer, kDefaultDepth * 2> queue;
   ASSERT_TRUE(queue.empty());
-  std::vector<std::shared_ptr<IOBuf>> v;
+  std::vector<scoped_refptr<GrowableIOBuffer>> v;
 
   for (unsigned int i = 0u; i < kDefaultDepth; ++i) {
     queue.push_back(kBuffer, kBufferSize);
@@ -319,7 +319,7 @@ TEST(IoQueueTest, EnlargeThird) {
   }
 
   for (unsigned int i = 0u; i < kDefaultDepth * 8; ++i) {
-    std::shared_ptr<IOBuf> buf = IOBuf::copyBuffer(kBuffer, kBufferSize);
+    scoped_refptr<GrowableIOBuffer> buf = GrowableIOBuffer::copyBuffer(kBuffer, kBufferSize);
     v.push_back(buf);
     queue.push_back(buf);
   }

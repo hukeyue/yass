@@ -8,8 +8,8 @@
 #include "net/channel.hpp"
 #include "net/cipher.hpp"
 #include "net/connection.hpp"
+#include "net/io_buffer.hpp"
 #include "net/io_queue.hpp"
-#include "net/iobuf.hpp"
 #include "net/protocol.hpp"
 #include "net/ss.hpp"
 #include "net/ss_request.hpp"
@@ -55,16 +55,16 @@ class DataFrameSource : public http2::adapter::DataFrameSource {
     if (chunks_.empty())
       return {kBlocked, last_frame_};
 
-    bool finished = (chunks_.size() <= 1) && (chunks_.front()->length() <= max_length) && last_frame_;
+    bool finished = (chunks_.size() <= 1) && (chunks_.front()->size() <= (int)max_length) && last_frame_;
 
-    return {std::min(chunks_.front()->length(), max_length), finished};
+    return {std::min<int>(chunks_.front()->size(), max_length), finished};
   }
 
   bool Send(absl::string_view frame_header, size_t payload_length) override;
 
   bool send_fin() const override { return true; }
 
-  void AddChunk(std::shared_ptr<IOBuf> chunk) { chunks_.push_back(std::move(chunk)); }
+  void AddChunk(scoped_refptr<GrowableIOBuffer> chunk) { chunks_.push_back(std::move(chunk)); }
   void set_last_frame(bool last_frame) { last_frame_ = last_frame; }
   void SetSendCompletionCallback(std::function<void()> callback) { send_completion_callback_ = std::move(callback); }
 
@@ -73,7 +73,7 @@ class DataFrameSource : public http2::adapter::DataFrameSource {
  private:
   ServerConnection* const connection_;
   const StreamId stream_id_;
-  std::deque<std::shared_ptr<IOBuf>> chunks_;
+  std::deque<scoped_refptr<GrowableIOBuffer>> chunks_;
   bool last_frame_ = false;
   std::function<void()> send_completion_callback_;
 };
@@ -178,7 +178,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
 
  public:
   // cipher_visitor_interface
-  bool on_received_data(std::shared_ptr<IOBuf> buf) override;
+  bool on_received_data(GrowableIOBuffer* buf) override;
   void on_protocol_error() override;
 
 #ifdef HAVE_QUICHE
@@ -255,7 +255,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   void ReadHandshakeViaSocks();
   void OnReadHandshakeViaSocks();
   void WriteHandshakeResponse();
-  std::shared_ptr<IOBuf> handshake_pending_buf_;
+  scoped_refptr<GrowableIOBuffer> handshake_pending_buf_;
   /// Start to read handshake request (via socks5)
   void WriteMethodSelectResponse();
   void ReadSocks5UsernamePasswordAuth();
@@ -273,20 +273,20 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// Write remaining buffers to stream
   void WriteStreamInPipe();
   /// Get next remaining buffer to stream
-  std::shared_ptr<IOBuf> GetNextDownstreamBuf(asio::error_code& ec,
-                                              size_t* bytes_transferred,
-                                              bool* downstream_blocked);
+  scoped_refptr<GrowableIOBuffer> GetNextDownstreamBuf(asio::error_code& ec,
+                                                       size_t* bytes_transferred,
+                                                       bool* downstream_blocked);
 
   /// Write remaining buffers to channel
   void WriteUpstreamInPipe();
   /// Get next remaining buffer to channel
-  std::shared_ptr<IOBuf> GetNextUpstreamBuf(asio::error_code& ec, size_t* bytes_transferred);
+  scoped_refptr<GrowableIOBuffer> GetNextUpstreamBuf(asio::error_code& ec, size_t* bytes_transferred);
 
   /// Process the recevied data
   /// \param buf pointer to received buffer
   /// \param error the error state
   /// \param bytes_transferred transferred bytes
-  void ProcessReceivedData(std::shared_ptr<IOBuf> buf, asio::error_code ec, size_t bytes_transferred);
+  void ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code ec, size_t bytes_transferred);
   /// Process the sent data
   /// \param error the error state
   /// \param bytes_transferred transferred bytes
@@ -305,7 +305,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   bool padding_support_ = false;
   int num_padding_send_ = 0;
   int num_padding_recv_ = 0;
-  std::shared_ptr<IOBuf> padding_in_middle_buf_;
+  scoped_refptr<GrowableIOBuffer> padding_in_middle_buf_;
 
   std::string remote_domain() const {
     std::ostringstream ss;
@@ -322,7 +322,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   void OnConnect();
 
   /// handle the read data from stream read event (downstream)
-  void OnStreamRead(std::shared_ptr<IOBuf> buf);
+  void OnStreamRead(GrowableIOBuffer* buf);
 
   /// handle the written data from stream write event (downstream)
   void OnStreamWrite();
@@ -334,16 +334,16 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   void OnDownstreamWriteFlush();
 
   /// write the given data to downstream
-  void OnDownstreamWrite(std::shared_ptr<IOBuf> buf);
+  void OnDownstreamWrite(GrowableIOBuffer* buf);
 
   /// flush upstream and try to write if any in queue
   void OnUpstreamWriteFlush();
 
   /// write the given data to upstream
-  void OnUpstreamWrite(std::shared_ptr<IOBuf> buf);
+  void OnUpstreamWrite(GrowableIOBuffer* buf);
 
   /// buffer of handshake header
-  std::shared_ptr<IOBuf> handshake_;
+  scoped_refptr<GrowableIOBuffer> handshake_;
   /// the queue to write upstream
   IoQueue<> upstream_;
   /// the flag to mark current write
@@ -390,7 +390,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
 
  private:
   /// encrypt data
-  void EncryptData(IoQueue<>* queue, std::shared_ptr<IOBuf> plaintext);
+  void EncryptData(IoQueue<>* queue, scoped_refptr<GrowableIOBuffer> plaintext);
 
   /// encode cipher to perform data encoder for upstream
   std::unique_ptr<cipher> encoder_;

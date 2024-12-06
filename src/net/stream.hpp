@@ -13,6 +13,7 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "net/asio.hpp"
+#include "net/io_buffer.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
 #include "net/resolver.hpp"
@@ -285,7 +286,7 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
     });
   }
 
-  size_t read_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
+  size_t read_some(GrowableIOBuffer* buf, asio::error_code& ec) {
     DCHECK(!closed_ && "I/O on closed upstream connection");
     size_t read = s_read_some(buf, ec);
     rbytes_transferred_ += read;
@@ -358,7 +359,7 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
     });
   }
 
-  size_t write_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
+  size_t write_some(GrowableIOBuffer* buf, asio::error_code& ec) {
     DCHECK(!closed_ && "I/O on closed upstream connection");
     size_t written = s_write_some(buf, ec);
     wbytes_transferred_ += written;
@@ -524,14 +525,14 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
  protected:
   virtual void s_wait_read(handle_t&& cb) { socket_.async_wait(asio::ip::tcp::socket::wait_read, std::move(cb)); }
 
-  virtual size_t s_read_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-    return socket_.read_some(tail_buffer(*buf), ec);
+  virtual size_t s_read_some(GrowableIOBuffer* buf, asio::error_code& ec) {
+    return socket_.read_some(tail_buffer(buf), ec);
   }
 
   virtual void s_wait_write(handle_t&& cb) { socket_.async_wait(asio::ip::tcp::socket::wait_write, std::move(cb)); }
 
-  virtual size_t s_write_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) {
-    return socket_.write_some(const_buffer(*buf), ec);
+  virtual size_t s_write_some(GrowableIOBuffer* buf, asio::error_code& ec) {
+    return socket_.write_some(const_buffer(buf), ec);
   }
 
   virtual void s_async_shutdown(handle_t&& cb) {

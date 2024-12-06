@@ -25,7 +25,7 @@
 #include "config/config.hpp"
 #include "feature.h"
 #include "net/cipher.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 #include "server/server_server.hpp"
 #include "version.h"
 
@@ -40,10 +40,10 @@ using namespace std::string_view_literals;
 
 namespace {
 
-IOBuf g_send_buffer;
+scoped_refptr<GrowableIOBuffer> g_send_buffer;
 std::mutex g_in_provider_mutex;
 std::mutex g_in_consumer_mutex;
-std::unique_ptr<IOBuf> g_recv_buffer;
+scoped_refptr<GrowableIOBuffer> g_recv_buffer;
 constexpr const std::string_view kConnectResponse = "HTTP/1.1 200 Connection established\r\n\r\n";
 const int kIOLoopCount = 1;
 
@@ -84,16 +84,16 @@ kMmiIVi25B8z
 )";
 
 void GenerateRandContent(int size) {
-  g_send_buffer.clear();
-  g_send_buffer.reserve(0, size);
+  g_send_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  g_send_buffer->SetCapacity(size);
 
-  gurl_base::RandBytes(g_send_buffer.mutable_data(), std::min(256, size));
+  gurl_base::RandBytes(g_send_buffer->data(), std::min(256, size));
   for (int i = 1; i < size / 256; ++i) {
-    memcpy(g_send_buffer.mutable_data() + 256 * i, g_send_buffer.data(), 256);
+    memcpy(g_send_buffer->data() + 256 * i, g_send_buffer->data(), 256);
   }
-  g_send_buffer.append(size);
 
-  g_recv_buffer = IOBuf::create(size);
+  g_recv_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+  g_recv_buffer->SetCapacity(size);
 }
 
 class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<ContentProviderConnection>, public Connection {
@@ -151,12 +151,12 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     scoped_refptr<ContentProviderConnection> self(this);
     g_in_provider_mutex.lock();
 
-    asio::async_write(downlink_->socket_, const_buffer(g_send_buffer),
+    asio::async_write(downlink_->socket_, const_buffer(g_send_buffer.get()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec.value() == asio::error::bad_descriptor || ec.value() == asio::error::operation_aborted) {
                           goto done;
                         }
-                        if (ec || bytes_transferred != g_send_buffer.length()) {
+                        if (ec || (int)bytes_transferred != g_send_buffer->size()) {
                           LOG(WARNING) << "Connection (content-provider) Failed to transfer data: " << ec;
                         } else {
                           VLOG(1) << "Connection (content-provider) written: " << bytes_transferred << " bytes";
@@ -169,7 +169,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                         shutdown(ec);
                       });
 
-    asio::async_read(downlink_->socket_, mutable_buffer(*g_recv_buffer),
+    asio::async_read(downlink_->socket_, mutable_buffer(g_recv_buffer.get()),
                      [this, self](asio::error_code ec, size_t bytes_transferred) {
                        if (ec.value() == asio::error::bad_descriptor || ec.value() == asio::error::operation_aborted) {
                          goto done;
@@ -177,12 +177,12 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                        if (ec.value() == asio::error::eof) {
                          goto done;
                        }
-                       if (ec || bytes_transferred != g_send_buffer.length()) {
+                       if (ec || (int)bytes_transferred != g_send_buffer->size()) {
                          LOG(WARNING) << "Connection (content-provider) Failed to transfer data: " << ec;
                        } else {
                          VLOG(1) << "Connection (content-provider) read: " << bytes_transferred << " bytes";
                        }
-                       g_recv_buffer->append(bytes_transferred);
+                       g_recv_buffer->set_offset(g_recv_buffer->offset() + bytes_transferred);
                      done:
                        if (done_[1]) {
                          return;
@@ -235,17 +235,15 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 using ContentProviderConnectionFactory = ConnectionFactory<ContentProviderConnection>;
 using ContentProviderServer = ContentServer<ContentProviderConnectionFactory>;
 
-void GenerateConnectRequest(std::string_view host, int port_num, IOBuf* buf) {
-  std::string request_header = absl::StrFormat(
+void GenerateConnectRequest(std::string_view host, int port_num, GrowableIOBuffer* buf) {
+  std::string req_header = absl::StrFormat(
       "CONNECT %s:%d HTTP/1.1\r\n"
       "Host: packages.endpointdev.com:443\r\n"
       "User-Agent: curl/7.77.0\r\n"
       "Proxy-Connection: Close\r\n"
       "\r\n",
       host, port_num);
-  buf->reserve(request_header.size(), 0);
-  memcpy(buf->mutable_buffer(), request_header.c_str(), request_header.size());
-  buf->prepend(request_header.size());
+  buf->appendBytesAtEnd(req_header.c_str(), req_header.size());
 }
 
 #define XX(num, name, string)                                   \
@@ -339,25 +337,25 @@ class SsEndToEndBM : public benchmark::Fixture {
     CHECK(!ec) << "Connection (content-consumer) connect failure " << ec;
     SetSocketTcpNoDelay(&s, ec);
     CHECK(!ec) << "Connection (content-consumer) set TCP_NODELAY failure: " << ec;
-    auto request_buf = IOBuf::create(SOCKET_BUF_SIZE);
+    auto request_buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
     GenerateConnectRequest("localhost"sv, content_provider_endpoint_.port(), request_buf.get());
 
-    size_t written = asio::write(s, const_buffer(*request_buf), ec);
+    size_t written = asio::write(s, const_buffer(request_buf.get()), ec);
     VLOG(1) << "Connection (content-consumer) written: " << written << " bytes";
     CHECK(!ec) << "Connection (content-consumer) write failure " << ec;
 
     constexpr const int kConnectResponseLength = kConnectResponse.size();
-    IOBuf response_buf;
-    response_buf.reserve(0, kConnectResponseLength);
-    size_t read = asio::read(s, asio::mutable_buffer(response_buf.mutable_tail(), kConnectResponseLength), ec);
+    auto response_buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    response_buf->SetCapacity(kConnectResponseLength);
+    size_t read = asio::read(s, asio::mutable_buffer(response_buf->bytes(), kConnectResponseLength), ec);
     VLOG(1) << "Connection (content-consumer) read: " << read << " bytes";
-    response_buf.append(read);
+    response_buf->SetCapacity(read);
     CHECK_EQ((int)read, kConnectResponseLength) << "Partial read";
 
 #if 0
     const char* buffer = reinterpret_cast<const char*>(response_buf.data());
 #endif
-    size_t buffer_length = response_buf.length();
+    size_t buffer_length = response_buf->size();
     CHECK_EQ((int)buffer_length, kConnectResponseLength) << "Partial read";
   }
 
@@ -375,8 +373,8 @@ class SsEndToEndBM : public benchmark::Fixture {
     auto work_guard =
         std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-    IOBuf resp_buffer;
-    resp_buffer.reserve(0, g_send_buffer.length());
+    auto resp_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    resp_buffer->SetCapacity(g_send_buffer->capacity());
 
     //
     // START
@@ -384,15 +382,15 @@ class SsEndToEndBM : public benchmark::Fixture {
     auto start = std::chrono::high_resolution_clock::now();
 
     VLOG(1) << "Connection (content-consumer) start to do IO";
-    asio::async_write(s, const_buffer(g_send_buffer), [work_guard](asio::error_code ec, size_t written) {
+    asio::async_write(s, const_buffer(g_send_buffer.get()), [work_guard](asio::error_code ec, size_t written) {
       VLOG(1) << "Connection (content-consumer) written: " << written << " bytes";
       CHECK(!ec) << "Connection (content-consumer) write failure " << ec;
-      CHECK_EQ(written, g_send_buffer.length()) << "Partial written";
+      CHECK_EQ((int)written, g_send_buffer->size()) << "Partial written";
     });
 
-    asio::async_read(s, tail_buffer(resp_buffer), [work_guard, &resp_buffer](asio::error_code ec, size_t read) {
+    asio::async_read(s, tail_buffer(resp_buffer.get()), [work_guard, &resp_buffer](asio::error_code ec, size_t read) {
       VLOG(1) << "Connection (content-consumer) read: " << read << " bytes";
-      resp_buffer.append(read);
+      resp_buffer->set_offset(resp_buffer->offset() + read);
       CHECK(!ec) << "Connection (content-consumer) read failure " << ec;
     });
     work_guard.reset();
@@ -401,13 +399,12 @@ class SsEndToEndBM : public benchmark::Fixture {
 #if 0
     const char* buffer = reinterpret_cast<const char*>(resp_buffer.data());
 #endif
-    size_t buffer_length = resp_buffer.length();
-    CHECK_EQ(buffer_length, g_send_buffer.length()) << "Partial read";
+    CHECK_EQ(0, resp_buffer->size()) << "Partial read";
 
     {
       std::lock_guard<std::mutex> lk(g_in_provider_mutex);
-      CHECK_EQ(g_recv_buffer->length(), g_send_buffer.length()) << "Partial read";
-      g_recv_buffer->clear();
+      CHECK_EQ(0, g_recv_buffer->size()) << "Partial read";
+      g_recv_buffer->set_offset(0);
     }
 
     //
@@ -564,25 +561,24 @@ BENCHMARK_DEFINE_F(ASIOFixture, PlainIO)(benchmark::State& state) {
     auto work_guard =
         std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-    IOBuf req_buffer;
-    req_buffer.reserve(0, g_send_buffer.length());
-    memcpy(req_buffer.mutable_tail(), g_send_buffer.data(), g_send_buffer.length());
-    req_buffer.append(g_send_buffer.length());
+    auto req_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    req_buffer->SetCapacity(g_send_buffer->size());
+    memcpy(req_buffer->data(), g_send_buffer->data(), g_send_buffer->size());
 
-    IOBuf resp_buffer;
-    resp_buffer.reserve(0, g_send_buffer.length());
+    auto resp_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+    resp_buffer->SetCapacity(g_send_buffer->size());
 
     //
     // START
     //
     auto start = std::chrono::high_resolution_clock::now();
 
-    asio::async_write(s1, const_buffer(req_buffer), [work_guard](asio::error_code ec, size_t written) {
+    asio::async_write(s1, const_buffer(req_buffer.get()), [work_guard](asio::error_code ec, size_t written) {
       CHECK(!ec) << "Connection (content-provider) written failure " << ec;
       VLOG(1) << "Connection (content-provider) written: " << written;
     });
 
-    asio::async_read(s2, mutable_buffer(*g_recv_buffer), [work_guard](asio::error_code ec, size_t read) {
+    asio::async_read(s2, mutable_buffer(g_recv_buffer.get()), [work_guard](asio::error_code ec, size_t read) {
       CHECK(!ec) << "Connection (content-provider) read failure " << ec;
       VLOG(1) << "Connection (content-provider) read: " << read;
     });

@@ -53,11 +53,11 @@ class ssl_stream : public stream {
  protected:
   void s_wait_read(handle_t&& cb) override { ssl_socket_->WaitRead(std::move(cb)); }
 
-  size_t s_read_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) override { return ssl_socket_->Read(buf, ec); }
+  size_t s_read_some(GrowableIOBuffer* buf, asio::error_code& ec) override { return ssl_socket_->Read(buf, ec); }
 
   void s_wait_write(handle_t&& cb) override { ssl_socket_->WaitWrite(std::move(cb)); }
 
-  size_t s_write_some(std::shared_ptr<IOBuf> buf, asio::error_code& ec) override { return ssl_socket_->Write(buf, ec); }
+  size_t s_write_some(GrowableIOBuffer* buf, asio::error_code& ec) override { return ssl_socket_->Write(buf, ec); }
 
   void s_async_shutdown(handle_t&& cb) override { ssl_socket_->Shutdown(std::move(cb)); }
 

@@ -11,7 +11,7 @@
 #include "third_party/boringssl/src/include/openssl/ssl.h"
 
 #include "net/asio.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 #include "net/net_errors.hpp"
 #include "net/openssl_util.hpp"
 #include "net/protocol.hpp"
@@ -78,8 +78,8 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   SSL* native_handle() { return ssl_.get(); }
 
   // Socket implementation.
-  size_t Read(std::shared_ptr<IOBuf> buf, asio::error_code& ec);
-  size_t Write(std::shared_ptr<IOBuf> buf, asio::error_code& ec);
+  size_t Read(GrowableIOBuffer* buf, asio::error_code& ec);
+  size_t Write(GrowableIOBuffer* buf, asio::error_code& ec);
   void WaitRead(WaitCallback&& cb);
   void WaitWrite(WaitCallback&& cb);
 
@@ -104,8 +104,8 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   void RetryAllOperations();
 
   int DoHandshakeLoop(int last_io_result, int last_openssl_result);
-  int DoPayloadRead(std::shared_ptr<IOBuf> buf, int buf_len);
-  int DoPayloadWrite(std::shared_ptr<IOBuf> buf, int buf_len);
+  int DoPayloadRead(GrowableIOBuffer* buf, int buf_len);
+  int DoPayloadWrite(GrowableIOBuffer* buf, int buf_len);
   void DoPeek();
   int MapLastOpenSSLError(int ssl_error);
 

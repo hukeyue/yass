@@ -9,7 +9,7 @@
 #include "core/span.hpp"
 #include "net/dns_message_request.hpp"
 #include "net/dns_message_response_parser.hpp"
-#include "net/iobuf.hpp"
+#include "net/io_buffer.hpp"
 
 #include "test_util.hpp"
 
@@ -55,17 +55,15 @@ TEST(DnsMessageTest, RequestCAresMatch) {
   request msg;
   ASSERT_TRUE(msg.init("www.google.com", DNS_TYPE_AAAA));
 
-  auto source = IOBuf::create(SOCKET_BUF_SIZE);
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
 
   for (auto buffer : msg.buffers()) {
-    source->reserve(0, buffer.size());
-    memcpy(source->mutable_tail(), buffer.data(), buffer.size());
-    source->append(buffer.size());
+    buf->appendBytesAtEnd(buffer.data(), buffer.size());
   }
 
   auto target = CreateRequery("www.google.com", DNS_CLASS_IN, DNS_TYPE_AAAA);
 
-  ASSERT_EQ(::testing::Bytes(*source), ::testing::Bytes(target));
+  ASSERT_EQ(::testing::Bytes(buf->span()), ::testing::Bytes(target));
 }
 #endif
 
@@ -76,15 +74,14 @@ static constexpr const uint8_t kExpectedRequestBytes[] = {
 TEST(DnsMessageTest, RequestBytes) {
   request msg;
   ASSERT_TRUE(msg.init("www.baidu.com", DNS_TYPE_A));
-  IOBuf buf;
+
+  auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
+
   for (auto buffer : msg.buffers()) {
-    buf.reserve(0, buffer.size());
-    memcpy(buf.mutable_tail(), buffer.data(), buffer.size());
-    buf.append(buffer.size());
+    buf->appendBytesAtEnd(buffer.data(), buffer.size());
   }
 
-  ASSERT_EQ(::testing::Bytes(buf.data(), buf.length()),
-            ::testing::Bytes(kExpectedRequestBytes, std::size(kExpectedRequestBytes)));
+  ASSERT_EQ(::testing::Bytes(buf->span()), ::testing::Bytes(kExpectedRequestBytes, std::size(kExpectedRequestBytes)));
 }
 
 static constexpr const uint8_t kResponseBytes[] = {
