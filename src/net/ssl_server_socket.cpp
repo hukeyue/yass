@@ -143,9 +143,10 @@ void SSLServerSocket::Disconnect() {
   disconnected_ = true;
 
   // Release user callbacks.
-  wait_shutdown_callback_ = nullptr;
+  user_handshake_callback_ = nullptr;
   wait_read_callback_ = nullptr;
   wait_write_callback_ = nullptr;
+  wait_shutdown_callback_ = nullptr;
 
   asio::error_code ec;
   stream_socket_->close(ec);
@@ -193,6 +194,10 @@ size_t SSLServerSocket::Write(GrowableIOBuffer* buf, asio::error_code& ec) {
 }
 
 void SSLServerSocket::WaitRead(WaitCallback&& cb) {
+  if (UNLIKELY(disconnected_)) {
+    cb(asio::error::connection_refused);
+    return;
+  }
   DCHECK(!wait_read_callback_ && "Multiple calls into Wait Read");
   wait_read_callback_ = std::move(cb);
   scoped_refptr<SSLServerSocket> self(this);
@@ -208,6 +213,10 @@ void SSLServerSocket::WaitRead(WaitCallback&& cb) {
 }
 
 void SSLServerSocket::WaitWrite(WaitCallback&& cb) {
+  if (UNLIKELY(disconnected_)) {
+    cb(asio::error::connection_refused);
+    return;
+  }
   DCHECK(!wait_write_callback_ && "Multiple calls into Wait Write");
   wait_write_callback_ = std::move(cb);
   scoped_refptr<SSLServerSocket> self(this);
@@ -218,6 +227,7 @@ void SSLServerSocket::OnWaitRead(asio::error_code ec) {
   if (disconnected_)
     return;
   if (ec == asio::error::bad_descriptor || ec == asio::error::operation_aborted) {
+    user_handshake_callback_ = nullptr;
     wait_read_callback_ = nullptr;
     wait_write_callback_ = nullptr;
     wait_shutdown_callback_ = nullptr;
@@ -227,7 +237,7 @@ void SSLServerSocket::OnWaitRead(asio::error_code ec) {
     OnDoWaitShutdown(ec);
   }
   if (auto cb = std::move(wait_read_callback_)) {
-    wait_read_callback_ = nullptr;
+    DCHECK(!wait_read_callback_);
     cb(ec);
   }
 }
@@ -236,6 +246,7 @@ void SSLServerSocket::OnWaitWrite(asio::error_code ec) {
   if (disconnected_)
     return;
   if (ec == asio::error::bad_descriptor || ec == asio::error::operation_aborted) {
+    user_handshake_callback_ = nullptr;
     wait_read_callback_ = nullptr;
     wait_write_callback_ = nullptr;
     wait_shutdown_callback_ = nullptr;
@@ -245,7 +256,7 @@ void SSLServerSocket::OnWaitWrite(asio::error_code ec) {
     OnDoWaitShutdown(ec);
   }
   if (auto cb = std::move(wait_write_callback_)) {
-    wait_write_callback_ = nullptr;
+    DCHECK(!wait_write_callback_);
     cb(ec);
   }
 }

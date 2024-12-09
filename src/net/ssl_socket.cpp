@@ -397,6 +397,10 @@ size_t SSLSocket::Write(GrowableIOBuffer* buf, asio::error_code& ec) {
 }
 
 void SSLSocket::WaitRead(WaitCallback&& cb) {
+  if (UNLIKELY(disconnected_)) {
+    cb(asio::error::connection_refused);
+    return;
+  }
   DCHECK(!wait_read_callback_ && "Multiple calls into Wait Read");
   wait_read_callback_ = std::move(cb);
   scoped_refptr<SSLSocket> self(this);
@@ -416,6 +420,10 @@ void SSLSocket::WaitRead(WaitCallback&& cb) {
 }
 
 void SSLSocket::WaitWrite(WaitCallback&& cb) {
+  if (UNLIKELY(disconnected_)) {
+    cb(asio::error::connection_refused);
+    return;
+  }
   DCHECK(!wait_write_callback_ && "Multiple calls into Wait Write");
   wait_write_callback_ = std::move(cb);
   scoped_refptr<SSLSocket> self(this);
@@ -453,6 +461,7 @@ void SSLSocket::OnWaitRead(asio::error_code ec) {
   if (disconnected_)
     return;
   if (ec == asio::error::bad_descriptor || ec == asio::error::operation_aborted) {
+    user_connect_callback_ = nullptr;
     wait_read_callback_ = nullptr;
     wait_write_callback_ = nullptr;
     wait_shutdown_callback_ = nullptr;
@@ -472,6 +481,7 @@ void SSLSocket::OnWaitWrite(asio::error_code ec) {
   if (disconnected_)
     return;
   if (ec == asio::error::bad_descriptor || ec == asio::error::operation_aborted) {
+    user_connect_callback_ = nullptr;
     wait_read_callback_ = nullptr;
     wait_write_callback_ = nullptr;
     wait_shutdown_callback_ = nullptr;
