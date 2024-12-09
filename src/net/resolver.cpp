@@ -28,6 +28,8 @@ class Resolver::ResolverImpl {
   {
   }
 
+  ~ResolverImpl() { Reset(); }
+
   int Init() {
     doh_url_ = absl::GetFlag(FLAGS_doh_url);
     if (!doh_url_.empty()) {

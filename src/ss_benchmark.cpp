@@ -267,7 +267,7 @@ class SsEndToEndBM : public benchmark::Fixture {
 
   void StartBackgroundTasks() {
     std::mutex m;
-    bool done = false;
+    std::atomic_bool done;
     asio::post(io_context_, [this, &m, &done]() {
       std::lock_guard<std::mutex> lk(m);
       auto ec = StartContentProvider(GetReusableEndpoint(), SOMAXCONN);
@@ -286,9 +286,9 @@ class SsEndToEndBM : public benchmark::Fixture {
   }
 
   void TearDown(::benchmark::State& state) override {
-    StopClient();
-    StopServer();
     StopContentProvider();
+    StopServer();
+    StopClient();
     work_guard_.reset();
     thread_->join();
     thread_.reset();
