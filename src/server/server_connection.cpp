@@ -101,7 +101,9 @@ bool DataFrameSource::Send(absl::string_view frame_header, size_t payload_length
   }
 
   if (chunks_.empty() && send_completion_callback_) {
-    std::move(send_completion_callback_).operator()();
+    auto cb = std::move(send_completion_callback_);
+    DCHECK(!send_completion_callback_);
+    cb();
   }
 
   // Unblocked
