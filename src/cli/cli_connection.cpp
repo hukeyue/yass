@@ -797,7 +797,9 @@ asio::error_code CliConnection::OnReadHttpRequestAfterReuse(scoped_refptr<Growab
     request_ = {};
     channel_->close();
     channel_.reset();
-    OnStreamRead(std::move(buf).get());
+    // BUGGY OnStreamRead(std::move(buf).get());
+    auto recv_buf = std::move(buf);
+    OnStreamRead(recv_buf.get());
     DCHECK(!buf);
     ec = PerformCmdOpsHttp();
     if (ec) {
