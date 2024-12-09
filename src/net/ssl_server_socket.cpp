@@ -373,8 +373,9 @@ int SSLServerSocket::DoHandshake(int* openssl_result) {
 
 void SSLServerSocket::DoHandshakeCallback(int rv) {
   DCHECK_NE(rv, ERR_IO_PENDING);
-  std::move(user_handshake_callback_).operator()(rv > OK ? OK : rv);
-  user_handshake_callback_ = nullptr;
+  auto cb = std::move(user_handshake_callback_);
+  DCHECK(!user_handshake_callback_);
+  cb(rv > OK ? OK : rv);
 }
 
 int SSLServerSocket::DoHandshakeLoop(int last_io_result, int last_sslerr) {
