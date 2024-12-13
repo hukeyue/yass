@@ -170,7 +170,7 @@ cd yass
 git submodule update --init
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on -DENABLE_GOLD=off -DUSE_LIBCXX=off -DUSE_GTK4=off ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
 
@@ -220,7 +220,7 @@ cd yass
 git submodule update --init
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on -DENABLE_GOLD=off -DUSE_LIBCXX=off -DUSE_GTK4=off ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
 
@@ -254,7 +254,7 @@ export CC=clang
 export CXX=clang++
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on -DUSE_GTK4=off ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
 
