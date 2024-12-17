@@ -1,7 +1,7 @@
 # Yet Another Shadow Socket.
 # Copyright (C) 2023-2024 Chilledheart
 # This file is distributed under the same license as the yass package.
-# Chilledheart <keeyou-cn@outlook.com>, 2024.
+# Chilledheart <hukeyue@vip.163.com>, 2024.
 # 
 # Translators:
 # Keeyou Hu, 2024
