@@ -3110,7 +3110,6 @@ target_include_directories(asio_core PUBLIC
   src)
 target_include_directories(asio_core PUBLIC
   third_party/asio/asio/include
-  third_party/googleurl-override/polyfills
   third_party/googleurl/polyfills
 )
 target_compile_definitions(asio_core PUBLIC ASIO_STANDALONE)
@@ -4114,8 +4113,6 @@ if (APPLE)
 endif()
 
 target_include_directories(yass_core PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl-override/polyfills
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl-override
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
   ${SUPPORT_INCLUDE_DIRS})

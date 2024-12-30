@@ -166,42 +166,42 @@ add_library(url STATIC
   googleurl/url/url_parse_internal.h
   googleurl/url/url_util.cc
   googleurl/url/url_util_internal.h
-  googleurl-override/base/pickle.h
-  googleurl-override/base/pickle.cc
+  googleurl/base/pickle.h
+  googleurl/base/pickle.cc
   # googleurl/url/scheme_host_port.cc
   # googleurl/url/scheme_host_port.h
   # googleurl/url/origin.cc
   # googleurl/url/origin.h
-  googleurl-override/base/atomic_ref_count.h
-  googleurl-override/base/atomicops.h
-  googleurl-override/base/atomicops_internals_portable.h
-  googleurl-override/base/atomicops_internals_atomicword_compat.h
-  googleurl-override/base/files/file_util.h
-  googleurl-override/base/macros/concat.h
-  googleurl-override/base/macros/if.h
-  googleurl-override/base/macros/remove_parens.h
-  googleurl-override/base/macros/uniquify.h
-  googleurl-override/base/memory/raw_ptr_exclusion.h
-  googleurl-override/base/memory/ref_counted.cc
-  googleurl-override/base/memory/ref_counted.h
-  googleurl-override/base/memory/scoped_refptr.h
-  googleurl-override/base/process/process_handle.h
-  googleurl-override/base/threading/platform_thread.cc
-  googleurl-override/base/threading/platform_thread.h
-  googleurl-override/base/threading/thread_collision_warner.cc
-  googleurl-override/base/threading/thread_collision_warner.h
-  googleurl-override/base/rand_util.h
-  googleurl-override/base/rand_util.cc
-  googleurl-override/polyfills/base/logging.h
-  googleurl-override/polyfills/base/logging.cc
-  googleurl-override/polyfills/base/check.h
-  googleurl-override/polyfills/base/check.cc
-  googleurl-override/polyfills/base/check_op.h
-  googleurl-override/polyfills/base/check_op.cc
-  googleurl-override/polyfills/base/debug/alias.h
-  googleurl-override/polyfills/base/debug/alias.cc
-  googleurl-override/polyfills/base/debug/debugger.h
-  googleurl-override/polyfills/base/debug/debugger.cc
+  googleurl/base/atomic_ref_count.h
+  googleurl/base/atomicops.h
+  googleurl/base/atomicops_internals_portable.h
+  googleurl/base/atomicops_internals_atomicword_compat.h
+  googleurl/base/files/file_util.h
+  googleurl/base/macros/concat.h
+  googleurl/base/macros/if.h
+  googleurl/base/macros/remove_parens.h
+  googleurl/base/macros/uniquify.h
+  googleurl/base/memory/raw_ptr_exclusion.h
+  googleurl/base/memory/ref_counted.cc
+  googleurl/base/memory/ref_counted.h
+  googleurl/base/memory/scoped_refptr.h
+  googleurl/base/process/process_handle.h
+  googleurl/base/threading/platform_thread.cc
+  googleurl/base/threading/platform_thread.h
+  googleurl/base/threading/thread_collision_warner.cc
+  googleurl/base/threading/thread_collision_warner.h
+  googleurl/base/rand_util.h
+  googleurl/base/rand_util.cc
+  googleurl/polyfills/base/logging.h
+  googleurl/polyfills/base/logging.cc
+  googleurl/polyfills/base/check.h
+  googleurl/polyfills/base/check.cc
+  googleurl/polyfills/base/check_op.h
+  googleurl/polyfills/base/check_op.cc
+  googleurl/polyfills/base/debug/alias.h
+  googleurl/polyfills/base/debug/alias.cc
+  googleurl/polyfills/base/debug/debugger.h
+  googleurl/polyfills/base/debug/debugger.cc
   )
 
 if (WIN32)
@@ -209,39 +209,39 @@ if (WIN32)
     googleurl/base/strings/sys_string_conversions_win.cc)
 
   target_sources(url PRIVATE
-    googleurl-override/base/files/file_util_win.cc
+    googleurl/base/files/file_util_win.cc
     googleurl/base/strings/string_util_win.h
     googleurl/base/strings/string_util_win.cc)
 elseif(APPLE)
   target_sources(url PRIVATE
-    googleurl-override/base/apple/scoped_cftyperef.h
-    googleurl-override/base/apple/scoped_typeref.h
-    googleurl-override/base/apple/foundation_util.mm
-    googleurl-override/base/apple/foundation_util.h
-    googleurl-override/base/files/file_util_apple.mm
-    googleurl-override/base/mac/scoped_ioobject.h
-    googleurl-override/base/strings/sys_string_conversions_apple.mm
+    googleurl/base/apple/scoped_cftyperef.h
+    googleurl/base/apple/scoped_typeref.h
+    googleurl/base/apple/foundation_util.mm
+    googleurl/base/apple/foundation_util.h
+    googleurl/base/files/file_util_apple.mm
+    googleurl/base/mac/scoped_ioobject.h
+    googleurl/base/strings/sys_string_conversions_apple.mm
   )
   # missing apple part
 else()
   target_sources(url PRIVATE
-    googleurl-override/base/files/file_util_posix.cc
+    googleurl/base/files/file_util_posix.cc
     googleurl/base/strings/sys_string_conversions_posix.cc)
 endif()
 
 if (WIN32)
   target_sources(url PRIVATE
-    googleurl-override/polyfills/base/debug/debugger_win.cc
-    googleurl-override/base/process/process_handle_win.cc
-    googleurl-override/base/scoped_clear_last_error_win.cc
-    googleurl-override/base/rand_util_win.cc)
+    googleurl/polyfills/base/debug/debugger_win.cc
+    googleurl/base/process/process_handle_win.cc
+    googleurl/base/scoped_clear_last_error_win.cc
+    googleurl/base/rand_util_win.cc)
 else()
   target_sources(url PRIVATE
-    googleurl-override/polyfills/base/debug/debugger_posix.cc
-    googleurl-override/base/process/process_handle_posix.cc
-    googleurl-override/base/posix/safe_strerror.cc
-    googleurl-override/base/posix/safe_strerror.h
-    googleurl-override/base/rand_util_posix.cc)
+    googleurl/polyfills/base/debug/debugger_posix.cc
+    googleurl/base/process/process_handle_posix.cc
+    googleurl/base/posix/safe_strerror.cc
+    googleurl/base/posix/safe_strerror.h
+    googleurl/base/rand_util_posix.cc)
 endif()
 
 if (USE_ICU)
@@ -259,26 +259,26 @@ else()
 endif()
 
 add_library(double_conversion STATIC
-  googleurl-override/base/third_party/double_conversion/double-conversion/bignum-dtoa.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/bignum-dtoa.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/bignum.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/bignum.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/cached-powers.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/cached-powers.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/diy-fp.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/double-to-string.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/double-to-string.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/double-conversion.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/fast-dtoa.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/fast-dtoa.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/fixed-dtoa.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/fixed-dtoa.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/ieee.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/string-to-double.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/string-to-double.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/strtod.cc
-  googleurl-override/base/third_party/double_conversion/double-conversion/strtod.h
-  googleurl-override/base/third_party/double_conversion/double-conversion/utils.h
+  googleurl/base/third_party/double_conversion/double-conversion/bignum-dtoa.cc
+  googleurl/base/third_party/double_conversion/double-conversion/bignum-dtoa.h
+  googleurl/base/third_party/double_conversion/double-conversion/bignum.cc
+  googleurl/base/third_party/double_conversion/double-conversion/bignum.h
+  googleurl/base/third_party/double_conversion/double-conversion/cached-powers.cc
+  googleurl/base/third_party/double_conversion/double-conversion/cached-powers.h
+  googleurl/base/third_party/double_conversion/double-conversion/diy-fp.h
+  googleurl/base/third_party/double_conversion/double-conversion/double-to-string.cc
+  googleurl/base/third_party/double_conversion/double-conversion/double-to-string.h
+  googleurl/base/third_party/double_conversion/double-conversion/double-conversion.h
+  googleurl/base/third_party/double_conversion/double-conversion/fast-dtoa.cc
+  googleurl/base/third_party/double_conversion/double-conversion/fast-dtoa.h
+  googleurl/base/third_party/double_conversion/double-conversion/fixed-dtoa.cc
+  googleurl/base/third_party/double_conversion/double-conversion/fixed-dtoa.h
+  googleurl/base/third_party/double_conversion/double-conversion/ieee.h
+  googleurl/base/third_party/double_conversion/double-conversion/string-to-double.cc
+  googleurl/base/third_party/double_conversion/double-conversion/string-to-double.h
+  googleurl/base/third_party/double_conversion/double-conversion/strtod.cc
+  googleurl/base/third_party/double_conversion/double-conversion/strtod.h
+  googleurl/base/third_party/double_conversion/double-conversion/utils.h
 )
 
 if (USE_LTO_CMAKE)
@@ -287,7 +287,7 @@ if (USE_LTO_CMAKE)
 endif()
 
 target_include_directories(double_conversion PRIVATE
-  googleurl-override/base/third_party/double_conversion/double-conversion
+  googleurl/base/third_party/double_conversion/double-conversion
 )
 
 target_compile_options(double_conversion PRIVATE -Wno-unused-const-variable -Wno-unused-function)
@@ -300,8 +300,6 @@ if (USE_LTO_CMAKE)
 endif()
 
 target_include_directories(url PUBLIC
-  googleurl-override/polyfills
-  googleurl-override
   googleurl/polyfills
   googleurl
   ${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -310,24 +308,24 @@ target_include_directories(url PUBLIC
 target_link_libraries(url PUBLIC absl::optional)
 
 target_sources(url PRIVATE
-  googleurl-override/base/files/memory_mapped_file.h
-  googleurl-override/base/files/memory_mapped_file.cc
-  googleurl-override/base/location.h
-  googleurl-override/base/location.cc
+  googleurl/base/files/memory_mapped_file.h
+  googleurl/base/files/memory_mapped_file.cc
+  googleurl/base/location.h
+  googleurl/base/location.cc
 )
 if (WIN32)
   target_sources(url PRIVATE
-    googleurl-override/base/win/pe_image.cc
-    googleurl-override/base/win/pe_image.h
-    googleurl-override/base/win/scoped_handle.cc
-    googleurl-override/base/win/scoped_handle.h
-    googleurl-override/base/win/windows_types.h
-    googleurl-override/base/win/win_handle_types.h
-    googleurl-override/base/files/memory_mapped_file_win.cc
+    googleurl/base/win/pe_image.cc
+    googleurl/base/win/pe_image.h
+    googleurl/base/win/scoped_handle.cc
+    googleurl/base/win/scoped_handle.h
+    googleurl/base/win/windows_types.h
+    googleurl/base/win/win_handle_types.h
+    googleurl/base/files/memory_mapped_file_win.cc
   )
   target_link_libraries(url PRIVATE delayimp)
 else()
   target_sources(url PRIVATE
-    googleurl-override/base/files/memory_mapped_file_posix.cc
+    googleurl/base/files/memory_mapped_file_posix.cc
   )
 endif()
