@@ -27,11 +27,11 @@ bool GetTempDir(std::string* path) {
 
 bool GetTempDir(std::wstring* path) {
   wchar_t temp_path[MAX_PATH + 1];
-  DWORD path_len = ::GetTempPathW(MAX_PATH, temp_path);
+  DWORD path_len = ::GetTempPathW(std::size(temp_path), temp_path);
   // If the function succeeds, the return value is the length,
   // in TCHARs, of the string copied to lpBuffer,
   // not including the terminating null character.
-  if (path_len >= MAX_PATH || path_len <= 0)
+  if (path_len >= std::size(temp_path) || path_len == 0)
     return false;
   // TODO(evanm): the old behavior of this function was to always strip the
   // trailing slash.  We duplicate this here, but it shouldn't be necessary

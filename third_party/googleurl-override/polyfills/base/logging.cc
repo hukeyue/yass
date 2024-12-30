@@ -2413,8 +2413,8 @@ static void GetTempDirectories(std::vector<std::string>* list) {
   //   C:/TEMP/
   //   C:/WINDOWS/ or C:/WINNT/
   //   .
-  wchar_t tmp[MAX_PATH];
-  if (DWORD len = GetTempPathW(MAX_PATH, tmp))
+  wchar_t tmp[MAX_PATH+1];
+  if (DWORD len = GetTempPathW(std::size(tmp), tmp))
     list->push_back(SysWideToUTF8(std::wstring(tmp, len)));
   list->push_back("C:\\tmp\\");
   list->push_back("C:\\temp\\");
