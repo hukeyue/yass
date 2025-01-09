@@ -300,9 +300,22 @@ http2::adapter::Http2VisitorInterface::OnHeaderResult ServerConnection::OnHeader
 
 bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_id) {
   auto peer_endpoint = peer_endpoint_;
-  if (request_map_[":method"s] != "CONNECT"s) {
+  // https://httpwg.org/specs/rfc9113.html#CONNECT
+  // The :method pseudo-header field is set to CONNECT.
+  if (auto method = request_map_[":method"s]; method != "CONNECT"s) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint
-              << " Unexpected method: " << request_map_[":method"];
+              << " Unexpected pseudo header method: " << method;
+    return false;
+  }
+  // The :scheme and :path pseudo-header fields MUST be omitted.
+  if (auto scheme = request_map_[":scheme"s]; !scheme.empty()) {
+    LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint
+              << " Unexpected pseudo header scheme: " << scheme;
+    return false;
+  }
+  if (auto path = request_map_[":path"s]; !path.empty()) {
+    LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint
+              << " Unexpected pseudo header path: " << path;
     return false;
   }
   bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
@@ -310,7 +323,10 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Unexpected auth token.";
     return false;
   }
-  // https://datatracker.ietf.org/doc/html/rfc9113
+  //
+  // The :authority pseudo-header field contains the host and port to connect to
+  // (equivalent to the authority-form of the request-target of CONNECT requests)
+  //
   // The recipient of an HTTP/2 request MUST NOT use the Host header field
   // to determine the target URI if ":authority" is present.
   auto authority = request_map_[":authority"s];
@@ -323,7 +339,7 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
   }
   if (authority.empty()) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint
-              << " Unexpected empty authority";
+              << " Unexpected empty pseudo header authority";
     return false;
   }
 
@@ -331,7 +347,7 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
   uint16_t portnum;
   if (!SplitHostPortWithDefaultPort<443>(&hostname, &portnum, authority)) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint
-              << " Unexpected authority: " << authority;
+              << " Unexpected pseudo header authority: " << authority;
     return false;
   }
 

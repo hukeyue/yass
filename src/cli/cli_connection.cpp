@@ -2378,7 +2378,13 @@ void CliConnection::connected() {
     std::unique_ptr<DataFrameSource> data_frame = std::make_unique<DataFrameSource>(this);
     data_frame_ = data_frame.get();
     std::vector<std::pair<std::string, std::string>> headers;
+    // https://httpwg.org/specs/rfc9113.html#CONNECT
+    // The :method pseudo-header field is set to CONNECT.
     headers.emplace_back(":method"s, "CONNECT"s);
+    // The :scheme and :path pseudo-header fields MUST be omitted.
+    // The :authority pseudo-header field contains the host and port
+    // to connect to (equivalent to the authority-form of
+    // the request-target of CONNECT requests)
     //    authority   = [ userinfo "@" ] host [ ":" port ]
     headers.emplace_back(":authority"s, hostname_and_port);
     headers.emplace_back("host"s, hostname_and_port);
