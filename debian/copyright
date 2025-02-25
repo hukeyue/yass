@@ -4,11 +4,11 @@ Upstream-Contact: Chilledheart <hukeyue@vip.163.com>
 Source: https://github.com/Chilledheart/yass
 
 Files: *
-Copyright: 2019-2024, Chilledheart <hukeyue@vip.163.com>
+Copyright: 2019-2025, Chilledheart <hukeyue@vip.163.com>
 License: GPL-2
 
 Files: debian/*
-Copyright: 2019-2024, Chilledheart <hukeyue@vip.163.com>
+Copyright: 2019-2025, Chilledheart <hukeyue@vip.163.com>
 License: GPL-2
 
 License: GPL-2
