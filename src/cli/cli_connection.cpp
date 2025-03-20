@@ -90,12 +90,14 @@ constexpr const std::string_view CliConnection::http_connect_reply_ = "HTTP/1.1 
 
 #if BUILDFLAG(IS_MAC)
 #include <xnu_private/net_pfvar.h>
-#endif
-#ifdef __linux__
+#elif BUILDFLAG(IS_LINUX)
 #include <linux/netfilter_ipv4.h>
+#elif BUILDFLAG(IS_FREEBSD)
+#define SO_ORIGINAL_DST 80       // from linux/include/uapi/linux/netfilter_ipv4.h
+#define IP6T_SO_ORIGINAL_DST 80  // from linux/include/uapi/linux/netfilter_ipv6/ip6_tables.h
 #endif
 
-#ifdef __linux__
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
 static bool IsIPv4MappedIPv6(const asio::ip::tcp::endpoint& address) {
   return address.address().is_v6() && address.address().to_v6().is_v4_mapped();
 }
@@ -583,7 +585,7 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
     OnUpstreamWriteFlush();
   }
   return ec;
-#elif defined(__linux__)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
   if (!absl::GetFlag(FLAGS_redir_mode)) {
     return asio::error::operation_not_supported;
   }
@@ -593,10 +595,17 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   socklen_t ss_len = sizeof(struct sockaddr_in6);
   asio::ip::tcp::endpoint endpoint;
   int ret;
+#if BUILDFLAG(IS_FREEBSD)
+  if (peer_endpoint_.address().is_v4() || IsIPv4MappedIPv6(peer_endpoint_))
+    ret = getsockopt(downlink_->socket_.native_handle(), IPPROTO_IP, SO_ORIGINAL_DST, &ss, &ss_len);
+  else
+    ret = getsockopt(downlink_->socket_.native_handle(), IPPROTO_IPV6, IP6T_SO_ORIGINAL_DST, &ss, &ss_len);
+#else
   if (peer_endpoint_.address().is_v4() || IsIPv4MappedIPv6(peer_endpoint_))
     ret = getsockopt(downlink_->socket_.native_handle(), SOL_IP, SO_ORIGINAL_DST, &ss, &ss_len);
   else
     ret = getsockopt(downlink_->socket_.native_handle(), SOL_IPV6, SO_ORIGINAL_DST, &ss, &ss_len);
+#endif
   if (ret == 0) {
     endpoint.resize(ss_len);
     memcpy(endpoint.data(), &ss, ss_len);
