@@ -230,9 +230,9 @@ ninja yass
 It is impossible to upgrade system compiler without upgrading OS,
 so you have to install latest [Clang] (not required since FreeBSD 14.1):
 
-Run in `Console`:
+Run in `Console` (not required if you have installed llvm19):
 ```
-pkg install llvm18-lite
+pkg install llvm19-lite
 ```
 
 2. Install required dependencies:
@@ -249,11 +249,11 @@ Run in `Console`:
 git clone https://gitee.com/keeyou/yass
 cd yass
 git submodule update --init
-export PATH="/usr/local/llvm18/bin:$PATH"
+export PATH="/usr/local/llvm19/bin:$PATH"
 export CC=clang
 export CXX=clang++
-mkdir build
-cd build
+mkdir build-freebsd
+cd build-freebsd
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
