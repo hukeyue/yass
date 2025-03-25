@@ -89,7 +89,7 @@ bool CreateDirectories(const std::string& path) {
 #ifndef _WIN32
 bool RemoveFile(const std::string& path) {
   const char* path_str = path.c_str();
-  struct stat file_info {};
+  struct stat file_info{};
   if (::lstat(path_str, &file_info) != 0) {
     // The Windows version defines this condition as success.
     return (errno == ENOENT);

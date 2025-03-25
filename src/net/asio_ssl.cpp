@@ -560,23 +560,23 @@ int load_ca_to_ssl_ctx_from_unix_store(SSL_CTX* ssl_ctx) {
   // cert list copied from golang src/crypto/x509/root_unix.go
   static const char* ca_bundle_paths[] = {
 #if BUILDFLAG(IS_LINUX)
-    "/etc/ssl/certs/ca-certificates.crt",                 // Debian/Ubuntu/Gentoo etc.
-    "/etc/pki/tls/certs/ca-bundle.crt",                   // Fedora/RHEL
-    "/etc/ssl/ca-bundle.pem",                             // OpenSUSE
-    "/etc/pki/tls/cacert.pem",                            // OpenELEC
-    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",  // CentOS/RHEL 7
-    "/etc/ssl/cert.pem",                                  // Alpine Linux
+      "/etc/ssl/certs/ca-certificates.crt",                 // Debian/Ubuntu/Gentoo etc.
+      "/etc/pki/tls/certs/ca-bundle.crt",                   // Fedora/RHEL
+      "/etc/ssl/ca-bundle.pem",                             // OpenSUSE
+      "/etc/pki/tls/cacert.pem",                            // OpenELEC
+      "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",  // CentOS/RHEL 7
+      "/etc/ssl/cert.pem",                                  // Alpine Linux
 #endif
 #if BUILDFLAG(IS_BSD)
-    "/usr/local/etc/ssl/cert.pem",             // FreeBSD
-    "/etc/ssl/cert.pem",                       // OpenBSD
-    "/usr/local/share/certs/ca-root-nss.crt",  // DragonFly
-    "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
+      "/usr/local/etc/ssl/cert.pem",             // FreeBSD
+      "/etc/ssl/cert.pem",                       // OpenBSD
+      "/usr/local/share/certs/ca-root-nss.crt",  // DragonFly
+      "/etc/openssl/certs/ca-certificates.crt",  // NetBSD
 #endif
 #if BUILDFLAG(IS_SOLARIS)
-    "/etc/certs/ca-certificates.crt",      // Solaris 11.2+
-    "/etc/ssl/certs/ca-certificates.crt",  // Joyent SmartOS
-    "/etc/ssl/cacert.pem",                 // OmniOS
+      "/etc/certs/ca-certificates.crt",      // Solaris 11.2+
+      "/etc/ssl/certs/ca-certificates.crt",  // Joyent SmartOS
+      "/etc/ssl/cacert.pem",                 // OmniOS
 #endif
   };
   for (auto ca_bundle : ca_bundle_paths) {
@@ -589,24 +589,24 @@ int load_ca_to_ssl_ctx_from_unix_store(SSL_CTX* ssl_ctx) {
   }
   static const char* ca_paths[] = {
 #if BUILDFLAG(IS_LINUX)
-    "/etc/ssl/certs",                                  // SLES10/SLES11, https://golang.org/issue/12139
-    "/etc/pki/tls/certs",                              // Fedora/RHEL
-    "/etc/pki/ca-trust/extracted/pem/directory-hash",  // Fedora/RHEL 9.5/10
+      "/etc/ssl/certs",                                  // SLES10/SLES11, https://golang.org/issue/12139
+      "/etc/pki/tls/certs",                              // Fedora/RHEL
+      "/etc/pki/ca-trust/extracted/pem/directory-hash",  // Fedora/RHEL 9.5/10
 #endif
 #if BUILDFLAG(IS_OHOS)
-    "/etc/ssl/certs",  // OpenHarmony
+      "/etc/ssl/certs",  // OpenHarmony
 #endif
 #if BUILDFLAG(IS_ANDROID)
-    "/system/etc/security/cacerts",     // Android system roots
-    "/data/misc/keychain/certs-added",  // User trusted CA folder
+      "/system/etc/security/cacerts",     // Android system roots
+      "/data/misc/keychain/certs-added",  // User trusted CA folder
 #endif
 #if BUILDFLAG(IS_BSD)
-    "/etc/ssl/certs",          // FreeBSD 12.2+
-    "/usr/local/share/certs",  // FreeBSD
-    "/etc/openssl/certs",      // NetBSD
+      "/etc/ssl/certs",          // FreeBSD 12.2+
+      "/usr/local/share/certs",  // FreeBSD
+      "/etc/openssl/certs",      // NetBSD
 #endif
 #if BUILDFLAG(IS_SOLARIS)
-    "/etc/certs/CA",  // Solaris
+      "/etc/certs/CA",  // Solaris
 #endif
   };
 
