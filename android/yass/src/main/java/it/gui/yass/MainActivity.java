@@ -279,8 +279,12 @@ public class MainActivity extends AppCompatActivity {
         Log.v(YASS_TAG, "yass thr stopped");
         this.runOnUiThread(() -> {
             state = NativeMachineState.STOPPED;
+
             Button startButton = findViewById(R.id.startButton);
             startButton.setEnabled(true);
+
+            nativeLocalPort = 0;
+            loadSettingsFromNativeCurrentIp();
 
             TextView statusTextView = findViewById(R.id.statusTextView);
             statusTextView.setText(String.format(getString(R.string.status_stopped), YassUtils.getServerHost(), YassUtils.getServerPort()));
@@ -363,7 +367,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onStopVpn() {
+        state = NativeMachineState.STOPPING;
+
+        Button stopButton = findViewById(R.id.stopButton);
+        stopButton.setEnabled(false);
+
+        TextView statusTextView = findViewById(R.id.statusTextView);
+        statusTextView.setText(R.string.status_stopping);
+
         stopRefreshPoll();
+
         vpnService.stopSelf();
         int ret = tun2ProxyShutdown(tun2proxyPtr);
         if (ret != 0) {
@@ -379,16 +392,6 @@ public class MainActivity extends AppCompatActivity {
         tun2proxyPtr = 0;
         tun2proxyThread = null;
         nativeStop();
-
-        Button stopButton = findViewById(R.id.stopButton);
-        stopButton.setEnabled(false);
-
-        nativeLocalPort = 0;
-        loadSettingsFromNativeCurrentIp();
-
-        TextView statusTextView = findViewById(R.id.statusTextView);
-        statusTextView.setText(R.string.status_stopping);
-        state = NativeMachineState.STOPPING;
     }
 
     public void onStopClicked(View view) {
