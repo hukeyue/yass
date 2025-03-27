@@ -238,11 +238,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onNativeStartFailedOnUIThread(String error_msg, boolean stop_native) {
+        state = NativeMachineState.STOPPED;
+
         if (stop_native) {
             nativeStop();
         }
 
-        state = NativeMachineState.STOPPED;
         Button startButton = findViewById(R.id.startButton);
         startButton.setEnabled(true);
 
@@ -264,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
             Log.v(YASS_TAG, String.format("yass thr started with port %d", local_port));
         }
         this.runOnUiThread(() -> {
+            if (state != NativeMachineState.STARTING) {
+                return;
+            }
             if (error_msg != null) {
                 onNativeStartFailedOnUIThread(error_msg, false);
             } else {
@@ -278,6 +282,9 @@ public class MainActivity extends AppCompatActivity {
     private void onNativeStopped() {
         Log.v(YASS_TAG, "yass thr stopped");
         this.runOnUiThread(() -> {
+            if (state != NativeMachineState.STOPPING) {
+                return;
+            }
             state = NativeMachineState.STOPPED;
 
             Button startButton = findViewById(R.id.startButton);
