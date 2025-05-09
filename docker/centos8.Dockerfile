@@ -4,15 +4,22 @@ FROM rockylinux:8
 RUN yum clean all && \
   rm -rf /var/cache/yum && rm -rf /var/cache/dnf && \
   yum install -y yum-utils && \
-  yum-config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
   yum-config-manager --enable powertools && \
   yum install -y --allowerasing gcc gcc-c++ \
-    git make python39 bash coreutils gh \
+    git make python39 bash coreutils \
     rpm-build rpm-devel rpmlint diffutils patch rpmdevtools \
     cmake ninja-build pkg-config perl golang \
     gtk3-devel qt5-qtbase-devel zlib-devel curl-devel && \
   yum clean all && \
   rm -rf /var/cache/yum && rm -rf /var/cache/dnf
+
+# Install requirements : gh
+RUN yum clean all && \
+  rm -rf /var/cache/yum && rm -rf /var/cache/dnf && rm -rf /var/cache/libdnf5 && \
+  yum-config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
+  yum install -y gh && \
+  yum clean all && \
+  rm -rf /var/cache/yum && rm -rf /var/cache/dnf && rm -rf /var/cache/libdnf5
 
 # Install cmake 3.29.8
 RUN curl -L https://github.com/Kitware/CMake/releases/download/v3.29.8/cmake-3.29.8-linux-x86_64.tar.gz | \
