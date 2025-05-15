@@ -5086,6 +5086,7 @@ if (BUILD_TESTS)
   set(yass_test_SOURCE
     src/test_util.cpp
     src/ss_test.cpp
+    src/absl_test.cpp
     src/compiler_test.cpp
     src/config/config_test.cpp
     src/core/process_utils_test.cpp

@@ -207,8 +207,10 @@ class ContentServer {
       pending_next_listen_ctxes_.clear();
 
       auto connection_map = std::move(connection_map_);
-      // FIXME silence some false-positive warning from abseil-cpp
-      connection_map_ = absl::flat_hash_map<int, scoped_refptr<ConnectionType>>();
+      // Fatal: If this log triggers, then a hash table was move-assigned to itself
+      // and then used again later without being reinitialized.
+      connection_map_.clear();
+
       opened_connections_ = 0;
       for (auto [conn_id, conn] : connection_map) {
         VLOG(1) << "Connections (" << T::Name << ")"
