@@ -2417,8 +2417,8 @@ func inspectArchive(file string, files []string) {
 		cmdRun([]string{p7z, "l", file}, false)
 		if strings.HasSuffix(file, ".aab") {
 			// sign aab file (https://developer.android.com/tools/apksigner)
-			// FIXME hardcoded with build-tools 35.0.0
-			apksigner := filepath.Join(androidSdkDir, "build-tools", "35.0.0", "apksigner")
+			// FIXME hardcoded with build-tools 36.0.0
+			apksigner := filepath.Join(androidSdkDir, "build-tools", "36.0.0", "apksigner")
 			cmdRun([]string{apksigner, "sign", "-v", "--min-sdk-version", fmt.Sprintf("%d", androidApiLevel),
 				"--ks", getEnv("SIGNING_STORE_PATH", "../android/keystore/debug_keystore.jks"),
 				"--ks-pass", fmt.Sprintf("pass:%s", getEnv("SIGNING_STORE_PASSWORD", "abc123")),
@@ -2428,14 +2428,14 @@ func inspectArchive(file string, files []string) {
 		}
 		if strings.HasSuffix(file, ".apk") || strings.HasSuffix(file, ".aab") {
 			// check 16kb-alignment with zipalign
-			// FIXME hardcoded with build-tools 35.0.0
-			zipalign := filepath.Join(androidSdkDir, "build-tools", "35.0.0", "zipalign")
+			// FIXME hardcoded with build-tools 36.0.0
+			zipalign := filepath.Join(androidSdkDir, "build-tools", "36.0.0", "zipalign")
 			cmdRun([]string{zipalign, "-c", "-P", "16", "-v", "4", file}, true)
 		}
 		if strings.HasSuffix(file, ".apk") {
 			// verify signature
-			// FIXME hardcoded with build-tools 35.0.0
-			apksigner := filepath.Join(androidSdkDir, "build-tools", "35.0.0", "apksigner")
+			// FIXME hardcoded with build-tools 36.0.0
+			apksigner := filepath.Join(androidSdkDir, "build-tools", "36.0.0", "apksigner")
 			cmdRun([]string{apksigner, "verify", "-v", "--min-sdk-version", fmt.Sprintf("%d", androidApiLevel), file}, true)
 		}
 	} else if strings.HasSuffix(file, ".tgz") {
