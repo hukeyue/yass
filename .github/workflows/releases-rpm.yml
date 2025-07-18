@@ -43,8 +43,6 @@ jobs:
       fail-fast: false
       matrix:
         container:
-        - 'centos8'
-        - 'centos9'
         - 'fedora41'
         - 'alpine320'
         - 'i386-alpine320'
@@ -87,14 +85,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - container: 'centos8'
-            gui_variant: gtk3
-          - container: 'centos8'
-            gui_variant: qt5
-          # qt6 sits on epel repo, disabling
-          # - container: 'centos9'
-          #   gui_variant: qt6
-          #   use_cet: true
           # - container: 'fedora41'
           #   gui_variant: gtk3
           #   use_cet: true
@@ -106,11 +96,10 @@ jobs:
           # - container: 'fedora41'
           #   gui_variant: qt6
           #   use_cet: true
-          # for opensuse users, you can use centos7's rpm packages
-          # - container: 'opensuse15'
-          #   gui_variant: gtk3
-          # - container: 'opensuse15'
-          #   gui_variant: qt5
+          - container: 'opensuse15'
+            gui_variant: gtk3
+          - container: 'opensuse15'
+            gui_variant: qt5
           # except for gtk4 and qt6 packages
           # glibc: 2.31 for opensuse15.5
           - container: 'opensuse15'
