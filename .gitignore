@@ -91,3 +91,5 @@ local.properties
 *.app
 *.aab
 *.aab.idsig
+knr_access
+access
