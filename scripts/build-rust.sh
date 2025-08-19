@@ -20,11 +20,11 @@ tar -xf rustc-$RUST_VER-src.tar.xz
 rm -rf rustc-$RUST_VER-src/src/tools/cargo
 mv cargo-$CARGO_VER rustc-$RUST_VER-src/src/tools/cargo
 
-cat > rustc-$RUST_VER-src/config.toml.in << EOF
+cat > rustc-$RUST_VER-src/bootstrap.toml.in << EOF
 
 profile = "compiler"
 # latest change id in src/bootstrap/src/utils/change_tracker.rs
-change-id = 140732
+change-id = "ignore"
 
 [build]
 # see https://github.com/llvm/llvm-project/issues/60115
@@ -36,6 +36,7 @@ rustc = "$HOME/.cargo/bin/rustc"
 target = ["$DEFAULT_TARGET", "aarch64-unknown-linux-ohos", "armv7-unknown-linux-ohos", "x86_64-unknown-linux-ohos"]
 docs = false
 tools = ["cargo","clippy","rust-demangler","rustfmt","rust-analyzer","src"]
+cargo-native-static = false
 
 [install]
 prefix = "$PWD/third_party/rust-ohos"
@@ -64,8 +65,15 @@ linker = "$PWD/scripts/x86_64-unknown-linux-ohos-clang.sh"
 EOF
 
 pushd rustc-$RUST_VER-src
-./configure --prefix $PWD/third_party/rust-ohos --tools=cargo,clippy,rust-demangler,rustfmt,rust-analyzer,src --enable-local-rust
-mv config.toml.in config.toml
+./configure --prefix "$PWD/third_party/rust-ohos" \
+  --sysconfdir "$PWD/third_party/rust-ohos/etc" \
+  --tools=cargo,clippy,rust-demangler,rustfmt,rust-analyzer,src \
+  --enable-local-rust \
+  --enable-vendor \
+  --disable-profiler \
+  --disable-cargo-native-static \
+  --disable-docs
+mv bootstrap.toml.in bootstrap.toml
 make
 rm -rf $PWD/third_party/rust-ohos
 make install
