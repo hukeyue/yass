@@ -152,5 +152,5 @@ ABSL_FLAG(uint32_t, parallel_max, 65535, "Maximum concurrency for parallel conne
 ABSL_FLAG(RateFlag, limit_rate, RateFlag(0), "Limit transfer speed to RATE");
 
 #if BUILDFLAG(IS_MAC)
-ABSL_FLAG(bool, ui_display_realtime_status, true, "Display Realtime Status in Status Bar (UI)");
+ABSL_FLAG(bool, ui_display_realtime_status, false, "Display Realtime Status in Status Bar (UI)");
 #endif
