@@ -1,73 +1,73 @@
 [submodule "third_party/asio"]
 	path = third_party/asio
-	url = https://gitee.com/keeyou/asio
+	url = https://github.com/Chilledheart/asio
 [submodule "third_party/abseil-cpp"]
 	path = third_party/abseil-cpp
-	url = https://gitee.com/keeyou/abseil-cpp
+	url = https://github.com/Chilledheart/abseil-cpp
 [submodule "third_party/lss"]
 	path = third_party/lss
-	url = https://gitee.com/keeyou/lss
+	url = https://chromium.googlesource.com/linux-syscall-support
 [submodule "third_party/boringssl"]
 	path = third_party/boringssl/src
-	url = https://gitee.com/keeyou/boringssl
+	url = https://github.com/Chilledheart/boringssl
 [submodule "third_party/quiche"]
 	path = third_party/quiche/src
-	url = https://gitee.com/keeyou/quiche
+	url = https://github.com/Chilledheart/quiche
 	branch = main
 [submodule "third_party/googletest"]
 	path = third_party/googletest
-	url = https://gitee.com/keeyou/googletest
+	url = https://github.com/google/googletest
 [submodule "third_party/protobuf"]
 	path = third_party/protobuf
-	url = https://gitee.com/keeyou/protobuf
+	url = https://github.com/Chilledheart/protobuf
 [submodule "third_party/libc++abi"]
 	path = third_party/libc++abi/trunk
-	url = https://gitee.com/keeyou/libcxxabi
+	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi
 [submodule "third_party/libc++"]
 	path = third_party/libc++/trunk
-	url = https://gitee.com/keeyou/libcxx
+	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx
 [submodule "third_party/googleurl"]
 	path = third_party/googleurl
-	url = https://gitee.com/keeyou/googleurl/
+	url = https://quiche.googlesource.com/googleurl/
 [submodule "third_party/c-ares"]
 	path = third_party/c-ares
-	url = https://gitee.com/keeyou/cares
+	url = https://github.com/Chilledheart/c-ares
 [submodule "third_party/nghttp2"]
 	path = third_party/nghttp2
-	url = https://gitee.com/keeyou/nghttp2
+	url = https://github.com/Chilledheart/nghttp2
 [submodule "third_party/benchmark"]
 	path = third_party/benchmark
-	url = https://gitee.com/keeyou/benchmark
+	url = https://github.com/Chilledheart/benchmark
 [submodule "third_party/mbedtls"]
 	path = third_party/mbedtls
-	url = https://gitee.com/keeyou/mbedtls
+	url = https://github.com/Chilledheart/mbedtls
 [submodule "third_party/libunwind/trunk"]
 	path = third_party/libunwind/trunk
-	url = https://gitee.com/keeyou/libunwind
+	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind
 [submodule "third_party/re2"]
 	path = third_party/re2
-	url = https://gitee.com/keeyou/re2
+	url = https://github.com/google/re2
 [submodule "third_party/leveldb"]
 	path = third_party/leveldb
-	url = https://gitee.com/keeyou/leveldb
+	url = https://github.com/Chilledheart/leveldb
 [submodule "third_party/snappy/src"]
 	path = third_party/snappy/src
-	url = https://gitee.com/keeyou/snappy
+	url = https://github.com/google/snappy
 [submodule "third_party/zstd"]
 	path = third_party/zstd
-	url = https://gitee.com/keeyou/zstd
+	url = https://github.com/Chilledheart/zstd
 [submodule "third_party/tun2proxy"]
 	path = third_party/tun2proxy
-	url = https://gitee.com/keeyou/tun2proxy
+	url = https://github.com/Chilledheart/tun2proxy
 [submodule "third_party/gperftools"]
 	path = third_party/gperftools
-	url = https://gitee.com/keeyou/gperftools
+	url = https://github.com/Chilledheart/gperftools
 [submodule "third_party/mimalloc"]
 	path = third_party/mimalloc
-	url = https://gitee.com/keeyou/mimalloc
+	url = https://github.com/Chilledheart/mimalloc
 [submodule "third_party/jsoncpp"]
 	path = third_party/jsoncpp
-	url = https://gitee.com/keeyou/jsoncpp
+	url = https://github.com/Chilledheart/jsoncpp
 [submodule "third_party/llvm-libc/trunk"]
 	path = third_party/llvm-libc/trunk
-	url = https://gitee.com/keeyou/llvm-libc
+	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc
