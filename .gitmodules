@@ -1,25 +1,25 @@
 [submodule "third_party/asio"]
 	path = third_party/asio
-	url = https://github.com/Chilledheart/asio
+	url = https://github.com/hukeyue/asio
 [submodule "third_party/abseil-cpp"]
 	path = third_party/abseil-cpp
-	url = https://github.com/Chilledheart/abseil-cpp
+	url = https://github.com/hukeyue/abseil-cpp
 [submodule "third_party/lss"]
 	path = third_party/lss
 	url = https://chromium.googlesource.com/linux-syscall-support
 [submodule "third_party/boringssl"]
 	path = third_party/boringssl/src
-	url = https://github.com/Chilledheart/boringssl
+	url = https://github.com/hukeyue/boringssl
 [submodule "third_party/quiche"]
 	path = third_party/quiche/src
-	url = https://github.com/Chilledheart/quiche
+	url = https://github.com/hukeyue/quiche
 	branch = main
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest
 [submodule "third_party/protobuf"]
 	path = third_party/protobuf
-	url = https://github.com/Chilledheart/protobuf
+	url = https://github.com/hukeyue/protobuf
 [submodule "third_party/libc++abi"]
 	path = third_party/libc++abi/trunk
 	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi
@@ -31,16 +31,16 @@
 	url = https://quiche.googlesource.com/googleurl/
 [submodule "third_party/c-ares"]
 	path = third_party/c-ares
-	url = https://github.com/Chilledheart/c-ares
+	url = https://github.com/hukeyue/c-ares
 [submodule "third_party/nghttp2"]
 	path = third_party/nghttp2
-	url = https://github.com/Chilledheart/nghttp2
+	url = https://github.com/hukeyue/nghttp2
 [submodule "third_party/benchmark"]
 	path = third_party/benchmark
-	url = https://github.com/Chilledheart/benchmark
+	url = https://github.com/hukeyue/benchmark
 [submodule "third_party/mbedtls"]
 	path = third_party/mbedtls
-	url = https://github.com/Chilledheart/mbedtls
+	url = https://github.com/hukeyue/mbedtls
 [submodule "third_party/libunwind/trunk"]
 	path = third_party/libunwind/trunk
 	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind
@@ -49,22 +49,22 @@
 	url = https://github.com/google/re2
 [submodule "third_party/leveldb"]
 	path = third_party/leveldb
-	url = https://github.com/Chilledheart/leveldb
+	url = https://github.com/hukeyue/leveldb
 [submodule "third_party/snappy/src"]
 	path = third_party/snappy/src
 	url = https://github.com/google/snappy
 [submodule "third_party/zstd"]
 	path = third_party/zstd
-	url = https://github.com/Chilledheart/zstd
+	url = https://github.com/hukeyue/zstd
 [submodule "third_party/tun2proxy"]
 	path = third_party/tun2proxy
-	url = https://github.com/Chilledheart/tun2proxy
+	url = https://github.com/hukeyue/tun2proxy
 [submodule "third_party/gperftools"]
 	path = third_party/gperftools
-	url = https://github.com/Chilledheart/gperftools
+	url = https://github.com/hukeyue/gperftools
 [submodule "third_party/mimalloc"]
 	path = third_party/mimalloc
-	url = https://github.com/Chilledheart/mimalloc
+	url = https://github.com/hukeyue/mimalloc
 [submodule "third_party/jsoncpp"]
 	path = third_party/jsoncpp
-	url = https://github.com/Chilledheart/jsoncpp
+	url = https://github.com/hukeyue/jsoncpp
