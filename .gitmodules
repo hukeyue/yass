@@ -31,7 +31,7 @@
 	url = https://gitee.com/keeyou/googleurl/
 [submodule "third_party/c-ares"]
 	path = third_party/c-ares
-	url = https://gitee.com/keeyou/c-ares
+	url = https://gitee.com/keeyou/cares
 [submodule "third_party/nghttp2"]
 	path = third_party/nghttp2
 	url = https://gitee.com/keeyou/nghttp2
