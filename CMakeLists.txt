@@ -4538,8 +4538,7 @@ if (GUI)
         set(ASSET_CATALOG src/ios/Assets.xcassets)
         set(ASSET_CATALOG_ASSETS Assets)
         list(APPEND SRC_FILES ${ALLRESOURCES})
-        list(APPEND SRC_FILES
-          ${ASSET_CATALOG})
+	#list(APPEND SRC_FILES ${ASSET_CATALOG})
         list(APPEND SRC_FILES
           src/ios/YassAppDelegate.mm
           src/ios/YassAppDelegate.h
@@ -4883,8 +4882,8 @@ if (GUI)
         # Therefore CMake strips the Resources folder name from the specified location.
         set_source_files_properties("src/ios/PrivacyInfo.xcprivacy" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
-        set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
-          MACOSX_PACKAGE_LOCATION "Resources")
+        #set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
+        #  MACOSX_PACKAGE_LOCATION "Resources")
 
         set_target_properties(${APP_NAME} PROPERTIES
           RESOURCE "${ALLRESOURCES}"
