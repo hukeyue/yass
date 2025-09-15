@@ -219,11 +219,11 @@ jobs:
         with:
           path: |
             qemu-user*.deb
-          key: ${{ runner.os }}-qemu-9.1.0-ds-8
+          key: ${{ runner.os }}-qemu-10.0.3-ds-0
       - name: "Install dependency: qemu user cache"
         if: ${{ steps.qemu-user-cache.outputs.cache-hit != 'true' }}
         run: |
-          wget http://ftp.us.debian.org/debian/pool/main/q/qemu/qemu-user_9.1.0+ds-8_amd64.deb
+          wget http://ftp.us.debian.org/debian/pool/main/q/qemu/qemu-user_10.0.3+ds-0+deb13u1_amd64.deb
       - name: Populate depedencies
         run: |
           sudo apt-get update -qq
