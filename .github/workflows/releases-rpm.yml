@@ -50,6 +50,8 @@ jobs:
         - 'aarch64-alpine320'
         - 'opensuse15'
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
