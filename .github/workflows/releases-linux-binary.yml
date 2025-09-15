@@ -139,7 +139,7 @@ jobs:
       - name: "Install dependency: sysroot (loongarch64)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' && matrix.arch == 'loongarch64' }}
         run: |
-          curl -L https://github.com/Chilledheart/loongson-chromium/releases/download/chromium120/debian_bullseye_loongarch64-sysroot.tar.bz2 | tar --bzip2 -xf -
+          curl -L https://github.com/hukeyue/loongson-chromium/releases/download/chromium120/debian_bullseye_loongarch64-sysroot.tar.bz2 | tar --bzip2 -xf -
       - name: "Install dependency: sysroot (riscv64 and riscv32)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' && (matrix.arch == 'riscv64' || matrix.arch == 'riscv32') }}
         run: |

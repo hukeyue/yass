@@ -72,14 +72,14 @@ jobs:
         if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
         run: |
           cd docker
-          docker build --cache-from ghcr.io/chilledheart/${{ matrix.container }} \
+          docker build --cache-from ghcr.io/hukeyue/${{ matrix.container }} \
             -f ${{ matrix.container }}.Dockerfile \
-            -t ghcr.io/chilledheart/${{ matrix.container }} \
+            -t ghcr.io/hukeyue/${{ matrix.container }} \
             .
       - name: Push Docker Image
         if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
         run: |
-          docker push --all-tags ghcr.io/chilledheart/${{ matrix.container }}
+          docker push --all-tags ghcr.io/hukeyue/${{ matrix.container }}
   rpm-release:
     strategy:
       fail-fast: false
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: docker_publish
     container:
-      image: 'ghcr.io/chilledheart/${{ matrix.container }}'
+      image: 'ghcr.io/hukeyue/${{ matrix.container }}'
     steps:
       - uses: actions/checkout@v4
       - name: Checkout with shallow submodules
@@ -234,9 +234,9 @@ jobs:
           sudo dpkg -i qemu-user_*.deb
       - name: Populate sysroot from docker image
         run: |
-          docker pull ghcr.io/chilledheart/${{ matrix.container }}
+          docker pull ghcr.io/hukeyue/${{ matrix.container }}
           mkdir -p "${{ env.SDK_ROOT }}"
-          docker export $(docker create --platform ${{ matrix.arch }} ghcr.io/chilledheart/${{ matrix.container }}) | tar -C "${{ env.SDK_ROOT }}" -xf -
+          docker export $(docker create --platform ${{ matrix.arch }} ghcr.io/hukeyue/${{ matrix.container }}) | tar -C "${{ env.SDK_ROOT }}" -xf -
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
