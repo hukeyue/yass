@@ -63,7 +63,7 @@ jobs:
             qemu_suffix: riscv64
           - arch: riscv32
             qemu_suffix: riscv32
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Checkout with shallow submodules
