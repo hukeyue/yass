@@ -18,7 +18,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 env:
-  CACHE_EPOCH: 132-2
+  CACHE_EPOCH: 141-1
   GOPROXY: direct
 jobs:
   win-clang-tidy:
@@ -128,8 +128,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            third_party/llvm-mingw-20240619-${{ matrix.variant }}-ubuntu-20.04-x86_64
-          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-20240619-${{ matrix.variant }}-v1
+            third_party/llvm-mingw-20250114-${{ matrix.variant }}-ubuntu-20.04-x86_64
+          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-20250114-${{ matrix.variant }}-v1
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
@@ -149,8 +149,8 @@ jobs:
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
           pushd third_party
-          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/20240619/llvm-mingw-20240619-${{ matrix.variant }}-ubuntu-20.04-x86_64.tar.xz
-          tar -xf llvm-mingw-20240619-${{ matrix.variant }}-ubuntu-20.04-x86_64.tar.xz
+          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/20250114/llvm-mingw-20250114-${{ matrix.variant }}-ubuntu-20.04-x86_64.tar.xz
+          tar -xf llvm-mingw-20250114-${{ matrix.variant }}-ubuntu-20.04-x86_64.tar.xz
           rm -vf llvm-mingw-*.xz
           popd
       - name: Change ubuntu mirror
@@ -184,7 +184,7 @@ jobs:
           export LC_ALL=en_US.UTF-8
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
             -build-test -build-benchmark -clang-tidy-mode \
-            -mingw-dir $PWD/third_party/llvm-mingw-20240619-${{ matrix.variant }}-ubuntu-20.04-x86_64 \
+            -mingw-dir $PWD/third_party/llvm-mingw-20250114-${{ matrix.variant }}-ubuntu-20.04-x86_64 \
             ${{ env.BUILD_OPTIONS }}
   linux-clang-tidy:
     runs-on: ubuntu-22.04

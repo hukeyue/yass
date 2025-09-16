@@ -241,7 +241,7 @@ http2::adapter::Http2VisitorInterface::OnHeaderResult CliConnection::OnHeaderFor
                                                                                        absl::string_view key,
                                                                                        absl::string_view value) {
   request_map_[key] = std::string{value};
-  return http2::adapter::Http2VisitorInterface::HEADER_OK;
+  return http2::adapter::Http2VisitorInterface::OnHeaderResult::HEADER_OK;
 }
 
 bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_id) {

@@ -21,10 +21,10 @@ commands:
     steps:
       - run:
           command: |
-            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz
-            tar -C third_party -xvf clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz \
-              clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/lib/clang/17/include \
-              clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/{clang,clang++,clang-17,ld.lld,lld,llvm-ar,llvm-ranlib}
+            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
+            tar -C third_party -xvf LLVM-19.1.7-Linux-X64.tar.xz \
+              LLVM-19.1.7-Linux-X64/lib/clang/19/include \
+              LLVM-19.1.7-Linux-X64/bin/{clang,clang++,clang-19,ld.lld,lld,llvm-ar,llvm-ranlib}
             rm -f *.xz
 
   download-toolchain-gcc:
@@ -88,8 +88,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang"
-            export "CXX=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
@@ -98,8 +98,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang"
-            export "CXX=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DUSE_QT6=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
@@ -118,8 +118,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang"
-            export "CXX=$PWD/third_party/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..

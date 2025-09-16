@@ -35,7 +35,7 @@ concurrency:
   group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 132-2
+  CACHE_EPOCH: 141-1
   GOPROXY: direct
 jobs:
   mac-release:
@@ -100,7 +100,7 @@ jobs:
         run: |
           WITH_CPU=${{ matrix.arch }} ./scripts/build-crashpad.sh
       - name: Install the Apple certificate
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ false && github.event_name == 'release' }}
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -142,7 +142,7 @@ jobs:
           ./build-darwin-${{ matrix.arch }}/yass_test
           ./build-darwin-${{ matrix.arch }}/yass_benchmark
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ false && github.event_name == 'release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
