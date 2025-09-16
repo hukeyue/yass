@@ -1,3 +1,11 @@
+yass (1.17.0-1) UNRELEASED; urgency=medium
+
+  * bump to chromium 141 dependents.
+  * net: replace folly::IOBuf with google::IOBuffer.
+  * tls: enable ML-KEM on all platforms by installation.
+  * undocumented changes.
+
+ -- Chilledheart <hukeyue@vip.163.com>  Tue, 16 Sep 2025 20:55:15 +0800
 yass (1.16.2-1) UNRELEASED; urgency=medium
 
   * cli: reduce memory usage per connection.

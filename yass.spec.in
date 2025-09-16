@@ -318,6 +318,11 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Tue Sep 16 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.0-1
+  - bump to chromium 141 dependents
+  - net: replace folly::IOBuf with google::IOBuffer
+  - tls: enable ML-KEM on all platforms by installation
+  - undocumented changes
 * Sun Dec 1 2024 Chilledheart <hukeyue@vip.163.com> - 1.16.2-1
   - cli: reduce memory usage per connection
   - base: use DCHECK_IS_ON for check_op
