@@ -5120,6 +5120,8 @@ if (BUILD_TESTS)
     add_executable(yass_test ${yass_test_SOURCE})
     minject_patch_exetuable(yass_test)
   endif()
+  # FIXME
+  target_compile_options(yass_test PRIVATE -Wno-thread-safety)
   if (USE_LEVELDB)
     target_sources(yass_test PRIVATE third_party/leveldb_test.cc)
   endif()
@@ -5259,6 +5261,8 @@ if (BUILD_BENCHMARKS)
     minject_patch_exetuable(yass_benchmark)
   endif()
 
+  # FIXME
+  target_compile_options(yass_benchmark PRIVATE -Wno-thread-safety)
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
                  PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
