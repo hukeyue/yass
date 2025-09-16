@@ -46,9 +46,8 @@ jobs:
         - 'fedora41'
         - 'alpine320'
         - 'i386-alpine320'
-        # FIXME ERROR: no match for platform in manifest: not found
-        #- 'armhf-alpine320'
-        #- 'aarch64-alpine320'
+        - 'armhf-alpine320'
+        - 'aarch64-alpine320'
         - 'opensuse15'
     runs-on: ubuntu-22.04
     permissions:
@@ -189,13 +188,12 @@ jobs:
           - container: 'i386-alpine320'
             arch: i386
             build_type: MinSizeRel
-          # FIXME ERROR: no match for platform in manifest: not found
-          # - container: 'aarch64-alpine320'
-          #   arch: aarch64
-          #   build_type: MinSizeRel
-          # - container: 'armhf-alpine320'
-          #   arch: armhf
-          #   build_type: MinSizeRel
+          - container: 'aarch64-alpine320'
+            arch: aarch64
+            build_type: MinSizeRel
+          - container: 'armhf-alpine320'
+            arch: armhf
+            build_type: MinSizeRel
     runs-on: ubuntu-22.04
     permissions:
       contents: write
