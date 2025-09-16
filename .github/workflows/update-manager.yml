@@ -12,6 +12,8 @@ on:
 jobs:
   update-manpage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Check out repository

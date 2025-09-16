@@ -64,6 +64,8 @@ jobs:
           - arch: riscv32
             qemu_suffix: riscv32
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Checkout with shallow submodules
