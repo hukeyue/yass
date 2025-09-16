@@ -68,6 +68,8 @@ jobs:
             apilevel: 24
             ndk_version: 26.3.11579264
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     env:
       ARCH: ${{ matrix.arch }}
       BUILD_TYPE: ${{ matrix.build_type }}

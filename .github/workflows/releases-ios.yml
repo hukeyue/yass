@@ -26,6 +26,8 @@ env:
 jobs:
   ios-simulator-release:
     runs-on: macos-15
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:

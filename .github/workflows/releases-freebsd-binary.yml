@@ -50,6 +50,8 @@ jobs:
         - '13'
         - '14'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     env:
       ARCH: ${{ matrix.arch }}
     steps:
