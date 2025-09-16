@@ -800,12 +800,16 @@ if (UNIX AND CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT AND COMPILER_CLANG AND NOT C
       endif()
     endif()
     # fix up for riscv64 and riscv32 sysroot
-    if (CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv32")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "riscv.*")
       file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/../lib/gcc/*/*.*.*")
     endif()
     # fix up for raw sysroot from docker
     if (NOT _GCC_SYSROOT)
       file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/usr/lib/gcc/*/*.*.*")
+    endif()
+    # fix up for mipsel and mips64el sysroot
+    if (NOT _GCC_SYSROOT)
+      file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/usr/lib/gcc/*/[0-9]*")
     endif()
     if (_GCC_SYSROOT)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --gcc-install-dir=${_GCC_SYSROOT}")
@@ -1483,7 +1487,10 @@ if ((UNIX AND NOT APPLE) OR ANDROID OR OHOS)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-pipe>)
   endif()
 
-  add_link_options(-Wl,-z,noexecstack -Wl,-z,relro)
+  # FIXME see https://github.com/hukeyue/yass/actions/runs/17764358948/
+  if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "mips.*")
+    add_link_options(-Wl,-z,noexecstack -Wl,-z,relro)
+  endif()
   add_link_options(-Wl,-z,now)
 endif()
 
