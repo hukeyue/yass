@@ -42,19 +42,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container:
-        - 'fedora41'
-        - 'alpine320'
-        - 'i386-alpine320'
-        - 'armhf-alpine320'
-        - 'aarch64-alpine320'
-        - 'opensuse15'
+        include:
+          - container: 'fedora41'
+            platform: 'linux/amd64'
+          - container: 'alpine320'
+            platform: 'linux/amd64'
+          - container: 'i386-alpine320'
+            platform: 'linux/amd64'
+          - container: 'armhf-alpine320'
+            platform: 'linux/arm/v7'
+          - container: 'aarch64-alpine320'
+            platform: 'linux/arm64'
+          - container: 'opensuse15'
+            platform: 'linux/amd64'
     runs-on: ubuntu-22.04
     permissions:
       packages: write
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: ${{ matrix.platform }}
       - uses: actions/checkout@v4
       - name: Cache docker files (dummy)
         id: docker-cache
@@ -70,18 +82,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build Docker Image
+      - name: Build and Push Docker Image
         if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
         run: |
           cd docker
-          docker build --cache-from ghcr.io/hukeyue/${{ matrix.container }} \
+          docker buildx build --cache-from ghcr.io/hukeyue/${{ matrix.container }} \
+            --platform ${{ matrix.platform }} \
+            --push \
             -f ${{ matrix.container }}.Dockerfile \
             -t ghcr.io/hukeyue/${{ matrix.container }} \
             .
-      - name: Push Docker Image
-        if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
-        run: |
-          docker push --all-tags ghcr.io/hukeyue/${{ matrix.container }}
   rpm-release:
     strategy:
       fail-fast: false
@@ -185,15 +195,19 @@ jobs:
           - container: 'alpine320'
             arch: amd64
             build_type: MinSizeRel
+            platform: 'linux/amd64'
           - container: 'i386-alpine320'
             arch: i386
             build_type: MinSizeRel
-          - container: 'aarch64-alpine320'
-            arch: aarch64
-            build_type: MinSizeRel
+            platform: 'linux/amd64'
           - container: 'armhf-alpine320'
             arch: armhf
             build_type: MinSizeRel
+            platform: 'linux/arm/v7'
+          - container: 'aarch64-alpine320'
+            arch: aarch64
+            build_type: MinSizeRel
+            platform: 'linux/arm64'
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -239,6 +253,8 @@ jobs:
 
           sudo dpkg -i qemu-user_*.deb
       - name: Populate sysroot from docker image
+        env:
+          DOCKER_DEFAULT_PLATFORM: ${{ matrix.platform }}
         run: |
           docker pull ghcr.io/hukeyue/${{ matrix.container }}
           mkdir -p "${{ env.SDK_ROOT }}"
