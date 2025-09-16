@@ -56,8 +56,6 @@ jobs:
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
       - name: Cache docker files (dummy)
         id: docker-cache
@@ -77,8 +75,7 @@ jobs:
         if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
         run: |
           cd docker
-          docker buildx build --cache-from ghcr.io/hukeyue/${{ matrix.container }} \
-            --platform linux/amd64,linux/arm64,linux/arm/v7 \
+          docker build --cache-from ghcr.io/hukeyue/${{ matrix.container }} \
             -f ${{ matrix.container }}.Dockerfile \
             -t ghcr.io/hukeyue/${{ matrix.container }} \
             .
