@@ -218,7 +218,7 @@ jobs:
             -E TMPDIR=$PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} \
             $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
       - name: Install the Release certificate
-        if: ${{ false && github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         env:
           SIGNING_STORE_BASE64: ${{ secrets.SIGNING_STORE_BASE64 }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
@@ -245,7 +245,7 @@ jobs:
             rm -f $SIGNING_STORE_PATH
           fi
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ false && github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

@@ -2437,6 +2437,8 @@ func inspectArchive(file string, files []string) {
 			// FIXME hardcoded with build-tools 36.0.0
 			apksigner := filepath.Join(androidSdkDir, "build-tools", "36.0.0", "apksigner")
 			cmdRun([]string{apksigner, "verify", "-v", "--min-sdk-version", fmt.Sprintf("%d", androidApiLevel), file}, true)
+			// verify signature - print certs
+			cmdRun([]string{apksigner, "verify", "--print-certs", file}, true)
 		}
 	} else if strings.HasSuffix(file, ".tgz") {
 		cmdRun([]string{"tar", "tvf", file}, false)
