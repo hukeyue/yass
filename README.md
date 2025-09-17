@@ -16,7 +16,12 @@ yass is an efficient forward proxy client supporting http/socks4/socks4a/socks5/
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
-- [Latest M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.2) will become Stable Release since _Jan 14, 2025_ (Extended Support).
+_NEW BUILD_(signed against new certificates)_:_
+- [EVALUATION M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.0) will become Stable Release since _Sep 30, 2025_.
+- [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.3) has become Stable Release since _Jan 14, 2025_ (Extended Support).
+
+_BAKED BUILDS_(signed with baked certificates)_:_
+- [Latest M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.2) has become Stable Release since _Jan 14, 2025_ (Extended Support).
 - [Latest M131's Release (1.15.x)](https://github.com/hukeyue/yass/releases/tag/1.15.4) has become Stable Release since _Nov 12, 2024_.
 - [Latest M130's Release (1.14.x)](https://github.com/hukeyue/yass/releases/tag/1.14.5) has become Stable Release since _Oct 15, 2024_ (Extended Support).
 - [Latest M129's Release (1.13.x)](https://github.com/hukeyue/yass/releases/tag/1.13.3) has become Stable Release since _Sep 17, 2024_.
