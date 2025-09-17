@@ -1,3 +1,10 @@
+yass (1.16.3-1) UNRELEASED; urgency=medium
+
+  * net: replace folly::IOBuf with google::IOBuffer.
+  * tls: enable ML-KEM on all platforms by installation.
+  * other undocumented changes.
+
+ -- Chilledheart <hukeyue@vip.163.com>  Wed, 17 Sep 2025 09:20:17 +0800
 yass (1.16.2-1) UNRELEASED; urgency=medium
 
   * cli: reduce memory usage per connection.
