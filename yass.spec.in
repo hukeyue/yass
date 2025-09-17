@@ -318,6 +318,8 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Wed Sep 17 2025 Chilledheart <hukeyue@vip.163.com> - 1.16.4-1
+  - undocumented changes
 * Wed Sep 17 2025 Chilledheart <hukeyue@vip.163.com> - 1.16.3-1
   - net: replace folly::IOBuf with google::IOBuffer
   - tls: enable ML-KEM on all platforms by installation
