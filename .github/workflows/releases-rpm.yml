@@ -48,7 +48,7 @@ jobs:
           - container: 'alpine320'
             platform: 'linux/amd64'
           - container: 'i386-alpine320'
-            platform: 'linux/amd64'
+            platform: 'linux/386'
           - container: 'armhf-alpine320'
             platform: 'linux/arm/v7'
           - container: 'aarch64-alpine320'
@@ -199,7 +199,7 @@ jobs:
           - container: 'i386-alpine320'
             arch: i386
             build_type: MinSizeRel
-            platform: 'linux/amd64'
+            platform: 'linux/386'
           - container: 'armhf-alpine320'
             arch: armhf
             build_type: MinSizeRel
@@ -258,7 +258,7 @@ jobs:
         run: |
           docker pull ghcr.io/hukeyue/${{ matrix.container }}
           mkdir -p "${{ env.SDK_ROOT }}"
-          docker export $(docker create --platform ${{ matrix.arch }} ghcr.io/hukeyue/${{ matrix.container }}) | tar -C "${{ env.SDK_ROOT }}" -xf -
+          docker export $(docker create ghcr.io/hukeyue/${{ matrix.container }}) | tar -C "${{ env.SDK_ROOT }}" -xf -
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
