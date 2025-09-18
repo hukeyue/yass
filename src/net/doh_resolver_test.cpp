@@ -52,7 +52,7 @@ TEST(DOH_TEST, LocalBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init("https://223.5.5.5/dns-query", 5000);
   ASSERT_EQ(ret, 0);
 
   DoLocalResolve(io_context, resolver);
@@ -94,7 +94,7 @@ TEST(DOH_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init("https://223.5.5.5/dns-query", 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -109,7 +109,7 @@ TEST(DOH_TEST, RemoteMulti) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init("https://223.5.5.5/dns-query", 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -128,7 +128,7 @@ TEST(DOH_TEST, Timeout) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://2.2.2.2/dns-query", 1);
+  int ret = resolver->Init("https://5.5.5.5/dns-query", 1);
   ASSERT_EQ(ret, 0);
 
   auto work_guard =
