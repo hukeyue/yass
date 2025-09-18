@@ -2,6 +2,10 @@
 
 @_YASS_LICENSE@
 
+=== yass alternative license ==
+
+@_YASS_OR1_LICENSE@
+
 === abseil-cpp ==
 
 @_ABSEIL_CPP_LICENSE@
