@@ -318,6 +318,8 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Thu Sep 18 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.2-1
+  - tls: correct ECDSA verification for FIPS
 * Wed Sep 17 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.1-1
   - undocumented changes
 * Tue Sep 16 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.0-1

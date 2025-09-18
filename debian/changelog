@@ -1,3 +1,7 @@
+yass (1.17.2-1) UNRELEASED; urgency=medium
+  * tls: correct ECDSA verification for FIPS.
+
+ -- Chilledheart <hukeyue@vip.163.com>  Thu, 18 Sep 2025 11:32:53 +0800
 yass (1.17.1-1) UNRELEASED; urgency=medium
   * undocumented changes.
 
