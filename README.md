@@ -18,13 +18,25 @@ Some data such as prebuilt binaries for BAKED BUILDS might be lost.
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
-_NEW BUILD_(signed against new certificates)_:_
+_PLANNED BUILD:_
+- M147's Release (1.23.x) will become Stable Release since _Apr 21, 2026_.
+- M146's Release (1.22.x) will become Stable Release since _Mar 24, 2026_ (Extended Support).
+- M145's Release (1.21.x) will become Stable Release since _Feb 24, 2025_.
+- M144's Release (1.20.x) will become Stable Release since _Jan 13, 2026_ (Extended Support).
+- M143's Release (1.19.x) will become Stable Release since _Dec 16, 2025_.
+- M142's Release (1.18.x) will become Stable Release since _Oct 28, 2025_ (Extended Support).
+
+[Report if you find/face/witness any miss in our plan or any conflict with our plan][frs]
+
+_LANDED BUILD_(signed against new certificates)_:_
 - [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.2) will become Stable Release since _Sep 30, 2025_.
 - [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release since _Jan 14, 2025_ (Extended Support).
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] is necessary.
 
 > [macOS prebuilts][macos_intel_dmg_url] and [iOS Beta][ios_testflight_invitation] are not provided until new permit from [Apple Developer][apple_developer] appears.
+
+[Report here if you find new network protocol/modification here and there, likely outside Chromium and curl][frs]
 
 _BAKED BUILDS_(signed with baked certificates)_:_
 - [Latest M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.2) has become Stable Release since _Jan 14, 2025_ (Extended Support).
@@ -40,7 +52,7 @@ _BAKED BUILDS_(signed with baked certificates)_:_
 - [Latest M122's Release (1.6.x)](https://github.com/hukeyue/yass/releases/tag/1.6.5) has become Stable Release since _Feb 20, 2024_ (Extended Support).
 - [Latest M121's Release (1.5.x)](https://github.com/hukeyue/yass/releases/tag/1.5.24) has become Stable Release since _Jan 23, 2024_.
 
-[Report here if you find new network protocol/modification here and there, likely outside Chromium and curl][frs]
+[Report if you witness any 404/page not found error from this page][bugs]
 
 ### Prebuilt binaries (Supported platforms)
 - GTK3 [download rpm][gtk3_rpm_url] or [download deb][gtk3_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
