@@ -18,19 +18,19 @@ Some data such as prebuilt binaries for BAKED BUILDS might be lost.
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
-_PLANNED BUILD:_
-- M147's Release (1.23.x) will become Stable Release since _Apr 21, 2026_.
-- M146's Release (1.22.x) will become Stable Release since _Mar 24, 2026_ (Extended Support).
-- M145's Release (1.21.x) will become Stable Release since _Feb 24, 2025_.
-- M144's Release (1.20.x) will become Stable Release since _Jan 13, 2026_ (Extended Support).
-- M143's Release (1.19.x) will become Stable Release since _Dec 16, 2025_.
-- M142's Release (1.18.x) will become Stable Release since _Oct 28, 2025_ (Extended Support).
+_PLANNED BUILDS:_
+- M147's Release (1.23.x) will become Stable Release _from Apr 21, 2026_.
+- M146's Release (1.22.x) will become Stable Release _from Mar 24, 2026_ (Extended Support).
+- M145's Release (1.21.x) will become Stable Release _from Feb 24, 2025_.
+- M144's Release (1.20.x) will become Stable Release _from Jan 13, 2026_ (Extended Support).
+- M143's Release (1.19.x) will become Stable Release _from Dec 16, 2025_.
+- M142's Release (1.18.x) will become Stable Release _from Oct 28, 2025_ (Extended Support).
 
 [Report if you find/face/witness any miss in our plan or any conflict with our plan][frs]
 
-_LANDED BUILD_(signed against new certificates)_:_
-- [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.2) will become Stable Release since _Sep 30, 2025_.
-- [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release since _Jan 14, 2025_ (Extended Support).
+_LANDED BUILDS_(signed against new certificates)_:_
+- [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.2) will become Stable Release _from Sep 30, 2025_.
+- [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release _since Jan 14, 2025_ (Extended Support).
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] is necessary.
 
