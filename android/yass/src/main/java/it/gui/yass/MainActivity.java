@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         {
-            boolean is_enabled = preferences.getBoolean(YassSettingsFragment.EnablePostQuantumKyberPreferenceKey, false);
+            boolean is_enabled = preferences.getBoolean(YassSettingsFragment.EnablePostQuantumKyberPreferenceKey, true);
             Log.d("Preferences", String.format(getLocale(), "Preferences: Post Quantumn Kyber: %b", is_enabled));
             YassUtils.setEnablePostQuantumKyber(is_enabled);
         }
