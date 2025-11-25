@@ -93,6 +93,10 @@ static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<DoHResol
                              if (ec == asio::error::timed_out) {
                                return;
                              }
+                             // Sometimes dns resolver don't get result without an answer like cloudflare
+                             if (ec == asio::error::host_not_found) {
+                               return;
+                             }
                              ASSERT_FALSE(ec) << ec;
                              for (auto iter = std::begin(results); iter != std::end(results); ++iter) {
                                const asio::ip::tcp::endpoint& endpoint = *iter;
