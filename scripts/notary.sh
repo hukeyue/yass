@@ -14,11 +14,18 @@ function notarize {
   ARCH=$2
   UNSIGNED_DMG=yass-macos-release-$ARCH-$TAG-unsigned.dmg
   SIGNED_DMG=yass-macos-release-$ARCH-$TAG.dmg
-  curl -L https://github.com/hukeyue/yass/releases/download/$TAG/$UNSIGNED_DMG -o $SIGNED_DMG
+  if [ ! -f $UNSIGNED_DMG ]; then
+    echo 'Skip missing file:' $UNSIGNED_DMG
+    return
+  fi
+  #curl -L https://github.com/hukeyue/yass/releases/download/$TAG/$UNSIGNED_DMG -o $SIGNED_DMG
+  mv -v $UNSIGNED_DMG $SIGNED_DMG
+  # xcrun notarytool store-credentials "notary" --apple-id "your-apple-id@example.com" --team-id "TEAMID12345" --password "AppSpecificPassword"
+  # Team ID: W5PW377ZKW
   xcrun notarytool submit $SIGNED_DMG --keychain-profile notary --wait
   xcrun stapler staple $SIGNED_DMG
   gh release upload $TAG $SIGNED_DMG
-  gh release delete-asset -y $TAG $UNSIGNED_DMG
+  #gh release delete-asset -y $TAG $UNSIGNED_DMG
 }
 
 function checksum {
