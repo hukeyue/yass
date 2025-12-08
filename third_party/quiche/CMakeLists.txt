@@ -10,8 +10,12 @@ set(quiche_SRCS
   src/quiche/binary_http/binary_http_message.h
   src/quiche/common/capsule.h
   src/quiche/common/capsule.cc
+  src/quiche/common/bug_utils.h
+  src/quiche/common/bug_utils.cc
   src/quiche/common/http/http_header_block.cc
   src/quiche/common/http/http_header_storage.cc
+  src/quiche/common/internet_checksum.h
+  src/quiche/common/internet_checksum.cc
   src/quiche/common/lifetime_tracking.h
   src/quiche/common/masque/connect_ip_datagram_payload.cc
   src/quiche/common/masque/connect_udp_datagram_payload.cc
@@ -28,10 +32,6 @@ set(quiche_SRCS
   src/quiche/common/platform/api/quiche_iovec.h
   src/quiche/common/platform/api/quiche_logging.h
   src/quiche/common/platform/api/quiche_lower_case_string.h
-  src/quiche/common/platform/api/quiche_mem_slice.h
-  src/quiche/common/platform/api/quiche_mutex.cc
-  src/quiche/common/platform/api/quiche_mutex.h
-  src/quiche/common/platform/api/quiche_prefetch.h
   src/quiche/common/platform/api/quiche_reference_counted.h
   src/quiche/common/platform/api/quiche_server_stats.h
   src/quiche/common/platform/api/quiche_stack_trace.h
@@ -45,13 +45,10 @@ set(quiche_SRCS
   src/quiche/common/platform/default/quiche_platform_impl/quiche_googleurl_impl.h
   # src/quiche/common/platform/default/quiche_platform_impl/quiche_logging_impl.cc
   # src/quiche/common/platform/default/quiche_platform_impl/quiche_logging_impl.h
-  src/quiche/common/platform/default/quiche_platform_impl/quiche_prefetch_impl.h
   #src/quiche/common/platform/default/quiche_platform_impl/quiche_default_proof_providers_impl.h
   #src/quiche/common/platform/default/quiche_platform_impl/quiche_default_proof_providers_impl.cc
   src/quiche/common/platform/default/quiche_platform_impl/quiche_lower_case_string_impl.h
   src/quiche/common/platform/default/quiche_platform_impl/quiche_bug_tracker_impl.h
-  src/quiche/common/platform/default/quiche_platform_impl/quiche_mutex_impl.h
-  src/quiche/common/platform/default/quiche_platform_impl/quiche_mutex_impl.cc
   src/quiche/common/platform/default/quiche_platform_impl/quiche_reference_counted_impl.h
   src/quiche/common/platform/default/quiche_platform_impl/quiche_stack_trace_impl.h
   src/quiche/common/platform/default/quiche_platform_impl/quiche_stack_trace_impl.cc
@@ -75,19 +72,26 @@ set(quiche_SRCS
   src/quiche/common/quiche_ip_address_family.cc
   src/quiche/common/quiche_ip_address_family.h
   src/quiche/common/quiche_linked_hash_map.h
+  src/quiche/common/quiche_mem_slice.cc
+  src/quiche/common/quiche_mem_slice.h
   src/quiche/common/quiche_mem_slice_storage.cc
   src/quiche/common/quiche_mem_slice_storage.h
   src/quiche/common/quiche_random.cc
   src/quiche/common/quiche_random.h
+  src/quiche/common/quiche_socket_address.cc
+  src/quiche/common/quiche_socket_address.h
   src/quiche/common/quiche_simple_arena.cc
   src/quiche/common/quiche_status_utils.h
   src/quiche/common/quiche_stream.h
+  src/quiche/common/quiche_weak_ptr.h
   src/quiche/common/quiche_text_utils.cc
   src/quiche/common/quiche_text_utils.h
   src/quiche/common/simple_buffer_allocator.cc
   src/quiche/common/simple_buffer_allocator.h
   src/quiche/common/structured_headers.cc
   src/quiche/common/structured_headers.h
+  src/quiche/common/vectorized_io_utils.cc
+  src/quiche/common/vectorized_io_utils.h
   src/quiche/common/wire_serialization.h
   src/quiche/http2/adapter/chunked_buffer.h
   src/quiche/http2/adapter/chunked_buffer.cc
@@ -116,9 +120,13 @@ set(quiche_SRCS
   src/quiche/http2/core/array_output_buffer.cc
   src/quiche/http2/core/array_output_buffer.h
   src/quiche/http2/core/header_byte_listener_interface.h
+  src/quiche/http2/core/http2_constants.cc
+  src/quiche/http2/core/http2_constants.h
   src/quiche/http2/core/http2_frame_decoder_adapter.cc
   src/quiche/http2/core/http2_frame_decoder_adapter.h
   src/quiche/http2/core/http2_header_block_hpack_listener.h
+  src/quiche/http2/core/http2_structures.cc
+  src/quiche/http2/core/http2_structures.h
   src/quiche/http2/core/http2_trace_logging.cc
   src/quiche/http2/core/http2_trace_logging.h
   src/quiche/http2/core/no_op_headers_handler.h
@@ -233,10 +241,6 @@ set(quiche_SRCS
   src/quiche/http2/hpack/varint/hpack_varint_decoder.h
   src/quiche/http2/hpack/varint/hpack_varint_encoder.cc
   src/quiche/http2/hpack/varint/hpack_varint_encoder.h
-  src/quiche/http2/http2_constants.cc
-  src/quiche/http2/http2_constants.h
-  src/quiche/http2/http2_structures.cc
-  src/quiche/http2/http2_structures.h
   src/quiche/oblivious_http/buffers/oblivious_http_request.cc
   src/quiche/oblivious_http/buffers/oblivious_http_request.h
   src/quiche/oblivious_http/buffers/oblivious_http_response.cc
@@ -405,6 +409,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/frames/quic_goaway_frame.h
   src/quiche/quic/core/frames/quic_handshake_done_frame.cc
   src/quiche/quic/core/frames/quic_handshake_done_frame.h
+  src/quiche/quic/core/frames/quic_immediate_ack_frame.cc
+  src/quiche/quic/core/frames/quic_immediate_ack_frame.h
   src/quiche/quic/core/frames/quic_inlined_frame.h
   src/quiche/quic/core/frames/quic_max_streams_frame.cc
   src/quiche/quic/core/frames/quic_max_streams_frame.h
@@ -448,6 +454,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/http/http_encoder.h
   src/quiche/quic/core/http/metadata_decoder.cc
   src/quiche/quic/core/http/metadata_decoder.h
+  src/quiche/quic/core/http/quic_connection_migration_manager.cc
+  src/quiche/quic/core/http/quic_connection_migration_manager.h
   src/quiche/quic/core/http/http_frames.h
   src/quiche/quic/core/http/quic_header_list.cc
   src/quiche/quic/core/http/quic_header_list.h
@@ -465,6 +473,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/http/quic_spdy_client_session.h
   src/quiche/quic/core/http/quic_spdy_client_session_base.cc
   src/quiche/quic/core/http/quic_spdy_client_session_base.h
+  src/quiche/quic/core/http/quic_spdy_client_session_with_migration.cc
+  src/quiche/quic/core/http/quic_spdy_client_session_with_migration.h
   src/quiche/quic/core/http/quic_spdy_client_stream.cc
   src/quiche/quic/core/http/quic_spdy_client_stream.h
   src/quiche/quic/core/http/quic_spdy_server_stream_base.cc
@@ -481,8 +491,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/http/web_transport_http3.h
   src/quiche/quic/core/http/web_transport_stream_adapter.cc
   src/quiche/quic/core/http/web_transport_stream_adapter.h
-  src/quiche/quic/core/internet_checksum.cc
-  src/quiche/quic/core/internet_checksum.h
   src/quiche/quic/core/legacy_quic_stream_id_manager.cc
   src/quiche/quic/core/legacy_quic_stream_id_manager.h
   src/quiche/quic/core/packet_number_indexed_queue.h
@@ -491,8 +499,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/proto/source_address_token_proto.h
   src/quiche/quic/core/qpack/new_qpack_blocking_manager.cc
   src/quiche/quic/core/qpack/new_qpack_blocking_manager.h
-  src/quiche/quic/core/qpack/qpack_blocking_manager.cc
-  src/quiche/quic/core/qpack/qpack_blocking_manager.h
   src/quiche/quic/core/qpack/qpack_blocking_manager_shim.h
   src/quiche/quic/core/qpack/qpack_decoded_headers_accumulator.cc
   src/quiche/quic/core/qpack/qpack_decoded_headers_accumulator.h
@@ -622,6 +628,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_path_validator.h
   src/quiche/quic/core/quic_ping_manager.cc
   src/quiche/quic/core/quic_ping_manager.h
+  src/quiche/quic/core/quic_queue_alarm_factory.cc
+  src/quiche/quic/core/quic_queue_alarm_factory.h
   src/quiche/quic/core/quic_received_packet_manager.cc
   src/quiche/quic/core/quic_received_packet_manager.h
   src/quiche/quic/core/quic_sent_packet_manager.cc
@@ -641,6 +649,10 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_stream_priority.h
   src/quiche/quic/core/quic_stream_send_buffer.cc
   src/quiche/quic/core/quic_stream_send_buffer.h
+  src/quiche/quic/core/quic_stream_send_buffer_base.cc
+  src/quiche/quic/core/quic_stream_send_buffer_base.h
+  src/quiche/quic/core/quic_stream_send_buffer_inling.cc
+  src/quiche/quic/core/quic_stream_send_buffer_inling.h
   src/quiche/quic/core/quic_stream_sequencer.cc
   src/quiche/quic/core/quic_stream_sequencer.h
   src/quiche/quic/core/quic_stream_sequencer_buffer.cc
@@ -697,8 +709,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/platform/api/quic_logging.h
   src/quiche/quic/platform/api/quic_mutex.h
   src/quiche/quic/platform/api/quic_server_stats.h
-  src/quiche/quic/platform/api/quic_socket_address.cc
-  src/quiche/quic/platform/api/quic_socket_address.h
   src/quiche/quic/platform/api/quic_stack_trace.h
   src/quiche/quic/platform/api/quic_testvalue.h
   src/quiche/quic/platform/api/quic_thread.h

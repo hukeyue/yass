@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-2.0
-/* Copyright (c) 2024 Chilledheart  */
+// SPDX-License-Identifier: GPL-2.0 OR CDDL-1.0
+/* Copyright (c) 2024-2025 Chilledheart  */
 
 import { YassDataItem } from './YassDataItem';
 import yass from 'libyass.so';

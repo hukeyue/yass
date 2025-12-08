@@ -22,7 +22,7 @@ if (ENABLE_LLD)
     endif()
   endif()
   # fix up for riscv64 and riscv32 sysroot
-  if (CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv32")
+  if (CMAKE_SYSTEM_PROCESSOR MATCHES "riscv.*")
     file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/../lib/gcc/*/*.*.*")
   endif()
   # fix up for raw sysroot from docker
@@ -38,6 +38,13 @@ if (ENABLE_LLD)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
   set(CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS} -fuse-ld=lld)
+
+  # see https://github.com/hukeyue/yass/actions/runs/17764358948/
+  if (CMAKE_SYSTEM_PROCESSOR MATCHES "mips.*")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,execstack")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,execstack")
+    set(CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS} -Wl,-z,execstack)
+  endif()
 endif()
 
 set(COMPILE_FLAGS)

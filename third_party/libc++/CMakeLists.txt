@@ -59,7 +59,7 @@ foreach(CompilerFlag ${CompilerFlags})
   string(REPLACE "-stdlib=libc++" "" ${CompilerFlag} "${${CompilerFlag}}")
 endforeach()
 
-set(libcxx_CR "8e31ad42561900383e10dbefc1d3e8f38cedfbe9")
+set(libcxx_CR "65a5746fb4cc5fd7fdd1773b0c50bc556ff8900a")
 # Fixed libc++ configuration macros are in
 # buildtools/third_party/libc++/__config_site. This config only has defines
 # that vary depending on gn args, and non-define flags.
@@ -209,7 +209,6 @@ set(libcxx_SOURCES
   trunk/src/ios.cpp
   trunk/src/ios.instantiations.cpp
   trunk/src/iostream.cpp
-  trunk/src/legacy_pointer_safety.cpp
   trunk/src/locale.cpp
   trunk/src/memory.cpp
   trunk/src/mutex.cpp
@@ -443,6 +442,18 @@ if (NOT APPLE AND (ASAN OR TSAN OR MSAN))
   set(libcxx_DEFINITIONS
     ${libcxx_DEFINITIONS}
     "_LIBCPP_DISABLE_NEW_DELETE_DEFINITIONS"
+  )
+endif()
+
+if (ASAN AND NOT APPLE)
+  set(libcxx_DEFINITIONS
+    ${libcxx_DEFINITIONS}
+    "_LIBCPP_INSTRUMENTED_WITH_ASAN=1"
+  )
+else()
+  set(libcxx_DEFINITIONS
+    ${libcxx_DEFINITIONS}
+    "_LIBCPP_INSTRUMENTED_WITH_ASAN=0"
   )
 endif()
 

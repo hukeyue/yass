@@ -800,12 +800,16 @@ if (UNIX AND CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT AND COMPILER_CLANG AND NOT C
       endif()
     endif()
     # fix up for riscv64 and riscv32 sysroot
-    if (CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv32")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "riscv.*")
       file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/../lib/gcc/*/*.*.*")
     endif()
     # fix up for raw sysroot from docker
     if (NOT _GCC_SYSROOT)
       file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/usr/lib/gcc/*/*.*.*")
+    endif()
+    # fix up for mipsel and mips64el sysroot
+    if (NOT _GCC_SYSROOT)
+      file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/usr/lib/gcc/*/[0-9]*")
     endif()
     if (_GCC_SYSROOT)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --gcc-install-dir=${_GCC_SYSROOT}")
@@ -1483,7 +1487,10 @@ if ((UNIX AND NOT APPLE) OR ANDROID OR OHOS)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-pipe>)
   endif()
 
-  add_link_options(-Wl,-z,noexecstack -Wl,-z,relro)
+  # FIXME see https://github.com/hukeyue/yass/actions/runs/17764358948/
+  if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "mips.*")
+    add_link_options(-Wl,-z,noexecstack -Wl,-z,relro)
+  endif()
   add_link_options(-Wl,-z,now)
 endif()
 
@@ -5043,6 +5050,7 @@ endif()
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ LICENSES/GPL-2.0                                _YASS_LICENSE)
+  file(READ LICENSES/CDDL-1.0                               _YASS_OR1_LICENSE)
   file(READ third_party/abseil-cpp/LICENSE                  _ABSEIL_CPP_LICENSE)
   file(READ third_party/asio/asio/LICENSE_1_0.txt           _ASIO_LICENSE)
   file(READ third_party/boringssl/src/LICENSE               _BORINGSSL_LICENSE)
@@ -5120,6 +5128,8 @@ if (BUILD_TESTS)
     add_executable(yass_test ${yass_test_SOURCE})
     minject_patch_exetuable(yass_test)
   endif()
+  # FIXME
+  target_compile_options(yass_test PRIVATE -Wno-thread-safety)
   if (USE_LEVELDB)
     target_sources(yass_test PRIVATE third_party/leveldb_test.cc)
   endif()
@@ -5259,6 +5269,8 @@ if (BUILD_BENCHMARKS)
     minject_patch_exetuable(yass_benchmark)
   endif()
 
+  # FIXME
+  target_compile_options(yass_benchmark PRIVATE -Wno-thread-safety)
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
                  PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
