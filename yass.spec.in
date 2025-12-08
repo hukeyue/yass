@@ -318,6 +318,8 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Mon Dec 8 2025 Chilledheart <hukeyue@vip.163.com> - 1.20.0-1
+  - bump to chromium 144 dependents
 * Thu Sep 18 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.2-1
   - tls: correct ECDSA verification for FIPS
 * Wed Sep 17 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.1-1
