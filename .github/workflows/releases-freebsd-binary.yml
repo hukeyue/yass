@@ -110,8 +110,11 @@ jobs:
       - name: Build Binary
         run: |
           ./tools/build --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
-            --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -build-benchmark -build-test
+            --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain
+            # FIXME disabled temporarily
+            # /usr/include/machine/proc.h:40:8: error: definition of type 'ptrauth_key' conflicts with typedef of the
+            # same name
+            # -build-benchmark -build-test
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:
