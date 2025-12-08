@@ -1924,6 +1924,12 @@ if (FREEBSD AND OS_X86)
   add_compile_options(-msse2)
 endif()
 
+# silence some missing symbols
+# ld.lld: error: undefined symbol: __aarch64_ldadd8_relax
+if (FREEBSD AND OS_AARCH64)
+  add_compile_options(-mno-outline-atomics)
+endif()
+
 # make boringssl capable on aarch64
 if (LINUX AND OS_AARCH64)
   add_compile_options($<$<COMPILE_LANGUAGE:ASM>:-march=armv8-a+crypto>)

@@ -35,7 +35,7 @@ concurrency:
   group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 141-1
+  CACHE_EPOCH: 144-1
   GOPROXY: direct
 jobs:
   freebsd-binary-release:
@@ -74,7 +74,7 @@ jobs:
         with:
           path: |
             freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain
-          key: freebsd-sysroot-${{ matrix.abi }}-${{ matrix.arch }}-${{ hashFiles('scripts/install-sysroot-freebsd.py') }}-v1
+          key: freebsd-sysroot-${{ matrix.abi }}-${{ matrix.arch }}-${{ hashFiles('scripts/install-sysroot-freebsd.py') }}-v3-v5
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
@@ -110,8 +110,11 @@ jobs:
       - name: Build Binary
         run: |
           ./tools/build --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
-            --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -build-benchmark -build-test
+            --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain
+            # FIXME disabled temporarily
+            # /usr/include/machine/proc.h:40:8: error: definition of type 'ptrauth_key' conflicts with typedef of the
+            # same name
+            # -build-benchmark -build-test
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

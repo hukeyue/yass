@@ -403,6 +403,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/frames/quic_connection_close_frame.h
   src/quiche/quic/core/frames/quic_crypto_frame.cc
   src/quiche/quic/core/frames/quic_crypto_frame.h
+  src/quiche/quic/core/frames/quic_datagram_frame.cc
+  src/quiche/quic/core/frames/quic_datagram_frame.h
   src/quiche/quic/core/frames/quic_frame.cc
   src/quiche/quic/core/frames/quic_frame.h
   src/quiche/quic/core/frames/quic_goaway_frame.cc
@@ -414,8 +416,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/frames/quic_inlined_frame.h
   src/quiche/quic/core/frames/quic_max_streams_frame.cc
   src/quiche/quic/core/frames/quic_max_streams_frame.h
-  src/quiche/quic/core/frames/quic_message_frame.cc
-  src/quiche/quic/core/frames/quic_message_frame.h
   src/quiche/quic/core/frames/quic_mtu_discovery_frame.h
   src/quiche/quic/core/frames/quic_new_connection_id_frame.cc
   src/quiche/quic/core/frames/quic_new_connection_id_frame.h
@@ -602,6 +602,8 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_error_codes.h
   src/quiche/quic/core/quic_flow_controller.cc
   src/quiche/quic/core/quic_flow_controller.h
+  src/quiche/quic/core/quic_force_blockable_packet_writer.cc
+  src/quiche/quic/core/quic_force_blockable_packet_writer.h
   src/quiche/quic/core/quic_framer.cc
   src/quiche/quic/core/quic_framer.h
   src/quiche/quic/core/quic_generic_session.cc

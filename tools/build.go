@@ -213,7 +213,7 @@ func InitFlag() {
 	flag.StringVar(&msvcCrtLinkageFlag, "msvc-crt-linkage", getEnv("MSVC_CRT_LINKAGE", "dynamic"), "Set Visual C++ CRT Linkage")
 	flag.BoolVar(&msvcAllowXpFlag, "msvc-allow-xp", getEnvBool("MSVC_ALLOW_XP", false), "Enable Windows XP Build")
 
-	flag.IntVar(&freebsdAbiFlag, "freebsd-abi", getFreebsdABI(11), "Select FreeBSD ABI")
+	flag.IntVar(&freebsdAbiFlag, "freebsd-abi", getFreebsdABI(13), "Select FreeBSD ABI")
 
 	flag.StringVar(&systemNameFlag, "system", runtime.GOOS, "Specify host system name")
 	flag.StringVar(&subSystemNameFlag, "subsystem", "", "Specify host subsystem name")
