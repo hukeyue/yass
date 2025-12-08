@@ -21,10 +21,10 @@ commands:
     steps:
       - run:
           command: |
-            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
-            tar -C third_party -xvf LLVM-19.1.7-Linux-X64.tar.xz \
-              LLVM-19.1.7-Linux-X64/lib/clang/19/include \
-              LLVM-19.1.7-Linux-X64/bin/{clang,clang++,clang-19,ld.lld,lld,llvm-ar,llvm-ranlib}
+            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz
+            tar -C third_party -xvf LLVM-20.1.8-Linux-X64.tar.xz \
+              LLVM-20.1.8-Linux-X64/lib/clang/20/include \
+              LLVM-20.1.8-Linux-X64/bin/{clang,clang++,clang-20,ld.lld,lld,llvm-ar,llvm-ranlib}
             rm -f *.xz
 
   download-toolchain-gcc:
@@ -88,8 +88,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
@@ -98,8 +98,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DUSE_QT6=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
@@ -118,8 +118,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-19.1.7-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..

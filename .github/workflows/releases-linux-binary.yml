@@ -147,7 +147,7 @@ jobs:
         run: |
           mkdir -p debian_bullseye_${{ matrix.arch }}-sysroot
           cd debian_bullseye_${{ matrix.arch }}-sysroot
-          curl -L https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.07.07/${{ matrix.arch }}-glibc-ubuntu-20.04-gcc-nightly-2023.07.07-nightly.tar.gz | tar --strip-components=1 --gz -xf -
+          curl -L https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.07.07/${{ matrix.arch }}-glibc-ubuntu-22.04-gcc-nightly-2023.07.07-nightly.tar.gz | tar --strip-components=1 --gz -xf -
           rm -rf bin include libexec ${{ matrix.arch }}-unknown-linux-gnu share
           cd ..
       - name: Change ubuntu mirror
