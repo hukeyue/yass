@@ -14,6 +14,7 @@ function notarize {
   ARCH=$2
   UNSIGNED_DMG=yass-macos-release-$ARCH-$TAG-unsigned.dmg
   SIGNED_DMG=yass-macos-release-$ARCH-$TAG.dmg
+  DEBUGINFO_TARBALL=yass-macos-release-$ARCH-$TAG-debuginfo.zip
   if [ ! -f $UNSIGNED_DMG ]; then
     echo 'Skip missing file:' $UNSIGNED_DMG
     return
@@ -25,6 +26,7 @@ function notarize {
   xcrun notarytool submit $SIGNED_DMG --keychain-profile notary --wait
   xcrun stapler staple $SIGNED_DMG
   gh release upload $TAG $SIGNED_DMG
+  gh release upload $TAG $DEBUGINFO_TARBALL
   #gh release delete-asset -y $TAG $UNSIGNED_DMG
 }
 
@@ -32,7 +34,9 @@ function checksum {
   TAG=$1
   ARCH=$2
   SIGNED_DMG=yass-macos-release-$ARCH-$TAG.dmg
+  DEBUGINFO_TARBALL=yass-macos-release-$ARCH-$TAG-debuginfo.zip
   sha256sum $SIGNED_DMG
+  sha256sum $DEBUGINFO_TARBALL
 }
 
 notarize $1 x64
