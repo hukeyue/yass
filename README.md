@@ -29,7 +29,7 @@ _LANDED BUILDS_(signed against new certificates)_:_
 - [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.0) will become Stable Release _from Jan 13, 2026_ (Extended Support).
 - M143's Release (1.19.x) will become Stable Release _from Dec 16, 2025_.
 - M142's Release (1.18.x) has become Stable Release _from Oct 28, 2025_ (Extended Support).
-- [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.2) has become Stable Release _from Sep 30, 2025_.
+- [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.3) has become Stable Release _from Sep 30, 2025_.
 - [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release _since Jan 14, 2025_ (Extended Support).
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] and [macOS prebuilts][macos_intel_dmg_url] is necessary.
