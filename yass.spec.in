@@ -318,6 +318,9 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Wed Dec 10 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.3-1
+  - libcxx: apply m141 patch
+  - generic: make source code CDDL-1.0 compatible
 * Thu Sep 18 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.2-1
   - tls: correct ECDSA verification for FIPS
 * Wed Sep 17 2025 Chilledheart <hukeyue@vip.163.com> - 1.17.1-1

@@ -1,3 +1,8 @@
+yass (1.17.3-1) UNRELEASED; urgency=medium
+  * libcxx: apply m141 patch
+  * license: make source code CDDL-1.0 compatible
+
+ -- Chilledheart <hukeyue@vip.163.com>  Wed, 10 Dec 2025 12:43:42 +0800
 yass (1.17.2-1) UNRELEASED; urgency=medium
   * tls: correct ECDSA verification for FIPS.
 
