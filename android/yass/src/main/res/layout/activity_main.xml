@@ -189,7 +189,7 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:hint="https://1.1.1.1/dns-query"
-                android:inputType="text" />
+                android:inputType="textUri" />
         </LinearLayout>
 
         <LinearLayout
