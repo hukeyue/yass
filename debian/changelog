@@ -1,3 +1,7 @@
+yass (1.17.4-1) UNRELEASED; urgency=medium
+
+  * miscellaneous fixes
+ -- Chilledheart <hukeyue@vip.163.com>  Fri, 12 Dec 2025 20:02:57 +0800
 yass (1.17.3-1) UNRELEASED; urgency=medium
   * libcxx: apply m141 patch
   * license: make source code CDDL-1.0 compatible
