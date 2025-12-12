@@ -40,6 +40,8 @@ public class YassUtils {
 
     public static native String[] getCipherStrings();
 
+    public static native int getLocalPort();
+
     public static native String getDoHUrl();
 
     public static native String getDoTHost();
@@ -49,8 +51,9 @@ public class YassUtils {
     public static native int getTimeout();
 
     public static native String saveConfig(String serverHost, String serverSNI, String serverPort,
-                                     String username, String password, int cipher, String doh_url,
-                                     String dot_host, String limit_rate, String timeout);
+                                     String username, String password, int cipher, String localPort,
+                                     String doh_url, String dot_host,
+                                     String limit_rate, String timeout);
 
     public static native void setEnablePostQuantumKyber(boolean enable_post_quantum_kyber);
 }

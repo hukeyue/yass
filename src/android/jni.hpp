@@ -39,6 +39,7 @@ extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getUsername(JNIE
 extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getPassword(JNIEnv* env, jobject obj);
 extern "C" JNIEXPORT jint JNICALL Java_it_gui_yass_YassUtils_getCipher(JNIEnv* env, jobject obj);
 extern "C" JNIEXPORT jobjectArray JNICALL Java_it_gui_yass_YassUtils_getCipherStrings(JNIEnv* env, jobject obj);
+extern "C" JNIEXPORT jint JNICALL Java_it_gui_yass_YassUtils_getLocalPort(JNIEnv* env, jobject obj);
 extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getDoHUrl(JNIEnv* env, jobject obj);
 extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getDoTHost(JNIEnv* env, jobject obj);
 extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getLimitRate(JNIEnv* env, jobject obj);
@@ -52,6 +53,7 @@ extern "C" JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_saveConfig(JNIEn
                                                                            jobject username,
                                                                            jobject password,
                                                                            jint method_idx,
+                                                                           jobject local_port,
                                                                            jobject doh_url,
                                                                            jobject dot_host,
                                                                            jobject limit_rate,

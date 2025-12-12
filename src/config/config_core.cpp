@@ -161,7 +161,13 @@ ABSL_FLAG(std::string, server_host, "http2.github.io", "Remote server on given h
 ABSL_FLAG(std::string, server_sni, "", "Remote server on given sni");
 ABSL_FLAG(PortFlag, server_port, PortFlag(443), "Remote server on given port");
 ABSL_FLAG(std::string, local_host, "127.0.0.1", "Local proxy server on given host (Client Only)");
-ABSL_FLAG(PortFlag, local_port, PortFlag(1080), "Local proxy server on given port (Client Only)");
+ABSL_FLAG(PortFlag, local_port,
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
+          PortFlag(0),
+#else
+          PortFlag(1080),
+#endif
+          "Local proxy server on given port (Client Only)");
 ABSL_FLAG(std::string, username, "username", "Server user");
 ABSL_FLAG(std::string, password, "password", "Server password");
 ABSL_FLAG(CipherMethodFlag,

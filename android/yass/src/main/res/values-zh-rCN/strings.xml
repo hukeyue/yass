@@ -27,4 +27,6 @@
     <string name="button_options">选项</string>
     <string name="title_options">选项</string>
     <string name="label_limit_rate">限制速率</string>
+    <string name="label_local_port">本地端口</string>
+    <string name="hint_local_port">0（0 代表随机端口）</string>
 </resources>
