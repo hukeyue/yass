@@ -160,6 +160,9 @@ public class MainActivity extends AppCompatActivity {
         cipherSpinner.setAdapter(adapter);
         cipherSpinner.setSelection(YassUtils.getCipher());
 
+        EditText localPortEditText = findViewById(R.id.localPortEditText);
+        localPortEditText.setText(String.format(getLocale(), "%d", YassUtils.getLocalPort()));
+
         EditText dohUrlEditText = findViewById(R.id.dohUrlEditText);
         dohUrlEditText.setText(String.format(getLocale(), "%s", YassUtils.getDoHUrl()));
 
@@ -211,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
         EditText usernameEditText = findViewById(R.id.usernameEditText);
         EditText passwordEditText = findViewById(R.id.passwordEditText);
         Spinner cipherSpinner = findViewById(R.id.cipherSpinner);
+        EditText localPortEditText = findViewById(R.id.localPortEditText);
         EditText dohUrlEditText = findViewById(R.id.dohUrlEditText);
         EditText dotHostEditText = findViewById(R.id.dotHostEditText);
         EditText limitRateEditText = findViewById(R.id.limitRateEditText);
@@ -222,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
                 usernameEditText.getText().toString(),
                 passwordEditText.getText().toString(),
                 cipherSpinner.getSelectedItemPosition(),
+                localPortEditText.getText().toString(),
                 dohUrlEditText.getText().toString(),
                 dotHostEditText.getText().toString(),
                 limitRateEditText.getText().toString(),

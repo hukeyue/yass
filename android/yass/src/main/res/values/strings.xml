@@ -27,4 +27,6 @@
     <string name="button_options">Options</string>
     <string name="title_options">Options</string>
     <string name="label_limit_rate">Limit Rate</string>
+    <string name="label_local_port">Local Port</string>
+    <string name="hint_local_port">0 (0 stands for random port)</string>
 </resources>

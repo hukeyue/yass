@@ -74,6 +74,10 @@ JNIEXPORT jint JNICALL Java_it_gui_yass_YassUtils_getServerPort(JNIEnv* env, job
   return absl::GetFlag(FLAGS_server_port);
 }
 
+JNIEXPORT jint JNICALL Java_it_gui_yass_YassUtils_getLocalPort(JNIEnv* env, jobject obj) {
+  return absl::GetFlag(FLAGS_local_port);
+}
+
 JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_getUsername(JNIEnv* env, jobject obj) {
   return env->NewStringUTF(absl::GetFlag(FLAGS_username).c_str());
 }
@@ -127,6 +131,7 @@ JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_saveConfig(JNIEnv* env,
                                                                 jobject _username,
                                                                 jobject _password,
                                                                 jint _method_idx,
+                                                                jobject _local_port,
                                                                 jobject _doh_url,
                                                                 jobject _dot_host,
                                                                 jobject _limit_rate,
@@ -156,7 +161,10 @@ JNIEXPORT jobject JNICALL Java_it_gui_yass_YassUtils_saveConfig(JNIEnv* env,
   auto method = kCipherMethods[_method_idx];
 
   constexpr std::string_view local_host = "0.0.0.0";
-  constexpr std::string_view local_port = "0";
+
+  const char* local_port_str = env->GetStringUTFChars((jstring)_local_port, nullptr);
+  std::string local_port = local_port_str != nullptr ? local_port_str : std::string();
+  env->ReleaseStringUTFChars((jstring)_local_port, local_port_str);
 
   const char* doh_url_str = env->GetStringUTFChars((jstring)_doh_url, nullptr);
   std::string doh_url = doh_url_str != nullptr ? doh_url_str : std::string();
