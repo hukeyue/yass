@@ -4543,9 +4543,9 @@ if (GUI)
             src/ios/zh-Hans.lproj/Main.strings)
         endif()
         set(ASSET_CATALOG src/ios/Assets.xcassets)
-        set(ASSET_CATALOG_ASSETS Assets)
+        set(ASSET_CATALOG_ASSETS AppIcon)
         list(APPEND SRC_FILES ${ALLRESOURCES})
-	#list(APPEND SRC_FILES ${ASSET_CATALOG})
+        list(APPEND SRC_FILES ${ASSET_CATALOG})
         list(APPEND SRC_FILES
           src/ios/YassAppDelegate.mm
           src/ios/YassAppDelegate.h
@@ -4889,8 +4889,8 @@ if (GUI)
         # Therefore CMake strips the Resources folder name from the specified location.
         set_source_files_properties("src/ios/PrivacyInfo.xcprivacy" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
-        #set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
-        #  MACOSX_PACKAGE_LOCATION "Resources")
+        set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
+          MACOSX_PACKAGE_LOCATION "Resources")
 
         set_target_properties(${APP_NAME} PROPERTIES
           RESOURCE "${ALLRESOURCES}"
@@ -4910,7 +4910,8 @@ if (GUI)
           XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
           XCODE_ATTRIBUTE_PRODUCT_NAME "${PACKAGE_NAME}"
           XCODE_GENERATE_SCHEME "TRUE"
-          XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+          XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "${ASSET_CATALOG_ASSETS}"
+          XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES YES
           # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/15183
           # Apps must have install step enabled
           XCODE_ATTRIBUTE_INSTALL_PATH  "$(LOCAL_APPS_DIR)"

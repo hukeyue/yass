@@ -202,10 +202,10 @@ func InitFlag() {
 	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.14"), "Set Mac OS X deployment target, such as 10.15")
 	flag.BoolVar(&macosxUniversalBuildFlag, "macosx-universal-build", getEnvBool("ENABLE_OSX_UNIVERSAL_BUILD", false), "Enable Mac OS X Universal Build")
 	flag.StringVar(&macosxKeychainPathFlag, "macosx-keychain-path", getEnv("KEYCHAIN_PATH", ""), "During signing, only search for the signing identity in the keychain file specified")
-	flag.StringVar(&macosxCodeSignIdentityFlag, "macosx-codesign-identity", getEnv("CODESIGN_IDENTITY", "-"), "Set Mac OS X CodeSign Identity")
+	flag.StringVar(&macosxCodeSignIdentityFlag, "macosx-codesign-identity", getEnv("MAC_CODESIGN_IDENTITY", "-"), "Set Mac OS X CodeSign Identity")
 
 	flag.StringVar(&iosVersionMinFlag, "ios-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "13.0"), "Set iOS deployment target, such as 13.0")
-	flag.StringVar(&iosCodeSignIdentityFlag, "ios-codesign-identity", getEnv("CODESIGN_IDENTITY", "-"), "Set iOS CodeSign Identity")
+	flag.StringVar(&iosCodeSignIdentityFlag, "ios-codesign-identity", getEnv("IOS_CODESIGN_IDENTITY", "-"), "Set iOS CodeSign Identity")
 	flag.StringVar(&iosDevelopmentTeamFlag, "ios-development-team", getEnv("DEVELOPMENT_TEAM", ""), "Set iOS deployment team")
 	flag.StringVar(&iosTestDeviceNameFlag, "ios-test-device-name", getEnv("IPHONE_NAME", ""), "Set iOS test device name")
 
