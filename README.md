@@ -34,7 +34,7 @@ _LANDED BUILDS_(signed against new certificates)_:_
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] and [macOS prebuilts][macos_intel_dmg_url] is necessary.
 
-> New [iOS Beta][ios_testflight_invitation] are not provided yet.
+> New [iOS Beta][ios_testflight_invitation] will be provided soon.
 
 [Report here if you find new network protocol/modification here and there, likely outside Chromium and curl][frs]
 
