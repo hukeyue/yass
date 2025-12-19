@@ -34,8 +34,6 @@ _LANDED BUILDS_(signed against new certificates)_:_
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] and [macOS prebuilts][macos_intel_dmg_url] is necessary.
 
-> New [iOS Beta][ios_testflight_invitation] will be provided soon.
-
 [Report here if you find new network protocol/modification here and there, likely outside Chromium and curl][frs]
 
 _BAKED BUILDS_(signed with baked certificates)_:_
@@ -90,6 +88,8 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 - Legacy iOS [Continue to accept TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_, and _iOS 13.0_ or above)
 - Legacy Windows [download 64-bit installer][windows_64_installer_url] (require [KB2999226] on _windows 7/8/8.1_) or [download 32-bit installer][windows_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3_) or [download arm64 installer][windows_arm64_installer_url] (require _windows 10/11_)
 - Legacy macOS [download intel dmg][macos_intel_dmg_url] or [download apple silicon dmg][macos_arm_dmg_url] (require _macOS 10.14_ or above)
+
+> New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.1 FOR NOW).
 
 See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
 
