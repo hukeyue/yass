@@ -4557,8 +4557,20 @@ if (GUI)
             src/ios/PrivacyInfo.xcprivacy
             src/ios/en.lproj/Localizable.strings
             src/ios/en.lproj/Main.strings
+            src/ios/es.lproj/Localizable.strings
+            src/ios/es.lproj/Main.strings
+            src/ios/fr.lproj/Localizable.strings
+            src/ios/fr.lproj/Main.strings
+            src/ios/ja.lproj/Localizable.strings
+            src/ios/ja.lproj/Main.strings
+            src/ios/ko.lproj/Localizable.strings
+            src/ios/ko.lproj/Main.strings
+            src/ios/ru.lproj/Localizable.strings
+            src/ios/ru.lproj/Main.strings
             src/ios/zh-Hans.lproj/Localizable.strings
-            src/ios/zh-Hans.lproj/Main.strings)
+            src/ios/zh-Hans.lproj/Main.strings
+            src/ios/zh-Hant.lproj/Localizable.strings
+            src/ios/zh-Hant.lproj/Main.strings)
         endif()
         set(ASSET_CATALOG src/ios/Assets.xcassets)
         set(ASSET_CATALOG_ASSETS AppIcon)

@@ -1,0 +1,29 @@
+"CONNECTED_WITH_CONNS" = "Соединение установлено: ";
+
+"DISCONNECTED_WITH" = "Отключено от сервера";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Не удалось подключиться, потому что ";
+
+"NETWORK_UNREACHABLE" = "Сеть недоступна";
+
+"RXRATE" = "Скорость загрузки: ";
+
+"TXRATE" = "Скорость выгрузки: ";
+
+"CONNECTING" = "Подключение";
+
+"CONNECTED" = "Подключено";
+
+"DISCONNECTING" = "Отключение";
+
+"DISCONNECTED" = "Отключено";
+
+"INVALID" = "Недействительное соединение";
+
+"REASSERTING" = "Переподключение";
+
+"UNKNOWN" = "Неизвестный статус";
+
+"START_FAILED" = "Сбой запуска";
+
+"OK" = "Подтверждение";

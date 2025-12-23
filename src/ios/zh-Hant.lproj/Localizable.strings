@@ -1,0 +1,29 @@
+"CONNECTED_WITH_CONNS" = "已產生連線: ";
+
+"DISCONNECTED_WITH" = "中斷連線於伺服器 ";
+
+"FAILED_TO_CONNECT_DUE_TO" = "無法連線因為 ";
+
+"NETWORK_UNREACHABLE" = "網路無法存取";
+
+"RXRATE" = " 下載速率: ";
+
+"TXRATE" = " 上傳速率: ";
+
+"CONNECTING" = "連接中";
+
+"CONNECTED" = "已連線";
+
+"DISCONNECTING" = "斷開連接中";
+
+"DISCONNECTED" = "已中斷連線";
+
+"INVALID" = "無效連結";
+
+"REASSERTING" = "重新連接中";
+
+"UNKNOWN" = "未知狀態";
+
+"START_FAILED" = "啟動失敗";
+
+"OK" = "確認";
