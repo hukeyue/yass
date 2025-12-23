@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">伺服器網域名稱</string>
+    <string name="label_server_port">伺服器連接埠號碼</string>
+    <string name="label_username">使用者名稱</string>
+    <string name="label_password">密碼</string>
+    <string name="label_cipher">加密方式</string>
+    <string name="status_stopped">斷開連接於伺服器 %s:%d</string>
+    <string name="status_started">已產生連線: 0</string>
+    <string name="status_stopping">斷開連接中</string>
+    <string name="status_starting">連接中</string>
+    <string name="status_started_with_rate">已產生連線: %d 上傳速率: %s 下載速率: %s</string>
+    <string name="button_start">啟動</string>
+    <string name="button_stop">停止</string>
+    <string name="status_ready">就緒</string>
+    <string name="label_timeout" >逾時時間</string>
+    <string name="status_current_ip_address">本地IP位址: %s:%d</string>
+    <string name="status_started_with_error_msg">無法連接因為 %s</string>
+    <string name="label_server_sni">伺服器名稱指示</string>
+    <string name="label_doh_url">基於 HTTPS 的 DNS (DoH) URL</string>
+    <string name="label_dot_host">基於 TLS 的 DNS (DoT) 網域名稱</string>
+    <string name="status_start_failed">啟動失敗</string>
+    <string name="post_quantum_kyber">在 TLS 1.3 連線中啟用後量子密鑰協定</string>
+    <string name="button_options">選項</string>
+    <string name="title_options">選項</string>
+    <string name="label_limit_rate">限制速率</string>
+    <string name="label_local_port">本地埠</string>
+    <string name="hint_local_port">0（0 代表隨機連接埠）</string>
+</resources>
