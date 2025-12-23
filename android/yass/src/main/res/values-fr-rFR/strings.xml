@@ -5,7 +5,7 @@
     <string name="title_notifications">Notifications</string>
     <string name="label_server_host">Nom de domaine du serveur</string>
     <string name="label_server_port">Numéro de port du serveur</string>
-    <string name="label_username">Nom d'utilisateur</string>
+    <string name="label_username">Nom d\'utilisateur</string>
     <string name="label_password">Mot de passe</string>
     <string name="label_cipher">Méthode de chiffrement</string>
     <string name="status_stopped">Déconnecté du serveur %s:%d</string>
@@ -16,7 +16,7 @@
     <string name="button_start">Démarrer</string>
     <string name="button_stop">Arrêter</string>
     <string name="status_ready">Prêt</string>
-    <string name="label_timeout"> >Délai d'attente dépassé</string>
+    <string name="label_timeout"> >Délai d\'attente dépassé</string>
     <string name="status_current_ip_address">Adresse IP locale : %s:%d</string>
     <string name="status_started_with_error_msg">Connexion impossible : %s</string>
     <string name="label_server_sni">Indicateur du nom du serveur</string>
