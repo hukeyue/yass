@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">Имя домена сервера</string>
+    <string name="label_server_port">Номер порта сервера</string>
+    <string name="label_username">Имя пользователя</string>
+    <string name="label_password">Пароль</string>
+    <string name="label_cipher">Метод шифрования</string>
+    <string name="status_stopped">Отключено от сервера %s:%d</string>
+    <string name="status_started">Установлено соединений: 0</string>
+    <string name="status_stopping">Отключение</string>
+    <string name="status_starting">Подключение</string>
+    <string name="status_started_with_rate">Установлено соединений: %d Скорость загрузки: %s Скорость скачивания: %s</string>
+    <string name="button_start">Start</string>
+    <string name="button_stop">Stop</string>
+    <string name="status_ready">Ready</string>
+    <string name="label_timeout"> >Timeout</string>
+    <string name="status_current_ip_address">Local IP address: %s:%d</string>
+    <string name="status_started_with_error_msg">Unable to connect because %s</string>
+    <string name="label_server_sni">Server name indicator</string>
+    <string name="label_doh_url">DNS (DoH) URL based on HTTPS</string>
+    <string name="label_dot_host">DNS (DoT) domain name based on TLS</string>
+    <string name="status_start_failed">Startup failed</string>
+    <string name="post_quantum_kyber">Включен протокол постквантового ключа в соединении TLS 1.3</string>
+    <string name="button_options">Параметры</string>
+    <string name="title_options">Параметры</string>
+    <string name="label_limit_rate">Ограничение скорости</string>
+    <string name="label_local_port">Локальный порт</string>
+    <string name="hint_local_port">0 (0 представляет собой случайный порт)</string>
+</resources>

@@ -4503,8 +4503,20 @@ if (GUI)
             ${MAIN_STORYBOARD}
             src/mac/en.lproj/Localizable.strings
             src/mac/en.lproj/Main.strings
+            src/mac/es.lproj/Localizable.strings
+            src/mac/es.lproj/Main.strings
+            src/mac/fr.lproj/Localizable.strings
+            src/mac/fr.lproj/Main.strings
+            src/mac/ja.lproj/Localizable.strings
+            src/mac/ja.lproj/Main.strings
+            src/mac/ko.lproj/Localizable.strings
+            src/mac/ko.lproj/Main.strings
+            src/mac/ru.lproj/Localizable.strings
+            src/mac/ru.lproj/Main.strings
             src/mac/zh-Hans.lproj/Localizable.strings
             src/mac/zh-Hans.lproj/Main.strings
+            src/mac/zh-Hant.lproj/Localizable.strings
+            src/mac/zh-Hant.lproj/Main.strings
           )
         endif()
         set(ASSET_CATALOG src/mac/Assets.xcassets)
@@ -4545,8 +4557,20 @@ if (GUI)
             src/ios/PrivacyInfo.xcprivacy
             src/ios/en.lproj/Localizable.strings
             src/ios/en.lproj/Main.strings
+            src/ios/es.lproj/Localizable.strings
+            src/ios/es.lproj/Main.strings
+            src/ios/fr.lproj/Localizable.strings
+            src/ios/fr.lproj/Main.strings
+            src/ios/ja.lproj/Localizable.strings
+            src/ios/ja.lproj/Main.strings
+            src/ios/ko.lproj/Localizable.strings
+            src/ios/ko.lproj/Main.strings
+            src/ios/ru.lproj/Localizable.strings
+            src/ios/ru.lproj/Main.strings
             src/ios/zh-Hans.lproj/Localizable.strings
-            src/ios/zh-Hans.lproj/Main.strings)
+            src/ios/zh-Hans.lproj/Main.strings
+            src/ios/zh-Hant.lproj/Localizable.strings
+            src/ios/zh-Hant.lproj/Main.strings)
         endif()
         set(ASSET_CATALOG src/ios/Assets.xcassets)
         set(ASSET_CATALOG_ASSETS AppIcon)
@@ -4806,9 +4830,33 @@ if (GUI)
             MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/en.lproj/Main.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/es.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/es.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/fr.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/fr.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ja.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ja.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ko.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ko.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ru.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/ru.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/zh-Hans.lproj/Localizable.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/zh-Hans.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/zh-Hant.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/zh-Hant.lproj/Main.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
         endif()
 

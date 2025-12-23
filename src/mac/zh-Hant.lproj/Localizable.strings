@@ -1,0 +1,14 @@
+"CONNECTING" = "連接中";
+
+"CONNECTED" = "已連線";
+
+"DISCONNECTING" = "斷開連接中";
+
+"DISCONNECTED_WITH" = "中斷連線於伺服器 ";
+
+"FAILED_TO_CONNECT_DUE_TO" = "無法連線因為 ";
+
+"RXRATE" = " 下載速率: ";
+
+"TXRATE" = " 上傳速率: ";
+

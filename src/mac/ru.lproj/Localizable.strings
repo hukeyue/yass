@@ -1,0 +1,14 @@
+"CONNECTING" = "Подключение";
+
+"CONNECTED" = "Подключено";
+
+"DISCONNECTING" = "Отключение";
+
+"DISCONNECTED_WITH" = "Отключено от сервера";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Не удалось подключиться из-за";
+
+"RXRATE" = "Скорость загрузки:";
+
+"TXRATE" = "Скорость выгрузки:";
+

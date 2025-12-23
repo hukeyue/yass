@@ -1,0 +1,29 @@
+"CONNECTED_WITH_CONNS" = "Connexion établie : ";
+
+"DISCONNECTED_WITH" = "Déconnecté du serveur : ";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Impossible de se connecter car : ";
+
+"NETWORK_UNREACHABLE" = "Réseau inaccessible : ";
+
+"RXRATE" = "Vitesse de téléchargement : ";
+
+"TXRATE" = "Vitesse d'envoi : ";
+
+"CONNECTING" = "Connexion en cours";
+
+"CONNECTED" = "Connecté";
+
+"DISCONNECTING" = "Déconnexion en cours";
+
+"DISCONNECTED" = "Déconnecté";
+
+"INVALID" = "Lien invalide";
+
+"REASSERTING" = "Reconnexion en cours";
+
+"UNKNOWN" = "Statut inconnu";
+
+"START_FAILED" = "Échec du démarrage";
+
+"OK" = "Confirmation";

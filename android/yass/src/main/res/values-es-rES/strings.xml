@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">Nombre de dominio del servidor</string>
+    <string name="label_server_port">Número de puerto del servidor</string>
+    <string name="label_username">Nombre de usuario</string>
+    <string name="label_password">Contraseña</string>
+    <string name="label_cipher">Método de cifrado</string>
+    <string name="status_stopped">Desconectado del servidor %s:%d</string>
+    <string name="status_started">Conexiones establecidas: 0</string>
+    <string name="status_stopping">Desconectando</string>
+    <string name="status_starting">Conectando</string>
+    <string name="status_started_with_rate">Conexiones establecidas: %d. Velocidad de subida: %s. Velocidad de descarga: %s.</string>
+    <string name="button_start">Iniciar</string>
+    <string name="button_stop">Detener</string>
+    <string name="status_ready">Listo</string>
+    <string name="label_timeout"> >Tiempo de espera</string>
+    <string name="status_current_ip_address">Dirección IP local: %s:%d</string>
+    <string name="status_started_with_error_msg">No se puede conectar debido a %s</string>
+    <string name="label_server_sni">Indicador de nombre de servidor</string>
+    <string name="label_doh_url">URL DNS (DoH) basada en HTTPS</string>
+    <string name="label_dot_host">Nombre de dominio DNS (DoT) basado en TLS</string>
+    <string name="status_start_failed">Error de inicio</string>
+    <string name="post_quantum_kyber">Protocolo de clave post-cuántica habilitado en TLS 1.3 Conexión</string>
+    <string name="button_options">Opciones</string>
+    <string name="title_options">Opciones</string>
+    <string name="label_limit_rate">Límite de velocidad</string>
+    <string name="label_local_port">Puerto local</string>
+    <string name="hint_local_port">0 (0 representa un puerto aleatorio)</string>
+</resources>

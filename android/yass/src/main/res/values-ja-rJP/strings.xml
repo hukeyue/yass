@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">サーバードメイン名</string>
+    <string name="label_server_port">サーバーポート番号</string>
+    <string name="label_username">ユーザー名</string>
+    <string name="label_password">パスワード</string>
+    <string name="label_cipher">暗号化方式</string>
+    <string name="status_stopped">サーバーから切断されました %s: %d</string>
+    <string name="status_started">接続確立数: 0</string>
+    <string name="status_stopping">切断中</string>
+    <string name="status_starting">接続中</string>
+    <string name="status_started_with_rate">接続確立数: %d アップロード速度: %s ダウンロード速度: %s</string>
+    <string name="button_start">開始</string>
+    <string name="button_stop">停止</string>
+    <string name="status_ready">準備完了</string>
+    <string name="label_timeout">タイムアウト</string>
+    <string name="status_current_ip_address">ローカルIPアドレス: %s:%d</string>
+    <string name="status_started_with_error_msg">%sのため接続できません</string>
+    <string name="label_server_sni">サーバー名インジケーター</string>
+    <string name="label_doh_url">HTTPSベースのDNS (DoH) URL</string>
+    <string name="label_dot_host">TLSベースのDNS (DoT) ドメイン名</string>
+    <string name="status_start_failed">起動失敗</string>
+    <string name="post_quantum_kyber">TLS 1.3接続で耐量子鍵プロトコルを有効化</string>
+    <string name="button_options">オプション</string>
+    <string name="title_options">オプション</string>
+    <string name="label_limit_rate">レート制限</string>
+    <string name="label_local_port">ローカルポート</string>
+    <string name="hint_local_port">0 (0 はランダムなポートを表します)</string>
+</resources>

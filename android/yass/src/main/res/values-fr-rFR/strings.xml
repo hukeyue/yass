@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">Nom de domaine du serveur</string>
+    <string name="label_server_port">Numéro de port du serveur</string>
+    <string name="label_username">Nom d\'utilisateur</string>
+    <string name="label_password">Mot de passe</string>
+    <string name="label_cipher">Méthode de chiffrement</string>
+    <string name="status_stopped">Déconnecté du serveur %s:%d</string>
+    <string name="status_started">Connexions établies : 0</string>
+    <string name="status_stopping">Déconnexion</string>
+    <string name="status_starting">Connexion</string>
+    <string name="status_started_with_rate">Connexions établies : %d Débit montant : %s Débit descendant : %s</string>
+    <string name="button_start">Démarrer</string>
+    <string name="button_stop">Arrêter</string>
+    <string name="status_ready">Prêt</string>
+    <string name="label_timeout"> >Délai d\'attente dépassé</string>
+    <string name="status_current_ip_address">Adresse IP locale : %s:%d</string>
+    <string name="status_started_with_error_msg">Connexion impossible : %s</string>
+    <string name="label_server_sni">Indicateur du nom du serveur</string>
+    <string name="label_doh_url">URL DNS (DoH) basée sur HTTPS</string>
+    <string name="label_dot_host">Nom de domaine DNS (DoT) basé sur TLS</string>
+    <string name="status_start_failed">Échec du démarrage</string>
+    <string name="post_quantum_kyber">Protocole de clés post-quantiques activé pour la connexion TLS 1.3</string>
+    <string name="button_options">Options</string>
+    <string name="title_options">Options</string>
+    <string name="label_limit_rate">Débit limite</string>
+    <string name="label_local_port">Port local</string>
+    <string name="hint_local_port">0 (0 représente un port aléatoire)</string>
+</resources>

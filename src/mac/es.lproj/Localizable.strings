@@ -1,0 +1,14 @@
+"CONNECTING" = "Conectando";
+
+"CONNECTED" = "Conectado";
+
+"DISCONNECTING" = "Desconectando";
+
+"DISCONNECTED_WITH" = "Desconectado del servidor";
+
+"FAILED_TO_CONNECT_DUE_TO" = "No se pudo conectar porque";
+
+"RXRATE" = "Tasa de descarga:";
+
+"TXRATE" = "Tasa de carga:";
+
