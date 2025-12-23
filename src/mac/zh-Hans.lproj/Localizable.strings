@@ -1,21 +1,14 @@
-/* Connecting */
 "CONNECTING" = "连接中";
 
-/* Connected */
 "CONNECTED" = "已连接";
 
-/* Disconnecting */
 "DISCONNECTING" = "断开连接中";
 
-/* Disconnected with  */
 "DISCONNECTED_WITH" = "断开连接于服务器 ";
 
-/* Failed to connect due to  */
 "FAILED_TO_CONNECT_DUE_TO" = "无法连接因为 ";
 
-/*  rx rate:  */
 "RXRATE" = " 下载速率: ";
 
-/*  tx rate:  */
 "TXRATE" = " 上传速率: ";
 

@@ -1,0 +1,74 @@
+
+"1Xt-HY-uBw.title" = "YASS";
+
+"3bJ-wb-xnh.title" = "Port local";
+
+"4sb-4s-VLi.title" = "Quitter";
+
+"5kV-Vb-QxS.title" = "À propos de YASS";
+
+"8hL-Qd-hQU.title" = "Démarrer avec le système";
+
+"9N4-Lw-6Ob.title" = "Mot de passe";
+
+"AYu-sK-qS6.title" = "Menu principal";
+
+"z0q-m8-6KJ.title" = "TCP Keep-Alive";
+
+"IpF-Ur-Zlh.title" = "Activer";
+
+"DwU-MU-ncE.title" = "Nombre de connexions TCP Keep-Alive";
+
+"EnC-Oa-kda.title" = "Nombre de tentatives de maintien de connexion TCP après une période d'inactivité";
+
+"EY5-8C-G6C.title" = "Activer le protocole de clé post-quantique dans une connexion TLS 1.3";
+
+"aFJ-Zj-eao.title" = "Activer";
+
+"IQv-IB-iLA.title" = "YASS (Yet Another Shadow Socket)";
+
+"JYa-MA-4KH.title" = "Arrêter";
+
+"Jw2-My-hmB.title" = "Activer";
+
+"KPU-2Q-dN7.title" = "Démarrer";
+
+"Mei-lK-JLB.title" = "Annuler";
+
+"QRy-PK-jJT.title" = "Nom d'utilisateur";
+
+"dCR-E3-G0W.title" = "Maintien de connexion TCP intervalle";
+
+"g0k-mZ-0JW.title" = "Proxy système";
+
+"g3k-Ab-Oin.title" = "Nom de domaine du serveur";
+
+"hei-7a-ZHr.title" = "Activer";
+
+"mcp-Vm-U1E.title" = "Numéro de port du serveur";
+
+"n7v-aO-ITf.title" = "Options";
+
+"qHI-jj-mpI.ibShadowedObjectValues[0]" = "Élément";
+
+"rim-zj-Iub.title" = "Nom de domaine local";
+
+"tOi-q9-yJY.title" = "Méthode de chiffrement";
+
+"uQy-DD-JDr.title" = "OUI";
+
+"yzs-Gu-p7Y.title" = "Confirmer";
+
+"yxt-ql-TD8.title" = "URL DNS basée sur HTTPS (DoH)";
+
+"PXx-nB-Hn1.title" = "Nom de domaine DNS basé sur TLS (DoT)";
+
+"Ux8-IL-FUS.title" = "Limitation du débit";
+
+"zY6-tD-aUd.title" = "Délai d'expiration";
+
+"bxG-gg-LTc.title" = "Indicateur de nom de serveur";
+
+"mw5-nB-ary.title" = "Affichage de l'état en direct";
+
+"71A-aG-Rt6.title" = "Activé";

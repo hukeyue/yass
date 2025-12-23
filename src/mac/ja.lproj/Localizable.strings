@@ -1,0 +1,14 @@
+"CONNECTING" = "接続中";
+
+"CONNECTED" = "接続済み";
+
+"DISCONNECTING" = "切断中";
+
+"DISCONNECTED_WITH" = "サーバーから切断されました";
+
+"FAILED_TO_CONNECT_DUE_TO" = "接続できません。理由";
+
+"RXRATE" = "ダウンロード速度:";
+
+"TXRATE" = "アップロード速度:";
+

@@ -1,0 +1,14 @@
+"CONNECTING" = "연결 중";
+
+"CONNECTED" = "연결됨";
+
+"DISCONNECTING" = "연결 해제 중";
+
+"DISCONNECTED_WITH" = "서버에서 연결이 해제되었습니다";
+
+"FAILED_TO_CONNECT_DUE_TO" = "연결할 수 없습니다";
+
+"RXRATE" = "다운로드 속도:";
+
+"TXRATE" = "업로드 속도:";
+

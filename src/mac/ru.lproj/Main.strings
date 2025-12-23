@@ -1,0 +1,74 @@
+
+"1Xt-HY-uBw.title" = "YASS";
+
+"3bJ-wb-xnh.title" = "Локальный порт";
+
+"4sb-4s-VLi.title" = "Выход";
+
+"5kV-Vb-QxS.title" = "О программе YASS";
+
+"8hL-Qd-hQU.title" = "Запуск с системой";
+
+"9N4-Lw-6Ob.title" = "Пароль";
+
+"AYu-sK-qS6.title" = "Главное меню";
+
+"z0q-m8-6KJ.title" = "TCP Keep-Alive";
+
+"IpF-Ur-Zlh.title" = "Включить";
+
+"DwU-MU-ncE.title" = "Количество подключений TCP Keep-Alive";
+
+"EnC-Oa-kda.title" = "TCP Количество попыток поддержания соединения после простоя";
+
+"EY5-8C-G6C.title" = "Включить протокол постквантового ключа в соединении TLS 1.3";
+
+"aFJ-Zj-eao.title" = "Включить";
+
+"IQv-IB-iLA.title" = "YASS (Еще один теневой сокет)";
+
+"JYa-MA-4KH.title" = "Остановить";
+
+"Jw2-My-hmB.title" = "Включить";
+
+"KPU-2Q-dN7.title" = "Запустить";
+
+"Mei-lK-JLB.title" = "Отменить";
+
+"QRy-PK-jJT.title" = "Имя пользователя";
+
+"dCR-E3-G0W.title" = "TCP keep-alive интервал";
+
+"g0k-mZ-0JW.title" = "Системный прокси";
+
+"g3k-Ab-Oin.title" = "Имя домена сервера";
+
+"hei-7a-ZHr.title" = "Включить";
+
+"mcp-Vm-U1E.title" = "Номер порта сервера";
+
+"n7v-aO-ITf.title" = "Параметры";
+
+"qHI-jj-mpI.ibShadowedObjectValues[0]" = "Элемент";
+
+"rim-zj-Iub.title" = "Имя локального домена";
+
+"tOi-q9-yJY.title" = "Метод шифрования";
+
+"uQy-DD-JDr.title" = "YASS";
+
+"yzs-Gu-p7Y.title" = "Подтверждение";
+
+"yxt-ql-TD8.title" = "URL-адрес DNS (DoH) на основе HTTPS";
+
+"PXx-nB-Hn1.title" = "Доменное имя DNS (DoT) на основе TLS";
+
+"Ux8-IL-FUS.title" = "Ограничение скорости";
+
+"zY6-tD-aUd.title" = "Тайм-аут";
+
+"bxG-gg-LTc.title" = "Индикатор имени сервера";
+
+"mw5-nB-ary.title" = "Отображение статуса в реальном времени";
+
+"71A-aG-Rt6.title" = "Включено";
