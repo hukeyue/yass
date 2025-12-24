@@ -325,12 +325,12 @@
   std::ostringstream ss;
   NSString* message = [appDelegate getStatus];
   ss << SysNSStringToUTF8(message);
-  message = NSLocalizedString(@"TXRATE", @" tx rate: ");
-  ss << SysNSStringToUTF8(message);
+  message = NSLocalizedString(@"TXRATE", @"tx rate:");
+  ss << " " << SysNSStringToUTF8(message) << " ";
   HumanReadableByteCountBin(&ss, rx_rate_);
   ss << "/s";
-  message = NSLocalizedString(@"RXRATE", @" rx rate: ");
-  ss << SysNSStringToUTF8(message);
+  message = NSLocalizedString(@"RXRATE", @"rx rate:");
+  ss << " " << SysNSStringToUTF8(message) << " ";
   HumanReadableByteCountBin(&ss, tx_rate_);
   ss << "/s";
 

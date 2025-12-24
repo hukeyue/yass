@@ -1,4 +1,4 @@
-"CONNECTED_WITH_CONNS" = "Conexión establecida: ";
+"CONNECTED_WITH_CONNS" = "Conexión establecida:";
 
 "DISCONNECTED_WITH" = "Desconectado del servidor";
 
@@ -6,9 +6,9 @@
 
 "NETWORK_UNREACHABLE" = "Red inaccesible";
 
-"RXRATE" = "Velocidad de descarga: ";
+"RXRATE" = "Velocidad de descarga:";
 
-"TXRATE" = "Velocidad de subida: ";
+"TXRATE" = "Velocidad de subida:";
 
 "CONNECTING" = "Conectando";
 

@@ -1,14 +1,14 @@
-"CONNECTED_WITH_CONNS" = "Соединение установлено: ";
+"CONNECTED_WITH_CONNS" = "Соединение установлено:";
 
 "DISCONNECTED_WITH" = "Отключено от сервера";
 
-"FAILED_TO_CONNECT_DUE_TO" = "Не удалось подключиться, потому что ";
+"FAILED_TO_CONNECT_DUE_TO" = "Не удалось подключиться, потому что";
 
 "NETWORK_UNREACHABLE" = "Сеть недоступна";
 
-"RXRATE" = "Скорость загрузки: ";
+"RXRATE" = "Скорость загрузки:";
 
-"TXRATE" = "Скорость выгрузки: ";
+"TXRATE" = "Скорость выгрузки:";
 
 "CONNECTING" = "Подключение";
 

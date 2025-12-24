@@ -1,20 +1,20 @@
 /* Connected with conns:  */
-"CONNECTED_WITH_CONNS" = "Connected with conns: ";
+"CONNECTED_WITH_CONNS" = "Connected with conns:";
 
 /* Disconnected with  */
-"DISCONNECTED_WITH" = "Disconnected with ";
+"DISCONNECTED_WITH" = "Disconnected with";
 
 /* Failed to connect due to  */
-"FAILED_TO_CONNECT_DUE_TO" = "Failed to connect due to ";
+"FAILED_TO_CONNECT_DUE_TO" = "Failed to connect due to";
 
 /* Network unreachable */
 "NETWORK_UNREACHABLE" = "Network unreachable";
 
 /*  rx rate:  */
-"RXRATE" = " rx rate: ";
+"RXRATE" = "rx rate:";
 
-/*  tx rate:  */
-"TXRATE" = " tx rate: ";
+/*  tx rate: */
+"TXRATE" = "tx rate:";
 
 /* Connecting */
 "CONNECTING" = "Connecting";

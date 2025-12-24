@@ -1,14 +1,14 @@
-"CONNECTED_WITH_CONNS" = "Connexion établie : ";
+"CONNECTED_WITH_CONNS" = "Connexion établie:";
 
-"DISCONNECTED_WITH" = "Déconnecté du serveur : ";
+"DISCONNECTED_WITH" = "Déconnecté du serveur:";
 
-"FAILED_TO_CONNECT_DUE_TO" = "Impossible de se connecter car : ";
+"FAILED_TO_CONNECT_DUE_TO" = "Impossible de se connecter car:";
 
-"NETWORK_UNREACHABLE" = "Réseau inaccessible : ";
+"NETWORK_UNREACHABLE" = "Réseau inaccessible";
 
-"RXRATE" = "Vitesse de téléchargement : ";
+"RXRATE" = "Vitesse de téléchargement:";
 
-"TXRATE" = "Vitesse d'envoi : ";
+"TXRATE" = "Vitesse d'envoi:";
 
 "CONNECTING" = "Connexion en cours";
 

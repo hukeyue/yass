@@ -1,14 +1,14 @@
-"CONNECTED_WITH_CONNS" = "已产生连接: ";
+"CONNECTED_WITH_CONNS" = "已产生连接:";
 
-"DISCONNECTED_WITH" = "断开连接于服务器 ";
+"DISCONNECTED_WITH" = "断开连接于服务器";
 
-"FAILED_TO_CONNECT_DUE_TO" = "无法连接因为 ";
+"FAILED_TO_CONNECT_DUE_TO" = "无法连接因为";
 
 "NETWORK_UNREACHABLE" = "网络无法访问";
 
-"RXRATE" = " 下载速率: ";
+"RXRATE" = "下载速率:";
 
-"TXRATE" = " 上传速率: ";
+"TXRATE" = "上传速率:";
 
 "CONNECTING" = "连接中";
 

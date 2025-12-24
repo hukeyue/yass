@@ -1,14 +1,14 @@
-"CONNECTED_WITH_CONNS" = "接続確立: ";
+"CONNECTED_WITH_CONNS" = "接続確立:";
 
-"DISCONNECTED_WITH" = "サーバーから切断されました ";
+"DISCONNECTED_WITH" = "サーバーから切断されました";
 
-"FAILED_TO_CONNECT_DUE_TO" = "接続できません。理由: ";
+"FAILED_TO_CONNECT_DUE_TO" = "接続できません。理由:";
 
 "NETWORK_UNREACHABLE" = "ネットワークにアクセスできません";
 
-"RXRATE" = "ダウンロード速度: ";
+"RXRATE" = "ダウンロード速度:";
 
-"TXRATE" = "アップロード速度: ";
+"TXRATE" = "アップロード速度:";
 
 "CONNECTING" = "接続中";
 
