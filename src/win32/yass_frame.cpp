@@ -742,10 +742,10 @@ std::wstring CYassFrame::GetStatusMessage() {
 
   std::wostringstream ss;
   ss << mApp->GetStatus();
-  ss << LoadStringStdW(m_hInstance, IDS_STATUS_TX_RATE);  // " tx rate: ";
+  ss << " " << LoadStringStdW(m_hInstance, IDS_STATUS_TX_RATE) << " ";  // "tx rate:";
   HumanReadableByteCountBin(&ss, rx_rate_);
   ss << "/s";
-  ss << LoadStringStdW(m_hInstance, IDS_STATUS_RX_RATE);  // " rx rate: ";
+  ss << " " << LoadStringStdW(m_hInstance, IDS_STATUS_RX_RATE) << " ";  // "rx rate:";
   HumanReadableByteCountBin(&ss, tx_rate_);
   ss << "/s";
 

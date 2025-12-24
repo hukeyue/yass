@@ -4,6 +4,7 @@
 #include <winresrc.h>
 
 // https://docs.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/indexsrv/valid-locale-identifiers
 
 /////////////////////////////////////////////////////////////////////////////
 // Unicode (UTF-8) resources
@@ -48,12 +49,12 @@ BEGIN
     IDS_HIDE_YASS_TIP       "Hide YASS"
     IDS_START_FAILED_MESSAGE            "Start Failed"
     IDS_STATUS_CONNECTING               "Connecting"
-    IDS_STATUS_CONNECTED_WITH_CONNS     "Connected with conns: "
-    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Failed to connect due to "
+    IDS_STATUS_CONNECTED_WITH_CONNS     "Connected with conns:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Failed to connect due to"
     IDS_STATUS_DISCONNECTING            "Disconnecting"
-    IDS_STATUS_DISCONNECTED_WITH        "Disconnected with "
-    IDS_STATUS_TX_RATE      " tx rate: "
-    IDS_STATUS_RX_RATE      " rx rate: "
+    IDS_STATUS_DISCONNECTED_WITH        "Disconnected with"
+    IDS_STATUS_TX_RATE      "tx rate:"
+    IDS_STATUS_RX_RATE      "rx rate:"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
@@ -80,12 +81,204 @@ BEGIN
     IDS_HIDE_YASS_TIP       "隐藏 YASS"
     IDS_START_FAILED_MESSAGE "启动失败"
     IDS_STATUS_CONNECTING               "连接中"
-    IDS_STATUS_CONNECTED_WITH_CONNS     "已产生连接: "
-    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "无法连接因为 "
+    IDS_STATUS_CONNECTED_WITH_CONNS     "已产生连接:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "无法连接因为"
     IDS_STATUS_DISCONNECTING            "断开连接中"
-    IDS_STATUS_DISCONNECTED_WITH        "断开连接于服务器 "
-    IDS_STATUS_TX_RATE      " 上传速率: "
-    IDS_STATUS_RX_RATE      " 下载速率: "
+    IDS_STATUS_DISCONNECTED_WITH        "断开连接于服务器"
+    IDS_STATUS_TX_RATE      "上传速率:"
+    IDS_STATUS_RX_RATE      "下载速率:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    IDS_START_BUTTON "啟動"
+    IDS_STOP_BUTTON "停止"
+    IDS_SERVER_HOST_LABEL "伺服器網域名稱"
+    IDS_SERVER_SNI_LABEL "伺服器名稱指示"
+    IDS_SERVER_PORT_LABEL "伺服器連接埠號碼"
+    IDS_USERNAME_LABEL "使用者名稱"
+    IDS_PASSWORD_LABEL "密碼"
+    IDS_METHOD_LABEL "加密方式"
+    IDS_LOCAL_HOST_LABEL "本地網域名稱"
+    IDS_LOCAL_PORT_LABEL "本機連接埠"
+    IDS_DOH_URL_LABEL "基於 HTTPS 的 DNS (DoH) URL"
+    IDS_DOT_HOST_LABEL "基於 TLS 的 DNS (DoT) 網域名稱"
+    IDS_LIMIT_RATE_LABEL "限制速率"
+    IDS_TIMEOUT_LABEL "逾時時間"
+    IDS_AUTOSTART_LABEL "隨系統自啟動"
+    IDS_SYSTEMPROXY_LABEL "系統代理程式"
+    IDS_ENABLE_LABEL "啟用"
+    IDS_SHOW_YASS_TIP "顯示 YASS"
+    IDS_HIDE_YASS_TIP "隱藏 YASS"
+    IDS_START_FAILED_MESSAGE "啟動失敗"
+    IDS_STATUS_CONNECTING "連接中"
+    IDS_STATUS_CONNECTED_WITH_CONNS "已產生連線:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "無法連線因為"
+    IDS_STATUS_DISCONNECTING "斷開連線中"
+    IDS_STATUS_DISCONNECTED_WITH "斷開連接於伺服器"
+    IDS_STATUS_TX_RATE "上傳速率:"
+    IDS_STATUS_RX_RATE "下載速率:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    IDS_START_BUTTON "Inicio"
+    IDS_STOP_BUTTON "Detener"
+    IDS_SERVER_HOST_LABEL "Nombre de dominio del servidor"
+    IDS_SERVER_SNI_LABEL "Indicador de nombre de servidor"
+    IDS_SERVER_PORT_LABEL "Número de puerto del servidor"
+    IDS_USERNAME_LABEL "Nombre de usuario"
+    IDS_PASSWORD_LABEL "Contraseña"
+    IDS_METHOD_LABEL "Método de cifrado"
+    IDS_LOCAL_HOST_LABEL "Nombre de dominio local"
+    IDS_LOCAL_PORT_LABEL "Puerto local"
+    IDS_DOH_URL_LABEL "URL DNS basada en HTTPS (DoH)"
+    IDS_DOT_HOST_LABEL "Nombre de dominio DNS basado en TLS (DoT)"
+    IDS_LIMIT_RATE_LABEL "Límite de velocidad"
+    IDS_TIMEOUT_LABEL "Tiempo de espera"
+    IDS_AUTOSTART_LABEL "Inicia con el sistema"
+    IDS_SYSTEMPROXY_LABEL "Agente del sistema"
+    IDS_ENABLE_LABEL "Habilitado"
+    IDS_SHOW_YASS_TIP "Mostrar YASS"
+    IDS_HIDE_YASS_TIP "Ocultar YASS"
+    IDS_START_FAILED_MESSAGE "Error de inicio"
+    IDS_STATUS_CONNECTING "Conectando"
+    IDS_STATUS_CONNECTED_WITH_CONNS "Conexión establecida:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "No se puede conectar porque"
+    IDS_STATUS_DISCONNECTING "Desconectando"
+    IDS_STATUS_DISCONNECTED_WITH "Desconectado del servidor"
+    IDS_STATUS_TX_RATE "Velocidad de subida:"
+    IDS_STATUS_RX_RATE "Descarga rate:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    IDS_START_BUTTON "Démarrer"
+    IDS_STOP_BUTTON "Arrêter"
+    IDS_SERVER_HOST_LABEL "Nom de domaine du serveur"
+    IDS_SERVER_SNI_LABEL "Indicateur de nom du serveur"
+    IDS_SERVER_PORT_LABEL "Numéro de port du serveur"
+    IDS_USERNAME_LABEL "Nom d'utilisateur"
+    IDS_PASSWORD_LABEL "Mot de passe"
+    IDS_METHOD_LABEL "Méthode de chiffrement"
+    IDS_LOCAL_HOST_LABEL "Nom de domaine local"
+    IDS_LOCAL_PORT_LABEL "Port local"
+    IDS_DOH_URL_LABEL "URL DNS basée sur HTTPS (DoH)"
+    IDS_DOT_HOST_LABEL "Nom de domaine DNS basé sur TLS (DoT)"
+    IDS_LIMIT_RATE_LABEL "Limite de débit"
+    IDS_TIMEOUT_LABEL "Délai d'expiration"
+    IDS_AUTOSTART_LABEL "Démarrage avec le système"
+    IDS_SYSTEMPROXY_LABEL "Agent système"
+    IDS_ENABLE_LABEL "Activé"
+    IDS_SHOW_YASS_TIP "Afficher YASS"
+    IDS_HIDE_YASS_TIP "Masquer YASS"
+    IDS_START_FAILED_MESSAGE "Échec du démarrage"
+    IDS_STATUS_CONNECTING "Connexion en cours"
+    IDS_STATUS_CONNECTED_WITH_CONNS "Connexion établie :"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Impossible de se connecter car :"
+    IDS_STATUS_DISCONNECTING "Déconnexion en cours"
+    IDS_STATUS_DISCONNECTED_WITH "Déconnecté du serveur"
+    IDS_STATUS_TX_RATE "Débit d'envoi :"
+    IDS_STATUS_RX_RATE "Débit de réception :"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON "Старт"
+    IDS_STOP_BUTTON "Стоп"
+    IDS_SERVER_HOST_LABEL "Имя домена сервера"
+    IDS_SERVER_SNI_LABEL "Индикатор имени сервера"
+    IDS_SERVER_PORT_LABEL "Номер порта сервера"
+    IDS_USERNAME_LABEL "Имя пользователя"
+    IDS_PASSWORD_LABEL "Пароль"
+    IDS_METHOD_LABEL "Метод шифрования"
+    IDS_LOCAL_HOST_LABEL "Имя локального домена"
+    IDS_LOCAL_PORT_LABEL "Локальный порт"
+    IDS_DOH_URL_LABEL "URL DNS на основе HTTPS (DoH)"
+    IDS_DOT_HOST_LABEL "Имя домена DNS на основе TLS (DoT)"
+    IDS_LIMIT_RATE_LABEL "Ограничение скорости"
+    IDS_TIMEOUT_LABEL "Тайм-аут"
+    IDS_AUTOSTART_LABEL "Запуск с системой"
+    IDS_SYSTEMPROXY_LABEL "Системный агент"
+    IDS_ENABLE_LABEL "Включить"
+    IDS_SHOW_YASS_TIP "Показать YASS"
+    IDS_HIDE_YASS_TIP "Скрыть YASS"
+    IDS_START_FAILED_MESSAGE "Сбой запуска"
+    IDS_STATUS_CONNECTING "Подключение"
+    IDS_STATUS_CONNECTED_WITH_CONNS "Соединение установлено:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Невозможно подключиться, потому что"
+    IDS_STATUS_DISCONNECTING "Отключение"
+    IDS_STATUS_DISCONNECTED_WITH "Отключено от сервера"
+    IDS_STATUS_TX_RATE "Скорость загрузки:"
+    IDS_STATUS_RX_RATE "Скорость скачивания:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON "開始"
+    IDS_STOP_BUTTON "停止"
+    IDS_SERVER_HOST_LABEL "サーバードメイン名"
+    IDS_SERVER_SNI_LABEL "サーバー名インジケーター"
+    IDS_SERVER_PORT_LABEL "サーバーポート番号"
+    IDS_USERNAME_LABEL "ユーザー名"
+    IDS_PASSWORD_LABEL "パスワード"
+    IDS_METHOD_LABEL "暗号化方式"
+    IDS_LOCAL_HOST_LABEL "ローカルドメイン名"
+    IDS_LOCAL_PORT_LABEL "ローカルポート"
+    IDS_DOH_URL_LABEL "HTTPSベースのDNS (DoH) URL"
+    IDS_DOT_HOST_LABEL "TLSベースのDNS (DoT) ドメイン名"
+    IDS_LIMIT_RATE_LABEL "レート制限"
+    IDS_TIMEOUT_LABEL "タイムアウト"
+    IDS_AUTOSTART_LABEL "システムで起動"
+    IDS_SYSTEMPROXY_LABEL "システムエージェント"
+    IDS_ENABLE_LABEL "有効"
+    IDS_SHOW_YASS_TIP "YASSを表示"
+    IDS_HIDE_YASS_TIP "YASSを非表示"
+    IDS_START_FAILED_MESSAGE "起動に失敗しました"
+    IDS_STATUS_CONNECTING "接続中"
+    IDS_STATUS_CONNECTED_WITH_CONNS "接続が確立されました:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "接続できません。理由"
+    IDS_STATUS_DISCONNECTING "切断中"
+    IDS_STATUS_DISCONNECTED_WITH "サーバーから切断されました"
+    IDS_STATUS_TX_RATE "アップロード速度:"
+    IDS_STATUS_RX_RATE "ダウンロード速度:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON "시작"
+    IDS_STOP_BUTTON "정지"
+    IDS_SERVER_HOST_LABEL "서버 도메인 이름"
+    IDS_SERVER_SNI_LABEL "서버 이름 표시기"
+    IDS_SERVER_PORT_LABEL "서버 포트 번호"
+    IDS_USERNAME_LABEL "사용자 이름"
+    IDS_PASSWORD_LABEL "암호"
+    IDS_METHOD_LABEL "암호화 방식"
+    IDS_LOCAL_HOST_LABEL "로컬 도메인 이름"
+    IDS_LOCAL_PORT_LABEL "로컬 포트"
+    IDS_DOH_URL_LABEL "HTTPS 기반 DNS(DoH) URL"
+    IDS_DOT_HOST_LABEL "TLS 기반 DNS(DoT) 도메인 이름"
+    IDS_LIMIT_RATE_LABEL "속도 제한"
+    IDS_TIMEOUT_LABEL "시간 초과"
+    IDS_AUTOSTART_LABEL "시스템으로 시작"
+    IDS_SYSTEMPROXY_LABEL "시스템 에이전트"
+    IDS_ENABLE_LABEL "활성화됨"
+    IDS_SHOW_YASS_TIP "YASS 표시"
+    IDS_HIDE_YASS_TIP "YASS 숨기기"
+    IDS_START_FAILED_MESSAGE "시작 실패"
+    IDS_STATUS_CONNECTING "연결 중"
+    IDS_STATUS_CONNECTED_WITH_CONNS "연결 설정됨:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "연결 실패 사유:"
+    IDS_STATUS_DISCONNECTING "연결 해제 중"
+    IDS_STATUS_DISCONNECTED_WITH "서버 연결 해제됨"
+    IDS_STATUS_TX_RATE "업로드 속도:"
+    IDS_STATUS_RX_RATE "다운로드 속도:"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
@@ -103,6 +296,48 @@ BEGIN
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    IDS_ABOUTBOX            "關於 (&A)..."
+    IDS_OPTIONBOX           "選項 (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    IDS_ABOUTBOX            "Acerca de (&A)..."
+    IDS_OPTIONBOX           "Opciones (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    IDS_ABOUTBOX            "À propos (&A)..."
+    IDS_OPTIONBOX           "Options (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "О программе (&A)..."
+    IDS_OPTIONBOX           "Параметры (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "バージョン情報 (&A)..."
+    IDS_OPTIONBOX           "オプション (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "정보 (&A)"
+    IDS_OPTIONBOX           "옵션 (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
     IDS_APP_TITLE       "YASS (Yet Another Shadow Socket)"
@@ -117,6 +352,48 @@ BEGIN
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    IDS_APP_TITLE       "YASS (Yet Another Shadow Socket)"
+    IDS_IDLEMESSAGE     "就緒"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    IDS_APP_TITLE       "YASS (Otro zócalo de sombra)"
+    IDS_IDLEMESSAGE     "Listo"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    IDS_APP_TITLE       "YASS (Encore une autre prise fantôme)"
+    IDS_IDLEMESSAGE     "Prêt"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS (Еще один теневой сокет)"
+    IDS_IDLEMESSAGE     "Готово"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS（もう一つのシャドウソケット）"
+    IDS_IDLEMESSAGE     "準備完了"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS (Yet Another Shadow Socket)"
+    IDS_IDLEMESSAGE     "준비됨"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
     ID_APP_MSG             "STATUS BAR"
@@ -126,6 +403,42 @@ STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 BEGIN
     ID_APP_MSG             "状态栏"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    ID_APP_MSG             "狀態列"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    ID_APP_MSG             "Barra de estado"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    ID_APP_MSG             "Barre d'état"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "Строка состояния"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "ステータスバー"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "상태 표시줄"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,6 +476,96 @@ BEGIN
     END
 END
 
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    POPUP "文件 (&F)"
+    BEGIN
+        MENUITEM "選項 (&O)...",                 ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "退出 (&X)",                    ID_APP_EXIT
+    END
+    POPUP "幫助 (&H)"
+    BEGIN
+        MENUITEM "關於 YASS (&A)...",            ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    POPUP "Archivo (&F)"
+    BEGIN
+        MENUITEM "Opciones (&O)...",             ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Salir (&X)",                   ID_APP_EXIT
+    END
+    POPUP "Ayuda (&H)"
+    BEGIN
+        MENUITEM "Acerca de YASS (&A)...",       ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    POPUP "Fichier (&F)"
+    BEGIN
+        MENUITEM "Options (&O)...",              ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Quitter (&X)",                 ID_APP_EXIT
+    END
+    POPUP "Aide (&H)"
+    BEGIN
+        MENUITEM "À propos de YASS (&A)...",     ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP "Файл (&F)"
+    BEGIN
+        MENUITEM "Параметры (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Выход (&X)",                   ID_APP_EXIT
+    END
+    POPUP "Справка (&H)"
+    BEGIN
+        MENUITEM "О программе YASS (&A)...",     ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    POPUP "ファイル (&F)"
+    BEGIN
+        MENUITEM "オプション (&O)...",           ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "終了 (&X)",                    ID_APP_EXIT
+    END
+    POPUP "ヘルプ (&H)"
+    BEGIN
+        MENUITEM "YASS について (&A)...",        ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP "파일(&F)"
+    BEGIN
+        MENUITEM "옵션 (&O)...",                ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "종료 (&X)",                   ID_APP_EXIT
+    END
+    POPUP "도움말(&H)"
+    BEGIN
+        MENUITEM "YASS 정보(&A)...",            ID_APP_ABOUT
+    END
+END
+
 IDC_CONTEXTMENU MENU
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
@@ -184,6 +587,73 @@ BEGIN
         MENUITEM "退出 (&X)",                    ID_APP_EXIT
     END
 END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "選項 (&O)...",                 ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "退出 (&X)",                    ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Opciones (&O)...",             ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Salir (&X)",                   ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Options (&O)...",              ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Quitter (&X)",                 ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Параметры (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Выход (&X)",                   ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "オプション (&O)...",           ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "終了 (&X)",                    ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "옵션 (&O)...",                 ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "종료 (&X)",                    ID_APP_EXIT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
