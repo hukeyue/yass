@@ -153,7 +153,21 @@
     std::string msg;
 
     if (ec) {
-      msg = ec.message();
+      if (ec.category() == asio::error::get_netdb_category() || ec.category() == asio::error::get_addrinfo_category()) {
+        NSError *urlError = [[NSError alloc] initWithDomain:NSURLErrorDomain
+                                                       code:NSURLErrorCannotFindHost
+                                                   userInfo:nil];
+        msg = SysNSStringToUTF8((urlError.localizedDescription));
+        NSLog(@"Translated URL error: %@", urlError.localizedDescription);
+      } else if (ec.category() == asio::error::get_system_category()) {
+        NSError *posixError = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain
+                                                         code:ec.value()
+                                                     userInfo:nil];
+        msg = SysNSStringToUTF8((posixError.localizedDescription));
+        NSLog(@"Translated POSIX error: %@", posixError.localizedDescription);
+      } else {
+        msg = ec.message();
+      }
       successed = false;
     } else {
       successed = true;
