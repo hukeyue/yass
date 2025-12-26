@@ -379,6 +379,18 @@ void CYassApp::OnStart(bool quiet) {
       if (ec) {
         message = new std::string;
 
+        // translate asio netdb and addrinfo categories back to WSA Error Codes
+        if (ec == asio::error::host_not_found) // netdb_category
+          ec = asio::error_code(EAI_NONAME, asio::error::get_system_category());
+        else if (ec == asio::error::host_not_found_try_again) // netdb_category
+          ec = asio::error_code(EAI_AGAIN, asio::error::get_system_category());
+        else if (ec == asio::error::no_recovery) // netdb_category
+          ec = asio::error_code(EAI_FAIL, asio::error::get_system_category());
+        else if (ec == asio::error::service_not_found) // addrinfo_category
+          ec = asio::error_code(EAI_SERVICE, asio::error::get_system_category());
+        else if (ec == asio::error::socket_type_not_supported) // addrinfo_category
+          ec = asio::error_code(EAI_SOCKTYPE, asio::error::get_system_category());
+
         if (ec.category() == asio::error::get_system_category()) {
           *message = SystemErrorCodeToString(ec.value());
         } else {
