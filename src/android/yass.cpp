@@ -207,7 +207,23 @@ JNIEXPORT void JNICALL Java_it_gui_yass_MainActivity_nativeStart(JNIEnv* env, jo
     }
     std::ostringstream ss;
     if (ec) {
-      ss << ec;
+      int status = 0;
+      // translate asio netdb and addrinfo categories back to WSA Error Codes
+      if (ec == asio::error::host_not_found) // netdb_category
+        status = EAI_NONAME;
+      else if (ec == asio::error::host_not_found_try_again) // netdb_category
+        status = EAI_AGAIN;
+      else if (ec == asio::error::no_recovery) // netdb_category
+        status = EAI_FAIL;
+      else if (ec == asio::error::service_not_found) // addrinfo_category
+        status = EAI_SERVICE;
+      else if (ec == asio::error::socket_type_not_supported) // addrinfo_category
+        status = EAI_SOCKTYPE;
+      if (status != 0) {
+        ss << gai_strerror(status);
+      } else  {
+        ss << ec;
+      }
     }
     int port = ec ? 0 : g_worker->GetLocalPort();
     CallOnNativeStarted(g_jvm, g_activity_obj, ss.str(), port);
