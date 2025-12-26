@@ -33,7 +33,9 @@
 #include <absl/debugging/symbolize.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <base/debug/debugger.h>
+#include <base/strings/string_util.h>
 #include <locale.h>
 #include <iostream>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
@@ -330,6 +332,34 @@ std::wstring CYassApp::GetStatus() const {
   return ss.str();
 }
 
+// https://learn.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
+// https://github.com/cggos/windows_via_cpp/blob/master/01-ErrorShow/ErrorShow.cpp#L75
+static std::string SystemErrorCodeToString(DWORD dwError) {
+  const int kErrorMessageBufferSize = 256;
+  wchar_t msgbuf[kErrorMessageBufferSize];
+  DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+  DWORD len = FormatMessageW(flags, nullptr, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                             msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
+  if (len) {
+    std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
+    // Messages returned by system end with line breaks.
+    return gurl_base::CollapseWhitespaceASCII(msg, true) + absl::StrFormat(" (0x%lX)", dwError);
+  }
+  // Is it a network-related error?
+  static HMODULE hDll = LoadLibraryExW(L"netmsg.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+  if (hDll != NULL) {
+    DWORD flags = FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS;
+    len = FormatMessageW(flags, hDll, dwError, 0,
+                         msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
+    if (len) {
+      std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
+      // Messages returned by system end with line breaks.
+      return gurl_base::CollapseWhitespaceASCII(msg, true) + absl::StrFormat(" (0x%lX)", dwError);
+    }
+  }
+  return absl::StrFormat("Error (0x%lX) while retrieving error. (0x%lX)", GetLastError(), dwError);
+}
+
 void CYassApp::OnStart(bool quiet) {
   DWORD main_thread_id = GetCurrentThreadId();
   state_ = STARTING;
@@ -348,7 +378,13 @@ void CYassApp::OnStart(bool quiet) {
 
       if (ec) {
         message = new std::string;
-        *message = ec.message();
+
+        if (ec.category() == asio::error::get_system_category()) {
+          *message = SystemErrorCodeToString(ec.value());
+        } else {
+          *message = ec.message();
+        }
+
         successed = false;
       } else {
         successed = true;
