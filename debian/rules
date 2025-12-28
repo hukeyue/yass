@@ -52,10 +52,13 @@ override_dh_auto_configure: CXXFLAGS += -ccc-gcc-name ${DEB_HOST_GNU_TYPE}-g++
 CMAKE_OPTIONS += -DCMAKE_C_COMPILER_TARGET=${DEB_HOST_GNU_TYPE} -DCMAKE_CXX_COMPILER_TARGET=${DEB_HOST_GNU_TYPE} -DCMAKE_ASM_COMPILER_TARGET=${DEB_HOST_GNU_TYPE}
 ifneq ($(filter riscv64,$(DEB_HOST_GNU_CPU)),)
 # According to the ISA spec definition rv64gc is rv64imafdc_zicsr_zifencei and
-# rv64imafdc is rv64imafdc_zicsr, see https://github.com/riscv-collab/riscv-gcc/issues/344
-override_dh_auto_configure: ASMFLAGS += -march=rv64gc -mabi=lp64d
-override_dh_auto_configure: CFLAGS += -march=rv64gc -mabi=lp64d
-override_dh_auto_configure: CXXFLAGS += -march=rv64gc -mabi=lp64d
+# rv64imafdc is rv64imafdc_zicsr, see https://github.com/llvm/llvm-project/issues/69780
+# see https://github.com/riscv-collab/riscv-gnu-toolchain/issues/1038
+# see https://gcc.gnu.org/onlinedocs/gcc-15.2.0/gcc/RISC-V-Options.html
+# can't link soft-float modules with double-float modules
+override_dh_auto_configure: ASMFLAGS += -march=rv64ifd -mabi=lp64d
+override_dh_auto_configure: CFLAGS += -march=rv64ifd -mabi=lp64d
+override_dh_auto_configure: CXXFLAGS += -march=rv64ifd -mabi=lp64d
 endif
 endif
 
