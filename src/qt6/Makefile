@@ -1,5 +1,5 @@
 # use make -B update-qm to update all qm files
-QT_DIR ?= /usr/lib64/qt6
+QT_DIR ?= /usr/lib/qt6
 LUPDATE := $(QT_DIR)/bin/lupdate
 LRELEASE := $(QT_DIR)/bin/lrelease
 
