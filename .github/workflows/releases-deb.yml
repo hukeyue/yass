@@ -53,6 +53,9 @@ jobs:
           - distro: bionic
             arch: arm64
             gui_variant: gtk3
+          - distro: trixie
+            arch: riscv64
+            gui_variant: gtk3
           - distro: jammy
             arch: amd64
             gui_variant: gtk4
@@ -61,12 +64,8 @@ jobs:
             arch: amd64
             gui_variant: qt6
             use_cet: true
-          - distro: trixie
-            arch: riscv64
-            gui_variant: none
         # XFAIL stretch
         # XFAIL focal-i386,jammy-i386,noble-i386
-        # XFAIL trixie-riscv64 (gui, curl)
         # distro: [trusty, xenial, bionic, focal, jammy, noble, stretch, buster, bullseye, bookworm]
         # arch: [i386, amd64, armhf, arm64]
         # include:
@@ -154,7 +153,7 @@ jobs:
         if: ${{ matrix.arch != 'i386' && matrix.arch != 'amd64' }}
         run: |
           echo "DEB_BUILD_PROFILES=nocheck cross ${{ env.DEB_BUILD_PROFILES }}" >> $GITHUB_ENV
-      - name: Set gui build profile (none of armel/mipsel/mips64el and riscv64)
+      - name: Set gui build profile (none of armel/mipsel/mips64el)
         if: ${{ matrix.gui_variant != 'none' }}
         run: |
           echo "DEB_BUILD_PROFILES=${{ matrix.gui_variant }} ${{ env.DEB_BUILD_PROFILES }}" >> $GITHUB_ENV
@@ -179,7 +178,7 @@ jobs:
           path: |
             /etc/schroot/chroot.d
             /var/lib/schroot/chroots
-          key: ${{ runner.os }}-22.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}-mix-v2
+          key: ${{ runner.os }}-22.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}-mix-v3
       - name: Fix schroot permissions (restore root permissions)
         run: |
           sudo chown -R root:root /etc/schroot/chroot.d /var/lib/schroot/chroots
@@ -321,17 +320,17 @@ jobs:
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
             sed -i 's#: integral_constant<bool, (T(0) < T(-1))> {};#: integral_constant<bool, __is_unsigned(T)> {};#g' /usr/include/$HOST_GNU_TYPE/qt5/QtCore/qtypetraits.h
       - name: Populate dependencie (gtk4, jammy only)
-        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' && matrix.arch != 'riscv64' && matrix.distro == 'jammy' }}
+        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' && matrix.distro == 'jammy' }}
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
             apt-get -o DPkg::Options::="--force-confnew" install -y libglib2.0-dev:${{ matrix.arch }} libgtk-4-dev:${{ matrix.arch }}
-      - name: Populate dependencie (gtk3, none of armel/mipsel/mips64el and riscv64)
-        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' && matrix.arch != 'riscv64' }}
+      - name: Populate dependencie (gtk3, none of armel/mipsel/mips64el)
+        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
             apt-get -o DPkg::Options::="--force-confnew" install -y libglib2.0-dev:${{ matrix.arch }} libgtk-3-dev:${{ matrix.arch }}
       - name: Populate dependencie (curl, for test purpose, exclude some arches)
-        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' && matrix.arch != 'riscv64' }}
+        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
             apt-get install -y libcurl4-openssl-dev:${{ matrix.arch }}
