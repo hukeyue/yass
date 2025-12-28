@@ -34,6 +34,13 @@
 #include "test_util.hpp"
 
 ABSL_FLAG(bool, no_doh_tests, false, "skip doh tests");
+ABSL_FLAG(bool, use_china_dns_tests, false, "use China DNS in tests");
+
+#define DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://223.5.5.5/dns-query" : \
+                 "https://1.1.1.1/dns-query")
+
+#define INVALID_DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://5.5.5.5/dns-query" : \
+                 "https://2.2.2.2/dns-query")
 
 using namespace net;
 
@@ -73,7 +80,7 @@ TEST(DOH_TEST, LocalBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init(DOH_URL, 5000);
   ASSERT_EQ(ret, 0);
 
   DoLocalResolve(io_context, resolver);
@@ -119,7 +126,7 @@ TEST(DOH_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init(DOH_URL, 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -134,7 +141,7 @@ TEST(DOH_TEST, RemoteMulti) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://1.1.1.1/dns-query", 5000);
+  int ret = resolver->Init(DOH_URL, 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -153,7 +160,7 @@ TEST(DOH_TEST, Timeout) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init("https://2.2.2.2/dns-query", 1);
+  int ret = resolver->Init(INVALID_DOH_URL, 1);
   ASSERT_EQ(ret, 0);
 
   auto work_guard =
