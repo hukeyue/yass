@@ -40,7 +40,7 @@ env:
   DH_QUIET: 1
 jobs:
   deb-release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     strategy:
@@ -116,14 +116,6 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y sbuild debhelper schroot debootstrap ubuntu-dev-tools qemu-user-static
-      - name: Populate dependencies (deboostrap update for trixie fix)
-        if: ${{ matrix.distro == 'trixie' }}
-        run: |
-          # TODO remove this once when moved to ubuntu 24.04
-          # from https://launchpad.net/ubuntu/noble/amd64/debootstrap
-          curl -L -O http://azure.archive.ubuntu.com/ubuntu/pool/main/d/debootstrap/debootstrap_1.0.134ubuntu1_all.deb
-          sudo apt-get update -qq && sudo apt-get install -f -y $PWD/debootstrap*.deb
-          rm -f *.deb
       - name: Copy sbuilrc
         run: |
           cp -fv sbuildrc ~/.sbuildrc
@@ -178,7 +170,7 @@ jobs:
           path: |
             /etc/schroot/chroot.d
             /var/lib/schroot/chroots
-          key: ${{ runner.os }}-22.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}-mix-v3
+          key: ${{ runner.os }}-24.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}-mix-v3
       - name: Fix schroot permissions (restore root permissions)
         run: |
           sudo chown -R root:root /etc/schroot/chroot.d /var/lib/schroot/chroots
