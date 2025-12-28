@@ -34,6 +34,13 @@
 #include "test_util.hpp"
 
 ABSL_FLAG(bool, no_dot_tests, false, "skip dot tests");
+ABSL_DECLARE_FLAG(bool, use_china_dns_tests);
+
+#define DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "223.5.5.5" : \
+                 "1.1.1.1")
+
+#define INVALID_DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "5.5.5.5" : \
+                 "2.2.2.2")
 
 using namespace net;
 
@@ -73,7 +80,7 @@ TEST(DOT_TEST, LocalBasic) {
   asio::io_context io_context;
 
   auto resolver = DoTResolver::Create(io_context);
-  int ret = resolver->Init("1.1.1.1", 5000);
+  int ret = resolver->Init(DOT_DOMAIN, 5000);
   ASSERT_EQ(ret, 0);
 
   DoLocalResolve(io_context, resolver);
@@ -119,7 +126,7 @@ TEST(DOT_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = DoTResolver::Create(io_context);
-  int ret = resolver->Init("1.1.1.1", 5000);
+  int ret = resolver->Init(DOT_DOMAIN, 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -134,7 +141,7 @@ TEST(DOT_TEST, RemoteMulti) {
   asio::io_context io_context;
 
   auto resolver = DoTResolver::Create(io_context);
-  int ret = resolver->Init("1.1.1.1", 5000);
+  int ret = resolver->Init(DOT_DOMAIN, 5000);
   ASSERT_EQ(ret, 0);
 
   DoRemoteResolve(io_context, resolver);
@@ -153,7 +160,7 @@ TEST(DOT_TEST, Timeout) {
   asio::io_context io_context;
 
   auto resolver = DoTResolver::Create(io_context);
-  int ret = resolver->Init("2.2.2.2", 1);
+  int ret = resolver->Init(INVALID_DOT_DOMAIN, 1);
   ASSERT_EQ(ret, 0);
 
   auto work_guard =
