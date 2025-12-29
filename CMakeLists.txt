@@ -3031,7 +3031,7 @@ if (BORINGSSL_BUILD_TESTS)
     COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
             ${CMAKE_CURRENT_BINARY_DIR}/third_party/boringssl/src
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boringssl/src
-    DEPENDS all_tests
+    DEPENDS boringssl_all_tests
     USES_TERMINAL)
 endif()
 

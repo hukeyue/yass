@@ -72,14 +72,14 @@ commands:
             BUILD_ARCH=$(dpkg-architecture -q DEB_BUILD_ARCH)
             cd /tmp
             # shipped with debian trixie
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang_1.23~2_${BUILD_ARCH}.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-go_1.23~2_${BUILD_ARCH}.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-src_1.23~2_all.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-doc_1.23~2_all.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.23/golang-1.23_1.23.3-2_all.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.23/golang-1.23-go_1.23.3-2_${BUILD_ARCH}.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.23/golang-1.23-src_1.23.3-2_all.deb
-            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.23/golang-1.23-doc_1.23.3-2_all.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang_1.24~2_${BUILD_ARCH}.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-go_1.24~2_${BUILD_ARCH}.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-src_1.24~2_all.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-defaults/golang-doc_1.24~2_all.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.24/golang-1.24_1.24.4-1_all.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.24/golang-1.24-go_1.24.4-1_${BUILD_ARCH}.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.24/golang-1.24-src_1.24.4-1_all.deb
+            curl -O http://ftp.us.debian.org/debian/pool/main/g/golang-1.24/golang-1.24-doc_1.24.4-1_all.deb
             sudo dpkg --force-depends -i $PWD/*.deb || true
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f
             rm -vf *.deb
@@ -178,7 +178,7 @@ commands:
     steps:
       - run:
           command: |
-            ninja -C build yass yass_test all_tests bssl_shim handshaker
+            ninja -C build yass yass_test boringssl_all_tests bssl_shim handshaker
 
   test:
     steps:
