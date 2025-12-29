@@ -118,8 +118,8 @@ jobs:
           REM start to build with workaround
           mkdir build-mingw
           cd build-mingw
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on -DGUI=on -DMINGW_MSVCRT100=on -DMINGW_WORKAROUND=on .. ${{ env.CMAKE_OPTIONS }} -DCMAKE_C_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_CXX_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_ASM_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_SYSROOT="%CD%\..\third_party\${{ matrix.mingw_dir }}\${{ matrix.arch }}-w64-mingw32" -DUSE_LIBCXX=on -DENABLE_LLD=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on
-          ninja yass yass_benchmark yass_test
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on -DCLI=on -DSERVER=on -DGUI=on -DMINGW_MSVCRT100=on -DMINGW_WORKAROUND=on .. ${{ env.CMAKE_OPTIONS }} -DCMAKE_C_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_CXX_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_ASM_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_SYSROOT="%CD%\..\third_party\${{ matrix.mingw_dir }}\${{ matrix.arch }}-w64-mingw32" -DUSE_LIBCXX=on -DENABLE_LLD=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on
+          ninja yass yass_benchmark yass_test yass_cli yass_server
       - name: Populate depedencies (libgcc-i686)
         if: ${{ matrix.arch == 'i686' }}
         run: |
@@ -177,6 +177,8 @@ jobs:
           cd build-mingw
           ./yass_test
           ./yass_benchmark
+          ./yass_cli --version
+          ./yass_server --version
       - name: Upload dist tarball
         if: ${{ github.event_name == 'release' }}
         env:

@@ -148,14 +148,22 @@ jobs:
           patch -p1 < ../winxp.patch
           popd
           echo "BUILD_OPTIONS=-mingw-allow-xp -enable-lto=false" >> $GITHUB_ENV
-      - name: Build Binary
+      - name: Build Binary (CLI and Server)
+        run: |
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system mingw \
+            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            ${{ env.BUILD_OPTIONS }}
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
+            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            ${{ env.BUILD_OPTIONS }}
+      - name: Build Binary (GUI)
         run: |
           # fix cpack error on C.UTF-8 locale
           # see https://github.com/lightspark/lightspark/discussions/604#discussioncomment-1034262
           export LC_ALL=en_US.UTF-8
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
             -build-test -build-benchmark \
-            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 \
+            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ env.BUILD_OPTIONS }}
       - name: Populate depedencies (Tests-i686)
         if: ${{ matrix.arch == 'i686' }}
@@ -173,6 +181,8 @@ jobs:
           cd build-mingw-winxp-${{ matrix.arch }}
           wine yass_test.exe
           wine yass_benchmark.exe
+          wine yass_cli.exe --version
+          wine yass_server.exe --version
       - name: Upload dist tarball
         if: ${{ github.event_name == 'release' }}
         env:
