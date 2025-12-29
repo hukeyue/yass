@@ -371,6 +371,10 @@ else()
       CMAKE_SYSTEM_PROCESSOR MATCHES "^loongarch64$")
     set(OS_LOONGARCH64 TRUE)
   endif()
+  if (NOT CMAKE_C_COMPILER_TARGET AND
+      CMAKE_SYSTEM_PROCESSOR MATCHES "^loong64$")
+    set(OS_LOONGARCH64 TRUE)
+  endif()
 
   # riscv64
   if (CMAKE_C_COMPILER_TARGET MATCHES "^riscv64-.*")
@@ -792,7 +796,7 @@ if (UNIX AND CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT AND COMPILER_CLANG AND NOT C
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
     file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/lib/gcc/*/*.*.*")
     # fix up for loongarch sysroot
-    if (CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+    if (OS_LOONGARCH64 AND NOT _GCC_SYSROOT)
       file(GLOB _GCC_SYSROOT "${CMAKE_SYSROOT}/../../lib/gcc/*/*.*.*")
       # required by loongarch64 sdk https://github.com/loongson/build-tools/releases
       if (NOT _GCC_SYSROOT)
@@ -824,7 +828,7 @@ if (UNIX AND CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT AND COMPILER_CLANG AND NOT C
   endif()
 endif()
 
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+if (OS_LOONGARCH64)
   add_definitions(-D_LOONGARCH_SZLONG=64)
 endif()
 
