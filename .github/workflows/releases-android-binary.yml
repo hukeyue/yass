@@ -186,7 +186,13 @@ jobs:
         if: ${{ steps.crashpad-cache.outputs.cache-hit != 'true' }}
         run: |
           WITH_OS=android WITH_CPU=${{ matrix.arch }} SKIP_STRIP=1 ./scripts/build-crashpad.sh
-      - name: Build Binary
+      - name: Build Binary (CLI and SERVER)
+        run: |
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
+             -nc -no-packaging
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
+             -nc -no-packaging
+      - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
             -build-benchmark -build-test -nc -no-packaging
@@ -230,6 +236,14 @@ jobs:
           echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> $GITHUB_ENV
           echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> $GITHUB_ENV
           echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> $GITHUB_ENV
+      - name: Build CLI package
+        run: |
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
+            -build-benchmark -build-test -nc
+      - name: Build SERVER package
+        run: |
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
+            -build-benchmark -build-test -nc
       - name: Build AAB bundle
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
@@ -249,4 +263,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.event.release.tag_name }} yass*.apk yass*.aab yass*.aab.idsig
+          gh release upload ${{ github.event.release.tag_name }} yass*.apk yass*.aab yass*.aab.idsig yass*.tgz

@@ -33,13 +33,16 @@
 
 #include "config/config_network.hpp"
 #include "net/c-ares.hpp"
+#include "net/resolver.hpp"
 #include "test_util.hpp"
 
+ABSL_FLAG(bool, no_cares_tests,
 #if BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID)
-ABSL_FLAG(bool, no_cares_tests, true, "skip c-ares tests");
+          true,
 #else
-ABSL_FLAG(bool, no_cares_tests, false, "skip c-ares tests");
+          false,
 #endif
+          "skip c-ares tests");
 
 using namespace net;
 
@@ -73,7 +76,7 @@ TEST(CARES_TEST, LocalfileBasic) {
 }
 
 TEST(CARES_TEST, RemoteNotFound) {
-  if (absl::GetFlag(FLAGS_no_cares_tests)) {
+  if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
   }
@@ -126,7 +129,7 @@ static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<CAresRes
 }
 
 TEST(CARES_TEST, RemoteBasic) {
-  if (absl::GetFlag(FLAGS_no_cares_tests)) {
+  if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
   }
@@ -141,7 +144,7 @@ TEST(CARES_TEST, RemoteBasic) {
 }
 
 TEST(CARES_TEST, RemoteMulti) {
-  if (absl::GetFlag(FLAGS_no_cares_tests)) {
+  if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
   }
