@@ -1621,7 +1621,11 @@ func postStateStripBinaries() {
 		glog.Info("Done in xcodebuild")
 		return
 	}
-	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" {
+	if systemNameFlag == "android" && variantFlag == "gui" {
+		glog.Info("Done in aab build")
+		return
+	}
+	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
 		if runtime.GOOS == "windows" {
 			objcopy = filepath.Join(clangPath, "bin", "llvm-objcopy.exe")
@@ -2386,15 +2390,15 @@ func postStateArchives() map[string][]string {
 			dbgPaths = append(dbgPaths, "crashpad_handler.pdb")
 		}
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
-	} else if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" {
+	} else if systemNameFlag == "android" && variantFlag == "gui"  {
+		// nop because we produces aab now
+		dbgPaths = []string{}
+	} else if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		dbgPaths = append(dbgPaths, getAppName()+".dbg")
 		if hasCrashpadDbg {
 			dbgPaths = append(dbgPaths, "crashpad_handler.dbg")
 		}
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
-	} else if systemNameFlag == "android" {
-		// nop because we produces aab now
-		dbgPaths = []string{}
 	} else if systemNameFlag == "darwin" {
 		dbgPaths = append(dbgPaths, getAppName()+".dSYM")
 		if hasCrashpadDbg {
