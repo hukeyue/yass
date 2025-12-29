@@ -318,6 +318,8 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Mon Dec 29 2025 Chilledheart <hukeyue@vip.163.com> - 1.20.3-1
+  - miscellaneous fixes
 * Fri Dec 26 2025 Chilledheart <hukeyue@vip.163.com> - 1.20.2-1
   - miscellaneous fixes
 * Fri Dec 12 2025 Chilledheart <hukeyue@vip.163.com> - 1.20.1-1
