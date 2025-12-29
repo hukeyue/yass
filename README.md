@@ -36,23 +36,9 @@ _LANDED BUILDS_(signed against new certificates)_:_
 
 > From 1.20.3 and 1.17.5, Command Line binaries (similar to naiveproxy binary) for Android and Windows are provided.
 
-[Report here if you find new network protocol/modification here and there, likely outside Chromium and curl][frs]
-
 _BAKED BUILDS_(signed with baked certificates)_:_
 - [Latest M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.2) has become Stable Release since _Jan 14, 2025_ (Extended Support).
 - [Latest M131's Release (1.15.x)](https://github.com/hukeyue/yass/releases/tag/1.15.4) has become Stable Release since _Nov 12, 2024_.
-- [Latest M130's Release (1.14.x)](https://github.com/hukeyue/yass/releases/tag/1.14.5) has become Stable Release since _Oct 15, 2024_ (Extended Support).
-- [Latest M129's Release (1.13.x)](https://github.com/hukeyue/yass/releases/tag/1.13.3) has become Stable Release since _Sep 17, 2024_.
-- [Latest M128's Release (1.12.x)](https://github.com/hukeyue/yass/releases/tag/1.12.5) has become Stable Release since _Aug 20, 2024_ (Extended Support).
-- [Latest M127's Release (1.11.x)](https://github.com/hukeyue/yass/releases/tag/1.11.5) has become Stable Release since _Jul 23, 2024_.
-- [Latest M126's Release (1.10.x)](https://github.com/hukeyue/yass/releases/tag/1.10.7) has become Stable Release since _Jun 11, 2024_ (Extended Support).
-- [Latest M125's Release (1.9.x)](https://github.com/hukeyue/yass/releases/tag/1.9.7) has become Stable Release since _May 14, 2024_.
-- [Latest M124's Release (1.8.x)](https://github.com/hukeyue/yass/releases/tag/1.8.7) has become Stable Release since _Apr 16, 2024_ (Extended Support).
-- [Latest M123's Release (1.7.x)](https://github.com/hukeyue/yass/releases/tag/1.7.7) has become Stable Release since _Mar 19, 2024_.
-- [Latest M122's Release (1.6.x)](https://github.com/hukeyue/yass/releases/tag/1.6.5) has become Stable Release since _Feb 20, 2024_ (Extended Support).
-- [Latest M121's Release (1.5.x)](https://github.com/hukeyue/yass/releases/tag/1.5.24) has become Stable Release since _Jan 23, 2024_.
-
-[Report if you witness any 404/page not found error from this page][bugs]
 
 ### Prebuilt binaries (Supported platforms)
 - GTK3 [download rpm][gtk3_rpm_url] or [download deb][gtk3_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
