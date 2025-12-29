@@ -27,7 +27,11 @@
 
 #include <functional>
 
+#include <absl/flags/declare.h>
+
 #include "net/asio.hpp"
+
+ABSL_DECLARE_FLAG(bool, disable_cares);
 
 namespace net {
 

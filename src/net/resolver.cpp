@@ -24,6 +24,8 @@
 
 #include "net/resolver.hpp"
 
+#include <absl/flags/flag.h>
+
 #include "config/config_network.hpp"
 #include "core/utils.hpp"
 #include "net/doh_resolver.hpp"
@@ -31,6 +33,12 @@
 
 #ifdef HAVE_C_ARES
 #include "net/c-ares.hpp"
+#endif
+
+#ifdef HAVE_C_ARES
+ABSL_FLAG(bool, disable_cares, false, "Disable C-Ares Component for DNS Resolving (If Available)");
+#else
+ABSL_FLAG(bool, disable_cares, true, "Disable C-Ares Component for DNS Resolving (Not Available)");
 #endif
 
 namespace net {
@@ -42,10 +50,9 @@ class Resolver::ResolverImpl {
         doh_resolver_(nullptr),
         dot_resolver_(nullptr),
 #ifdef HAVE_C_ARES
-        resolver_(nullptr)
-#else
-        resolver_(io_context)
+        resolver_(nullptr),
 #endif
+        resolver_libc_(io_context)
   {
   }
 
@@ -63,11 +70,12 @@ class Resolver::ResolverImpl {
       return dot_resolver_->Init(dot_host_, 10000);
     }
 #ifdef HAVE_C_ARES
-    resolver_ = CAresResolver::Create(io_context_);
-    return resolver_->Init(5000);
-#else
-    return 0;
+    if (!absl::GetFlag(FLAGS_disable_cares)) {
+      resolver_ = CAresResolver::Create(io_context_);
+      return resolver_->Init(5000);
+    }
 #endif
+    return 0;
   }
 
   void Cancel() {
@@ -86,10 +94,10 @@ class Resolver::ResolverImpl {
 #ifdef HAVE_C_ARES
     if (resolver_) {
       resolver_->Cancel();
+      return;
     }
-#else
-    resolver_.cancel();
 #endif
+    resolver_libc_.cancel();
   }
 
   void Reset() {
@@ -102,7 +110,10 @@ class Resolver::ResolverImpl {
       return;
     }
 #ifdef HAVE_C_ARES
-    resolver_.reset();
+    if (resolver_) {
+      resolver_.reset();
+      return;
+    }
 #endif
   }
 
@@ -116,11 +127,13 @@ class Resolver::ResolverImpl {
       return;
     }
 #ifdef HAVE_C_ARES
-    resolver_->AsyncResolve(host_name, std::to_string(port), cb);
-#else
-    resolver_.async_resolve(Net_ipv6works() ? asio::ip::tcp::unspec() : asio::ip::tcp::v4(), host_name,
-                            std::to_string(port), cb);
+    if (resolver_) {
+      resolver_->AsyncResolve(host_name, std::to_string(port), cb);
+      return;
+    }
 #endif
+    resolver_libc_.async_resolve(Net_ipv6works() ? asio::ip::tcp::unspec() : asio::ip::tcp::v4(),
+                                 host_name, std::to_string(port), cb);
   }
 
  private:
@@ -133,9 +146,8 @@ class Resolver::ResolverImpl {
 
 #ifdef HAVE_C_ARES
   scoped_refptr<CAresResolver> resolver_;
-#else
-  asio::ip::tcp::resolver resolver_;
 #endif
+  asio::ip::tcp::resolver resolver_libc_;
 };
 
 Resolver::Resolver(asio::io_context& io_context) : impl_(new ResolverImpl(io_context)) {}

@@ -912,6 +912,11 @@ int main(int argc, char** argv) {
   CHECK_EQ(iResult, 0) << "WSAStartup failure";
 #endif
 
+  // Forcely disabling c-ares due to cli usage for android
+#if defined(HAVE_C_ARES) && (BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS))
+  absl::SetFlag(&FLAGS_disable_cares, true);
+#endif
+
 #ifdef HAVE_CURL
   curl_global_init(CURL_GLOBAL_ALL);
 #endif
