@@ -1,3 +1,9 @@
+yass (1.17.5-1) UNRELEASED; urgency=medium
+
+  * miscellaneous fixes
+  * add debian loong64 port (cli)
+  * add debian riscv64 port (gtk3)
+ -- Chilledheart <hukeyue@vip.163.com>  Mon, 29 Dec 2025 17:50:23 +0800
 yass (1.17.4-1) UNRELEASED; urgency=medium
 
   * miscellaneous fixes
