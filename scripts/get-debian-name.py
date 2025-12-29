@@ -38,13 +38,13 @@ def init_codenames_from_distro_info_data():
   try:
     open_ubuntu_csv_file('/usr/share/distro-info/ubuntu.csv')
   except IOError:
-    # shipped by distro-info-data 0.60ubuntu0.2
+    # shipped by distro-info-data 0.68
     open_ubuntu_csv_file('./distro-info/ubuntu.csv')
     pass
   try:
     open_debian_csv_file('/usr/share/distro-info/debian.csv')
   except IOError:
-    # shipped by distro-info-data 0.60ubuntu0.2
+    # shipped by distro-info-data 0.68
     open_debian_csv_file('./distro-info/debian.csv')
     pass
 
