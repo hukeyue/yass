@@ -1549,7 +1549,7 @@ func postStateCopyDependedLibraries() {
 		}
 		deps, unresolvedDeps := GetDependenciesByDumpbin(getAppName(), searchDirs)
 
-		hasCrashpad := true
+		hasCrashpad := variantFlag == "gui"
 		if _, err := os.Stat("crashpad_handler.exe"); errors.Is(err, os.ErrNotExist) {
 			hasCrashpad = false
 		}
@@ -2308,16 +2308,16 @@ func postStateArchives() map[string][]string {
 	if systemNameFlag == "harmony" {
 		archive = fmt.Sprintf(archiveFormat, APPNAME, "", ".hap")
 	}
-	hasCrashpadExe := true
+	hasCrashpadExe := variantFlag == "gui"
 	if _, err := os.Stat("crashpad_handler.exe"); errors.Is(err, os.ErrNotExist) {
 		hasCrashpadExe = false
 	}
-	hasCrashpadPdb := true
+	hasCrashpadPdb := variantFlag == "gui"
 	if _, err := os.Stat("crashpad_handler.pdb"); errors.Is(err, os.ErrNotExist) {
 		hasCrashpadPdb = false
 	}
 
-	hasCrashpadDbg := true
+	hasCrashpadDbg := variantFlag == "gui"
 	if _, err := os.Stat("crashpad_handler.dbg"); errors.Is(err, os.ErrNotExist) {
 		hasCrashpadDbg = false
 	}
@@ -2372,12 +2372,12 @@ func postStateArchives() map[string][]string {
 	// https://github.com/wixtoolset/issues/issues/5558
 	// error CNDL0265 : The Platform attribute has an invalid value arm64.
 	// Possible values are x86, x64, or ia64.
-	if systemNameFlag == "windows" && msvcTargetArchFlag != "arm64" {
+	if systemNameFlag == "windows" && msvcTargetArchFlag != "arm64" && variantFlag == "gui" {
 		generateMsi(msiArchive, dllPaths, licensePaths, hasCrashpadExe)
 		archives[msiArchive] = []string{msiArchive}
 	}
 	// nsis installer
-	if systemNameFlag == "windows" || systemNameFlag == "mingw" {
+	if (systemNameFlag == "windows" || systemNameFlag == "mingw") && variantFlag == "gui" {
 		generateNSIS(nsisArchive, dllPaths)
 		archives[nsisArchive] = []string{nsisArchive}
 		generateNSISSystemInstaller(nsisSystemArchive)
