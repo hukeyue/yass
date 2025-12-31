@@ -9,9 +9,9 @@ freebsd_task:
   name: FreeBSD
 
   matrix:
-    - name: FreeBSD 14.1
+    - name: FreeBSD 14.3
       freebsd_instance:
-        image_family: freebsd-14-1
+        image_family: freebsd-14-3
       env:
         configure: -DCMAKE_BUILD_TYPE=Release
 
@@ -20,13 +20,13 @@ freebsd_task:
 
   pkginstall_script:
     - pkg update -f
-    - pkg install -y cmake ninja pkgconf perl5 go llvm17-lite git ca_root_nss
+    - pkg install -y cmake ninja pkgconf perl5 go llvm20-lite git ca_root_nss
   submodules_script:
     # unshallow must come first otherwise submodule may be get unshallowed
     - git fetch --tags --unshallow
     - git submodule update --init --depth 1
   configure_script:
-    - export PATH="/usr/local/llvm17/bin:$PATH"
+    - export PATH="/usr/local/llvm20/bin:$PATH"
     - export CC=clang
     - export CXX=clang++
     - mkdir build
