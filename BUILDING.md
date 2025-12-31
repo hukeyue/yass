@@ -88,7 +88,7 @@ ninja yass
 
   * Choose `Add LLVM to System Path`.
 
-Notes: please make sure you have [LLVM][llvm-win64] (17.0 or above).
+Notes: please make sure you have [LLVM][llvm-win64] (20.0 or above).
 
 5. Compile the program with Release configuration.
 
@@ -230,9 +230,9 @@ ninja yass
 It is impossible to upgrade system compiler without upgrading OS,
 so you have to install latest [Clang] (not required since FreeBSD 14.1):
 
-Run in `Console` (not required if you have installed llvm19):
+Run in `Console` (not required if you have installed llvm20):
 ```
-pkg install llvm19-lite
+pkg install llvm20-lite
 ```
 
 2. Install required dependencies:
@@ -249,7 +249,7 @@ Run in `Console`:
 git clone https://gitee.com/keeyou/yass
 cd yass
 git submodule update --init
-export PATH="/usr/local/llvm19/bin:$PATH"
+export PATH="/usr/local/llvm20/bin:$PATH"
 export CC=clang
 export CXX=clang++
 mkdir build-freebsd
@@ -270,6 +270,6 @@ ninja yass
 [NASM]: https://www.nasm.us/
 [Xcode]: https://apps.apple.com/us/app/xcode/id497799835?mt=12
 [MacPorts]: https://guide.macports.org/chunked/installing.macports.html
-[llvm-win64]: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe
+[llvm-win64]: https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-win64.exe
 [msys2]: https://www.msys2.org/
 [EPEL]: https://docs.fedoraproject.org/en-US/epel
