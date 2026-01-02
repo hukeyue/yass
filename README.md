@@ -26,7 +26,7 @@ _PLANNED BUILDS:_
 [Report if you find/face/witness any miss in our plan or any conflict with our plan][frs]
 
 _LANDED BUILDS_(signed against new certificates)_:_
-- [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.3) will become Stable Release _from Jan 13, 2026_ (Extended Support).
+- [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.4) will become Stable Release _from Jan 13, 2026_ (Extended Support).
 - M143's Release (1.19.x) will become Stable Release _from Dec 16, 2025_.
 - M142's Release (1.18.x) has become Stable Release _from Oct 28, 2025_ (Extended Support).
 - [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.5) has become Stable Release _from Sep 30, 2025_.
@@ -34,7 +34,7 @@ _LANDED BUILDS_(signed against new certificates)_:_
 
 > Due to the change of certificate, re-installation [YASS] on [Android Phone][android_64_apk_url] and [macOS prebuilts][macos_intel_dmg_url] is necessary.
 
-> From 1.20.3 and 1.17.5, Command Line binaries (similar to naiveproxy binary) for Android and Windows are provided.
+> From 1.20.4 and 1.17.5, Command Line binaries (similar to naiveproxy binary) for Android and Windows are provided.
 
 _BAKED BUILDS_(signed with baked certificates)_:_
 - [Latest M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.2) has become Stable Release since _Jan 14, 2025_ (Extended Support).
@@ -77,7 +77,7 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 - Legacy Windows [download 64-bit installer][windows_64_installer_url] (require [KB2999226] on _windows 7/8/8.1_) or [download 32-bit installer][windows_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3_) or [download arm64 installer][windows_arm64_installer_url] (require _windows 10/11_)
 - Legacy macOS [download intel dmg][macos_intel_dmg_url] or [download apple silicon dmg][macos_arm_dmg_url] (require _macOS 10.14_ or above)
 
-> New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.3 FOR NOW).
+> New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.4 FOR NOW).
 
 See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
 
@@ -189,40 +189,40 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [mlkem]: https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/
 [kyber]: https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/
 
-[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-gtk3.el8.x86_64.1.20.3.rpm
-[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-gtk3-ubuntu-16.04-xenial_amd64.1.20.3.deb
-[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-qt5.el8.x86_64.1.20.3.rpm
-[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-qt5-ubuntu-16.04-xenial_amd64.1.20.3.deb
-[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-gtk4.lp155.x86_64.1.20.3.rpm
-[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-gtk4-ubuntu-22.04-jammy_amd64.1.20.3.deb
-[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-qt6.lp155.x86_64.1.20.3.rpm
-[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-qt6-ubuntu-22.04-jammy_amd64.1.20.3.deb
+[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3.el8.x86_64.1.20.4.rpm
+[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3-ubuntu-16.04-xenial_amd64.1.20.4.deb
+[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt5.el8.x86_64.1.20.4.rpm
+[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt5-ubuntu-16.04-xenial_amd64.1.20.4.deb
+[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk4.lp155.x86_64.1.20.4.rpm
+[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk4-ubuntu-22.04-jammy_amd64.1.20.4.deb
+[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt6.lp155.x86_64.1.20.4.rpm
+[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt6-ubuntu-22.04-jammy_amd64.1.20.4.deb
 
-[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-x86_64-1.20.3.flatpak
+[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-x86_64-1.20.4.flatpak
 
-[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-amd64-1.20.3.tgz
-[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-amd64-1.20.3.tgz
-[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-arm64-1.20.3.tgz
-[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-loongarch64-1.20.3.tgz
-[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-riscv64-1.20.3.tgz
-[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-release-riscv32-1.20.3.tgz
+[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-amd64-1.20.4.tgz
+[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-amd64-1.20.4.tgz
+[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-arm64-1.20.4.tgz
+[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-loongarch64-1.20.4.tgz
+[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-riscv64-1.20.4.tgz
+[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-release-riscv32-1.20.4.tgz
 
-[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-openwrt-release-x86_64-1.20.3.tgz
-[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-openwrt-release-i486-1.20.3.tgz
-[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-openwrt-release-aarch64-1.20.3.tgz
+[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-openwrt-release-x86_64-1.20.4.tgz
+[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-openwrt-release-i486-1.20.4.tgz
+[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-openwrt-release-aarch64-1.20.4.tgz
 
-[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-musl-release-amd64-1.20.3.tgz
-[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-musl-release-i386-1.20.3.tgz
-[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-musl-release-aarch64-1.20.3.tgz
-[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass_cli-linux-musl-release-armhf-1.20.3.tgz
+[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-musl-release-amd64-1.20.4.tgz
+[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-musl-release-i386-1.20.4.tgz
+[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-musl-release-aarch64-1.20.4.tgz
+[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass_cli-linux-musl-release-armhf-1.20.4.tgz
 
-[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-android-release-arm64-1.20.3.apk
-[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-android-release-arm-1.20.3.apk
+[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-android-release-arm64-1.20.4.apk
+[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-android-release-arm-1.20.4.apk
 
-[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-mingw-win7-release-x86_64-1.20.3-system-installer.exe
-[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-mingw-winxp-release-i686-1.20.3-system-installer.exe
-[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-mingw-release-aarch64-1.20.3-system-installer.exe
+[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-mingw-win7-release-x86_64-1.20.4-system-installer.exe
+[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-mingw-winxp-release-i686-1.20.4-system-installer.exe
+[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-mingw-release-aarch64-1.20.4-system-installer.exe
 
-[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-macos-release-x64-1.20.3.dmg
-[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.20.3/yass-macos-release-arm64-1.20.3.dmg
+[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-macos-release-x64-1.20.4.dmg
+[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-macos-release-arm64-1.20.4.dmg
 [apple_developer]: https://developer.apple.com
