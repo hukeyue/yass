@@ -3878,6 +3878,10 @@ if (COMPILER_GCC OR COMPILER_CLANG)
     add_compile_options(-Wno-stringop-overread -Wno-stringop-overflow -Wno-array-bounds)
   endif()
 
+  if (COMPILER_GCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0)
+    add_compile_options(-Wno-format-truncation)
+  endif()
+
   # silence some mingw compiler warnings
   if (WIN32 AND NOT MSVC AND COMPILER_CLANG)
     add_compile_options(-Wno-unknown-pragmas)
