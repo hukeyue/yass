@@ -1,13 +1,6 @@
-# MIGRATION IN PROGRESS (98% - Almost done)
-Some data such as prebuilt binaries for BAKED BUILDS might be lost.
-
-[Report if you find any 404 error from this page][bugs]
-
 # Yet Another Shadow Socket
 
 [YASS] is an efficient forward proxy client supporting http/socks4/socks4a/socks5/socks5h protocol running on PC and mobile devices.
-
-[Report if you find any bug in this product][bugs]
 
 ## Releases
 
@@ -22,8 +15,6 @@ _PLANNED BUILDS:_
 - M147's Release (1.23.x) will become Stable Release _from Apr 21, 2026_.
 - M146's Release (1.22.x) will become Stable Release _from Mar 24, 2026_ (Extended Support).
 - M145's Release (1.21.x) will become Stable Release _from Feb 24, 2025_.
-
-[Report if you find/face/witness any miss in our plan or any conflict with our plan][frs]
 
 _LANDED BUILDS_(signed against new certificates)_:_
 - [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.4) will become Stable Release _from Jan 13, 2026_ (Extended Support).
@@ -68,8 +59,6 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 [![Flathub Version](https://img.shields.io/flathub/v/io.github.chilledheart.yass)][flathub_url]
 [![Flathub Downloads](https://img.shields.io/flathub/downloads/io.github.chilledheart.yass)][flathub_url]
 
-[Report here if you need new features][frs]
-
 ### Prebuilt binaries (Supported legacy platforms)
 
 - Legacy Android [download 64-bit apk][android_64_apk_url] or [download 32-bit apk][android_32_apk_url] (require _Android 7.0_ or above)
@@ -80,8 +69,6 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 > New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.4 FOR NOW).
 
 See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
-
-[Report here if you need to run outside the OS in the table][frs]
 
 Special Note: for legacy supported platforms, [bugs][bugs] will be fixed ASAP while [feature request][frs] is a time-consuming task and
 it is expected that it would be delayed in a proper and unlimited period.
@@ -96,12 +83,8 @@ Steps:
 2. Send a request to join the language translation.
 3. After accepted by the project maintainer, then you can translate online.
 
-[Report here if you want to add new language outside current layout][frs]
-
 ### Build from Source
 Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
-
-[Report here if you want to build or package in a new distribution/platform][frs]
 
 ## Highlight Features
 
@@ -132,8 +115,6 @@ See [NaïveProxy](https://github.com/klzgrad/naiveproxy)'s project homepage for 
 ### Standard Usages
 Visit wiki's [Usages](https://github.com/hukeyue/yass/wiki/Usage).
 
-[Report here if you want to add new client-side optimization/usage][frs]
-
 ### Server side support (mostly outside this project)
 
 See [Setup forwardproxy caddy service](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#setup-forwardproxy-caddy-service) for more.
@@ -143,8 +124,6 @@ See [Window sizes for large bandwidth](https://github.com/hukeyue/yass/wiki/Usag
 See [Use BBR Congestion Control](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#use-bbr-congestion-control) for more.
 
 See [ChatGPT capable caddy Server](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#chatgpt-capable-caddy-server) for more.
-
-[Report here if you want to add new server-side optimization/cooperation][frs]
 
 ### Debug Guide
 Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
