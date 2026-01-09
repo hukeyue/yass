@@ -34,9 +34,9 @@ def download_url(url, tarball):
 def check_string_output(command):
   return subprocess.check_output(command, stderr=subprocess.STDOUT).decode().strip()
 
-# ['tar', '-C', sysroot, '-xf', 'base.txz', './usr/include', './usr/lib', './lib', './usr/libdata/pkgconfig']
+# ['tar', '-C', sysroot, '-xf', 'base.txz', './usr/include', './usr/lib', './lib', './usr/libdata/pkgconfig', './usr/share/pkgconfig']
 # ['tar', '-xf', 'packagesite.txz', 'packagesite.yaml']
-# ['tar', '-C', sysroot, '-xf', os.path.basename(pkg_url), '/usr/local/include', '/usr/local/libdata', '/usr/local/lib']
+# ['tar', '-C', sysroot, '-xf', os.path.basename(pkg_url), '/usr/local/include', '/usr/local/libdata', '/usr/local/share/pkgconfig', '/usr/local/lib']
 def extract_tarfile(tar, sysroot=".", filters=[]):
   print('extracting %s with (filters %s)' % (tar, ' '.join(filters)))
   with tarfile.open(tar) as package_tar:
@@ -114,7 +114,7 @@ def extract_pkg(pkg_url, pkg_sum, sysroot, is_zstd):
     pkg_tar = pkg_name.replace('.pkg', '.tar')
     print(check_string_output(['zstd', '-d', pkg_name, '-o', pkg_tar, '-f']))
     pkg_name = pkg_tar
-  extract_tarfile(pkg_name, sysroot, ['/usr/local/include', '/usr/local/libdata', '/usr/local/lib'])
+  extract_tarfile(pkg_name, sysroot, ['/usr/local/include', '/usr/local/libdata', '/usr/local/share/pkgconfig', '/usr/local/lib'])
   if is_zstd:
     os.unlink(pkg_name)
 
@@ -145,6 +145,9 @@ def main(args):
   elif abi == '14':
     release = '3'
     is_zstd = True
+  elif abi == '15':
+    release = '0'
+    is_zstd = True
   else:
     usage()
   version = f'{abi}.{release}'
@@ -164,7 +167,7 @@ def main(args):
   # extract include and shared libraries only
   print('Extracting sysroot (base)...')
   download_url(f'{FREEBSD_MAIN_SITE}/{sys_arch}/{version}-RELEASE/base.txz', 'base.txz')
-  extract_tarfile('base.txz', sysroot, ['./usr/include', './usr/lib', './lib', './usr/libdata/pkgconfig'])
+  extract_tarfile('base.txz', sysroot, ['./usr/include', './usr/lib', './lib', './usr/libdata/pkgconfig', './usr/share/pkgconfig'])
 
   print(f'Extracting sysroot (gtk3)...')
   base_url = f'{FREEBSD_PKG_SITE}/FreeBSD%3A{abi}%3A{arch}/release_{release}'
