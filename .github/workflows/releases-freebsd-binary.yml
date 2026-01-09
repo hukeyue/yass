@@ -42,13 +42,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch:
-        - 'amd64'
-        - 'aarch64'
-        - 'i386'
-        abi:
-        - '13'
-        - '14'
+        include:
+          - abi: 13
+            arch: amd64
+          - abi: 13
+            arch: i386
+          - abi: 13
+            arch: aarch64
+          - abi: 14
+            arch: amd64
+          - abi: 14
+            arch: i386
+          - abi: 14
+            arch: aarch64
+          - abi: 15
+            arch: amd64
+          - abi: 15
+            arch: aarch64
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -74,7 +84,7 @@ jobs:
         with:
           path: |
             freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain
-          key: freebsd-sysroot-${{ matrix.abi }}-${{ matrix.arch }}-${{ hashFiles('scripts/install-sysroot-freebsd.py') }}-v3-v5
+          key: freebsd-sysroot-${{ matrix.abi }}-${{ matrix.arch }}-${{ hashFiles('scripts/install-sysroot-freebsd.py') }}-v3-v5-v7
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
