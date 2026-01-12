@@ -14,7 +14,7 @@
 			<key>Key</key>
 			<string>ENABLE_POST_QUANTUM_KYBER</string>
 			<key>DefaultValue</key>
-			<false/>
+			<true/>
 		</dict>
 	</array>
 </dict>
