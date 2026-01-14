@@ -3,7 +3,7 @@
   <id>io.github.chilledheart.yass</id>
   <name>YASS</name>
   <developer id="info.letshack">
-    <name>Chilledheart</name>
+    <name>hukeyue</name>
   </developer>
   <summary>Lightweight forward proxy</summary>
   <description>
@@ -14,21 +14,21 @@
   </description>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
-  <url type="bugtracker">https://github.com/Chilledheart/yass/issues</url>
+  <url type="bugtracker">https://github.com/hukeyue/yass/issues</url>
   <url type="homepage">https://letshack.info</url>
-  <url type="faq">https://github.com/Chilledheart/yass/wiki/Usage</url>
+  <url type="faq">https://github.com/hukeyue/yass/wiki/Usage</url>
   <url type="translate">https://app.transifex.com/yetanothershadowsocket/yetanothershadowsocket</url>
-  <url type="vcs-browser">https://github.com/Chilledheart/yass</url>
+  <url type="vcs-browser">https://github.com/hukeyue/yass</url>
   <launchable type="desktop-id">io.github.chilledheart.yass.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image type="source">https://github.com/Chilledheart/yass/assets/54673341/4e2a2e47-43fb-402f-90c7-d2e033cc6a1d</image>
+      <image type="source">https://letshack.info/images/kde6.png</image>
       <caption>Main window</caption>
     </screenshot>
   </screenshots>
   <releases>
     <release version="@YASS_APP_TAG@" date="@YASS_APP_TODAY@" type="stable">
-      <url type="details">https://github.com/Chilledheart/yass/releases/tag/@YASS_APP_TAG@</url>
+      <url type="details">https://github.com/hukeyue/yass/releases/tag/@YASS_APP_TAG@</url>
     </release>
   </releases>
   <content_rating type="oars-1.1" />
