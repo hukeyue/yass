@@ -33,6 +33,9 @@ _BAKED BUILDS_(signed with baked certificates)_:_
 
 ### Prebuilt binaries (Supported platforms)
 - GTK3 [download rpm][gtk3_rpm_url] or [download deb][gtk3_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
+- GTK3 for i686 [download i686 deb][gtk3_i686_deb_url] (minimum requirement: _Ubuntu 16.04 Xenial_)
+- GTK3 for ARM64 [download arm64 deb][gtk3_arm64_deb_url] (minimum requirement: _Ubuntu 18.04 Bionic_)
+- GTK3 for RISCV64 [download riscv64 deb][gtk3_riscv64_deb_url] (minimum requirement: _Debian 13 Trixie_)
 - Qt5 [download rpm][qt5_rpm_url] or [download deb][qt5_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
 - GTK4 [download rpm][gtk4_rpm_url] or [download deb][gtk4_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 22.04_)
 - Qt6 [download rpm][qt6_rpm_url] or [download deb][qt6_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ with epel or _Ubuntu 22.04_)
@@ -170,6 +173,9 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 
 [gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3.el8.x86_64.1.20.4.rpm
 [gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3-ubuntu-16.04-xenial_amd64.1.20.4.deb
+[gtk3_i686_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3-ubuntu-16.04-xenial_i386.1.20.4.deb
+[gtk3_arm64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3-ubuntu-18.04-bionic_arm64.1.20.4.deb
+[gtk3_riscv64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk3-debian-13-trixie_riscv64.1.20.4.deb
 [qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt5.el8.x86_64.1.20.4.rpm
 [qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-qt5-ubuntu-16.04-xenial_amd64.1.20.4.deb
 [gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.20.4/yass-gtk4.lp155.x86_64.1.20.4.rpm
