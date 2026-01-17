@@ -48,25 +48,25 @@ jobs:
             qemu_suffix: i386
             rust_target: i686-linux-android
             apilevel: 24
-            ndk_version: 26.3.11579264
+            ndk_version: 27.3.13750724
           - arch: x64
             build_type: Release
             qemu_suffix: amd64
             rust_target: x86_64-linux-android
             apilevel: 24
-            ndk_version: 26.3.11579264
+            ndk_version: 27.3.13750724
           - arch: arm
             build_type: Release
             qemu_suffix: armel
             rust_target: armv7-linux-androideabi
             apilevel: 24
-            ndk_version: 26.3.11579264
+            ndk_version: 27.3.13750724
           - arch: arm64
             build_type: Release
             qemu_suffix: aarch64
             rust_target: aarch64-linux-android
             apilevel: 24
-            ndk_version: 26.3.11579264
+            ndk_version: 27.3.13750724
     runs-on: ubuntu-22.04
     permissions:
       contents: write
