@@ -230,7 +230,7 @@ func InitFlag() {
 	flag.BoolVar(&androidAab, "android-aab", false, "Build aab format instead of apk")
 	flag.IntVar(&androidApiLevel, "android-api", 24, "Select Android API Level")
 	flag.StringVar(&androidSdkDir, "android-sdk-dir", getEnv("ANDROID_SDK_ROOT", ""), "Android SDK Home Path")
-	flag.StringVar(&androidNdkVer, "android-ndk-ver", getEnv("ANDROID_NDK_VER", "26.3.11579264"), "Android NDK Version")
+	flag.StringVar(&androidNdkVer, "android-ndk-ver", getEnv("ANDROID_NDK_VER", "27.3.13750724"), "Android NDK Version")
 
 	flag.StringVar(&harmonyNdkDir, "harmony-ndk-dir", getEnv("HARMONY_NDK_ROOT", ""), "OpenHarmony NDK (toolchain) Path")
 
