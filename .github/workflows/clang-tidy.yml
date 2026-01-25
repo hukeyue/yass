@@ -242,13 +242,13 @@ jobs:
         run: |
           ./tools/build -clang-tidy-mode -build-test -build-benchmark -no-packaging
   mac-clang-tidy:
-    runs-on: macos-15
+    runs-on: macos-26
     if: ${{ github.event_name != 'release' }}
     strategy:
       fail-fast: false
       matrix:
         build_type: [Release]
-        xcode_version: [16.4]
+        xcode_version: [26.2]
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:

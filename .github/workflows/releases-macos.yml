@@ -39,7 +39,7 @@ env:
   GOPROXY: direct
 jobs:
   mac-release:
-    runs-on: macos-15
+    runs-on: macos-26
     permissions:
       contents: write
     strategy:
@@ -47,7 +47,7 @@ jobs:
       matrix:
         arch: [x64, arm64]
         build_type: [Release]
-        xcode_version: [16.4]
+        xcode_version: [26.2]
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
