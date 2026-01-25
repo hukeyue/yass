@@ -354,9 +354,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15]
+        os: [macos-26]
         build_type: [Debug, RelWithDebInfo]
-        xcode_version: [16.4]
+        xcode_version: [26.2]
     runs-on: ${{ matrix.os }}
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
