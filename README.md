@@ -17,8 +17,8 @@ _PLANNED BUILDS:_
 - M145's Release (1.21.x) will become Stable Release _from Feb 24, 2025_.
 
 _LANDED BUILDS_(signed against new certificates)_:_
-- [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.4) will become Stable Release _from Jan 13, 2026_ (Extended Support).
-- M143's Release (1.19.x) will become Stable Release _from Dec 16, 2025_.
+- [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.4) has become Stable Release _from Jan 13, 2026_ (Extended Support).
+- M143's Release (1.19.x) has become Stable Release _from Dec 16, 2025_.
 - M142's Release (1.18.x) has become Stable Release _from Oct 28, 2025_ (Extended Support).
 - [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.5) has become Stable Release _from Sep 30, 2025_.
 - [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release _since Jan 14, 2025_ (Extended Support).
