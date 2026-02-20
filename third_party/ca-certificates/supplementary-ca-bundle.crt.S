@@ -13,4 +13,10 @@ _binary_supplementary_ca_bundle_crt_start:
 _binary_supplementary_ca_bundle_crt_end:
 .previous
 
+#ifdef USE_CET
+#if defined(_M_X64) || defined(__x86_64__)
+.include "cet.64.s"
+#elif defined(_M_IX86) || defined(__i386__)
 .include "cet.32.s"
+#endif
+#endif
