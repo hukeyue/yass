@@ -732,6 +732,7 @@ endif()
 include(config-ix)
 
 if (USE_CET)
+  add_definitions(-DUSE_CET)
   if (MSVC)
     # see https://reviews.llvm.org/D70606
     add_link_options(/cetcompat)
@@ -3222,11 +3223,7 @@ if (OHOS OR ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME S
   if (COMPILER_CLANG)
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -Wno-unused-command-line-argument")
   endif()
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(ASIO_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/ca-bundle.crt.m32.s")
-  else()
-    set(ASIO_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/ca-bundle.crt.s")
-  endif()
+  set(ASIO_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/ca-bundle.crt.S")
 endif()
 
 if (APPLE)
@@ -3269,11 +3266,7 @@ if (OHOS OR ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME S
   if (COMPILER_CLANG)
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -Wno-unused-command-line-argument")
   endif()
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(ASIO_SUPPLEMENARY_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/supplementary-ca-bundle.crt.m32.s")
-  else()
-    set(ASIO_SUPPLEMENARY_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/supplementary-ca-bundle.crt.s")
-  endif()
+  set(ASIO_SUPPLEMENARY_CA_BUNDLE_CRT_SRC "third_party/ca-certificates/supplementary-ca-bundle.crt.S")
 endif()
 
 if (APPLE)
