@@ -173,7 +173,7 @@ jobs:
           path: |
             /etc/schroot/chroot.d
             /var/lib/schroot/chroots
-          key: ${{ runner.os }}-24.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}
+          key: ${{ runner.os }}-24.04-schroot-${{ matrix.distro }}-${{ matrix.arch }}-v2
       - name: Fix schroot permissions (restore root permissions)
         run: |
           sudo chown -R root:root /etc/schroot/chroot.d /var/lib/schroot/chroots
@@ -273,16 +273,6 @@ jobs:
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
             apt-get install -y perl gcc g++ ninja-build
-      - name: Populate dependencie (zlib on loong64)
-        if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch == 'loong64' }}
-        run: |
-          # FIXME Remove once zlib1g built on official port
-          cd /tmp
-          curl -O http://ftp.ports.debian.org/debian-ports/pool-loong64/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+b2_loong64.deb
-          curl -O http://ftp.ports.debian.org/debian-ports/pool-loong64/main/z/zlib/zlib1g-dev_1.3.dfsg+really1.3.1-1+b2_loong64.deb
-          sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
-            apt-get install -f -y $PWD/zlib*.deb
-          rm -f zlib*.deb
       - name: Populate dependencie (zlib)
         if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' }}
         run: |
