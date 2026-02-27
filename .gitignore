@@ -24,9 +24,9 @@ sscxx
 /third_party/curl-*-win32-mingw
 /third_party/curl-*-win64-mingw
 /third_party/curl-*-win64a-mingw
-/third_party/llvm-mingw-*-msvcrt-ubuntu-20.04-x86_64
-/third_party/llvm-mingw-*-ucrt-ubuntu-20.04-x86_64
-/third_party/llvm-mingw-*-ucrt-ubuntu-20.04-aarch64
+/third_party/llvm-mingw-*-msvcrt-ubuntu-22.04-x86_64
+/third_party/llvm-mingw-*-ucrt-ubuntu-22.04-x86_64
+/third_party/llvm-mingw-*-ucrt-ubuntu-22.04-aarch64
 /third_party/llvm-mingw-*-ucrt-macos-universal
 /third_party/llvm-mingw-*-ucrt-i686
 /third_party/llvm-mingw-*-ucrt-x86_64
