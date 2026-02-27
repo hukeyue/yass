@@ -3238,7 +3238,7 @@ endif()
 add_library(asio_ca_bundle_crt OBJECT ${ASIO_CA_BUNDLE_CRT_SRC})
 target_include_directories(asio_ca_bundle_crt PRIVATE third_party/ca-certificates)
 
-list(APPEND YASS_APP_FEATURES "ca-certificates 20250419.3.112")
+list(APPEND YASS_APP_FEATURES "ca-certificates 20260223.3.121")
 target_sources(asio PRIVATE $<TARGET_OBJECTS:asio_ca_bundle_crt>)
 
 #
