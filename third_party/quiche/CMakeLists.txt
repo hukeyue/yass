@@ -14,6 +14,7 @@ set(quiche_SRCS
   src/quiche/common/bug_utils.cc
   src/quiche/common/http/http_header_block.cc
   src/quiche/common/http/http_header_storage.cc
+  src/quiche/common/http/status_code_mapping.cc
   src/quiche/common/internet_checksum.h
   src/quiche/common/internet_checksum.cc
   src/quiche/common/lifetime_tracking.h
@@ -228,7 +229,6 @@ set(quiche_SRCS
   src/quiche/http2/hpack/hpack_output_stream.h
   src/quiche/http2/hpack/hpack_static_table.cc
   src/quiche/http2/hpack/hpack_static_table.h
-  src/quiche/http2/hpack/hpack_static_table_entries.inc
   src/quiche/http2/hpack/http2_hpack_constants.cc
   src/quiche/http2/hpack/http2_hpack_constants.h
   src/quiche/http2/hpack/huffman/hpack_huffman_decoder.cc
@@ -332,8 +332,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/crypto/chacha_base_decrypter.h
   src/quiche/quic/core/crypto/chacha_base_encrypter.cc
   src/quiche/quic/core/crypto/chacha_base_encrypter.h
-  src/quiche/quic/core/crypto/channel_id.cc
-  src/quiche/quic/core/crypto/channel_id.h
   src/quiche/quic/core/crypto/client_proof_source.cc
   src/quiche/quic/core/crypto/client_proof_source.h
   src/quiche/quic/core/crypto/crypto_framer.cc
@@ -489,6 +487,10 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/http/spdy_utils.h
   src/quiche/quic/core/http/web_transport_http3.cc
   src/quiche/quic/core/http/web_transport_http3.h
+  src/quic/core/http/web_transport_only_dispatcher.cc
+  src/quic/core/http/web_transport_only_dispatcher.h
+  src/quic/core/http/web_transport_only_server_session.cc
+  src/quic/core/http/web_transport_only_server_session.h
   src/quiche/quic/core/http/web_transport_stream_adapter.cc
   src/quiche/quic/core/http/web_transport_stream_adapter.h
   src/quiche/quic/core/legacy_quic_stream_id_manager.cc

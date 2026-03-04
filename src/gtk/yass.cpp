@@ -297,7 +297,7 @@ void YASSApp::OnStart(bool quiet) {
       }
 
       {
-        absl::MutexLock lk(&dispatch_mutex_);
+        absl::MutexLock lk(dispatch_mutex_);
         dispatch_queue_.emplace(successed ? STARTED : START_FAILED, msg);
       }
 
@@ -314,7 +314,7 @@ void YASSApp::OnStop(bool quiet) {
   if (!quiet) {
     callback = [this]() {
       {
-        absl::MutexLock lk(&dispatch_mutex_);
+        absl::MutexLock lk(dispatch_mutex_);
         dispatch_queue_.emplace(STOPPED, std::string());
       }
 
@@ -345,7 +345,7 @@ void YASSApp::OnStopped() {
 void YASSApp::OnDispatch() {
   std::pair<YASSState, std::string> event;
   {
-    absl::MutexLock lk(&dispatch_mutex_);
+    absl::MutexLock lk(dispatch_mutex_);
     event = dispatch_queue_.front();
     dispatch_queue_.pop();
   }
