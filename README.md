@@ -12,11 +12,14 @@ Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
 _PLANNED BUILDS:_
-- M147's Release (1.23.x) will become Stable Release _from Apr 21, 2026_.
-- M146's Release (1.22.x) will become Stable Release _from Mar 24, 2026_ (Extended Support).
-- M145's Release (1.21.x) will become Stable Release _from Feb 24, 2025_.
+- M150's Release (1.26.x) will become Stable Release _from Jun 30, 2026_ (Extended Support).
+- M149's Release (1.25.x) will become Stable Release _from Jun 2, 2026_.
+- M148's Release (1.24.x) will become Stable Release _from May 5, 2026_ (Extended Support).
+- M147's Release (1.23.x) will become Stable Release _from Apr 7, 2026_.
 
 _LANDED BUILDS_(signed against new certificates)_:_
+- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.0) will become Stable Release _from Mar 10, 2026_ (Extended Support).
+- M145's Release (1.21.x) has become Stable Release _from Feb 10, 2025_.
 - [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.5) has become Stable Release _from Jan 13, 2026_ (Extended Support).
 - M143's Release (1.19.x) has become Stable Release _from Dec 16, 2025_.
 - M142's Release (1.18.x) has become Stable Release _from Oct 28, 2025_ (Extended Support).
