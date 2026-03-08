@@ -2665,22 +2665,20 @@ if (USE_MIMALLOC AND USE_SYSTEM_MIMALLOC)
 elseif(USE_MIMALLOC AND NOT WIN32)
   message(STATUS "Compiling with bundled mimalloc support")
 
-  set(MI_BUILD_STATIC ON CACHE INTERNAL "")
+  set(MI_BUILD_STATIC OFF CACHE INTERNAL "")
   set(MI_BUILD_SHARED OFF CACHE INTERNAL "")
-  set(MI_BUILD_OBJECT OFF CACHE INTERNAL "")
+  set(MI_BUILD_OBJECT ON CACHE INTERNAL "")
   set(MI_BUILD_TESTS OFF CACHE INTERNAL "")
   set(MI_ENABLE_INSTALL OFF CACHE INTERNAL "")
   set(MI_LIBC_MUSL "${USE_MUSL}" CACHE INTERNAL "")
   add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
-  target_compile_definitions(mimalloc-static PRIVATE MI_USE_ENVIRON=0)
+  target_compile_definitions(mimalloc-obj PRIVATE MI_USE_ENVIRON=0)
   if (USE_LTO_CMAKE)
-    set_property(TARGET mimalloc-static
+    set_property(TARGET mimalloc-obj
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
-  set(MIMALLOC_LIB mimalloc-static)
-  add_library(mimalloc_override OBJECT src/mimalloc.cc)
-  target_link_libraries(mimalloc_override PRIVATE mimalloc-static)
+  set(MIMALLOC_LIB mimalloc-obj)
 
   set(SUPPORT_DEFINITIONS
     HAVE_MIMALLOC
@@ -2733,16 +2731,16 @@ elseif(USE_MIMALLOC AND WIN32)
     DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
   set(SUPPORT_LIBS
-    ${SUPPORT_LIBS}
     mimalloc_override
+    ${SUPPORT_LIBS}
     )
 
   list(APPEND YASS_APP_FEATURES "mimalloc (dll)")
 endif()
 
 set(CORE_LIBS
-  ${CORE_LIBS}
   ${MIMALLOC_LIB}
+  ${CORE_LIBS}
 )
 
 function(minject_patch_exetuable target_name)
@@ -4260,7 +4258,10 @@ target_compile_definitions(yass_net PUBLIC
   ${SUPPORT_DEFINITIONS})
 
 target_link_directories(yass_net PUBLIC ${SUPPORT_LIB_DIRS})
-target_link_libraries(yass_net PUBLIC ${SUPPORT_LIBS})
+target_link_libraries(yass_net PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  ${SUPPORT_LIBS})
 
 if (ANDROID)
   target_link_libraries(yass_net PUBLIC log)
@@ -4280,11 +4281,13 @@ endif()
 target_include_directories(yass_cli_nogui_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_cli_nogui_lib PUBLIC yass_net)
+target_link_libraries(yass_cli_nogui_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_net)
 
 add_library(yass_cli_lib STATIC
   src/cli/cli_worker.cpp
-  $<TARGET_OBJECTS:yass_cli_nogui_lib>
   )
 if (USE_LTO_CMAKE)
   set_property(TARGET yass_cli_lib
@@ -4293,12 +4296,15 @@ endif()
 target_include_directories(yass_cli_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_cli_lib PUBLIC yass_net)
+target_link_libraries(yass_cli_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_cli_nogui_lib
+  yass_net)
 
 if (CLI)
   add_executable(yass_cli
     src/cli/cli.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
   )
   minject_patch_exetuable(yass_cli)
   if (USE_LTO_CMAKE)
@@ -4327,7 +4333,11 @@ if (CLI)
   target_include_directories(yass_cli PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-  target_link_libraries(yass_cli PUBLIC yass_net)
+  target_link_libraries(yass_cli PUBLIC
+    ${TCMALLOC_LIB}
+    ${MIMALLOC_LIB}
+    yass_cli_nogui_lib
+    yass_net)
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_cli RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -4354,12 +4364,14 @@ endif()
 target_include_directories(yass_server_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_server_lib PUBLIC yass_net)
+target_link_libraries(yass_server_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_net)
 
 if (SERVER)
   add_executable(yass_server
     src/server/server.cpp
-    $<TARGET_OBJECTS:yass_server_lib>
     )
   minject_patch_exetuable(yass_server)
   if (USE_LTO_CMAKE)
@@ -4388,7 +4400,11 @@ if (SERVER)
   target_include_directories(yass_server PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-  target_link_libraries(yass_server PUBLIC yass_net)
+  target_link_libraries(yass_server PUBLIC
+    ${TCMALLOC_LIB}
+    ${MIMALLOC_LIB}
+    yass_server_lib
+    yass_net)
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_server RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -4711,14 +4727,16 @@ if (GUI)
 
     target_link_directories(${APP_NAME} PUBLIC ${GUI_LIBRARY_DIRS})
 
-    if (NOT IOS)
-      target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
-    endif()
-
     target_link_libraries(${APP_NAME} PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
       ${GUI_LIBRARIES}
       yass_core
     )
+
+    if (NOT IOS)
+      target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
+    endif()
 
     if (GUI_FLAVOUR STREQUAL "windows" AND MSVC)
         set_target_properties(${APP_NAME} PROPERTIES
@@ -5121,8 +5139,6 @@ if (BUILD_TESTS)
     src/net/dns_message_test.cpp
     src/net/doh_resolver_test.cpp
     src/net/dot_resolver_test.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
-    $<TARGET_OBJECTS:yass_server_lib>
     )
 
   if (IOS)
@@ -5149,6 +5165,10 @@ if (BUILD_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_test PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
+      yass_cli_nogui_lib
+      yass_server_lib
       yass_net
       yass_gtest
       )
@@ -5258,8 +5278,6 @@ endif()
 if (BUILD_BENCHMARKS)
   set(yass_benchmark_SOURCE
     src/ss_benchmark.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
-    $<TARGET_OBJECTS:yass_server_lib>
     )
   if (IOS)
     enable_testing()
@@ -5289,6 +5307,10 @@ if (BUILD_BENCHMARKS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_benchmark PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
+      yass_cli_nogui_lib
+      yass_server_lib
       yass_net
       benchmark::benchmark
       )
