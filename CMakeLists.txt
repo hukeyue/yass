@@ -172,11 +172,6 @@ endif()
 enable_language(C)
 enable_language(CXX)
 
-# required by zstd
-if (NOT COMPILER_MSVC)
-  enable_language(ASM)
-endif()
-
 ## Setup compiler informations
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
     CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -493,8 +488,6 @@ cmake_dependent_option(
 cmake_dependent_option(
   USE_SYSTEM_HTTP_PARSER "Build with system or vendored http parser" OFF
   "NOT USE_BALSA_HTTP_PARSER" OFF)
-
-option(USE_LEVELDB "Build with leveldb" OFF)
 
 option(USE_SQLITE "Build with sqlite" OFF)
 cmake_dependent_option(
@@ -3645,56 +3638,6 @@ if (USE_BALSA_HTTP_PARSER)
   set(SUPPORT_LIBS balsa ${SUPPORT_LIBS})
 endif()
 
-# *****************************************************************************************
-#           snappy Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled snappy library")
-  add_subdirectory(third_party/snappy EXCLUDE_FROM_ALL)
-  include_directories(third_party/snappy/src)
-endif()
-
-# *****************************************************************************************
-#           zstd Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled zstd library")
-  set(ZSTD_BUILD_PROGRAMS "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_CONTRIB "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_TESTS "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_STATIC "ON" CACHE STRING "")
-  set(ZSTD_BUILD_SHARED "OFF" CACHE STRING "")
-  set(ZSTD_PROGRAMS_LINK_SHARED "OFF" CACHE STRING "")
-  set(ZSTD_INSTALL "OFF" CACHE STRING "")
-  set(ZSTD_LEGACY_SUPPORT "OFF" CACHE STRING "")
-  add_subdirectory(third_party/zstd/build/cmake EXCLUDE_FROM_ALL)
-  include_directories(third_party/zstd/lib)
-endif()
-
-# *****************************************************************************************
-#           leveldb Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled leveldb library")
-  set(LEVELDB_BUILD_UTILS "OFF" CACHE STRING "")
-  set(LEVELDB_BUILD_TESTS "OFF" CACHE STRING "")
-  set(LEVELDB_BUILD_BENCHMARKS "OFF" CACHE STRING "")
-  set(LEVELDB_INSTALL "OFF" CACHE STRING "")
-  set(HAVE_CRC32C 0)
-  set(HAVE_SNAPPY 1)
-  set(HAVE_ZSTD 1)
-  set(HAVE_TCMALLOC 0)
-  add_subdirectory(third_party/leveldb EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "leveldb")
-  set(SUPPORT_DEFINITIONS
-    HAVE_LEVELDB
-    ${SUPPORT_DEFINITIONS}
-  )
-  set(SUPPORT_LIBS leveldb ${SUPPORT_LIBS})
-endif()
 
 # *****************************************************************************************
 #           sqlite3 Library
@@ -5125,7 +5068,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/boringssl/src/LICENSE               _BORINGSSL_LICENSE)
   file(READ third_party/googleurl/LICENSE                   _GOOGLEURL_LICENSE)
   file(READ third_party/jsoncpp/LICENSE                     _JSONCPP_LICENSE)
-  file(READ third_party/leveldb/LICENSE                     _LEVELDB_LICENSE)
   file(READ third_party/libc++/trunk/LICENSE.TXT            _LIBCXX_LICENSE)
   file(READ third_party/libc++abi/trunk/LICENSE.TXT         _LIBCXXABI_LICENSE)
   file(READ third_party/libunwind/trunk/LICENSE.TXT         _LIBUNWIND_LICENSE)
@@ -5135,7 +5077,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/protobuf/LICENSE                    _PROTOBUF_LICENSE)
   file(READ third_party/quiche/src/LICENSE                  _QUICHE_LICENSE)
   file(READ third_party/re2/LICENSE                         _RE2_LICENSE)
-  file(READ third_party/snappy/src/COPYING                  _SNAPPY_LICENSE)
   file(READ third_party/sqlite/LICENSE                      _SQLITE_LICENSE)
   file(READ third_party/gperftools/COPYING                  _TCMALLOC_LICENSE)
   file(READ third_party/tun2proxy/LICENSE                   _TUN2PROXY_LICENSE)
@@ -5199,9 +5140,6 @@ if (BUILD_TESTS)
   endif()
   # FIXME
   target_compile_options(yass_test PRIVATE -Wno-thread-safety)
-  if (USE_LEVELDB)
-    target_sources(yass_test PRIVATE third_party/leveldb_test.cc)
-  endif()
   if (USE_SQLITE)
     target_sources(yass_test PRIVATE third_party/sqlite/sqlite3_test.cc)
   endif()
