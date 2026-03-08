@@ -172,11 +172,6 @@ endif()
 enable_language(C)
 enable_language(CXX)
 
-# required by zstd
-if (NOT COMPILER_MSVC)
-  enable_language(ASM)
-endif()
-
 ## Setup compiler informations
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
     CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -493,8 +488,6 @@ cmake_dependent_option(
 cmake_dependent_option(
   USE_SYSTEM_HTTP_PARSER "Build with system or vendored http parser" OFF
   "NOT USE_BALSA_HTTP_PARSER" OFF)
-
-option(USE_LEVELDB "Build with leveldb" OFF)
 
 option(USE_SQLITE "Build with sqlite" OFF)
 cmake_dependent_option(
@@ -2672,22 +2665,20 @@ if (USE_MIMALLOC AND USE_SYSTEM_MIMALLOC)
 elseif(USE_MIMALLOC AND NOT WIN32)
   message(STATUS "Compiling with bundled mimalloc support")
 
-  set(MI_BUILD_STATIC ON CACHE INTERNAL "")
+  set(MI_BUILD_STATIC OFF CACHE INTERNAL "")
   set(MI_BUILD_SHARED OFF CACHE INTERNAL "")
-  set(MI_BUILD_OBJECT OFF CACHE INTERNAL "")
+  set(MI_BUILD_OBJECT ON CACHE INTERNAL "")
   set(MI_BUILD_TESTS OFF CACHE INTERNAL "")
   set(MI_ENABLE_INSTALL OFF CACHE INTERNAL "")
   set(MI_LIBC_MUSL "${USE_MUSL}" CACHE INTERNAL "")
   add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
-  target_compile_definitions(mimalloc-static PRIVATE MI_USE_ENVIRON=0)
+  target_compile_definitions(mimalloc-obj PRIVATE MI_USE_ENVIRON=0)
   if (USE_LTO_CMAKE)
-    set_property(TARGET mimalloc-static
+    set_property(TARGET mimalloc-obj
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
-  set(MIMALLOC_LIB mimalloc-static)
-  add_library(mimalloc_override OBJECT src/mimalloc.cc)
-  target_link_libraries(mimalloc_override PRIVATE mimalloc-static)
+  set(MIMALLOC_LIB mimalloc-obj)
 
   set(SUPPORT_DEFINITIONS
     HAVE_MIMALLOC
@@ -2740,16 +2731,16 @@ elseif(USE_MIMALLOC AND WIN32)
     DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
   set(SUPPORT_LIBS
-    ${SUPPORT_LIBS}
     mimalloc_override
+    ${SUPPORT_LIBS}
     )
 
   list(APPEND YASS_APP_FEATURES "mimalloc (dll)")
 endif()
 
 set(CORE_LIBS
-  ${CORE_LIBS}
   ${MIMALLOC_LIB}
+  ${CORE_LIBS}
 )
 
 function(minject_patch_exetuable target_name)
@@ -3645,56 +3636,6 @@ if (USE_BALSA_HTTP_PARSER)
   set(SUPPORT_LIBS balsa ${SUPPORT_LIBS})
 endif()
 
-# *****************************************************************************************
-#           snappy Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled snappy library")
-  add_subdirectory(third_party/snappy EXCLUDE_FROM_ALL)
-  include_directories(third_party/snappy/src)
-endif()
-
-# *****************************************************************************************
-#           zstd Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled zstd library")
-  set(ZSTD_BUILD_PROGRAMS "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_CONTRIB "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_TESTS "OFF" CACHE STRING "")
-  set(ZSTD_BUILD_STATIC "ON" CACHE STRING "")
-  set(ZSTD_BUILD_SHARED "OFF" CACHE STRING "")
-  set(ZSTD_PROGRAMS_LINK_SHARED "OFF" CACHE STRING "")
-  set(ZSTD_INSTALL "OFF" CACHE STRING "")
-  set(ZSTD_LEGACY_SUPPORT "OFF" CACHE STRING "")
-  add_subdirectory(third_party/zstd/build/cmake EXCLUDE_FROM_ALL)
-  include_directories(third_party/zstd/lib)
-endif()
-
-# *****************************************************************************************
-#           leveldb Library
-# *****************************************************************************************
-
-if (USE_LEVELDB)
-  message(STATUS "Compiling with bundled leveldb library")
-  set(LEVELDB_BUILD_UTILS "OFF" CACHE STRING "")
-  set(LEVELDB_BUILD_TESTS "OFF" CACHE STRING "")
-  set(LEVELDB_BUILD_BENCHMARKS "OFF" CACHE STRING "")
-  set(LEVELDB_INSTALL "OFF" CACHE STRING "")
-  set(HAVE_CRC32C 0)
-  set(HAVE_SNAPPY 1)
-  set(HAVE_ZSTD 1)
-  set(HAVE_TCMALLOC 0)
-  add_subdirectory(third_party/leveldb EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "leveldb")
-  set(SUPPORT_DEFINITIONS
-    HAVE_LEVELDB
-    ${SUPPORT_DEFINITIONS}
-  )
-  set(SUPPORT_LIBS leveldb ${SUPPORT_LIBS})
-endif()
 
 # *****************************************************************************************
 #           sqlite3 Library
@@ -4317,7 +4258,10 @@ target_compile_definitions(yass_net PUBLIC
   ${SUPPORT_DEFINITIONS})
 
 target_link_directories(yass_net PUBLIC ${SUPPORT_LIB_DIRS})
-target_link_libraries(yass_net PUBLIC ${SUPPORT_LIBS})
+target_link_libraries(yass_net PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  ${SUPPORT_LIBS})
 
 if (ANDROID)
   target_link_libraries(yass_net PUBLIC log)
@@ -4337,11 +4281,13 @@ endif()
 target_include_directories(yass_cli_nogui_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_cli_nogui_lib PUBLIC yass_net)
+target_link_libraries(yass_cli_nogui_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_net)
 
 add_library(yass_cli_lib STATIC
   src/cli/cli_worker.cpp
-  $<TARGET_OBJECTS:yass_cli_nogui_lib>
   )
 if (USE_LTO_CMAKE)
   set_property(TARGET yass_cli_lib
@@ -4350,12 +4296,15 @@ endif()
 target_include_directories(yass_cli_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_cli_lib PUBLIC yass_net)
+target_link_libraries(yass_cli_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_cli_nogui_lib
+  yass_net)
 
 if (CLI)
   add_executable(yass_cli
     src/cli/cli.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
   )
   minject_patch_exetuable(yass_cli)
   if (USE_LTO_CMAKE)
@@ -4384,7 +4333,11 @@ if (CLI)
   target_include_directories(yass_cli PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-  target_link_libraries(yass_cli PUBLIC yass_net)
+  target_link_libraries(yass_cli PUBLIC
+    ${TCMALLOC_LIB}
+    ${MIMALLOC_LIB}
+    yass_cli_nogui_lib
+    yass_net)
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_cli RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -4411,12 +4364,14 @@ endif()
 target_include_directories(yass_server_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(yass_server_lib PUBLIC yass_net)
+target_link_libraries(yass_server_lib PUBLIC
+  ${TCMALLOC_LIB}
+  ${MIMALLOC_LIB}
+  yass_net)
 
 if (SERVER)
   add_executable(yass_server
     src/server/server.cpp
-    $<TARGET_OBJECTS:yass_server_lib>
     )
   minject_patch_exetuable(yass_server)
   if (USE_LTO_CMAKE)
@@ -4445,7 +4400,11 @@ if (SERVER)
   target_include_directories(yass_server PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-  target_link_libraries(yass_server PUBLIC yass_net)
+  target_link_libraries(yass_server PUBLIC
+    ${TCMALLOC_LIB}
+    ${MIMALLOC_LIB}
+    yass_server_lib
+    yass_net)
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_server RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -4768,14 +4727,16 @@ if (GUI)
 
     target_link_directories(${APP_NAME} PUBLIC ${GUI_LIBRARY_DIRS})
 
-    if (NOT IOS)
-      target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
-    endif()
-
     target_link_libraries(${APP_NAME} PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
       ${GUI_LIBRARIES}
       yass_core
     )
+
+    if (NOT IOS)
+      target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
+    endif()
 
     if (GUI_FLAVOUR STREQUAL "windows" AND MSVC)
         set_target_properties(${APP_NAME} PROPERTIES
@@ -5125,7 +5086,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/boringssl/src/LICENSE               _BORINGSSL_LICENSE)
   file(READ third_party/googleurl/LICENSE                   _GOOGLEURL_LICENSE)
   file(READ third_party/jsoncpp/LICENSE                     _JSONCPP_LICENSE)
-  file(READ third_party/leveldb/LICENSE                     _LEVELDB_LICENSE)
   file(READ third_party/libc++/trunk/LICENSE.TXT            _LIBCXX_LICENSE)
   file(READ third_party/libc++abi/trunk/LICENSE.TXT         _LIBCXXABI_LICENSE)
   file(READ third_party/libunwind/trunk/LICENSE.TXT         _LIBUNWIND_LICENSE)
@@ -5135,7 +5095,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/protobuf/LICENSE                    _PROTOBUF_LICENSE)
   file(READ third_party/quiche/src/LICENSE                  _QUICHE_LICENSE)
   file(READ third_party/re2/LICENSE                         _RE2_LICENSE)
-  file(READ third_party/snappy/src/COPYING                  _SNAPPY_LICENSE)
   file(READ third_party/sqlite/LICENSE                      _SQLITE_LICENSE)
   file(READ third_party/gperftools/COPYING                  _TCMALLOC_LICENSE)
   file(READ third_party/tun2proxy/LICENSE                   _TUN2PROXY_LICENSE)
@@ -5180,8 +5139,6 @@ if (BUILD_TESTS)
     src/net/dns_message_test.cpp
     src/net/doh_resolver_test.cpp
     src/net/dot_resolver_test.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
-    $<TARGET_OBJECTS:yass_server_lib>
     )
 
   if (IOS)
@@ -5199,9 +5156,6 @@ if (BUILD_TESTS)
   endif()
   # FIXME
   target_compile_options(yass_test PRIVATE -Wno-thread-safety)
-  if (USE_LEVELDB)
-    target_sources(yass_test PRIVATE third_party/leveldb_test.cc)
-  endif()
   if (USE_SQLITE)
     target_sources(yass_test PRIVATE third_party/sqlite/sqlite3_test.cc)
   endif()
@@ -5211,6 +5165,10 @@ if (BUILD_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_test PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
+      yass_cli_nogui_lib
+      yass_server_lib
       yass_net
       yass_gtest
       )
@@ -5320,8 +5278,6 @@ endif()
 if (BUILD_BENCHMARKS)
   set(yass_benchmark_SOURCE
     src/ss_benchmark.cpp
-    $<TARGET_OBJECTS:yass_cli_nogui_lib>
-    $<TARGET_OBJECTS:yass_server_lib>
     )
   if (IOS)
     enable_testing()
@@ -5351,6 +5307,10 @@ if (BUILD_BENCHMARKS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_benchmark PUBLIC
+      ${TCMALLOC_LIB}
+      ${MIMALLOC_LIB}
+      yass_cli_nogui_lib
+      yass_server_lib
       yass_net
       benchmark::benchmark
       )

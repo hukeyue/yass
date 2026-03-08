@@ -47,15 +47,6 @@
 [submodule "third_party/re2"]
 	path = third_party/re2
 	url = https://github.com/google/re2
-[submodule "third_party/leveldb"]
-	path = third_party/leveldb
-	url = https://github.com/hukeyue/leveldb
-[submodule "third_party/snappy/src"]
-	path = third_party/snappy/src
-	url = https://github.com/google/snappy
-[submodule "third_party/zstd"]
-	path = third_party/zstd
-	url = https://github.com/hukeyue/zstd
 [submodule "third_party/tun2proxy"]
 	path = third_party/tun2proxy
 	url = https://github.com/hukeyue/tun2proxy
