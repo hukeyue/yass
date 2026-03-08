@@ -489,11 +489,6 @@ cmake_dependent_option(
   USE_SYSTEM_HTTP_PARSER "Build with system or vendored http parser" OFF
   "NOT USE_BALSA_HTTP_PARSER" OFF)
 
-option(USE_SQLITE "Build with sqlite" OFF)
-cmake_dependent_option(
-  USE_SYSTEM_SQLITE "Build with system or vendored sqlite" OFF
-  USE_SQLITE OFF)
-
 option(USE_OLD_SYSTEMD_SERVICE "Install with old systemd service files" OFF)
 cmake_dependent_option(
   USE_IOURING "Build with io uring support" OFF
@@ -3638,40 +3633,6 @@ endif()
 
 
 # *****************************************************************************************
-#           sqlite3 Library
-# *****************************************************************************************
-
-if (USE_SYSTEM_SQLITE)
-  find_package(PkgConfig)
-  if (PKG_CONFIG_FOUND)
-    pkg_check_modules(SQLITE sqlite3 IMPORTED_TARGET)
-  endif()
-  if(NOT SQLITE_FOUND)
-    message(STATUS "System sqlite3 not found, using bundled one")
-    set(USE_SYSTEM_SQLITE FALSE)
-  endif()
-endif()
-
-if (USE_SYSTEM_SQLITE AND USE_SQLITE)
-  message(STATUS "Compiling with system sqlite3 library")
-  list(APPEND YASS_APP_FEATURES "system sqlite3 library")
-  set(SUPPORT_DEFINITIONS
-    HAVE_SQLITE
-    ${SUPPORT_DEFINITIONS}
-  )
-  set(SUPPORT_LIBS PkgConfig::SQLITE ${SUPPORT_LIBS})
-elseif (USE_SQLITE)
-  message(STATUS "Compiling with bundled sqlite3 library")
-  add_subdirectory(third_party/sqlite EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "sqlite3")
-  set(SUPPORT_DEFINITIONS
-    HAVE_SQLITE
-    ${SUPPORT_DEFINITIONS}
-  )
-  set(SUPPORT_LIBS sqlite ${SUPPORT_LIBS})
-endif()
-
-# *****************************************************************************************
 #           Compiler warning flags
 # *****************************************************************************************
 
@@ -5095,7 +5056,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/protobuf/LICENSE                    _PROTOBUF_LICENSE)
   file(READ third_party/quiche/src/LICENSE                  _QUICHE_LICENSE)
   file(READ third_party/re2/LICENSE                         _RE2_LICENSE)
-  file(READ third_party/sqlite/LICENSE                      _SQLITE_LICENSE)
   file(READ third_party/gperftools/COPYING                  _TCMALLOC_LICENSE)
   file(READ third_party/tun2proxy/LICENSE                   _TUN2PROXY_LICENSE)
   file(READ third_party/zlib/LICENSE                        _ZLIB_LICENSE)
@@ -5156,9 +5116,6 @@ if (BUILD_TESTS)
   endif()
   # FIXME
   target_compile_options(yass_test PRIVATE -Wno-thread-safety)
-  if (USE_SQLITE)
-    target_sources(yass_test PRIVATE third_party/sqlite/sqlite3_test.cc)
-  endif()
   target_include_directories(yass_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src
       ${CMAKE_CURRENT_SOURCE_DIR}/src/cli
