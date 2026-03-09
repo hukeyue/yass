@@ -44,6 +44,10 @@
 #include <mimalloc.h>
 #endif
 
+#ifdef HAVE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
+
 namespace config {
 
 bool testOnlyMode = false;
@@ -101,6 +105,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
 #ifdef HAVE_MIMALLOC
       std::cout << "MIMALLOC: " << mi_version() << std::endl;
 #endif
+#ifdef HAVE_JEMALLOC
+      std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
+#endif
 #ifndef NDEBUG
       std::cout << "Debug build (NDEBUG not #defined)" << std::endl;
 #endif
@@ -123,6 +130,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
 #endif
 #ifdef HAVE_MIMALLOC
   std::cerr << "MIMALLOC: " << mi_version() << std::endl;
+#endif
+#ifdef HAVE_JEMALLOC
+  std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   std::cerr << "Assertions build (DCHECK_ALWAYS_ON #defined)" << std::endl;
@@ -156,6 +166,9 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
 #endif
 #ifdef HAVE_MIMALLOC
   LOG(WARNING) << "MIMALLOC: " << mi_version();
+#endif
+#ifdef HAVE_JEMALLOC
+  LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   LOG(WARNING) << "Assertions build (DCHECK_ALWAYS_ON #defined)";

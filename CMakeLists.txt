@@ -460,6 +460,14 @@ cmake_dependent_option(
   USE_SYSTEM_MIMALLOC "Use system or vendored mimalloc" OFF
   USE_MIMALLOC OFF)
 
+cmake_dependent_option(
+  USE_JEMALLOC "Use jemalloc" OFF
+  "NOT USE_TCMALLOC; NOT USE_MIMALLOC; NOT APPLE; NOT ANDROID; NOT OHOS; NOT WIN32" OFF)
+
+cmake_dependent_option(
+  USE_SYSTEM_JEMALLOC "Use system or vendored jemalloc" OFF
+  USE_JEMALLOC OFF)
+
 option(USE_LIBCXX "Build with custom libc++" OFF)
 
 option(USE_NGHTTP2 "Build with libnghttp2" ON)
@@ -2647,7 +2655,7 @@ endif()
 # mold. If you want to dynamically link to the system's
 # libmimalloc.so, pass -DUSE_SYSTEM_MIMALLOC=ON.
 if (USE_MIMALLOC AND USE_SYSTEM_MIMALLOC)
-  message(STATUS "Compiling with system tcmalloc support")
+  message(STATUS "Compiling with system mimalloc support")
   list(APPEND YASS_APP_FEATURES "system mimalloc")
 
   set(MIMALLOC_LIB PkgConfig::MIMALLOC)
@@ -2757,6 +2765,63 @@ function(minject_patch_exetuable target_name)
     COMMAND ${WINE_PREFIX} "${MINJECT_EXETUABLE}" --force --inplace $<TARGET_FILE:${target_name}>
     COMMENT "minject ${target_name}")
 endfunction()
+
+# *****************************************************************************************
+#           jemalloc Library
+# *****************************************************************************************
+
+if (USE_SYSTEM_JEMALLOC)
+  find_package(PkgConfig)
+  if (PKG_CONFIG_FOUND)
+    pkg_check_modules(JEMALLOC jemalloc IMPORTED_TARGET)
+  endif()
+  if(NOT JEMALLOC_FOUND)
+    message(STATUS "System jemalloc not found, using bundled one")
+    set(USE_SYSTEM_JEMALLOC FALSE)
+  endif()
+  if (USE_LIBCXX)
+    message(STATUS "Cannot use system jemalloc with custom libc++, using bundled one")
+    set(USE_SYSTEM_JEMALLOC FALSE)
+  endif()
+endif()
+
+# By default, we build a bundled jemalloc and statically-link it to
+# mold. If you want to dynamically link to the system's
+# libjemalloc.so, pass -DUSE_SYSTEM_JEMALLOC=ON.
+if (USE_JEMALLOC AND USE_SYSTEM_JEMALLOC)
+  message(STATUS "Compiling with system jemalloc support")
+  list(APPEND YASS_APP_FEATURES "system jemalloc")
+
+  set(JEMALLOC_LIB PkgConfig::JEMALLOC)
+
+  set(SUPPORT_DEFINITIONS
+    HAVE_JEMALLOC
+    ${SUPPORT_DEFINITIONS}
+  )
+
+elseif(USE_JEMALLOC)
+  message(STATUS "Compiling with bundled jemalloc support")
+
+  add_subdirectory(third_party/jemalloc EXCLUDE_FROM_ALL)
+  if (USE_LTO_CMAKE)
+    set_property(TARGET jemalloc_static
+      PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
+  endif()
+
+  set(JEMALLOC_LIB jemalloc_static)
+
+  set(SUPPORT_DEFINITIONS
+    HAVE_JEMALLOC
+    ${SUPPORT_DEFINITIONS}
+  )
+
+  list(APPEND YASS_APP_FEATURES "jemalloc")
+endif()
+
+set(CORE_LIBS
+  ${JEMALLOC_LIB}
+  ${CORE_LIBS}
+)
 
 # *****************************************************************************************
 #           re2 Library
@@ -4222,6 +4287,7 @@ target_link_directories(yass_net PUBLIC ${SUPPORT_LIB_DIRS})
 target_link_libraries(yass_net PUBLIC
   ${TCMALLOC_LIB}
   ${MIMALLOC_LIB}
+  ${JEMALLOC_LIB}
   ${SUPPORT_LIBS})
 
 if (ANDROID)
@@ -4245,6 +4311,7 @@ target_include_directories(yass_cli_nogui_lib PRIVATE
 target_link_libraries(yass_cli_nogui_lib PUBLIC
   ${TCMALLOC_LIB}
   ${MIMALLOC_LIB}
+  ${JEMALLOC_LIB}
   yass_net)
 
 add_library(yass_cli_lib STATIC
@@ -4260,6 +4327,7 @@ target_include_directories(yass_cli_lib PRIVATE
 target_link_libraries(yass_cli_lib PUBLIC
   ${TCMALLOC_LIB}
   ${MIMALLOC_LIB}
+  ${JEMALLOC_LIB}
   yass_cli_nogui_lib
   yass_net)
 
@@ -4297,6 +4365,7 @@ if (CLI)
   target_link_libraries(yass_cli PUBLIC
     ${TCMALLOC_LIB}
     ${MIMALLOC_LIB}
+    ${JEMALLOC_LIB}
     yass_cli_nogui_lib
     yass_net)
 
@@ -4328,6 +4397,7 @@ target_include_directories(yass_server_lib PRIVATE
 target_link_libraries(yass_server_lib PUBLIC
   ${TCMALLOC_LIB}
   ${MIMALLOC_LIB}
+  ${JEMALLOC_LIB}
   yass_net)
 
 if (SERVER)
@@ -4364,6 +4434,7 @@ if (SERVER)
   target_link_libraries(yass_server PUBLIC
     ${TCMALLOC_LIB}
     ${MIMALLOC_LIB}
+    ${JEMALLOC_LIB}
     yass_server_lib
     yass_net)
 
@@ -4691,6 +4762,7 @@ if (GUI)
     target_link_libraries(${APP_NAME} PUBLIC
       ${TCMALLOC_LIB}
       ${MIMALLOC_LIB}
+      ${JEMALLOC_LIB}
       ${GUI_LIBRARIES}
       yass_core
     )
@@ -5060,6 +5132,7 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/tun2proxy/LICENSE                   _TUN2PROXY_LICENSE)
   file(READ third_party/zlib/LICENSE                        _ZLIB_LICENSE)
   file(READ third_party/mimalloc/LICENSE                    _MIMALLOC_LICENSE)
+  file(READ third_party/jemalloc/src/COPYING                _JEMALLOC_LICENSE)
 
   set(LICENSE_FILE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE")
   configure_file("LICENSES/LICENSE.cmake.in" "${LICENSE_FILE}" @ONLY)
