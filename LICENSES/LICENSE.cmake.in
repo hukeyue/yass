@@ -77,3 +77,7 @@
 === mimalloc ==
 
 @_MIMALLOC_LICENSE@
+
+=== jemalloc ==
+
+@_JEMALLOC_LICENSE@
