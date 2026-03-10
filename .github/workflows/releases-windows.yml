@@ -66,13 +66,6 @@ jobs:
             third_party/libcurl-vc16-x64-release-static-ipv6-sspi-schannel
             third_party/libcurl-vc16-x86-release-static-ipv6-sspi-schannel
           key: ${{ runner.os }}-msvc-dynamic-curl-vc16-${{ matrix.arch }}-v2
-      - name: Cache crashpad build stage
-        id: crashpad-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            third_party/crashpad
-          key: ${{ runner.os }}-msvc-dynamic-${{ matrix.arch }}-winsdk-${{ matrix.winsdk_version }}-crashpad-${{ hashFiles('CRASHPAD_COMMIT') }}-v${{ env.CACHE_EPOCH }}-v1
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
@@ -99,11 +92,6 @@ jobs:
         run: |
           choco install -y ninja
           ninja --version
-      - name: Build Binary (crashpad)
-        if: ${{ steps.crashpad-cache.outputs.cache-hit != 'true' }}
-        shell: bash
-        run: |
-          WITH_CPU=${{ matrix.arch }} SKIP_STRIP=1 ./scripts/build-crashpad.sh
       - name: Build Binary
         run: |
           set VCToolsVersion=

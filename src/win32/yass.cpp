@@ -43,7 +43,6 @@
 #include "cli/cli_connection_stats.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "crashpad_helper.hpp"
 #include "crypto/crypter_export.hpp"
 #include "version.h"
 #include "win32/resource.hpp"
@@ -100,12 +99,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   }
 
   absl::InitializeSymbolizer(exec_path.c_str());
-#ifdef HAVE_CRASHPAD
-  CHECK(InitializeCrashpad(exec_path));
-#else
   absl::FailureSignalHandlerOptions failure_handle_options;
   absl::InstallFailureSignalHandler(failure_handle_options);
-#endif
 
   // TODO move to standalone function
   // Parse command line for internal options

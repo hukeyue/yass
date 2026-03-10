@@ -40,7 +40,6 @@
 #include "cli/cli_connection_stats.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "crashpad_helper.hpp"
 #include "crypto/crypter_export.hpp"
 #include "freedesktop/utils.hpp"
 #include "gtk4/yass_window.hpp"
@@ -155,12 +154,8 @@ int main(int argc, const char** argv) {
   setlocale(LC_NUMERIC, "C");
 
   absl::InitializeSymbolizer(exec_path.c_str());
-#ifdef HAVE_CRASHPAD
-  CHECK(InitializeCrashpad(exec_path));
-#else
   absl::FailureSignalHandlerOptions failure_handle_options;
   absl::InstallFailureSignalHandler(failure_handle_options);
-#endif
 
   config::SetClientUsageMessage(exec_path);
   config::ReadConfigFileAndArguments(argc, argv);

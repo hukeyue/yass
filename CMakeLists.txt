@@ -2839,170 +2839,6 @@ message(STATUS "Compiling with bundled googleurl library")
 set(SUPPORT_LIBS url ${SUPPORT_LIBS})
 
 # *****************************************************************************************
-#           crashpad Library
-# *****************************************************************************************
-
-set(_CRASHPAD_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/third_party/crashpad/crashpad/out/Default-${MSVC_C_ARCHITECTURE_ID}")
-set(_CRASHPAD_BINARY_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/third_party/crashpad/crashpad/out/Binary-${MSVC_C_ARCHITECTURE_ID}")
-if (MSVC AND MSVC_CRT_LINKAGE STREQUAL "dynamic" AND NOT ALLOW_XP AND ${CMAKE_BUILD_TYPE} MATCHES Release AND EXISTS "${_CRASHPAD_PREFIX}/obj/client/client.lib")
-  message(STATUS "Compiling with bundled crashpad client library")
-  add_library(crashpad_common STATIC IMPORTED)
-  set_property(TARGET crashpad_common PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/client/common.lib")
-  add_library(crashpad_util STATIC IMPORTED)
-  set_property(TARGET crashpad_util PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/util/util.lib")
-  add_library(crashpad_client STATIC IMPORTED)
-  set_property(TARGET crashpad_client PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/client/client.lib")
-  add_library(mini_chromium_base STATIC IMPORTED)
-  set_property(TARGET mini_chromium_base PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/third_party/mini_chromium/mini_chromium/base/base.lib")
-
-  add_library(yass_crashpad STATIC
-    src/crashpad_helper.cpp
-    src/crashpad_helper.hpp
-  )
-  target_compile_definitions(yass_crashpad PUBLIC HAVE_CRASHPAD)
-  target_include_directories(yass_crashpad PRIVATE
-    "${_CRASHPAD_PREFIX}/gen"
-    third_party/crashpad/crashpad/third_party/mini_chromium/mini_chromium
-    third_party/crashpad/crashpad
-    src
-  )
-  target_link_libraries(yass_crashpad PRIVATE crashpad_client crashpad_common crashpad_util mini_chromium_base)
-  list(APPEND YASS_APP_FEATURES "crashpad")
-  set(CORE_LIBS yass_crashpad ${CORE_LIBS})
-  set(USE_CRASHPAD ON)
-
-  file(COPY "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler.exe" DESTINATION ${CMAKE_BINARY_DIR})
-  file(COPY "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler.pdb" DESTINATION ${CMAKE_BINARY_DIR})
-
-  install(FILES "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler.exe" DESTINATION "${CMAKE_INSTALL_BINDIR}")
-endif()
-
-if (IOS)
-  if (SDK_NAME STREQUAL iphoneos)
-    set(_CRASHPAD_OS "-ios")
-    set(_CRASHPAD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
-  elseif (SDK_NAME STREQUAL iphonesimulator)
-    set(_CRASHPAD_OS "-ios-simulator")
-    set(_CRASHPAD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
-  endif()
-elseif (ANDROID)
-  set(_CRASHPAD_OS "-android")
-  if (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64-v8a")
-    set(_CRASHPAD_ARCH "arm64")
-  elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "armeabi-v7a")
-    set(_CRASHPAD_ARCH "arm")
-  elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-    set(_CRASHPAD_ARCH "x86")
-  elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    set(_CRASHPAD_ARCH "x64")
-  elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64")
-    set(_CRASHPAD_ARCH "riscv64")
-  else()
-    message(WARNING "crashpad: unsupported android architecture ${CMAKE_SYSTEM_PROCESSOR}")
-    set(_CRASHPAD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
-  endif()
-elseif (OSX_CROSS_ARCHITECTURES_COUNT EQUAL 1)
-  set(_CRASHPAD_ARCH "${CMAKE_OSX_ARCHITECTURES}")
-elseif (OSX_CROSS_ARCHITECTURES_COUNT)
-  set(_CRASHPAD_ARCH "mac_universal")
-else()
-  if (CMAKE_C_COMPILER_TARGET)
-    string(REPLACE "-" ";" SPLITED_TARGET "${CMAKE_C_COMPILER_TARGET}")
-    list(GET SPLITED_TARGET 0 _TARGET)
-    set(_CRASHPAD_ARCH "${_TARGET}")
-  else()
-    set(_CRASHPAD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
-  endif()
-endif()
-# mapping to gn arch syntax
-if (_CRASHPAD_ARCH STREQUAL "x86_64" OR _CRASHPAD_ARCH STREQUAL "amd64")
-  set(_CRASHPAD_ARCH "x64")
-elseif (_CRASHPAD_ARCH MATCHES "i.86")
-  set(_CRASHPAD_ARCH "x86")
-elseif (_CRASHPAD_ARCH STREQUAL "aarch64")
-  set(_CRASHPAD_ARCH "arm64")
-endif()
-set(_CRASHPAD_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/third_party/crashpad/crashpad/out/Default-${_CRASHPAD_ARCH}${_CRASHPAD_OS}")
-set(_CRASHPAD_BINARY_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/third_party/crashpad/crashpad/out/Binary-${_CRASHPAD_ARCH}${_CRASHPAD_OS}")
-if (UNIX AND (${CMAKE_BUILD_TYPE} MATCHES MinSizeRel OR ${CMAKE_BUILD_TYPE} MATCHES Release) AND EXISTS "${_CRASHPAD_PREFIX}/obj/client/libclient.a")
-  message(STATUS "Compiling with bundled crashpad client library")
-  add_library(crashpad_common STATIC IMPORTED)
-  set_property(TARGET crashpad_common PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/client/libcommon.a")
-  add_library(crashpad_util STATIC IMPORTED)
-  set_property(TARGET crashpad_util PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/util/libutil.a")
-  add_library(crashpad_client STATIC IMPORTED)
-  set_property(TARGET crashpad_client PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/client/libclient.a")
-  add_library(mini_chromium_base STATIC IMPORTED)
-  set_property(TARGET mini_chromium_base PROPERTY
-               IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/third_party/mini_chromium/mini_chromium/base/libbase.a")
-
-  add_library(yass_crashpad STATIC
-    src/crashpad_helper.cpp
-    src/crashpad_helper.hpp
-  )
-  target_compile_definitions(yass_crashpad PUBLIC HAVE_CRASHPAD)
-  target_include_directories(yass_crashpad PRIVATE
-    "${_CRASHPAD_PREFIX}/gen"
-    third_party/crashpad/crashpad/third_party/mini_chromium/mini_chromium
-    third_party/crashpad/crashpad
-    src
-  )
-  target_link_libraries(yass_crashpad PRIVATE crashpad_client crashpad_common crashpad_util mini_chromium_base)
-  list(APPEND YASS_APP_FEATURES "crashpad")
-  set(CORE_LIBS yass_crashpad ${CORE_LIBS})
-  set(USE_CRASHPAD ON)
-  if (IOS)
-    add_library(crashpad_handler_common STATIC IMPORTED)
-    set_property(TARGET crashpad_handler_common PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/handler/libcommon.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_handler_common)
-
-    add_library(crashpad_minidump STATIC IMPORTED)
-    set_property(TARGET crashpad_minidump PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/minidump/libminidump.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_minidump)
-
-    add_library(crashpad_snapshot STATIC IMPORTED)
-    set_property(TARGET crashpad_snapshot PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/snapshot/libsnapshot.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_snapshot)
-
-    add_library(crashpad_snapshot_context STATIC IMPORTED)
-    set_property(TARGET crashpad_snapshot_context PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/snapshot/libcontext.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_snapshot_context)
-
-    add_library(crashpad_util_net STATIC IMPORTED)
-    set_property(TARGET crashpad_util_net PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/util/libnet.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_util_net)
-
-    target_link_libraries(yass_crashpad PRIVATE z)
-  endif()
-  if (APPLE)
-    add_library(crashpad_util_mig STATIC IMPORTED)
-    set_property(TARGET crashpad_util_mig PROPERTY
-                 IMPORTED_LOCATION "${_CRASHPAD_PREFIX}/obj/util/libmig_output.a")
-    target_link_libraries(yass_crashpad PRIVATE crashpad_util_mig bsm)
-  endif()
-
-  if (NOT IOS)
-    file(COPY "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler" DESTINATION ${CMAKE_BINARY_DIR})
-    if (EXISTS "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler.dbg")
-      file(COPY "${_CRASHPAD_BINARY_PREFIX}/crashpad_handler.dbg" DESTINATION ${CMAKE_BINARY_DIR})
-    endif()
-    set(_CRASHPAD_BINARY "${CMAKE_BINARY_DIR}/crashpad_handler")
-  endif()
-endif()
-
-# *****************************************************************************************
 #           tun2proxy Library
 # *****************************************************************************************
 
@@ -4529,10 +4365,6 @@ if (GUI)
         list(APPEND SRC_FILES ${ALLRESOURCES})
         list(APPEND SRC_FILES
           ${ASSET_CATALOG})
-        if (_CRASHPAD_BINARY)
-          list(APPEND SRC_FILES
-            ${_CRASHPAD_BINARY})
-        endif()
         list(APPEND SRC_FILES
           src/mac/yass.icns)
 
@@ -4873,10 +4705,6 @@ if (GUI)
           MACOSX_PACKAGE_LOCATION "Resources")
         set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
-        if (_CRASHPAD_BINARY)
-          set_source_files_properties("${_CRASHPAD_BINARY}" PROPERTIES
-            MACOSX_PACKAGE_LOCATION "Resources")
-        endif()
 
         set_target_properties(${APP_NAME} PROPERTIES
           RESOURCE "${ALLRESOURCES}"
