@@ -101,13 +101,6 @@ jobs:
           path: |
             third_party/tun2proxy/target/${{ matrix.rust_target }}/release/libtun2proxy.a
           key: ${{ runner.os }}-rust-${{ matrix.rust_target }}-tun2proxy-${{ hashFiles('RUST_REVISION') }}-${{ hashFiles('RUST_CARGO_REVISION') }}-${{ hashFiles('third_party/tun2proxy/Cargo.toml') }}-v${{ env.CACHE_EPOCH }}-v1
-      - name: Cache crashpad build stage
-        id: crashpad-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            third_party/crashpad
-          key: ${{ runner.os }}-android-${{ matrix.arch }}-ndk-${{ matrix.ndk_version }}-crashpad-${{ hashFiles('CRASHPAD_COMMIT') }}-v${{ env.CACHE_EPOCH }}-v1
       - name: Cache gradle
         uses: actions/cache@v4
         with:
@@ -176,16 +169,6 @@ jobs:
         run: |
           ./scripts/setup-android-rust.sh
           WITH_OS=android WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
-      - name: Build Binary (prebuild stage for crashpad)
-        if: ${{ steps.crashpad-cache.outputs.cache-hit != 'true' }}
-        run: |
-          # FIXME required by next step, need to copy to current clang with ndk's libunwind.a
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
-            -no-build -no-configure
-      - name: Build Binary (crashpad)
-        if: ${{ steps.crashpad-cache.outputs.cache-hit != 'true' }}
-        run: |
-          WITH_OS=android WITH_CPU=${{ matrix.arch }} SKIP_STRIP=1 ./scripts/build-crashpad.sh
       - name: Build Binary (CLI and SERVER)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \

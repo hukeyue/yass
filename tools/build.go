@@ -1549,14 +1549,6 @@ func postStateCopyDependedLibraries() {
 		}
 		deps, unresolvedDeps := GetDependenciesByDumpbin(getAppName(), searchDirs)
 
-		hasCrashpad := variantFlag == "gui"
-		if _, err := os.Stat("crashpad_handler.exe"); errors.Is(err, os.ErrNotExist) {
-			hasCrashpad = false
-		}
-		if hasCrashpad {
-			deps = append(deps, "crashpad_handler.exe")
-		}
-
 		depsMap := make(map[string]struct{})
 		for _, dep := range deps {
 			depsMap[dep] = struct{}{}
@@ -1662,14 +1654,6 @@ func postStateCodeSign() {
 	if cmakeBuildTypeFlag != "Release" || (systemNameFlag != "darwin" && systemNameFlag != "ios") {
 		return
 	}
-	// reference https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues?language=objc
-	// Hardened runtime is available in the Capabilities pane of Xcode 10 or later
-	// code sign crashpad_handler as well if any
-	hasCrashpad := true
-	crashpadPath := filepath.Join(getAppName(), "Contents", "Resources", "crashpad_handler")
-	if _, err := os.Stat(crashpadPath); errors.Is(err, os.ErrNotExist) {
-		hasCrashpad = false
-	}
 	codesignCmd := []string{
 		"codesign", "-s", macosxCodeSignIdentityFlag,
 		"--deep", "--force", "--options=runtime", "--timestamp",
@@ -1679,19 +1663,11 @@ func postStateCodeSign() {
 		codesignCmd = append(codesignCmd, "--keychain", macosxKeychainPathFlag)
 	}
 
-	if hasCrashpad {
-		codesignCmd := append(codesignCmd, crashpadPath)
-		cmdRun(codesignCmd, true)
-	}
-
 	codesignCmd = append(codesignCmd, getAppName())
 	cmdRun(codesignCmd, true)
 	cmdRun([]string{"codesign", "-dv", "--deep", "--strict", "--verbose=4", getAppName()}, true)
 	cmdRun([]string{"codesign", "-d", "--entitlements", ":-", getAppName()}, true)
 
-	if hasCrashpad {
-		cmdRun([]string{"codesign", "-d", "--entitlements", ":-", crashpadPath}, true)
-	}
 	cmdRun([]string{"spctl", "-a", "-vvv", "--type", "install", getAppName()}, false)
 }
 
@@ -2035,7 +2011,7 @@ func archiveMainFile(output string, prefix string, paths []string, dllPaths []st
 			glog.Fatalf("%v", err)
 		}
 		cmdRun([]string{"rm", "-f", "YassPacketTunnel.appex", "libasio.a",
-			"libyass_crashpad.a", "libyass_core.a", "libyass_net.a", "yass.app"}, true)
+			"libyass_core.a", "libyass_net.a", "yass.app"}, true)
 		err = os.Chdir(buildDir)
 		if err != nil {
 			glog.Fatalf("%v", err)
@@ -2126,7 +2102,7 @@ func archiveMainFile(output string, prefix string, paths []string, dllPaths []st
 	}
 }
 
-func generateMsi(output string, dllPaths []string, licensePaths []string, hasCrashpad bool) {
+func generateMsi(output string, dllPaths []string, licensePaths []string) {
 	wxsTemplate, err := ioutil.ReadFile(filepath.Join("..", "yass.wxs"))
 	if err != nil {
 		glog.Fatalf("%v", err)
@@ -2144,9 +2120,6 @@ func generateMsi(output string, dllPaths []string, licensePaths []string, hasCra
 		licenseReplacement += fmt.Sprintf("<File Name='%s' Source='%s' KeyPath='no' />\n", filepath.Base(licensePath), licensePath)
 	}
 	wxsXml = strings.Replace(wxsXml, "<!-- %LICENSEPLACEHOLDER% -->", licenseReplacement, 1)
-	if hasCrashpad {
-		wxsXml = strings.Replace(wxsXml, "<!-- %CRASHPAD_HANDLER_HOLDER% -->", "<File Name='crashpad_handler.exe' Source='crashpad_handler.exe' KeyPath='no'/>", 1)
-	}
 
 	err = ioutil.WriteFile("yass.wxs", []byte(wxsXml), 0666)
 	if err != nil {
@@ -2308,19 +2281,6 @@ func postStateArchives() map[string][]string {
 	if systemNameFlag == "harmony" {
 		archive = fmt.Sprintf(archiveFormat, APPNAME, "", ".hap")
 	}
-	hasCrashpadExe := variantFlag == "gui"
-	if _, err := os.Stat("crashpad_handler.exe"); errors.Is(err, os.ErrNotExist) {
-		hasCrashpadExe = false
-	}
-	hasCrashpadPdb := variantFlag == "gui"
-	if _, err := os.Stat("crashpad_handler.pdb"); errors.Is(err, os.ErrNotExist) {
-		hasCrashpadPdb = false
-	}
-
-	hasCrashpadDbg := variantFlag == "gui"
-	if _, err := os.Stat("crashpad_handler.dbg"); errors.Is(err, os.ErrNotExist) {
-		hasCrashpadDbg = false
-	}
 
 	msiArchive := fmt.Sprintf(archiveFormat, APPNAME, "", ".msi")
 	nsisArchive := fmt.Sprintf(archiveFormat, APPNAME, "-user-installer", ".exe")
@@ -2354,10 +2314,6 @@ func postStateArchives() map[string][]string {
 	if (variantFlag == "cli" || variantFlag == "server") && (systemNameFlag == "linux" || systemNameFlag == "freebsd") {
 		paths = append(paths, fmt.Sprintf("../doc/%s.1", APPNAME))
 	}
-	// copying dependent crashpad handler if any
-	if hasCrashpadExe {
-		paths = append(paths, "crashpad_handler.exe")
-	}
 
 	// copying dependent LICENSEs
 	licensePaths := postStateArchiveLicenses()
@@ -2373,7 +2329,7 @@ func postStateArchives() map[string][]string {
 	// error CNDL0265 : The Platform attribute has an invalid value arm64.
 	// Possible values are x86, x64, or ia64.
 	if systemNameFlag == "windows" && msvcTargetArchFlag != "arm64" && variantFlag == "gui" {
-		generateMsi(msiArchive, dllPaths, licensePaths, hasCrashpadExe)
+		generateMsi(msiArchive, dllPaths, licensePaths)
 		archives[msiArchive] = []string{msiArchive}
 	}
 	// nsis installer
@@ -2386,24 +2342,15 @@ func postStateArchives() map[string][]string {
 	// debuginfo file
 	if systemNameFlag == "windows" {
 		dbgPaths = append(dbgPaths, APPNAME+".pdb")
-		if hasCrashpadPdb {
-			dbgPaths = append(dbgPaths, "crashpad_handler.pdb")
-		}
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "android" && variantFlag == "gui"  {
 		// nop because we produces aab now
 		dbgPaths = []string{}
 	} else if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		dbgPaths = append(dbgPaths, getAppName()+".dbg")
-		if hasCrashpadDbg {
-			dbgPaths = append(dbgPaths, "crashpad_handler.dbg")
-		}
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "darwin" {
 		dbgPaths = append(dbgPaths, getAppName()+".dSYM")
-		if hasCrashpadDbg {
-			dbgPaths = append(dbgPaths, "crashpad_handler.dbg")
-		}
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "ios" {
 		cmdRun([]string{"rm", "-rf", getAppName() + ".dSYM"}, true)
