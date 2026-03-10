@@ -2804,11 +2804,11 @@ elseif(USE_JEMALLOC)
 
   add_subdirectory(third_party/jemalloc EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
-    set_property(TARGET jemalloc_static
+    set_property(TARGET jemalloc-obj
       PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
   endif()
 
-  set(JEMALLOC_LIB jemalloc_static)
+  set(JEMALLOC_LIB jemalloc-obj)
 
   set(SUPPORT_DEFINITIONS
     HAVE_JEMALLOC
@@ -5197,6 +5197,7 @@ if (BUILD_TESTS)
   target_link_libraries(yass_test PUBLIC
       ${TCMALLOC_LIB}
       ${MIMALLOC_LIB}
+      ${JEMALLOC_LIB}
       yass_cli_nogui_lib
       yass_server_lib
       yass_net
@@ -5339,6 +5340,7 @@ if (BUILD_BENCHMARKS)
   target_link_libraries(yass_benchmark PUBLIC
       ${TCMALLOC_LIB}
       ${MIMALLOC_LIB}
+      ${JEMALLOC_LIB}
       yass_cli_nogui_lib
       yass_server_lib
       yass_net
