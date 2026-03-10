@@ -26,6 +26,8 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 
+#pragma GCC visibility push (hidden)
+
 extern int app_indicator_init(void);
 extern void app_indicator_uninit(void);
 
@@ -35,6 +37,8 @@ extern void* app_indicator_new_with_path(const char*, const char*, int, const ch
 extern void app_indicator_set_status(void*, int);
 extern void app_indicator_set_menu(void*, void*);
 extern void app_indicator_set_secondary_activate_target(void*, void*);
+
+#pragma GCC visibility pop
 
 static int (*o_app_indicator_get_type)(void);
 static void* (*o_app_indicator_new)(const char*, const char*, int);
@@ -118,3 +122,4 @@ void app_indicator_set_secondary_activate_target(void* indicator, void* menuitem
 
   o_app_indicator_set_secondary_activate_target(indicator, menuitem);
 }
+

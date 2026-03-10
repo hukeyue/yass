@@ -147,7 +147,6 @@ add_library(jemalloc-obj OBJECT
   ${jemalloc_C_HDRS}
   ${jemalloc_C_SRCS})
 
-#target_compile_definitions(jemalloc-obj PUBLIC -UJEMALLOC_EXPORT)
 target_include_directories(jemalloc-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_include_directories(jemalloc-obj PRIVATE src/include)
 
