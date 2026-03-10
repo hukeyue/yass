@@ -1098,9 +1098,11 @@ func buildStageGenerateBuildScript() {
 			// mimalloc calls madvise internally while
 			// some old system doesn't like it.
 			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
 		} else {
 			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
 			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
 		}
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DENABLE_FORTIFY=on"))
 	}
