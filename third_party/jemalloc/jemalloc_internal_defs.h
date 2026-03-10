@@ -36,16 +36,26 @@
  * Hyper-threaded CPUs may need a special instruction inside spin loops in
  * order to yield to another virtual CPU.
  */
-#define CPU_SPINWAIT __asm__ volatile("isb")
-/* 1 if CPU_SPINWAIT is defined, 0 otherwise. */
+#if defined(_M_IX86) || defined(_M_X64)
+#define CPU_SPINWAIT _mm_pause()
 #define HAVE_CPU_SPINWAIT 1
+#elif defined(__i386__) || defined(__x86_64__)
+#define CPU_SPINWAIT __asm__ volatile("pause")
+#define HAVE_CPU_SPINWAIT 1
+#elif defined(__aarch64__) || (defined(__arm__) && (__ARM_ARCH >= 7)) || defined(__ARM_ARCH_7A__)
+#define CPU_SPINWAIT __asm__ volatile("isb")
+#define HAVE_CPU_SPINWAIT 1
+#else
+/* 1 if CPU_SPINWAIT is defined, 0 otherwise. */
+#define HAVE_CPU_SPINWAIT 0
+#endif
 
 /*
  * Number of significant bits in virtual addresses.  This may be less than the
  * total number of bits in a pointer, e.g. on x64, for which the uppermost 16
  * bits are the same as bit 47.
  */
-#define LG_VADDR 48
+#define LG_VADDR @jemalloc_LG_VADDR@
 
 /* Defined if C11 atomics are available. */
 #define JEMALLOC_C11_ATOMICS
@@ -391,16 +401,16 @@
 /* #undef JEMALLOC_BIG_ENDIAN */
 
 /* sizeof(int) == 2^LG_SIZEOF_INT. */
-#define LG_SIZEOF_INT 2
+#define LG_SIZEOF_INT @jemalloc_LG_SIZEOF_INT@
 
 /* sizeof(long) == 2^LG_SIZEOF_LONG. */
-#define LG_SIZEOF_LONG 3
+#define LG_SIZEOF_LONG @jemalloc_LG_SIZEOF_LONG@
 
 /* sizeof(long long) == 2^LG_SIZEOF_LONG_LONG. */
-#define LG_SIZEOF_LONG_LONG 3
+#define LG_SIZEOF_LONG_LONG @jemalloc_LG_SIZEOF_LONGLONG@
 
 /* sizeof(intmax_t) == 2^LG_SIZEOF_INTMAX_T. */
-#define LG_SIZEOF_INTMAX_T 3
+#define LG_SIZEOF_INTMAX_T @jemalloc_LG_SIZEOF_INTMAX_T@
 
 /* glibc malloc hooks (__malloc_hook, __realloc_hook, __free_hook). */
 /* #undef JEMALLOC_GLIBC_MALLOC_HOOK */
@@ -476,10 +486,14 @@
  * If defined, support the use of rdtscp to get the time stamp counter
  * and the processor ID.
  */
-/* #undef JEMALLOC_HAVE_RDTSCP */
+#if defined(__i386__) || defined(__x86_64__)
+#define JEMALLOC_HAVE_RDTSCP
+#endif
 
 /* If defined, use __int128 for optimization. */
+#if (defined(__clang__) || defined(__GNUC__)) && defined(__SIZEOF_INT128__)
 #define JEMALLOC_HAVE_INT128
+#endif
 
 #include "jemalloc/internal/jemalloc_internal_overrides.h"
 
