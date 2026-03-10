@@ -36,7 +36,6 @@
 #include "cli/cli_worker.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "crashpad_helper.hpp"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;
@@ -62,15 +61,6 @@ void Init(JNIEnv* env, jobject activity_obj) {
 
 #ifdef HAVE_C_ARES
   CHECK_EQ(0, InitializeCares(env, activity_obj));
-#endif
-
-#ifdef HAVE_CRASHPAD
-  // FIXME correct the path
-  std::string lib_path;
-  CHECK_EQ(0, GetNativeLibraryDirectory(env, activity_obj, &lib_path));
-  std::string data_path;
-  CHECK_EQ(0, GetDataLibraryDirectory(env, activity_obj, &data_path));
-  CHECK(InitializeCrashpad(lib_path + "/libnative-lib.so", data_path));
 #endif
 
   config::ReadConfigFileAndArguments(0, nullptr);

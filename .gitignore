@@ -31,8 +31,6 @@ sscxx
 /third_party/llvm-mingw-*-ucrt-i686
 /third_party/llvm-mingw-*-ucrt-x86_64
 /third_party/llvm-mingw-*-ucrt-aarch64
-/third_party/crashpad
-/third_party/depot_tools
 *.aps
 *.build
 /debian/*.debhelper
