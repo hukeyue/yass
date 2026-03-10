@@ -105,13 +105,13 @@ configure_file(public_namespace.h
 configure_file(private_namespace.h
   "${CMAKE_CURRENT_BINARY_DIR}/include/jemalloc/internal/private_namespace.h" @ONLY)
 
-add_library(jemalloc_static STATIC
+add_library(jemalloc-obj OBJECT
   ${jemalloc_C_HDRS}
   ${jemalloc_C_SRCS})
 
-#target_compile_definitions(jemalloc_static PUBLIC -UJEMALLOC_EXPORT)
-target_include_directories(jemalloc_static PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
-target_include_directories(jemalloc_static PRIVATE src/include)
+#target_compile_definitions(jemalloc-obj PUBLIC -UJEMALLOC_EXPORT)
+target_include_directories(jemalloc-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(jemalloc-obj PRIVATE src/include)
 
-target_link_libraries(jemalloc_static PRIVATE dl)
+target_link_libraries(jemalloc-obj PRIVATE ${CMAKE_DL_LIBS})
 
