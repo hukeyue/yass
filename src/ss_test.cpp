@@ -148,22 +148,30 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             std::string_view remote_host_ips,
                             std::string_view remote_host_sni,
                             uint16_t remote_port,
+                            std::string_view remote_username,
+                            std::string_view remote_password,
                             bool upstream_https_fallback,
                             bool https_fallback,
                             bool enable_upstream_tls,
                             bool enable_tls,
                             SSL_CTX* upstream_ssl_ctx,
-                            SSL_CTX* ssl_ctx)
+                            SSL_CTX* ssl_ctx,
+                            std::string_view username,
+                            std::string_view password)
       : Connection(io_context,
                    remote_host_ips,
                    remote_host_sni,
                    remote_port,
+                   remote_username,
+                   remote_password,
                    upstream_https_fallback,
                    https_fallback,
                    enable_upstream_tls,
                    enable_tls,
                    upstream_ssl_ctx,
-                   ssl_ctx) {}
+                   ssl_ctx,
+                   username,
+                   password) {}
 
   ~ContentProviderConnection() override {
     VLOG(1) << "Connection (content-provider) " << connection_id() << " freed memory";
@@ -677,7 +685,7 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
     asio::error_code ec;
 
     content_provider_server_ = std::make_unique<ContentProviderServer>(io_context_);
-    content_provider_server_->listen(endpoint, {}, backlog, ec);
+    content_provider_server_->listen(endpoint, {}, {}, {}, backlog, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       return ec;
@@ -700,8 +708,9 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
   asio::error_code StartServer(asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
     server_server_ = std::make_unique<server::ServerServer>(io_context_, std::string_view(), std::string_view(),
-                                                            uint16_t(), std::string_view(), kCertificate, kPrivateKey);
-    server_server_->listen(endpoint, "localhost"sv, backlog, ec);
+                                                            uint16_t(), std::string_view(), std::string_view(),
+                                                            std::string_view(), kCertificate, kPrivateKey);
+    server_server_->listen(endpoint, "localhost"sv, absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password), backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -725,8 +734,10 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
 
     local_server_ =
         std::make_unique<cli::CliServer>(io_context_, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
-                                         "localhost"sv, remote_endpoint.port(), kCertificate);
-    local_server_->listen(endpoint, {}, backlog, ec);
+                                         "localhost"sv, remote_endpoint.port(),
+                                         absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                                         kCertificate);
+    local_server_->listen(endpoint, {}, {}, {}, backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;

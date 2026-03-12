@@ -140,22 +140,30 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// \param remote_host_ips the ip addresses used with remote endpoint
   /// \param remote_host_sni the sni name used with remote endpoint
   /// \param remote_port the port used with remote endpoint
+  /// \param remote_username the username used with remote endpoint
+  /// \param remote_password the password used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
   /// \param enable_tls the underlying data channel is using tls
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer
+  /// \param username the username used downlink
+  /// \param password the password used downlink
   ServerConnection(asio::io_context& io_context,
                    std::string_view remote_host_ips,
                    std::string_view remote_host_sni,
                    uint16_t remote_port,
+                   std::string_view remote_username,
+                   std::string_view remote_password,
                    bool upstream_https_fallback,
                    bool https_fallback,
                    bool enable_upstream_tls,
                    bool enable_tls,
                    SSL_CTX* upstream_ssl_ctx,
-                   SSL_CTX* ssl_ctx);
+                   SSL_CTX* ssl_ctx,
+                   std::string_view username,
+                   std::string_view password);
 
   /// Destruct the service
   ~ServerConnection() override;

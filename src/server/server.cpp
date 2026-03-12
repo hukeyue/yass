@@ -180,9 +180,12 @@ int main(int argc, const char* argv[]) {
     return -1;
   }
 
+  std::string server_username = absl::GetFlag(FLAGS_username);
+  std::string server_password = absl::GetFlag(FLAGS_password);
+
   ServerServer server(io_context);
   for (auto& endpoint : endpoints) {
-    server.listen(endpoint, host_sni, SOMAXCONN, ec);
+    server.listen(endpoint, host_sni, server_username, server_password, SOMAXCONN, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       server.stop();

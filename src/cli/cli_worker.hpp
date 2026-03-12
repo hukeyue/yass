@@ -79,6 +79,8 @@ class Worker {
   std::string cached_server_host_;
   std::string cached_server_sni_;
   uint16_t cached_server_port_;
+  std::string cached_server_username_;
+  std::string cached_server_password_;
   std::string cached_local_host_;
   uint16_t cached_local_port_;
 
