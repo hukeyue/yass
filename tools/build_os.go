@@ -1,3 +1,6 @@
+//go:build !freebsd
+// +build !freebsd
+
 // SPDX-License-Identifier: GPL-2.0 OR CDDL-1.0
 /*
  * CDDL HEADER START
@@ -21,9 +24,6 @@
  */
 
 /* Copyright (c) 2023-2025 Chilledheart  */
-
-//go:build !freebsd
-// +build !freebsd
 
 package main
 
