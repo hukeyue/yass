@@ -76,7 +76,8 @@ static std::vector<http2::adapter::Header> GenerateHeaders(std::vector<std::pair
 }
 
 static constexpr std::string_view kBasicAuthPrefix = "basic ";
-static bool VerifyProxyAuthorizationIdentity(std::string_view auth) {
+static bool VerifyProxyAuthorizationIdentity(std::string_view auth,
+                                             std::string_view username, std::string_view password) {
   if (auth.size() <= kBasicAuthPrefix.size()) {
     return false;
   }
@@ -88,7 +89,7 @@ static bool VerifyProxyAuthorizationIdentity(std::string_view auth) {
   if (!Base64Decode(auth, &pass, Base64DecodePolicy::kForgiving)) {
     return false;
   }
-  return pass == absl::StrCat(absl::GetFlag(FLAGS_username), ":", absl::GetFlag(FLAGS_password));
+  return pass == absl::StrCat(username, ":", password);
 }
 
 #endif
@@ -141,22 +142,30 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    std::string_view remote_host_ips,
                                    std::string_view remote_host_sni,
                                    uint16_t remote_port,
+                                   std::string_view remote_username,
+                                   std::string_view remote_password,
                                    bool upstream_https_fallback,
                                    bool https_fallback,
                                    bool enable_upstream_tls,
                                    bool enable_tls,
                                    SSL_CTX* upstream_ssl_ctx,
-                                   SSL_CTX* ssl_ctx)
+                                   SSL_CTX* ssl_ctx,
+                                   std::string_view username,
+                                   std::string_view password)
     : Connection(io_context,
                  remote_host_ips,
                  remote_host_sni,
                  remote_port,
+                 remote_username,
+                 remote_password,
                  upstream_https_fallback,
                  https_fallback,
                  enable_upstream_tls,
                  enable_tls,
                  upstream_ssl_ctx,
-                 ssl_ctx),
+                 ssl_ctx,
+                 username,
+                 password),
       state_() {}
 
 ServerConnection::~ServerConnection() {
@@ -250,8 +259,8 @@ void ServerConnection::Start() {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
       ReadHandshakeViaSocks();
     } else {
-      encoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this, true);
-      decoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this);
+      encoder_ = std::make_unique<cipher>("", password_, method(), this, true);
+      decoder_ = std::make_unique<cipher>("", password_, method(), this);
       ReadHandshake();
     }
   }
@@ -339,8 +348,8 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
               << " Unexpected pseudo header path: " << path;
     return false;
   }
-  bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
-  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s])) {
+  bool auth_required = !username_.empty() && !password_.empty();
+  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s], username_, password_)) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Unexpected auth token.";
     return false;
   }
@@ -687,8 +696,8 @@ void ServerConnection::OnReadHandshakeViaHttps() {
       return;
     }
 
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
-    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization())) {
+    bool auth_required = !username_.empty() && !password_.empty();
+    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization(), username_, password_)) {
       LOG(INFO) << "Connection (server) " << connection_id() << " Unexpected auth token.";
       OnDisconnect(asio::error::invalid_argument);
       return;
@@ -788,7 +797,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
   switch (method()) {
     case CRYPTO_SOCKS4:
     case CRYPTO_SOCKS4A: {
-      bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+      bool auth_required = !username_.empty() && !password_.empty();
       if (auth_required) {
         LOG(WARNING) << "Server specifies username and password but SOCKS4/SOCKS4A doesn't support it";
       }
@@ -833,7 +842,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
 
       socks5::method_select_request_parser::result_type result;
 
-      bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+      bool auth_required = !username_.empty() && !password_.empty();
       std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
 
       if (result == socks5::method_select_request_parser::good) {
@@ -937,7 +946,7 @@ void ServerConnection::WriteMethodSelectResponse() {
       ProcessSentData(ec, 0);
       return;
     }
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+    bool auth_required = !username_.empty() && !password_.empty();
     auto method_select_reply = socks5::method_select_response_stock_reply(auth_required ? socks5::username_or_password
                                                                                         : socks5::no_auth_required);
     auto buf = GrowableIOBuffer::copyBuffer(&method_select_reply, sizeof(method_select_reply));
@@ -1019,8 +1028,7 @@ void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
     return;
   }
 
-  if (auth_request.username() != absl::GetFlag(FLAGS_username) ||
-      auth_request.password() != absl::GetFlag(FLAGS_password)) {
+  if (auth_request.username() != username_ || auth_request.password() != password_) {
     LOG(INFO) << "Connection (server) " << connection_id() << " socks5: dismatched username and password pair.";
     OnDisconnect(asio::error::invalid_argument);
     return;

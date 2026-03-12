@@ -209,10 +209,14 @@ int main(int argc, const char* argv[]) {
     LOG(INFO) << "resolved local ips: " << absl::StrJoin(local_ips, ";") << " from " << local_host_name;
   }
 
+  std::string remote_username = absl::GetFlag(FLAGS_username);
+  std::string remote_password = absl::GetFlag(FLAGS_password);
+
   asio::error_code ec;
-  CliServer server(io_context, remote_host_ips, remote_host_sni, remote_port);
+  CliServer server(io_context, remote_host_ips, remote_host_sni, remote_port,
+                   remote_username, remote_password);
   for (auto& endpoint : endpoints) {
-    server.listen(endpoint, std::string(), SOMAXCONN, ec);
+    server.listen(endpoint, {}, {}, {}, SOMAXCONN, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       server.stop();
