@@ -132,7 +132,7 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
 
   `LISTEN-URI = <LISTEN-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]`
 
-  `LISTEN-PROTO = "socks" | "http"`
+  `LISTEN-PROTO = "auto" | "socks" | "http" | "redir"`
 
   Listens at addr:port with protocol _<LISTEN-PROTO>_.
   Can be specified multiple times to listen on multiple ports.
