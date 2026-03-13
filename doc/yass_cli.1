@@ -1,6 +1,6 @@
 .\" generated with Ronn-NG/v0.9.1
 .\" http://github.com/apjanke/ronn-ng/tree/0.9.1
-.TH "YASS_CLI" "1" "December 2024" ""
+.TH "YASS_CLI" "1" "March 2026" ""
 .SH "NAME"
 \fByass_cli\fR \- a lightweight and efficient, socks5/http forward proxy
 .SH "SYNOPSIS"
@@ -96,6 +96,30 @@ Enables post\-quantum key\-agreements (i\.e\. \fIML\-KEM\fR) in TLS 1\.3 connect
 Specify \fIalgo\fR as TCP congestion control algorithm for underlying TCP connections (Linux Only)
 .IP
 See \fB/proc/sys/net/ipv4/tcp_allowed_congestion_control\fR for available options and \fBtcp\fR(7)\.
+.TP
+\fB\-\-proxy\fR \fIproxy_uris\fR
+Routes traffic via the PROXY\-URIs
+.IP
+\fBPROXY\-URI = <PROXY\-PROTO>"://"[<USER>":"<PASS>"@"]<HOSTNAME>[":"<PORT>]\fR
+.IP
+\fBPROXY\-PROTO = "https" | "http2" | "socks" | "naive"\fR
+.IP
+Routes traffic via the proxy URI\. The scheme naive proxy is negotiated automatically for Naive padding (controlled by \fIpadding_support\fR)
+.IP
+If multiple proxies are specified, they must match the number of specified \fILISTEN\-URIs\fR, and each \fILISTEN\-URI\fR is routed to the \fIPROXY\fR matched by position\. \fIPROXY\-CHAIN\fR is not supported\.
+.IP
+Once specified, all of \fIserver_host\fR, \fIserver_sni\fR, \fIserver_port\fR, \fIusername\fR, \fIpassword\fR, \fImethod\fR, \fIlocal_host\fR and \fIlocal_port\fR are ignored\.
+.TP
+\fB\-\-listen\fR \fIlisten_uris\fR
+Listens at given LISTEN\-URIs
+.IP
+\fBLISTEN\-URI = <LISTEN\-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]\fR
+.IP
+\fBLISTEN\-PROTO = "socks" | "http"\fR
+.IP
+Listens at addr:port with protocol \fI\fILISTEN\-PROTO\fR\fR\. Can be specified multiple times to listen on multiple ports\. \fILISTEN\-PROTO\fR is required but ignored in use\. Default proto, addr, port: \fBauto\fR, \fB0\.0\.0\.0\fR, \fB1080\fR\.
+.IP
+Once specified, all of \fIserver_host\fR, \fIserver_sni\fR, \fIserver_port\fR, \fIusername\fR, \fIpassword\fR, \fImethod\fR, \fIlocal_host\fR and \fIlocal_port\fR are ignored\.
 .SH "ENVIRONMENT VARIABLES"
 .TP
 \fBSSL_CERT_FILE\fR
