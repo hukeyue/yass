@@ -193,6 +193,7 @@ class Connection {
   /// \param remote_port the port used with remote endpoint
   /// \param remote_username the username used with remote endpoint
   /// \param remote_password the password used with remote endpoint
+  /// \param remote_cipher the cipher used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
@@ -201,12 +202,14 @@ class Connection {
   /// \param ssl_ctx the ssl context object for tls data transfer
   /// \param username the username used downlink
   /// \param password the password used downlink
+  /// \param cipher the cipher used with downlink
   Connection(asio::io_context& io_context,
              std::string_view remote_host_ips,
              std::string_view remote_host_sni,
              uint16_t remote_port,
              std::string_view remote_username,
              std::string_view remote_password,
+             cipher_method remote_cipher,
              bool upstream_https_fallback,
              bool https_fallback,
              bool enable_upstream_tls,
@@ -214,19 +217,22 @@ class Connection {
              SSL_CTX* upstream_ssl_ctx,
              SSL_CTX* ssl_ctx,
              std::string_view username,
-             std::string_view password)
+             std::string_view password,
+             cipher_method cipher)
       : io_context_(&io_context),
         remote_host_ips_(remote_host_ips),
         remote_host_sni_(remote_host_sni),
         remote_port_(remote_port),
         remote_username_(remote_username),
         remote_password_(remote_password),
+        remote_cipher_(remote_cipher),
         upstream_https_fallback_(upstream_https_fallback),
         enable_upstream_tls_(enable_upstream_tls),
         enable_tls_(enable_tls),
         upstream_ssl_ctx_(upstream_ssl_ctx),
         username_(username),
-        password_(password) {
+        password_(password),
+        cipher_(cipher) {
     DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
     if (enable_tls) {
       DCHECK(ssl_ctx);
@@ -322,6 +328,8 @@ class Connection {
   std::string remote_username_;
   /// the upstream password to be established with
   std::string remote_password_;
+  /// the upstream cipher to be established with
+  cipher_method remote_cipher_;
 
   /// service's bound endpoint
   asio::ip::tcp::endpoint endpoint_;
@@ -348,6 +356,8 @@ class Connection {
   std::string username_;
   /// the downlink password
   std::string password_;
+  /// the downlink cipher
+  cipher_method cipher_;
 
   std::unique_ptr<Downlink> downlink_;
 
@@ -360,12 +370,6 @@ class Connection {
  private:
   /// the callback invoked when disconnect event happens
   absl::AnyInvocable<void()> disconnect_cb_;
-
- public:
-  cipher_method method() const { return method_; }
-
- private:
-  cipher_method method_ = absl::GetFlag(FLAGS_method).method;
 };
 
 enum ConnectionFactoryType {

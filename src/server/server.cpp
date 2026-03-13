@@ -182,10 +182,11 @@ int main(int argc, const char* argv[]) {
 
   std::string server_username = absl::GetFlag(FLAGS_username);
   std::string server_password = absl::GetFlag(FLAGS_password);
+  cipher_method server_method = absl::GetFlag(FLAGS_method).method;
 
   ServerServer server(io_context);
   for (auto& endpoint : endpoints) {
-    server.listen(endpoint, host_sni, server_username, server_password, SOMAXCONN, ec);
+    server.listen(endpoint, host_sni, server_username, server_password, server_method, SOMAXCONN, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       server.stop();

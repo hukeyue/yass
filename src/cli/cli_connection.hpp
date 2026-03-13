@@ -155,6 +155,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// \param remote_port the port used with remote endpoint
   /// \param remote_username the username used with remote endpoint
   /// \param remote_password the password used with remote endpoint
+  /// \param remote_cipher the cipher used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
@@ -163,12 +164,14 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// \param ssl_ctx the ssl context object for tls data transfer
   /// \param username the username used downlink
   /// \param password the password used downlink
+  /// \param cipher the cipher used with downlink
   CliConnection(asio::io_context& io_context,
                 std::string_view remote_host_ips,
                 std::string_view remote_host_sni,
                 uint16_t remote_port,
                 std::string_view remote_username,
                 std::string_view remote_password,
+                cipher_method remote_cipher,
                 bool upstream_https_fallback,
                 bool https_fallback,
                 bool enable_upstream_tls,
@@ -176,7 +179,8 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
                 SSL_CTX* upstream_ssl_ctx,
                 SSL_CTX* ssl_ctx,
                 std::string_view username,
-                std::string_view password);
+                std::string_view password,
+                cipher_method cipher);
 
   /// Destruct the service
   ~CliConnection() override;
@@ -526,6 +530,8 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
 
   /// mark of in-progress writing
   bool write_inprogress_ = false;
+
+  cipher_method method() const { return remote_cipher_; }
 
   friend class DataFrameSource;
 };

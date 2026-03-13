@@ -74,6 +74,7 @@ class ContentServer {
                          uint16_t remote_port = {},
                          std::string_view remote_username = {},
                          std::string_view remote_password = {},
+                         cipher_method remote_cipher = {},
                          std::string_view upstream_certificate = {},
                          std::string_view certificate = {},
                          std::string_view private_key = {},
@@ -86,10 +87,11 @@ class ContentServer {
         remote_port_(remote_port),
         remote_username_(remote_username),
         remote_password_(remote_password),
-        upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(absl::GetFlag(FLAGS_method).method)),
+        remote_cipher_(remote_cipher),
+        upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)),
         https_fallback_(upstream_https_fallback_),
-        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(absl::GetFlag(FLAGS_method).method)),
-        enable_tls_(enable_upstream_tls_),
+        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
+        enable_tls_(true),
         upstream_certificate_(upstream_certificate),
         certificate_(certificate),
         private_key_(private_key),
@@ -128,6 +130,7 @@ class ContentServer {
               std::string_view server_name,
               std::string_view server_username,
               std::string_view server_password,
+              cipher_method server_cipher,
               int backlog,
               asio::error_code& ec) {
     if (next_listen_ctx_ >= MAX_LISTEN_ADDRESSES) {
@@ -142,6 +145,8 @@ class ContentServer {
     ctx.server_name = server_name;
     ctx.server_username = server_username;
     ctx.server_password = server_password;
+    ctx.server_cipher = server_cipher;
+    ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
     ctx.endpoint = endpoint;
     ctx.acceptor = std::make_unique<asio::ip::tcp::acceptor>(io_context_);
 
@@ -178,7 +183,7 @@ class ContentServer {
         return;
       }
     }
-    if (enable_tls_) {
+    if (ctx.enable_tls) {
       setup_ssl_ctx(ec);
       if (ec) {
         return;
@@ -274,18 +279,19 @@ class ContentServer {
             return;
           }
           tlsext_ctx_t* tlsext_ctx = nullptr;
-          if (enable_tls_) {
+          if (ctx.enable_tls) {
             tlsext_ctx = new tlsext_ctx_t{this, next_connection_id_, listen_ctx_num};
             setup_ssl_ctx_alpn_cb(tlsext_ctx);
             setup_ssl_ctx_tlsext_cb(tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
               T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
-                        remote_username_, remote_password_, upstream_https_fallback_,
+                        remote_username_, remote_password_, remote_cipher_,
+                        upstream_https_fallback_,
                         https_fallback_,
-                        enable_upstream_tls_, enable_tls_,
+                        enable_upstream_tls_, ctx.enable_tls,
                         upstream_ssl_ctx_.get(), ssl_ctx_.get(),
-                        ctx.server_username, ctx.server_password);
+                        ctx.server_username, ctx.server_password, ctx.server_cipher);
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
           if (in_shutdown_) {
             return;
@@ -680,6 +686,7 @@ class ContentServer {
   uint16_t remote_port_;
   std::string remote_username_;
   std::string remote_password_;
+  cipher_method remote_cipher_;
 
   bool upstream_https_fallback_;
   bool https_fallback_;
@@ -699,6 +706,8 @@ class ContentServer {
     std::string server_name;
     std::string server_username;
     std::string server_password;
+    cipher_method server_cipher;
+    bool enable_tls;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
