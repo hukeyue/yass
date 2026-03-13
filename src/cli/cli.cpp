@@ -211,7 +211,9 @@ static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector
       LOG(WARNING) << "Invalid Listen URL: " << listen_uri_str;
       return asio::error::invalid_argument;
     }
-    LOG(WARNING) << "Listen Scheme is ignored due to automatical detection: " << listen_uri.scheme();
+    if (listen_uri.scheme() != "auto" && listen_uri.scheme() != "redir") {
+      LOG(WARNING) << "Following listen uri's scheme is ignored due to automatical detection: " << listen_uri.scheme();
+    }
     local_host_name = listen_uri.host();
     local_port = listen_uri.EffectiveIntPort();
     if (!listen_uri.has_port()) {
@@ -350,8 +352,9 @@ int main(int argc, const char* argv[]) {
   const std::vector<std::string>& proxy_uri_strs = absl::GetFlag(FLAGS_proxy).str_array;
   const std::vector<std::string>& listen_uri_strs = absl::GetFlag(FLAGS_listen).str_array;
   if (!proxy_uri_strs.empty() && !listen_uri_strs.empty()) {
-    LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified";
-    LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, local_host and local_port are now ignored";
+    LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified.";
+    LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, "
+      "padding_support, redir_mode, local_host and local_port fields are ignored now.";
     url::AddStandardScheme("auto",
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
     url::AddStandardScheme("socks",
@@ -359,6 +362,8 @@ int main(int argc, const char* argv[]) {
     url::AddStandardScheme("http2",
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
     url::AddStandardScheme("naive",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("redir",
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
     if (proxy_uri_strs.size() != listen_uri_strs.size()) {
       LOG(WARNING) << "Listen addresses do not match multiple proxy addresses";

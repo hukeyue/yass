@@ -51,7 +51,7 @@ ABSL_FLAG(StringArrayFlag, proxy, {}, kProxyUsage);
 
 static constexpr const std::string_view kListenUsage = R"(
 LISTEN-URI = <LISTEN-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]
-LISTEN-PROTO = "socks" | "http"
+LISTEN-PROTO = "auto" | "socks" | "http" | "redir"
 
 Listens at addr:port with protocol <LISTEN-PROTO>. (CLI only)
 Can be specified multiple times to listen on multiple ports.

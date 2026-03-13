@@ -472,14 +472,15 @@ void CliConnection::ReadMethodSelect() {
       return;
     }
     if (ec) {
-      OnDisconnect(ec);
-      return;
+      goto done;
     }
     buf->SetCapacity(bytes_transferred);
     DumpHex("HANDSHAKE/METHOD_SELECT->", buf.get());
 
-    ec = OnReadRedirHandshake(buf.get());
-    if (ec == asio::error::operation_not_supported) {
+    if (redir_mode()) {
+      ec = OnReadRedirHandshake(buf.get());
+      goto done;
+    } else {
       ec = asio::error::invalid_argument;
     }
     if (ec == asio::error::invalid_argument) {
@@ -491,6 +492,8 @@ void CliConnection::ReadMethodSelect() {
     if (ec == asio::error::invalid_argument) {
       ec = OnReadHttpRequest(buf.get());
     }
+
+done:
     if (ec) {
       OnDisconnect(ec);
     } else {
@@ -543,10 +546,7 @@ void CliConnection::ReadSocks5Handshake() {
 
 asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
 #if BUILDFLAG(IS_MAC)
-  if (!redir_mode()) {
-    return asio::error::operation_not_supported;
-  }
-  VLOG(2) << "Connection (client) " << connection_id() << " try redir handshake";
+  VLOG(2) << "Connection (client) " << connection_id() << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   const bool ipv4_compatible = peer_endpoint_.address().is_v4();
 
@@ -624,10 +624,7 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   }
   return ec;
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
-  if (!absl::GetFlag(FLAGS_redir_mode)) {
-    return asio::error::operation_not_supported;
-  }
-  VLOG(2) << "Connection (client) " << connection_id() << " try redir handshake";
+  VLOG(2) << "Connection (client) " << connection_id() << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   struct sockaddr_storage ss = {};
   socklen_t ss_len = sizeof(struct sockaddr_in6);
