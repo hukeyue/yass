@@ -83,6 +83,7 @@ class Worker {
   std::string cached_server_password_;
   std::string cached_local_host_;
   uint16_t cached_local_port_;
+  cipher_method cached_server_cipher_;
 
   WorkerPrivate* private_;
   std::string remote_server_ips_;

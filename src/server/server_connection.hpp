@@ -142,6 +142,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// \param remote_port the port used with remote endpoint
   /// \param remote_username the username used with remote endpoint
   /// \param remote_password the password used with remote endpoint
+  /// \param remote_cipher the cipher used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
@@ -150,12 +151,14 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// \param ssl_ctx the ssl context object for tls data transfer
   /// \param username the username used downlink
   /// \param password the password used downlink
+  /// \param cipher the cipher used with downlink
   ServerConnection(asio::io_context& io_context,
                    std::string_view remote_host_ips,
                    std::string_view remote_host_sni,
                    uint16_t remote_port,
                    std::string_view remote_username,
                    std::string_view remote_password,
+                   cipher_method remote_cipher,
                    bool upstream_https_fallback,
                    bool https_fallback,
                    bool enable_upstream_tls,
@@ -163,7 +166,8 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
                    SSL_CTX* upstream_ssl_ctx,
                    SSL_CTX* ssl_ctx,
                    std::string_view username,
-                   std::string_view password);
+                   std::string_view password,
+                   cipher_method cipher);
 
   /// Destruct the service
   ~ServerConnection() override;
@@ -428,6 +432,8 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
 
   /// mark of in-progress writing
   bool write_inprogress_ = false;
+
+  cipher_method method() const { return cipher_; }
 
   friend class DataFrameSource;
 };

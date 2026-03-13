@@ -86,6 +86,7 @@ void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
     cached_server_port_ = absl::GetFlag(FLAGS_server_port);
     cached_server_username_ = absl::GetFlag(FLAGS_username);
     cached_server_password_ = absl::GetFlag(FLAGS_password);
+    cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
     cached_local_host_ = absl::GetFlag(FLAGS_local_host);
     cached_local_port_ = absl::GetFlag(FLAGS_local_port);
 
@@ -275,11 +276,12 @@ void Worker::on_resolve_done(asio::error_code ec) {
 
   private_->cli_server = std::make_unique<CliServer>(io_context_, remote_server_ips_, remote_server_sni_,
                                                      cached_server_port_,
-                                                     cached_server_username_, cached_server_password_);
+                                                     cached_server_username_, cached_server_password_,
+                                                     cached_server_cipher_);
 
   local_port_ = 0;
   for (auto& endpoint : endpoints_) {
-    private_->cli_server->listen(endpoint, {}, {}, {}, SOMAXCONN, ec);
+    private_->cli_server->listen(endpoint, {}, {}, {}, {}, SOMAXCONN, ec);
     if (ec) {
       break;
     }

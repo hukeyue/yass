@@ -111,6 +111,36 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
 
   See `/proc/sys/net/ipv4/tcp_allowed_congestion_control` for available options and `tcp`(7).
 
+* `--proxy` _proxy_uris_:
+  Routes traffic via the PROXY-URIs
+
+  `PROXY-URI = <PROXY-PROTO>"://"[<USER>":"<PASS>"@"]<HOSTNAME>[":"<PORT>]`
+
+  `PROXY-PROTO = "https" | "http2" | "socks" | "naive"`
+
+  Routes traffic via the proxy URI.
+  The scheme naive proxy is negotiated automatically for Naive padding (controlled by _padding_support_)
+
+  If multiple proxies are specified, they must match the number of specified
+  _LISTEN-URIs_, and each _LISTEN-URI_ is routed to the _PROXY_ matched by position.
+  _PROXY-CHAIN_ is not supported.
+
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _local_host_ and _local_port_ are ignored.
+
+* `--listen` _listen_uris_:
+  Listens at given LISTEN-URIs
+
+  `LISTEN-URI = <LISTEN-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]`
+
+  `LISTEN-PROTO = "socks" | "http"`
+
+  Listens at addr:port with protocol _<LISTEN-PROTO>_.
+  Can be specified multiple times to listen on multiple ports.
+  _LISTEN-PROTO_ is required but ignored in use.
+  Default proto, addr, port: `auto`, `0.0.0.0`, `1080`.
+
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _local_host_ and _local_port_ are ignored.
+
 ## ENVIRONMENT VARIABLES
 
 * `SSL_CERT_FILE`:
