@@ -125,7 +125,7 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
   _LISTEN-URIs_, and each _LISTEN-URI_ is routed to the _PROXY_ matched by position.
   _PROXY-CHAIN_ is not supported.
 
-  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _local_host_ and _local_port_ are ignored.
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _padding_support_, _redir_mode_, _local_host_ and _local_port_ are ignored.
 
 * `--listen` _listen_uris_:
   Listens at given LISTEN-URIs
@@ -139,7 +139,7 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
   _LISTEN-PROTO_ is required but ignored in use.
   Default proto, addr, port: `auto`, `0.0.0.0`, `1080`.
 
-  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _local_host_ and _local_port_ are ignored.
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _padding_support_, _redir_mode_, _local_host_ and _local_port_ are ignored.
 
 ## ENVIRONMENT VARIABLES
 

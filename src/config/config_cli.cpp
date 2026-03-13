@@ -45,7 +45,7 @@ If multiple proxies are specified, they must match the number of specified
 LISTEN-URIs, and each LISTEN-URI is routed to the PROXY matched by position.
 PROXY-CHAIN is not supported.
 
-Once specified, all of server_host, server_sni, server_port, username, password, method, local_host and local_port are ignored.
+Once specified, all of server_host, server_sni, server_port, username, password, method, padding_support, redir_mode, local_host and local_port are ignored.
 )";
 ABSL_FLAG(StringArrayFlag, proxy, {}, kProxyUsage);
 
@@ -58,7 +58,7 @@ Can be specified multiple times to listen on multiple ports.
 LISTEN-PROTO is required but ignored in use.
 Default proto, addr, port: auto, 0.0.0.0, 1080.
 
-Once specified, all of server_host, server_sni, server_port, username, password, method, local_host and local_port are ignored.
+Once specified, all of server_host, server_sni, server_port, username, password, method, padding_support, redir_mode, local_host and local_port are ignored.
 )";
 
 ABSL_FLAG(StringArrayFlag, listen, {}, kListenUsage);
