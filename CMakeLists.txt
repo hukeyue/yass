@@ -3887,6 +3887,7 @@ endif()
 
 add_library(yass_core STATIC
     src/config/config.cpp
+    src/config/config_cli.cpp
     src/config/config_core.cpp
     src/config/config_network.cpp
     src/config/config_ptype.cpp
@@ -3894,6 +3895,7 @@ add_library(yass_core STATIC
     src/config/config_impl.cpp
     src/config/config_version.cpp
     src/config/config.hpp
+    src/config/config_cli.hpp
     src/config/config_core.hpp
     src/config/config_export.hpp
     src/config/config_network.hpp

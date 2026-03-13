@@ -81,9 +81,11 @@ class Worker {
   uint16_t cached_server_port_;
   std::string cached_server_username_;
   std::string cached_server_password_;
+  cipher_method cached_server_cipher_;
+  bool cached_server_padding_support_;
+  bool cached_server_redir_mode_;
   std::string cached_local_host_;
   uint16_t cached_local_port_;
-  cipher_method cached_server_cipher_;
 
   WorkerPrivate* private_;
   std::string remote_server_ips_;

@@ -23,6 +23,7 @@
 /* Copyright (c) 2019-2025 Chilledheart  */
 
 #include "config/config.hpp"
+#include "config/config_cli.hpp"
 
 #include <absl/flags/flag.h>
 #include <absl/flags/usage.h>
@@ -105,6 +106,18 @@ bool ReadConfig() {
   config_impl->Read("ui_display_realtime_status", &FLAGS_ui_display_realtime_status);
 #endif
 
+  /* cli-only options */
+  if (pType == YASS_CLIENT_DEFAULT) {
+    if (config_impl->HasKey<std::vector<std::string>>("proxy") ||
+        config_impl->HasKey<std::string>("proxy")) {
+      config_impl->Read("proxy", &FLAGS_proxy);
+    }
+    if (config_impl->HasKey<std::vector<std::string>>("listen") ||
+        config_impl->HasKey<std::string>("listen")) {
+      config_impl->Read("listen", &FLAGS_listen);
+    }
+  }
+
   /* close fields */
   config_impl->Close();
 
@@ -176,6 +189,11 @@ bool SaveConfig() {
 #if BUILDFLAG(IS_MAC)
   all_fields_written &= config_impl->Write("ui_display_realtime_status", FLAGS_ui_display_realtime_status);
 #endif
+
+  if (pType == YASS_CLIENT_DEFAULT) {
+    all_fields_written &= config_impl->Write("proxy", FLAGS_proxy);
+    all_fields_written &= config_impl->Write("listen", FLAGS_listen);
+  }
 
   all_fields_written &= config_impl->Close();
 

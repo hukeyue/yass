@@ -24,6 +24,7 @@
 
 #include "cli/cli_server.hpp"
 #include "config/config.hpp"
+#include "config/config_cli.hpp"
 #include "crypto/crypter_export.hpp"
 
 #include <absl/debugging/failure_signal_handler.h>
@@ -31,7 +32,6 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
-#include <absl/strings/str_split.h>
 #include <build/build_config.h>
 #include <locale.h>
 #include <memory>
@@ -51,35 +51,6 @@
 namespace config {
 const ProgramType pType = YASS_CLIENT_DEFAULT;
 }  // namespace config
-
-constexpr const std::string_view kProxyUsage = R"(
-PROXY-URI = <PROXY-PROTO>"://"[<USER>":"<PASS>"@"]<HOSTNAME>[":"<PORT>]
-PROXY-PROTO = "https" | "http2" | "socks" | "naive"
-
-Routes traffic via the proxy URI.
-The naive proxy scheme is negotiated automatically for Naive padding (controlled by --padding_support)
-
-If multiple proxies are specified, they must match the number of specified
-LISTEN-URIs, and each LISTEN-URI is routed to the PROXY matched by position.
-PROXY-CHAIN is not supported.
-
-Once specified, all of server_host, server_sni, server_port, username, password, method, local_host and local_port are ignored.
-)";
-ABSL_FLAG(std::string, proxy, "", kProxyUsage);
-
-constexpr const std::string_view kListenUsage = R"(
-LISTEN-URI = <LISTEN-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]
-LISTEN-PROTO = "socks" | "http"
-
-Listens at addr:port with protocol <LISTEN-PROTO>.
-Can be specified multiple times to listen on multiple ports.
-LISTEN-PROTO is required but ignored in use.
-Default proto, addr, port: auto, 0.0.0.0, 1080.
-
-Once specified, all of server_host, server_sni, server_port, username, password, method, local_host and local_port are ignored.
-)";
-
-ABSL_FLAG(std::string, listen, "", kListenUsage);
 
 using namespace net::cli;
 
@@ -122,8 +93,10 @@ static asio::error_code ListenAddress(asio::io_context& io_context, std::vector<
                                       std::string remote_username,
                                       std::string remote_password,
                                       cipher_method remote_cipher,
+                                      bool remote_padding_support,
                                       std::string local_host_name,
-                                      uint16_t local_port) {
+                                      uint16_t local_port,
+                                      bool redir_mode) {
   if (remote_host_sni.empty()) {
     remote_host_sni = remote_host_name;
   }
@@ -171,9 +144,9 @@ static asio::error_code ListenAddress(asio::io_context& io_context, std::vector<
 
   asio::error_code ec;
   auto server = std::make_unique<CliServer>(io_context, remote_host_ips, remote_host_sni, remote_port,
-                                            remote_username, remote_password, remote_cipher);
+                                            remote_username, remote_password, remote_cipher, remote_padding_support);
   for (auto& endpoint : endpoints) {
-    server->listen(endpoint, {}, {}, {}, {}, SOMAXCONN, ec);
+    server->listen(endpoint, {}, {}, {}, {}, {}, redir_mode, SOMAXCONN, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       return ec;
@@ -194,8 +167,10 @@ static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector
     std::string remote_username;
     std::string remote_password;
     cipher_method remote_cipher;
+    bool remote_padding_support = false;
     std::string local_host_name;
     uint16_t local_port;
+    bool redir_mode = false;
 
     GURL proxy_uri(proxy_uri_str);
     if (!proxy_uri.is_valid() || !proxy_uri.has_host() || !proxy_uri.has_scheme()) {
@@ -215,8 +190,7 @@ static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector
         remote_port = 443u;
       }
     } else if (proxy_uri.scheme() == "naive") {
-      // TODO control padding for different upstream
-      absl::SetFlag(&FLAGS_padding_support, true);
+      remote_padding_support = true;
       remote_cipher = CRYPTO_HTTP2;
       if (!proxy_uri.has_port()) {
         remote_port = 443u;
@@ -243,10 +217,15 @@ static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector
     if (!listen_uri.has_port()) {
       local_port = 1080u;
     }
+    if (listen_uri.scheme() == "redir") {
+      redir_mode = true;
+    } else {
+      redir_mode = false;
+    }
 
     return ListenAddress(io_context, servers, remote_host_name, remote_host_sni, remote_port,
-                         remote_username, remote_password, remote_cipher,
-                         local_host_name, local_port);
+                         remote_username, remote_password, remote_cipher, remote_padding_support,
+                         local_host_name, local_port, redir_mode);
 }
 
 int main(int argc, const char* argv[]) {
@@ -368,9 +347,9 @@ int main(int argc, const char* argv[]) {
   signals.async_wait(cb);
 
   // listen
-  auto proxy_str = absl::GetFlag(FLAGS_proxy);
-  auto listen_str = absl::GetFlag(FLAGS_listen);
-  if (!proxy_str.empty() && !listen_str.empty()) {
+  const std::vector<std::string>& proxy_uri_strs = absl::GetFlag(FLAGS_proxy).str_array;
+  const std::vector<std::string>& listen_uri_strs = absl::GetFlag(FLAGS_listen).str_array;
+  if (!proxy_uri_strs.empty() && !listen_uri_strs.empty()) {
     LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified";
     LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, local_host and local_port are now ignored";
     url::AddStandardScheme("auto",
@@ -381,8 +360,6 @@ int main(int argc, const char* argv[]) {
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
     url::AddStandardScheme("naive",
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-    std::vector<std::string_view> proxy_uri_strs = absl::StrSplit(proxy_str, ',');
-    std::vector<std::string_view> listen_uri_strs = absl::StrSplit(listen_str, ',');
     if (proxy_uri_strs.size() != listen_uri_strs.size()) {
       LOG(WARNING) << "Listen addresses do not match multiple proxy addresses";
       return -1;
@@ -393,7 +370,7 @@ int main(int argc, const char* argv[]) {
         return -1;
       }
     }
-  } else if (listen_str.empty() ^ proxy_str.empty()) {
+  } else if (proxy_uri_strs.empty() ^ listen_uri_strs.empty()) {
     LOG(WARNING) << "Both of Listen URLs and Proxy URLs are required. Ignored now";
   } else {
     std::string remote_host_name = absl::GetFlag(FLAGS_server_host);
@@ -402,12 +379,14 @@ int main(int argc, const char* argv[]) {
     std::string remote_username = absl::GetFlag(FLAGS_username);
     std::string remote_password = absl::GetFlag(FLAGS_password);
     cipher_method remote_cipher = absl::GetFlag(FLAGS_method);
+    bool remote_padding_support = absl::GetFlag(FLAGS_padding_support);
     std::string local_host_name = absl::GetFlag(FLAGS_local_host);
     uint16_t local_port = absl::GetFlag(FLAGS_local_port);
+    bool redir_mode = absl::GetFlag(FLAGS_redir_mode);
 
     ec = ListenAddress(io_context, &servers, remote_host_name, remote_host_sni, remote_port,
-                       remote_username, remote_password, remote_cipher,
-                       local_host_name, local_port);
+                       remote_username, remote_password, remote_cipher, remote_padding_support,
+                       local_host_name, local_port, redir_mode);
     if (ec) {
       LOG(WARNING) << ec;
       return -1;

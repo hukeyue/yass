@@ -145,6 +145,7 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    std::string_view remote_username,
                                    std::string_view remote_password,
                                    cipher_method remote_cipher,
+                                   bool remote_padding_support,
                                    bool upstream_https_fallback,
                                    bool https_fallback,
                                    bool enable_upstream_tls,
@@ -153,7 +154,9 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    SSL_CTX* ssl_ctx,
                                    std::string_view username,
                                    std::string_view password,
-                                   cipher_method cipher)
+                                   cipher_method cipher,
+                                   bool padding_support,
+                                   bool redir_mode)
     : Connection(io_context,
                  remote_host_ips,
                  remote_host_sni,
@@ -161,6 +164,7 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                  remote_username,
                  remote_password,
                  remote_cipher,
+                 remote_padding_support,
                  upstream_https_fallback,
                  https_fallback,
                  enable_upstream_tls,
@@ -169,7 +173,9 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                  ssl_ctx,
                  username,
                  password,
-                 cipher),
+                 cipher,
+                 padding_support,
+                 redir_mode),
       state_() {}
 
 ServerConnection::~ServerConnection() {
@@ -235,7 +241,7 @@ void ServerConnection::Start() {
     options.perspective = http2::adapter::Perspective::kServer;
     adapter_ = http2::adapter::OgHttp2Adapter::Create(*this, options);
 #endif
-    padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    padding_support_in_fact_ = padding_support();
     SetState(state_stream);
 
     // Send Upstream Settings (HTTP2 Only)
@@ -256,7 +262,7 @@ void ServerConnection::Start() {
       if (downlink_->https_fallback()) {
     DCHECK(!http2);
     // TODO should we support it?
-    // padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    // padding_support_in_fact_ = padding_support();
     ReadHandshakeViaHttps();
   } else {
     DCHECK(!http2);
@@ -413,11 +419,11 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
   }
 
   bool padding_support = request_map_.find("padding"s) != request_map_.end();
-  if (padding_support_ && padding_support) {
+  if (padding_support_in_fact_ && padding_support) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Padding support enabled.";
   } else {
     VLOG(1) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Padding support disabled.";
-    padding_support_ = false;
+    padding_support_in_fact_ = false;
   }
 
   // we're done
@@ -474,7 +480,7 @@ bool ServerConnection::OnBeginDataForStream(StreamId stream_id, size_t payload_l
 }
 
 bool ServerConnection::OnDataForStream(StreamId stream_id, absl::string_view data) {
-  if (padding_support_ && num_padding_recv_ < kFirstPaddings) {
+  if (padding_support_in_fact_ && num_padding_recv_ < kFirstPaddings) {
     asio::error_code ec;
     // Append buf to in_middle_buf
     if (padding_in_middle_buf_) {
@@ -1394,7 +1400,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
       ec = asio::error::eof;
       return nullptr;
     }
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       buf = AddPadding(buf.get());
       VLOG(2) << "Connection (server) " << connection_id() << " added padding for: " << num_padding_send_
@@ -1724,7 +1730,7 @@ void ServerConnection::OnConnect() {
     headers.emplace_back("server"s, "YASS/" YASS_APP_PRODUCT_VERSION);
     // Send "Padding" header
     // originated from forwardproxy.go;func ServeHTTP
-    if (padding_support_) {
+    if (padding_support_in_fact_) {
       std::string padding(gurl_base::RandInt(30, 64), '~');
       uint64_t bits = gurl_base::RandUint64();
       for (int i = 0; i < 16; ++i) {

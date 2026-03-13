@@ -62,4 +62,8 @@ std::string AbslUnparseFlag(const RateFlag&);
 ABSL_DECLARE_FLAG(bool, ui_display_realtime_status);
 #endif
 
+bool AbslParseFlag(absl::string_view text, StringArrayFlag* flag, std::string* err);
+
+std::string AbslUnparseFlag(const StringArrayFlag&);
+
 #endif  // H_CONFIG_CONFIG_CORE

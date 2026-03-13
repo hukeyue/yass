@@ -153,6 +153,11 @@ bool ConfigImpl::HasKey<std::string>(const std::string& key) {
 }
 
 template <>
+bool ConfigImpl::HasKey<std::vector<std::string>>(const std::string& key) {
+  return HasKeyStringArrayImpl(key);
+}
+
+template <>
 bool ConfigImpl::HasKey<bool>(const std::string& key) {
   return HasKeyBoolImpl(key);
 }
@@ -247,6 +252,37 @@ bool ConfigImpl::Read(const std::string& key, absl::Flag<RateFlag>* value, bool 
   return true;
 }
 
+// try read via StringArray API first then try spliting comma-joined string
+template <>
+bool ConfigImpl::Read(const std::string& key, absl::Flag<StringArrayFlag>* value, bool is_masked) {
+  if (HasKeyStringArrayImpl(key)) {
+    alignas(std::string) alignas(8) std::vector<std::string> real_value_array;
+    if (!ReadImpl(key, &real_value_array)) {
+      std::cerr << "failed to load option " << key << std::endl;
+      return false;
+    }
+    StringArrayFlag str_arr;
+    str_arr.str_array = std::move(real_value_array);
+    absl::SetFlag(value, str_arr);
+    std::cerr << "loaded option " << key << ": " << to_masked_string(str_arr.operator std::string(), is_masked) << std::endl;
+    return true;
+  }
+  alignas(std::string) alignas(8) std::string real_value;
+  if (!ReadImpl(key, &real_value)) {
+    std::cerr << "failed to load option " << key << std::endl;
+    return false;
+  }
+  std::string err;
+  StringArrayFlag str_array;
+  if (!AbslParseFlag(real_value, &str_array, &err)) {
+    std::cerr << "invalid value for key: " << key << " value: " << to_masked_string(real_value, is_masked) << std::endl;
+    return false;
+  }
+  absl::SetFlag(value, str_array);
+  std::cerr << "loaded option " << key << ": " << to_masked_string(real_value, is_masked) << std::endl;
+  return true;
+}
+
 template <>
 bool ConfigImpl::Read(const std::string& key, absl::Flag<bool>* value, bool is_masked) {
   // Use an int instead of a bool to guarantee that a non-zero value has
@@ -282,6 +318,22 @@ bool ConfigImpl::Write(const std::string& key, const absl::Flag<T>& value, bool 
 }
 
 template bool ConfigImpl::Write(const std::string& key, const absl::Flag<std::string>& value, bool is_masked);
+
+template <>
+bool ConfigImpl::Write(const std::string& key, const absl::Flag<StringArrayFlag>& value, bool is_masked) {
+  auto real_arr_value = absl::GetFlag(value);
+  auto real_value = real_arr_value.operator std::string();
+  if (WriteImpl(key, real_arr_value.str_array)) {
+    std::cerr << "saved option " << key << ": " << to_masked_string(real_value, is_masked) << std::endl;
+    return true;
+  }
+  if (!WriteImpl(key, real_value)) {
+    std::cerr << "failed to saved option " << key << ": " << to_masked_string(real_value, is_masked) << std::endl;
+    return false;
+  }
+  std::cerr << "saved option " << key << ": " << to_masked_string(real_value, is_masked) << std::endl;
+  return true;
+}
 
 template <>
 bool ConfigImpl::Write(const std::string& key, const absl::Flag<PortFlag>& value, bool is_masked) {
