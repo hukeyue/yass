@@ -115,7 +115,7 @@ Listens at given LISTEN\-URIs
 .IP
 \fBLISTEN\-URI = <LISTEN\-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]\fR
 .IP
-\fBLISTEN\-PROTO = "socks" | "http"\fR
+\fBLISTEN\-PROTO = "auto" | "socks" | "http" | "redir"\fR
 .IP
 Listens at addr:port with protocol \fI\fILISTEN\-PROTO\fR\fR\. Can be specified multiple times to listen on multiple ports\. \fILISTEN\-PROTO\fR is required but ignored in use\. Default proto, addr, port: \fBauto\fR, \fB0\.0\.0\.0\fR, \fB1080\fR\.
 .IP
