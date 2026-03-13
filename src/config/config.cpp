@@ -479,7 +479,7 @@ std::string ReadConfigFromArgument(std::string_view server_host,
 }
 
 void SetClientUsageMessage(std::string_view exec_path) {
-  absl::SetProgramUsageMessage(absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", R"(
+  constexpr std::string_view kClientUsage = R"(
   -K, --config <file> Read config from a file
   -t Don't run, just test the configuration file
   -v, --version Print yass version
@@ -499,7 +499,18 @@ void SetClientUsageMessage(std::string_view exec_path) {
   -k, --insecure_mode Skip the verification step and proceed without checking
   --tls13_early_data Enable 0RTTI Early Data
   --enable_post_quantum_kyber Enables post-quantum key-agreements (i.e. ML-KEM) in TLS 1.3 connections.
-)"));
+)";
+  constexpr std::string_view kExtraUsage =
+  R"(
+  --proxy=PROXY-URI[","PROXY-URI] Routes traffic via the proxy URIs
+  --listen=LISTEN-URI[","LISTEN-URI] Listens at given URIs
+  )";
+  std::string_view additionalUsage;
+
+  if (pType == YASS_CLIENT_DEFAULT) {
+    additionalUsage = kExtraUsage;
+  }
+  absl::SetProgramUsageMessage(absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", kClientUsage, additionalUsage));
 }
 
 void SetServerUsageMessage(std::string_view exec_path) {
