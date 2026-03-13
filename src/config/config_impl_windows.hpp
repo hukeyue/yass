@@ -165,6 +165,10 @@ class ConfigImplWindows : public ConfigImpl {
            size % sizeof(wchar_t) == 0;
   }
 
+  bool HasKeyStringArrayImpl(const std::string& key) override {
+    return false; /* TBD */
+  }
+
   bool HasKeyBoolImpl(const std::string& key) override { return HasKeyUint32Impl(key); }
 
   bool HasKeyUint32Impl(const std::string& key) override {
@@ -219,6 +223,10 @@ class ConfigImplWindows : public ConfigImpl {
 
     std::cerr << "bad field: " << key << std::endl;
     return false;
+  }
+
+  bool ReadImpl(const std::string& key, std::vector<std::string>* value) override {
+    return false; /* TBD */
   }
 
   bool ReadImpl(const std::string& key, bool* value) override {
@@ -281,6 +289,10 @@ class ConfigImplWindows : public ConfigImpl {
     }
     std::cerr << "failed to write field: " << key << " with content " << value << std::endl;
     return false;
+  }
+
+  bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override {
+    return false; /* TBD */
   }
 
   bool WriteImpl(const std::string& key, bool value) override {

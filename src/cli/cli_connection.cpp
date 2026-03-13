@@ -24,7 +24,6 @@
 
 #include "cli/cli_connection.hpp"
 
-#include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <base/rand_util.h>
 #include <base/strings/string_util.h>
@@ -170,6 +169,7 @@ CliConnection::CliConnection(asio::io_context& io_context,
                              std::string_view remote_username,
                              std::string_view remote_password,
                              cipher_method remote_cipher,
+                             bool remote_padding_support,
                              bool upstream_https_fallback,
                              bool https_fallback,
                              bool enable_upstream_tls,
@@ -178,7 +178,9 @@ CliConnection::CliConnection(asio::io_context& io_context,
                              SSL_CTX* ssl_ctx,
                              std::string_view username,
                              std::string_view password,
-                             cipher_method cipher)
+                             cipher_method cipher,
+                             bool padding_support,
+                             bool redir_mode)
     : Connection(io_context,
                  remote_host_ips,
                  remote_host_sni,
@@ -186,6 +188,7 @@ CliConnection::CliConnection(asio::io_context& io_context,
                  remote_username,
                  remote_password,
                  remote_cipher,
+                 remote_padding_support,
                  upstream_https_fallback,
                  https_fallback,
                  enable_upstream_tls,
@@ -194,7 +197,9 @@ CliConnection::CliConnection(asio::io_context& io_context,
                  ssl_ctx,
                  username,
                  password,
-                 cipher),
+                 cipher,
+                 padding_support,
+                 redir_mode),
       state_(),
       resolver_(io_context) {}
 
@@ -279,7 +284,7 @@ http2::adapter::Http2VisitorInterface::OnHeaderResult CliConnection::OnHeaderFor
 
 bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_id) {
   bool padding_support = request_map_.find("padding"s) != request_map_.end();
-  padding_support_ &= padding_support;
+  padding_support_in_fact_ &= padding_support;
   std::string_view server_field = "(unknown)"sv;
   auto it = request_map_.find("server"s);
   if (it != request_map_.end()) {
@@ -307,7 +312,7 @@ bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_i
   }
 
   LOG(INFO) << "Connection (client) " << connection_id() << " for " << remote_domain() << " Padding support "
-            << (padding_support_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
+            << (padding_support_in_fact_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
 
   // we're done
   request_map_.clear();
@@ -357,7 +362,7 @@ bool CliConnection::OnBeginDataForStream(StreamId stream_id, size_t payload_leng
 }
 
 bool CliConnection::OnDataForStream(StreamId stream_id, absl::string_view data) {
-  if (padding_support_ && num_padding_recv_ < kFirstPaddings) {
+  if (padding_support_in_fact_ && num_padding_recv_ < kFirstPaddings) {
     asio::error_code ec;
     // Append buf to in_middle_buf
     if (padding_in_middle_buf_) {
@@ -538,7 +543,7 @@ void CliConnection::ReadSocks5Handshake() {
 
 asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
 #if BUILDFLAG(IS_MAC)
-  if (!absl::GetFlag(FLAGS_redir_mode)) {
+  if (!redir_mode()) {
     return asio::error::operation_not_supported;
   }
   VLOG(2) << "Connection (client) " << connection_id() << " try redir handshake";
@@ -1873,7 +1878,7 @@ after_read:
       ec = asio::error::eof;
       return nullptr;
     }
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       buf = AddPadding(buf.get());
       VLOG(2) << "Connection (client) " << connection_id() << " added padding for: " << num_padding_send_
@@ -2240,7 +2245,7 @@ void CliConnection::OnStreamRead(GrowableIOBuffer* buf) {
       return;
     }
     auto send_buf = scoped_refptr<GrowableIOBuffer>(buf);
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       send_buf = AddPadding(buf);
       VLOG(2) << "Connection (client) " << connection_id() << " added padding for: " << num_padding_send_
@@ -2363,13 +2368,13 @@ void CliConnection::connected() {
     options.perspective = http2::adapter::Perspective::kClient;
     adapter_ = http2::adapter::OgHttp2Adapter::Create(*this, options);
 #endif
-    padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    padding_support_in_fact_ = padding_support();
   } else
 #endif
       if (upstream_https_fallback_) {
     // nothing to create
     // TODO should we support it?
-    // padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    // padding_support_in_fact_ = padding_support();
   } else {
     DCHECK(!http2);
     if (!CIPHER_METHOD_IS_SOCKS(method())) {
@@ -2434,7 +2439,7 @@ void CliConnection::connected() {
     }
     // Send "Padding" header
     // originated from naive_proxy_delegate.go;func ServeHTTP
-    if (padding_support_) {
+    if (padding_support_in_fact_) {
       // Sends client-side padding header regardless of server support
       std::string padding(gurl_base::RandInt(16, 32), '~');
       InitializeNonindexCodes();
