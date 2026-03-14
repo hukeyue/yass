@@ -284,7 +284,6 @@ TEST_F(ConfigTest, RWString) {
   ASSERT_TRUE(config_impl->Close());
 }
 
-#if !(defined(_WIN32) || defined(__APPLE__))
 TEST_F(ConfigTest, RWStringArrayVariant0) {
   auto config_impl = config::ConfigImpl::Create();
   const std::vector<std::string> test_string_array = { "test-variant0-str", "test-variant0-str2" };
@@ -300,8 +299,13 @@ TEST_F(ConfigTest, RWStringArrayVariant0) {
 
   config_impl = config::ConfigImpl::Create();
   ASSERT_TRUE(config_impl->Open(false));
+#if !defined(_WIN32)
   EXPECT_FALSE(config_impl->HasKey<std::string>(test_key));
   EXPECT_TRUE(config_impl->HasKey<std::vector<std::string>>(test_key));
+#else
+  EXPECT_TRUE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key)); // TBD not implemented
+#endif
   EXPECT_FALSE(config_impl->HasKey<bool>(test_key));
   EXPECT_FALSE(config_impl->HasKey<uint32_t>(test_key));
   EXPECT_FALSE(config_impl->HasKey<uint64_t>(test_key));
@@ -363,4 +367,3 @@ TEST_F(ConfigTest, RWStringArrayVariant1) {
   EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key));
   ASSERT_TRUE(config_impl->Close());
 }
-#endif
