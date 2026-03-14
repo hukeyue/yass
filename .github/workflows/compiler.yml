@@ -51,7 +51,7 @@ jobs:
       run:
         shell: cmd
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -59,7 +59,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain, nasm, nsis and wixtoolset 3
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/nasm
@@ -69,14 +69,14 @@ jobs:
           key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache msvc curl
         id: curl-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/libcurl-vc16-arm64-release-static-ipv6-sspi-schannel
             third_party/libcurl-vc16-x64-release-static-ipv6-sspi-schannel
             third_party/libcurl-vc16-x86-release-static-ipv6-sspi-schannel
           key: ${{ runner.os }}-msvc-dynamic-curl-vc16-${{ matrix.arch }}-v2
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -142,7 +142,7 @@ jobs:
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -150,7 +150,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/nasm
@@ -160,21 +160,21 @@ jobs:
           key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache mingw64 llvm sysroot
         id: sysroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-mingw-20250709-ucrt-ubuntu-22.04-x86_64
           key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-20250709-ucrt-v1
       - name: Cache mingw64 curl
         id: curl-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/curl-8.4.0_7-win64a-mingw
             third_party/curl-8.4.0_7-win64-mingw
             third_party/curl-8.4.0_7-win32-mingw
           key: ${{ runner.os }}-mingw64-curl-and-aarch64-v1
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -277,7 +277,7 @@ jobs:
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -285,12 +285,12 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain (v20.1.8)
         id: clang20-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/LLVM-20.1.8-Linux-X64
           key: ${{ runner.os }}-toolchain-clang20-v${{ env.CACHE_EPOCH }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -361,13 +361,13 @@ jobs:
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
           git fetch --tags --unshallow
           git submodule update --init --depth 1
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |

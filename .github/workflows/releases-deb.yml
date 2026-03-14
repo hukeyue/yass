@@ -83,7 +83,7 @@ jobs:
       HOST_ARCH: '${{ matrix.arch }}'
       HOST_DISTRO: '${{ matrix.distro }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -96,7 +96,7 @@ jobs:
           patch -p1 < v8-6.7.17-fix-gcc-unwind-header.patch
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
@@ -168,7 +168,7 @@ jobs:
           sudo chown -R $USER:sbuild /etc/schroot/chroot.d /var/lib/schroot/chroots
       - name: Cache schroot
         id: schroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /etc/schroot/chroot.d

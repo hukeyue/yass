@@ -67,7 +67,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -88,21 +88,21 @@ jobs:
           echo "SDK_ROOT=${{ github.workspace }}/debian_bullseye_${{ matrix.arch }}-sysroot/sysroot" >> $GITHUB_ENV
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache qemu-user
         id: qemu-user-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             qemu-user*.deb
           key: ${{ runner.os }}-qemu-10.0.3-ds-0
       - name: Cache sysroot
         id: sysroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ github.workspace }}/debian_bullseye_${{ matrix.arch }}-sysroot
@@ -115,7 +115,7 @@ jobs:
         if: ${{ matrix.arch != 'riscv32' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
         run: |
           echo "EXTRA_BUILD_FLAGS=-use-mold -enable-lto=false" >> $GITHUB_ENV
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |

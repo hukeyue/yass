@@ -82,7 +82,7 @@ jobs:
       SDK_ROOT: ${{ github.workspace }}/openwrt-sdk-${{ matrix.arch_name }}
       SDK_HOME: ${{ github.workspace }}/openwrt-sdk-${{ matrix.arch_name }}-home
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -95,28 +95,28 @@ jobs:
           patch -p1 < v8-6.7.17-fix-gcc-unwind-header.patch
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache qemu-user
         id: qemu-user-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             qemu-user*.deb
           key: ${{ runner.os }}-qemu-10.0.3-ds-0
       - name: Cache openwrt sdkhome (sysroot)
         id: sysroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             openwrt-sdk-*.Linux-x86_64
             ${{ env.SDK_ROOT }}
             ${{ env.SDK_HOME }}
           key: openwrt-sysroot-${{ matrix.arch_name }}-23-05-03-v1
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
