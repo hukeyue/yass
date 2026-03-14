@@ -65,7 +65,7 @@ jobs:
     env:
       ARCH: ${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -73,19 +73,19 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache sysroot
         id: sysroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain
           key: freebsd-sysroot-${{ matrix.abi }}-${{ matrix.arch }}-${{ hashFiles('scripts/install-sysroot-freebsd.py') }}-v3-v5-v7
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |

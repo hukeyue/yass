@@ -41,7 +41,7 @@ jobs:
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -49,7 +49,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain, nasm, nsis and wixtoolset 3
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/nasm
@@ -59,14 +59,14 @@ jobs:
           key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache msvc curl
         id: curl-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/libcurl-vc16-arm64-release-static-ipv6-sspi-schannel
             third_party/libcurl-vc16-x64-release-static-ipv6-sspi-schannel
             third_party/libcurl-vc16-x86-release-static-ipv6-sspi-schannel
           key: ${{ runner.os }}-msvc-dynamic-curl-vc16-${{ matrix.arch }}-v2
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -146,7 +146,7 @@ jobs:
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -176,7 +176,7 @@ jobs:
           }
       - name: Cache toolchain, nasm, nsis and wixtoolset 3
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/nasm
@@ -184,7 +184,7 @@ jobs:
             third_party/wix311
             third_party/nsis
           key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |

@@ -60,24 +60,24 @@ jobs:
       packages: write
     steps:
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           image: tonistiigi/binfmt:qemu-v7.0.0-28
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           platforms: ${{ matrix.platform }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Cache docker files (dummy)
         id: docker-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             docker/dummy
           key: ${{ runner.os }}-docker-${{ matrix.container }}-${{ hashFiles(format('docker/{0}.Dockerfile', matrix.container)) }}-v1
       - name: Login to GitHub Container Registry
         if: ${{ steps.docker-cache.outputs.cache-hit != 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -125,7 +125,7 @@ jobs:
     container:
       image: 'ghcr.io/hukeyue/${{ matrix.container }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # ignore annoying failures
@@ -135,7 +135,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
@@ -172,7 +172,7 @@ jobs:
         if: ${{ matrix.gui_variant == 'gtk4' }}
         run: |
           echo "USE_GTK4=1" >> $GITHUB_ENV
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -215,7 +215,7 @@ jobs:
       BUILD_TYPE: ${{ matrix.build_type }}
     needs: docker_publish
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # ignore annoying failures
@@ -228,14 +228,14 @@ jobs:
           echo "SDK_ROOT=${{ github.workspace }}/${{ matrix.arch }}-alpine320-sysroot" >> $GITHUB_ENV
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache qemu-user
         id: qemu-user-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             qemu-user*.deb
@@ -259,7 +259,7 @@ jobs:
           docker pull ghcr.io/hukeyue/${{ matrix.container }}
           mkdir -p "${{ env.SDK_ROOT }}"
           docker export $(docker create ghcr.io/hukeyue/${{ matrix.container }}) | tar -C "${{ env.SDK_ROOT }}" -xf -
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
