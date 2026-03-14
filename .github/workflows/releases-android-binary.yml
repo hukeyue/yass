@@ -76,7 +76,7 @@ jobs:
       SYSROOT: ${{ github.workspace }}/android-sysroot-${{ matrix.arch }}
       ANDROID_NDK_VER: ${{ matrix.ndk_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
         run: |
           # unshallow must come first otherwise submodule may be get unshallowed
@@ -89,38 +89,38 @@ jobs:
           patch -p1 < v8-6.7.17-fix-gcc-unwind-header.patch
       - name: Cache toolchain
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - name: Cache tun2proxy build stage
         id: tun2proxy-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             third_party/tun2proxy/target/${{ matrix.rust_target }}/release/libtun2proxy.a
           key: ${{ runner.os }}-rust-${{ matrix.rust_target }}-tun2proxy-${{ hashFiles('RUST_REVISION') }}-${{ hashFiles('RUST_CARGO_REVISION') }}-${{ hashFiles('third_party/tun2proxy/Cargo.toml') }}-v${{ env.CACHE_EPOCH }}-v1
       - name: Cache gradle
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.gradle
           key: ${{ runner.os }}-gradle-${{ hashFiles('android/gradle/wrapper/*') }}-${{ hashFiles('android/**/*.gradle') }}
       - name: Cache qemu-user
         id: qemu-user-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             qemu-user*.deb
           key: ${{ runner.os }}-qemu-10.0.3-ds-0
       - name: Cache sysroot
         id: sysroot-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ env.SYSROOT }}
           key: android-sysroot-${{ matrix.arch }}-${{ hashFiles('scripts/get-android-sys.sh') }}-v1
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
           cache-dependency-path: |
@@ -130,7 +130,7 @@ jobs:
         run: |
           cd tools
           go build
-      #- uses: actions/setup-java@v4
+      #- uses: actions/setup-java@v5
       #  with:
       #    distribution: 'temurin'
       #    java-version: '21'
