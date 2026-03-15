@@ -51,20 +51,44 @@ bool ReadConfig() {
     return false;
   }
 
-  /* load required fields */
-  required_fields_loaded &= config_impl->Read("server", &FLAGS_server_host);
-  required_fields_loaded &= config_impl->Read("server_port", &FLAGS_server_port);
-  required_fields_loaded &= config_impl->Read("method", &FLAGS_method);
-  required_fields_loaded &= config_impl->Read("username", &FLAGS_username);
-  required_fields_loaded &= config_impl->Read("password", &FLAGS_password, true);
+  bool overridable_fields_loaded = false;
 
-  if (pType_IsClient()) {
-    required_fields_loaded &= config_impl->Read("local", &FLAGS_local_host);
-    required_fields_loaded &= config_impl->Read("local_port", &FLAGS_local_port);
+  /* priorize loading cli-only options */
+  if (pType == YASS_CLIENT_DEFAULT) {
+    if (config_impl->HasKey<std::vector<std::string>>("proxy") ||
+        config_impl->HasKey<std::string>("proxy")) {
+      config_impl->Read("proxy", &FLAGS_proxy);
+    }
+    if (config_impl->HasKey<std::vector<std::string>>("listen") ||
+        config_impl->HasKey<std::string>("listen")) {
+      config_impl->Read("listen", &FLAGS_listen);
+    }
+
+    if (!absl::GetFlag(FLAGS_proxy).str_array.empty() &&
+        !absl::GetFlag(FLAGS_listen).str_array.empty()) {
+      LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified.";
+      LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, "
+        "padding_support, redir_mode, local_host and local_port fields are ignored now.";
+      overridable_fields_loaded = true;
+    }
   }
 
-  /* optional fields */
-  config_impl->Read("server_sni", &FLAGS_server_sni);
+  /* load required fields */
+  if (!overridable_fields_loaded) {
+    required_fields_loaded &= config_impl->Read("server", &FLAGS_server_host);
+    required_fields_loaded &= config_impl->Read("server_port", &FLAGS_server_port);
+    required_fields_loaded &= config_impl->Read("username", &FLAGS_username);
+    required_fields_loaded &= config_impl->Read("password", &FLAGS_password, true);
+    required_fields_loaded &= config_impl->Read("method", &FLAGS_method);
+
+    if (pType_IsClient()) {
+      required_fields_loaded &= config_impl->Read("local", &FLAGS_local_host);
+      required_fields_loaded &= config_impl->Read("local_port", &FLAGS_local_port);
+    }
+
+    /* optional fields */
+    config_impl->Read("server_sni", &FLAGS_server_sni);
+  }
 
   config_impl->Read("fast_open", &FLAGS_tcp_fastopen);
   config_impl->Read("fast_open_connect", &FLAGS_tcp_fastopen_connect);
@@ -105,18 +129,6 @@ bool ReadConfig() {
 #if BUILDFLAG(IS_MAC)
   config_impl->Read("ui_display_realtime_status", &FLAGS_ui_display_realtime_status);
 #endif
-
-  /* cli-only options */
-  if (pType == YASS_CLIENT_DEFAULT) {
-    if (config_impl->HasKey<std::vector<std::string>>("proxy") ||
-        config_impl->HasKey<std::string>("proxy")) {
-      config_impl->Read("proxy", &FLAGS_proxy);
-    }
-    if (config_impl->HasKey<std::vector<std::string>>("listen") ||
-        config_impl->HasKey<std::string>("listen")) {
-      config_impl->Read("listen", &FLAGS_listen);
-    }
-  }
 
   /* close fields */
   config_impl->Close();

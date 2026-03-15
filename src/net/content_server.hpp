@@ -91,7 +91,7 @@ class ContentServer {
         remote_cipher_(remote_cipher),
         remote_padding_support_(remote_padding_support),
         upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)),
-        https_fallback_(upstream_https_fallback_),
+        https_fallback_(true),
         enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
         enable_tls_(true),
         upstream_certificate_(upstream_certificate),
@@ -153,6 +153,7 @@ class ContentServer {
     ctx.server_padding_support = server_padding_support;
     ctx.server_redir_mode = server_redir_mode;
     ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
+    ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_HTTPS_FALLBACK(server_cipher);
     ctx.endpoint = endpoint;
     ctx.acceptor = std::make_unique<asio::ip::tcp::acceptor>(io_context_);
 
@@ -295,7 +296,7 @@ class ContentServer {
                         remote_username_, remote_password_, remote_cipher_,
                         remote_padding_support_,
                         upstream_https_fallback_,
-                        https_fallback_,
+                        ctx.https_fallback,
                         enable_upstream_tls_, ctx.enable_tls,
                         upstream_ssl_ctx_.get(), ssl_ctx_.get(),
                         ctx.server_username, ctx.server_password, ctx.server_cipher,
@@ -506,13 +507,15 @@ class ContentServer {
                             void* arg) {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
+    auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
+    auto https_fallback = server->listen_ctxs_[listen_ctx_num].https_fallback;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
         goto err;
       }
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
-      if (!server->https_fallback_ && NextProtoFromString(alpn) == kProtoHTTP2) {
+      if (!https_fallback && NextProtoFromString(alpn) == kProtoHTTP2) {
         VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
         server->set_https_fallback(connection_id, false);
         *out = in + 1;
@@ -652,11 +655,13 @@ class ContentServer {
     client_instance_ = this;
     ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
     ssl_client_session_cache_ = std::make_unique<SSLClientSessionCache>(SSLClientSessionCache::Config{});
-
+    // FIXME have troubles with multiple instances model
+#if 0
     // Disable the internal session cache. Session caching is handled
     // externally (i.e. by SSLClientSessionCache).
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL);
     SSL_CTX_sess_set_new_cb(ctx, NewSessionCallback);
+#endif
 
     SSL_CTX_set_timeout(ctx, 1 * 60 * 60 /* one hour */);
 
@@ -719,7 +724,7 @@ class ContentServer {
     bool server_padding_support;
     bool server_redir_mode;
     bool enable_tls;
-    bool unused_variable;
+    bool https_fallback;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
