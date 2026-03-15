@@ -1,3 +1,7 @@
+yass (1.22.3-1) UNRELEASED; urgency=medium
+
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Sun, 15 Mar 2026 18:53:36 +0800
 yass (1.22.2-1) UNRELEASED; urgency=medium
 
   * support proxy-uri and listen-uri parameters (CLI only).
