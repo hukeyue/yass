@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #include "crypto/xchacha20_poly1305_sodium_decrypter.hpp"
 

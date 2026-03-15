@@ -1,14 +1,14 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: yass
 Upstream-Contact: Chilledheart <hukeyue@vip.163.com>
-Source: https://github.com/Chilledheart/yass
+Source: https://github.com/hukeyue/yass
 
 Files: *
-Copyright: 2019-2025, Chilledheart <hukeyue@vip.163.com>
+Copyright: 2019-2026, Chilledheart <hukeyue@vip.163.com>
 License: GPL-2
 
 Files: debian/*
-Copyright: 2019-2025, Chilledheart <hukeyue@vip.163.com>
+Copyright: 2019-2026, Chilledheart <hukeyue@vip.163.com>
 License: GPL-2
 
 License: GPL-2

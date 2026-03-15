@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2021-2025 Chilledheart  */
+/* Copyright (c) 2021-2026 Chilledheart  */
 
 #include "cli/cli_connection_stats.hpp"
 

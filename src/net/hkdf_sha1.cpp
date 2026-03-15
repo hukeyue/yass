@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2020-2025 Chilledheart  */
+/* Copyright (c) 2020-2026 Chilledheart  */
 
 /* HKDF-Extract + HKDF-Expand */
 

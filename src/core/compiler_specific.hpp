@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef YASS_CORE_COMPILER_SPECIFIC_H
 #define YASS_CORE_COMPILER_SPECIFIC_H

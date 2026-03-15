@@ -21,9 +21,9 @@ Build-Depends:
  qtbase5-dev <qt5>,
  qt6-base-dev <qt6>
 Rules-Requires-Root: no
-Homepage: https://github.com/Chilledheart/yass
-Vcs-Git: https://github.com/Chilledheart/yass.git
-Vcs-Browser: https://github.com/Chilledheart/yass
+Homepage: https://github.com/hukeyue/yass
+Vcs-Git: https://github.com/hukeyue/yass.git
+Vcs-Browser: https://github.com/hukeyue/yass
 
 Package: yass
 Architecture: any

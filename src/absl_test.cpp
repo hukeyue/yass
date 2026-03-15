@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2025 Chilledheart  */
+/* Copyright (c) 2025-2026 Chilledheart  */
 
 #include <gtest/gtest.h>
 

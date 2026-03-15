@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2025 Chilledheart  */
+/* Copyright (c) 2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_CLI
 #define H_CONFIG_CONFIG_CLI

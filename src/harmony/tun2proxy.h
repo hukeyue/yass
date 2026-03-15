@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef _H_HARMONY_TUN2PROXY_HPP
 #define _H_HARMONY_TUN2PROXY_HPP

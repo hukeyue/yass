@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_NET_HKDF_SHA1
 #define H_NET_HKDF_SHA1
