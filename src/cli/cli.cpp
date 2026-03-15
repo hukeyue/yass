@@ -352,9 +352,6 @@ int main(int argc, const char* argv[]) {
   const std::vector<std::string>& proxy_uri_strs = absl::GetFlag(FLAGS_proxy).str_array;
   const std::vector<std::string>& listen_uri_strs = absl::GetFlag(FLAGS_listen).str_array;
   if (!proxy_uri_strs.empty() && !listen_uri_strs.empty()) {
-    LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified.";
-    LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, "
-      "padding_support, redir_mode, local_host and local_port fields are ignored now.";
     url::AddStandardScheme("auto",
                            url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
     url::AddStandardScheme("socks",
