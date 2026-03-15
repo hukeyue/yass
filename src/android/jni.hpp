@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2025 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
 #ifndef YASS_ANDROID_JNI_HPP
 #define YASS_ANDROID_JNI_HPP

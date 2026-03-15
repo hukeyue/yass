@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "cli/cli_server.hpp"
 #include "config/config.hpp"

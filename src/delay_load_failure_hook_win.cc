@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 // windows.h needs to be included before delayimp.h.
 #include <windows.h>

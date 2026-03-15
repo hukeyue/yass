@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2025 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
 #ifndef H_NET_SSL_SERVER_SOCKET
 #define H_NET_SSL_SERVER_SOCKET

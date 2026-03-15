@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_IMPL_APPLE
 #define H_CONFIG_CONFIG_IMPL_APPLE

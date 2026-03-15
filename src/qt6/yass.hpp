@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef _YASS_QT6_YASS_HPP
 #define _YASS_QT6_YASS_HPP

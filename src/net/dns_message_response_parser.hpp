@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef H_NET_DNS_MESSAGE_RESPONSE_PARSER
 #define H_NET_DNS_MESSAGE_RESPONSE_PARSER

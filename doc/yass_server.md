@@ -16,7 +16,7 @@ command, but also it contains a gtk3/gtk4/qt5/qt6 (all are supported) graphical
 interface client which is more friendly to the new users.
 
 ### How to use
-See <https://github.com/Chilledheart/yass/wiki/Usage>.
+See <https://github.com/hukeyue/yass/wiki/Usage>.
 
 ## OPTIONS
 
@@ -129,7 +129,7 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
 
 ## COPYRIGHT
 
-Copyright (C) 2019-2024 Chilledheart. All rights reserved.
+Copyright (C) 2019-2026 Chilledheart. All rights reserved.
 
 ## SEE ALSO
 

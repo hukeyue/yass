@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef NET_BASE64_H_
 #define NET_BASE64_H_

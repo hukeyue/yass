@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef H_CRYPTO_XCHACHA20_POLY1305_SODIUM_DECRYPTER
 #define H_CRYPTO_XCHACHA20_POLY1305_SODIUM_DECRYPTER

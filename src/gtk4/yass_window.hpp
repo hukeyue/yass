@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef YASS_WINDOW_H
 #define YASS_WINDOW_H

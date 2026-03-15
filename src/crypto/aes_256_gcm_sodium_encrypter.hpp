@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef H_CRYPTO_AES256_GCM_SODIUM_ENCRYPTER
 #define H_CRYPTO_AES256_GCM_SODIUM_ENCRYPTER

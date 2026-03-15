@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2025 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
 #ifndef NET_IO_QUEUE_HPP
 #define NET_IO_QUEUE_HPP
