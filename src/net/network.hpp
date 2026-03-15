@@ -73,7 +73,11 @@ const uint32_t kSpdyDisablePush = 0;
 // from net/spdy/spdy_session.h
 // If more than this many bytes have been read or more than that many
 // milliseconds have passed, return ERR_IO_PENDING from ReadLoop.
+#ifdef _WIN32
+const int kYieldAfterBytesRead = 384 * 1024;
+#else
 const int kYieldAfterBytesRead = 32 * 1024;
+#endif
 const int kYieldAfterDurationMilliseconds = 20;
 
 // from net/spdy/spdy_session.h
