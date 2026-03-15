@@ -1,3 +1,8 @@
+yass (1.22.2-1) UNRELEASED; urgency=medium
+
+  * support proxy-uri and listen-uri parameters (CLI only).
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Sun, 15 Mar 2026 13:52:41 +0800
 yass (1.22.1-1) UNRELEASED; urgency=medium
 
   * add the support of jemalloc.

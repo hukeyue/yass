@@ -318,6 +318,9 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Sun Mar 15 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.2-1
+  - support proxy-uri and listen-uri parameters (CLI only)
+  - miscellaneous fixes
 * Wed Mar 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.1-1
   - add the support of jemalloc
   - miscellaneous fixes
