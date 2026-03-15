@@ -114,8 +114,6 @@ class ContentServer {
     CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
     CHECK_EQ(connection_map_.size(), 0u) << "ContentServer freed on non-closed connections";
 
-    client_instance_ = nullptr;
-
     work_guard_.reset();
   }
 
@@ -652,16 +650,16 @@ class ContentServer {
       VLOG(1) << "Using upstream certificate (in-memory)";
     }
 
-    client_instance_ = this;
-    ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+    std::call_once(boringssl_data_index_init_flag_, [&]{
+      ssl_ctx_data_index_ = SSL_CTX_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+      ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+    });
+    SSL_CTX_set_ex_data(ctx, ssl_ctx_data_index_, this);
     ssl_client_session_cache_ = std::make_unique<SSLClientSessionCache>(SSLClientSessionCache::Config{});
-    // FIXME have troubles with multiple instances model
-#if 0
     // Disable the internal session cache. Session caching is handled
     // externally (i.e. by SSLClientSessionCache).
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL);
     SSL_CTX_sess_set_new_cb(ctx, NewSessionCallback);
-#endif
 
     SSL_CTX_set_timeout(ctx, 1 * 60 * 60 /* one hour */);
 
@@ -674,10 +672,11 @@ class ContentServer {
   }
 
  private:
-  int ssl_socket_data_index_ = -1;
-  static ContentServer<T>* client_instance_;
-  static ContentServer* GetInstance() { return client_instance_; }
-  SSLSocket* GetClientSocketFromSSL(const SSL* ssl) {
+  static std::once_flag boringssl_data_index_init_flag_;
+  static int ssl_ctx_data_index_;
+  static int ssl_socket_data_index_;
+
+  static SSLSocket* GetClientSocketFromSSL(const SSL* ssl) {
     DCHECK(ssl);
     SSLSocket* socket = static_cast<SSLSocket*>(SSL_get_ex_data(ssl, ssl_socket_data_index_));
     DCHECK(socket);
@@ -685,7 +684,7 @@ class ContentServer {
   }
 
   static int NewSessionCallback(SSL* ssl, SSL_SESSION* session) {
-    SSLSocket* socket = GetInstance()->GetClientSocketFromSSL(ssl);
+    SSLSocket* socket = GetClientSocketFromSSL(ssl);
     return socket->NewSessionCallback(session);
   }
 
@@ -741,7 +740,13 @@ class ContentServer {
 };
 
 template <typename T>
-ContentServer<T>* ContentServer<T>::client_instance_ = nullptr;
+std::once_flag ContentServer<T>::boringssl_data_index_init_flag_ = {};
+
+template <typename T>
+int ContentServer<T>::ssl_ctx_data_index_ = -1;
+
+template <typename T>
+int ContentServer<T>::ssl_socket_data_index_ = -1;
 
 }  // namespace net
 
