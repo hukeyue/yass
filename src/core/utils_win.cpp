@@ -35,6 +35,7 @@ struct IUnknown;
 #endif
 
 #include <absl/flags/internal/program_name.h>
+#include <absl/time/clock.h>
 #include <base/compiler_specific.h>
 #include <build/build_config.h>
 #include <limits>
@@ -183,54 +184,15 @@ bool SetCurrentThreadName(const std::string& name) {
   return SUCCEEDED(ret);
 }
 
-static uint64_t GetMonotonicTimeQPC() {
-  static LARGE_INTEGER StartTime, Frequency;
-  static bool started;
-
-  LARGE_INTEGER CurrentTime, ElapsedNanoseconds;
-
-  if (!started) {
-    if (!QueryPerformanceFrequency(&Frequency)) {
-      RAW_LOG(FATAL, "QueryPerformanceFrequency failed");
-      return 0;
-    }
-    if (!QueryPerformanceCounter(&StartTime)) {
-      RAW_LOG(FATAL, "QueryPerformanceCounter failed");
-      return 0;
-    }
-    started = true;
-  }
-  // Activity to be timed
-  if (!QueryPerformanceCounter(&CurrentTime)) {
-    RAW_LOG(FATAL, "QueryPerformanceCounter failed");
-    return 0;
-  }
-
-  ElapsedNanoseconds.QuadPart = CurrentTime.QuadPart - StartTime.QuadPart;
-
-  //
-  // We now have the elapsed number of ticks, along with the
-  // number of ticks-per-second. We use these values
-  // to convert to the number of elapsed microseconds.
-  // To guard against loss-of-precision, we convert
-  // to microseconds *before* dividing by ticks-per-second.
-  //
-
-  auto seconds = ElapsedNanoseconds.QuadPart / Frequency.QuadPart;
-  auto fractions = ElapsedNanoseconds.QuadPart % Frequency.QuadPart;
-
-  return seconds * NS_PER_SECOND + fractions * NS_PER_SECOND / Frequency.QuadPart;
-}
-
 uint64_t GetMonotonicTime() {
 #if _WIN32_WINNT >= 0x0600
-  return GetMonotonicTimeQPC();
+  return absl::GetCurrentTimeNanos();
 #else
   /* if vista or later */
   static const auto fPointer =
       reinterpret_cast<void*>(::GetProcAddress(::GetModuleHandleW(L"Kernel32.dll"), "GetTickCount64"));
   if (fPointer) {
-    return GetMonotonicTimeQPC();
+    return absl::GetCurrentTimeNanos();
   }
   return GetTickCount() * 1000000;
 #endif
