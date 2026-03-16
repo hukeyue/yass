@@ -248,7 +248,7 @@ void ServerConnection::Start() {
     std::vector<http2::adapter::Http2Setting> settings{
         {http2::adapter::Http2KnownSettingsId::HEADER_TABLE_SIZE, kSpdyMaxHeaderTableSize},
         {http2::adapter::Http2KnownSettingsId::MAX_CONCURRENT_STREAMS, kSpdyMaxConcurrentPushedStreams},
-        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_STREAM_WINDOW_SIZE},
+        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_CONN_WINDOW_SIZE},
         {http2::adapter::Http2KnownSettingsId::MAX_HEADER_LIST_SIZE, kSpdyMaxHeaderListSize},
         {http2::adapter::Http2KnownSettingsId::ENABLE_PUSH, kSpdyDisablePush},
     };
@@ -1360,7 +1360,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
   }
 
   scoped_refptr<GrowableIOBuffer> buf;
-  size_t read;
+  size_t read = 0;
 
 #ifdef HAVE_QUICHE
   if (data_frame_ && !data_frame_->empty()) {
@@ -1587,7 +1587,7 @@ try_again:
       return nullptr;
     }
     // not enough buffer for recv window
-    if (upstream_.byte_length() < H2_STREAM_WINDOW_SIZE) {
+    if (upstream_.byte_length() < H2_CONN_WINDOW_SIZE) {
       goto try_again;
     }
   } else

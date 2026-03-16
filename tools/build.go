@@ -899,6 +899,7 @@ func buildStageGenerateBuildScript() {
 		// if msvcCrtLinkageFlag == "dynamic" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
+		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
 	if systemNameFlag == "darwin" {
@@ -976,6 +977,8 @@ func buildStageGenerateBuildScript() {
 		// if !mingwAllowXpFlag && targetAbi != "i686" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
+
+		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
 	if systemNameFlag == "ios" {

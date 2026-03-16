@@ -575,7 +575,7 @@ class SsEndToEndBM : public benchmark::Fixture {
   }                                                                                               \
   BENCHMARK_REGISTER_F(SsEndToEndBM, name)                                                        \
       ->Name("SsEndToEndBM_FullDuplex_" #name)                                                    \
-      ->Range(4096, 1 * 1024 * 1024)                                                              \
+      ->Range(512, 32 * 1024)                                                                    \
       ->UseManualTime();
 CIPHER_METHOD_MAP_SODIUM(XX)
 CIPHER_METHOD_MAP_HTTP(XX)
