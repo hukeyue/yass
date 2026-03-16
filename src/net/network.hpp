@@ -65,11 +65,6 @@ const uint32_t kSpdyMaxConcurrentPushedStreams = 1000;
 // Specifies the the default value for the push setting, which is disabled.
 const uint32_t kSpdyDisablePush = 0;
 
-// followed by curl's nghttp adapter
-/* this is how much we want "in flight" for a stream */
-#define H2_STREAM_WINDOW_SIZE (10 * 1024 * 1024)
-#define HTTP2_HUGE_WINDOW_SIZE (100 * H2_STREAM_WINDOW_SIZE)
-
 // from net/spdy/spdy_session.h
 // If more than this many bytes have been read or more than that many
 // milliseconds have passed, return ERR_IO_PENDING from ReadLoop.
