@@ -183,7 +183,7 @@ bool SetCurrentThreadName(const std::string& name) {
   return SUCCEEDED(ret);
 }
 
-static uint64_t GetMonotonicTimeQPC() {
+static inline uint64_t GetMonotonicTimeQPC() {
   static LARGE_INTEGER StartTime, Frequency;
   static bool started;
 
@@ -216,16 +216,10 @@ static uint64_t GetMonotonicTimeQPC() {
   // to microseconds *before* dividing by ticks-per-second.
   //
 
-#if _WIN32_WINNT >= 0x0600
-  double quad_part = ElapsedNanoseconds.QuadPart;
-  quad_part = quad_part * NS_PER_SECOND / Frequency.QuadPart;
-  return quad_part;
-#else
-  ElapsedNanoseconds.QuadPart *= MS_PER_SECOND;
-  ElapsedNanoseconds.QuadPart /= Frequency.QuadPart;
-  ElapsedNanoseconds.QuadPart *= 1000;
-  return ElapsedNanoseconds.QuadPart;
-#endif
+  auto seconds = ElapsedNanoseconds.QuadPart / Frequency.QuadPart;
+  auto fractions = ElapsedNanoseconds.QuadPart % Frequency.QuadPart;
+
+  return seconds * NS_PER_SECOND + fractions * NS_PER_SECOND / Frequency.QuadPart;
 }
 
 uint64_t GetMonotonicTime() {
