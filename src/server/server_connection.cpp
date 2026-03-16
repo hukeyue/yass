@@ -1360,7 +1360,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
   }
 
   scoped_refptr<GrowableIOBuffer> buf;
-  size_t read;
+  size_t read = 0;
 
 #ifdef HAVE_QUICHE
   if (data_frame_ && !data_frame_->empty()) {

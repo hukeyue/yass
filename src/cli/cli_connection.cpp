@@ -1779,7 +1779,7 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
   }
 
   scoped_refptr<GrowableIOBuffer> buf;
-  size_t read;
+  size_t read = 0;
   int previous_capacity;
 
 #ifdef HAVE_QUICHE
