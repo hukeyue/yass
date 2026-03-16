@@ -216,10 +216,16 @@ static uint64_t GetMonotonicTimeQPC() {
   // to microseconds *before* dividing by ticks-per-second.
   //
 
-  ElapsedNanoseconds.QuadPart *= NS_PER_SECOND;
+#if _WIN32_WINNT >= 0x0600
+  double quad_part = ElapsedNanoseconds.QuadPart;
+  quad_part = quad_part * NS_PER_SECOND / Frequency.QuadPart;
+  return quad_part;
+#else
+  ElapsedNanoseconds.QuadPart *= MS_PER_SECOND;
   ElapsedNanoseconds.QuadPart /= Frequency.QuadPart;
-
+  ElapsedNanoseconds.QuadPart *= 1000;
   return ElapsedNanoseconds.QuadPart;
+#endif
 }
 
 uint64_t GetMonotonicTime() {

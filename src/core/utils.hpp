@@ -67,6 +67,7 @@ bool SetCurrentThreadName(const std::string& name);
 
 uint64_t GetMonotonicTime();
 
+#define MS_PER_SECOND (1000 * 1000)
 #define NS_PER_SECOND (1000 * 1000 * 1000)
 
 namespace internal {
