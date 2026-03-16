@@ -1197,7 +1197,7 @@ try_again:
       return nullptr;
     }
     // not enough buffer for recv window
-    if (downstream_.byte_length() < H2_STREAM_WINDOW_SIZE) {
+    if (downstream_.byte_length() < H2_CONN_WINDOW_SIZE) {
       goto try_again;
     }
   } else
@@ -2386,7 +2386,7 @@ void CliConnection::connected() {
     std::vector<http2::adapter::Http2Setting> settings{
         {http2::adapter::Http2KnownSettingsId::HEADER_TABLE_SIZE, kSpdyMaxHeaderTableSize},
         {http2::adapter::Http2KnownSettingsId::MAX_CONCURRENT_STREAMS, kSpdyMaxConcurrentPushedStreams},
-        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_STREAM_WINDOW_SIZE},
+        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_CONN_WINDOW_SIZE},
         {http2::adapter::Http2KnownSettingsId::MAX_HEADER_LIST_SIZE, kSpdyMaxHeaderListSize},
         {http2::adapter::Http2KnownSettingsId::ENABLE_PUSH, kSpdyDisablePush},
     };
