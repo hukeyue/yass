@@ -804,18 +804,33 @@ class EndToEndTestPostQuantumnMLKEMOnly : public EndToEndTest {
 };
 }  // namespace
 
+TEST_P(EndToEndTest, 512) {
+  GenerateRandContent(512);
+  SendRequestAndCheckResponse();
+}
+
 TEST_P(EndToEndTest, 4K) {
   GenerateRandContent(4096);
   SendRequestAndCheckResponse();
 }
 
-TEST_P(EndToEndTest, 256K) {
-  GenerateRandContent(256 * 1024);
+TEST_P(EndToEndTest, 32K) {
+  GenerateRandContent(32 * 1024);
   SendRequestAndCheckResponse();
 }
 
-TEST_P(EndToEndTest, 1M) {
-  GenerateRandContent(1024 * 1024);
+TEST_P(EndToEndTest, 64K) {
+  GenerateRandContent(64 * 1024);
+  SendRequestAndCheckResponse();
+}
+
+TEST_P(EndToEndTest, 128K) {
+  GenerateRandContent(128 * 1024);
+  SendRequestAndCheckResponse();
+}
+
+TEST_P(EndToEndTest, 256K) {
+  GenerateRandContent(256 * 1024);
   SendRequestAndCheckResponse();
 }
 
