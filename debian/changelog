@@ -1,3 +1,8 @@
+yass (1.22.5-1) UNRELEASED; urgency=medium
+
+  * improve stability of https/http2 connection latency.
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Tue, 17 Mar 2026 17:52:14 +0800
 yass (1.22.4-1) UNRELEASED; urgency=medium
 
   * miscellaneous fixes.

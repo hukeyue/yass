@@ -318,6 +318,9 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Tue Mar 17 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.5-1
+  - improve stability of https/http2 connection latency
+  - miscellaneous fixes
 * Mon Mar 16 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.4-1
   - miscellaneous fixes
 * Sun Mar 15 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.3-1
