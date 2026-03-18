@@ -3473,6 +3473,8 @@ elseif (USE_NGHTTP2)
     nghttp2_static
     ${SUPPORT_LIBS}
   )
+else()
+  list(APPEND YASS_APP_FEATURES "oghttp2")
 endif()
 
 # *****************************************************************************************
