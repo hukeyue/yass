@@ -35,11 +35,11 @@ jobs:
           - arch: x64
             build_type: Release
             rust_target: x86_64-apple-ios
-            xcode_version: 26.2
+            xcode_version: 26.3
           - arch: arm64
             build_type: Release
             rust_target: aarch64-apple-ios-sim
-            xcode_version: 26.2
+            xcode_version: 26.3
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:

@@ -356,7 +356,7 @@ jobs:
       matrix:
         os: [macos-26]
         build_type: [Debug, RelWithDebInfo]
-        xcode_version: [26.2]
+        xcode_version: [26.3]
     runs-on: ${{ matrix.os }}
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
