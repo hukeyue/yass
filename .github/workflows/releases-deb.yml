@@ -338,6 +338,11 @@ jobs:
           export DEB_BUILD_PROFILES
           export DH_QUIET
           sudo -E sudo -E -u "$USER" -g sbuild ./scripts/build-deb.sh
+      - uses: actions/upload-artifact@v6
+        with:
+          name: deb-release-${{ matrix.distro }}-${{ matrix.arch }}-${{ matrix.gui_variant }}-${{ github.sha }}
+          path: |
+            yass*.deb
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

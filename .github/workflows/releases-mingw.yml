@@ -142,6 +142,14 @@ jobs:
           # to add a link to the debugging info into the stripped executable.
           llvm-objcopy --add-gnu-debuglink=yass.exe.dbg yass.exe
 
+          llvm-objcopy --only-keep-debug yass_cli.exe yass_cli.exe.dbg
+          llvm-objcopy --strip-debug yass_cli.exe
+          llvm-objcopy --add-gnu-debuglink=yass_cli.exe.dbg yass_cli.exe
+
+          llvm-objcopy --only-keep-debug yass_server.exe yass_server.exe.dbg
+          llvm-objcopy --strip-debug yass_server.exe
+          llvm-objcopy --add-gnu-debuglink=yass_server.exe.dbg yass_server.exe
+
           export PREFIX=yass-win-mingw64-${{ matrix.arch }}-${{ github.event.release.tag_name }}
           # generate archive
           rm -rf $PREFIX
@@ -171,6 +179,31 @@ jobs:
           curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x64.exe
           vcredist_x64.exe /install /quiet /norestart
           del vcredist_x64.exe
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            build-mingw/yass_cli.exe
+            build-mingw/yass_server.exe
+            build-mingw/yass.exe
+            build-mingw/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          path: |
+            build-mingw/*.dbg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
+          path: |
+            build-mingw/yass_test.exe
+            build-mingw/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          path: |
+            build-mingw/yass_benchmark.exe
+            build-mingw/*.dll
       - name: Run unittests
         shell: bash
         run: |
