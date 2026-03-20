@@ -84,14 +84,14 @@ jobs:
           cd ..
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.cxxruntime }}-${{ matrix.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-test
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
-            build-linux-${{ matrix.arch }}/yass_test
+            build/yass_test
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.cxxruntime }}-${{ matrix.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
-            build-linux-${{ matrix.arch }}/yass_benchmark
+            build/yass_benchmark
       - name: Memory layout fix for old clang
         run: |
           # TODO remove this once upstream fix is available

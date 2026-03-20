@@ -285,11 +285,6 @@ jobs:
             build-mingw-winxp-${{ matrix.arch }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: t-mingw-winxp-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-dbg
-          path: |
-            build-mingw-winxp-${{ matrix.arch }}/*.dbg
-      - uses: actions/upload-artifact@v6
-        with:
           name: t-mingw-winxp-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build-mingw-winxp-${{ matrix.arch }}/yass_test.exe
