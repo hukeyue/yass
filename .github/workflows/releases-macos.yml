@@ -47,7 +47,7 @@ jobs:
       matrix:
         arch: [x64, arm64]
         build_type: [Release]
-        xcode_version: [26.2]
+        xcode_version: [26.3]
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
