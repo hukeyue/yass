@@ -72,6 +72,7 @@ jobs:
           name: flatpak-release-${{ matrix.arch }}-${{ github.sha }}
           path: |
             yass*.flatpak
+          compression-level: 0 # no compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

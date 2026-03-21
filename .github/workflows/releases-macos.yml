@@ -151,6 +151,7 @@ jobs:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dmg
           path: |
             *.dmg
+          compression-level: 0 # no compression
       - name: Install rosetta
         if: ${{ matrix.arch == 'x64' }}
         run: |

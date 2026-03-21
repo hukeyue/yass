@@ -186,6 +186,7 @@ jobs:
           name: rpm-release-${{ matrix.container }}-${{ matrix.gui_variant }}-${{ github.sha }}
           path: |
             yass*.rpm
+          compression-level: 0 # no compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

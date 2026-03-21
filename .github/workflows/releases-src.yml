@@ -66,26 +66,31 @@ jobs:
           name: src-tgz-${{ github.sha }}
           path: |
             yass*.tar.gz
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
           name: src-tbz2-${{ github.sha }}
           path: |
             yass*.tar.bz2
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
           name: src-txz-${{ github.sha }}
           path: |
             yass*.tar.xz
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
           name: src-tzst-${{ github.sha }}
           path: |
             yass*.tar.zst
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
           name: src-zip-${{ github.sha }}
           path: |
             yass*.zip
+          compression-level: 0 # no compression
       - name: Upload tarballs
         if: ${{ github.event_name == 'release' }}
         env:

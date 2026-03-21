@@ -343,6 +343,7 @@ jobs:
           name: deb-release-${{ matrix.distro }}-${{ matrix.arch }}-${{ matrix.gui_variant }}-${{ github.sha }}
           path: |
             yass*.deb
+          compression-level: 0 # no compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

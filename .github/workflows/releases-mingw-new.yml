@@ -236,6 +236,7 @@ jobs:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-nsis-installer
           path: |
             *.exe
+          compression-level: 0 # no compression
       - name: Run tests
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |

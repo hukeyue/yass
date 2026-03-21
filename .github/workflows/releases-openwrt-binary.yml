@@ -256,6 +256,7 @@ jobs:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-ipk
           path: |
             yass*.ipk
+          compression-level: 0 # no compression
       - name: Run tests (x86 and x86_64)
         if: ${{ matrix.arch_name == 'x86' || matrix.arch_name == 'x86_64' }}
         run: |
