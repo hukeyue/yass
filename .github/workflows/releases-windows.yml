@@ -1,4 +1,4 @@
-name: OnDemand Build Artifacts (MSVC)
+name: Build Artifacts (Windows)
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +15,20 @@ on:
         description: 'Test scenario tags'
         required: false
         type: boolean
+  pull_request:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  push:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  release:
+    types: [published]
   schedule:
     - cron: '0 16 * * *'
 concurrency:
@@ -34,10 +48,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x86, arm64]
-        crt-linkage: [dynamic]
-        build_type: [Release]
-        winsdk_version: [10.0.22621.0]
+        include:
+          - arch: x86
+            crt-linkage: dynamic
+            build_type: Release
+            winsdk_version: 10.0.22621.0
+          - arch: x64
+            crt-linkage: dynamic
+            build_type: Release
+            winsdk_version: 10.0.22621.0
+          - arch: arm64
+            crt-linkage: dynamic
+            build_type: Release
+            winsdk_version: 10.0.22621.0
+          - arch: x64
+            crt-linkage: dynamic
+            build_type: Debug
+            winsdk_version: 10.0.22621.0
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -116,9 +143,19 @@ jobs:
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}
           path: |
-            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
-            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-cli
+          path: |
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-server
+          path: |
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
@@ -137,6 +174,17 @@ jobs:
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
+          path: |
+            *.exe
+      - uses: actions/upload-artifact@v6
+        if: ${{ matrix.arch != 'arm64' }}
+        with:
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-msi-installer
+          path: |
+            *.msi
       - name: Run tests
         if: ${{ matrix.arch == 'x64' || matrix.arch == 'x86' }}
         run: |
@@ -145,19 +193,32 @@ jobs:
           build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
           build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_server --version || exit /b
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.zip *.exe
       - name: Upload dist installers
-        if: ${{ github.event_name == 'release' && matrix.arch != 'arm64' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' && matrix.arch != 'arm64' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.msi
+      - name: Run tests (extra)
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          cd build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode || exit /b
   windows-xp-release:
     runs-on: windows-2022
     permissions:
@@ -258,25 +319,25 @@ jobs:
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-cli
+          path: |
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-server
+          path: |
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-pdb
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
-      - uses: actions/upload-artifact@v6
-        with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-msi-installer
-          path: |
-            *.msi
-      - uses: actions/upload-artifact@v6
-        with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
-          path: |
-            *.exe
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-test
@@ -289,6 +350,17 @@ jobs:
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
+          path: |
+            *.exe
+      - uses: actions/upload-artifact@v6
+        if: ${{ matrix.arch != 'arm64' }}
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-msi-installer
+          path: |
+            *.msi
       - name: Run tests
         run: |
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_test || exit /b
@@ -296,7 +368,7 @@ jobs:
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_server --version || exit /b
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash

@@ -1,4 +1,4 @@
-name: OnDemand Build Artifacts (iOS)
+name: Build Artifacts (iOS)
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +15,20 @@ on:
         description: 'Test scenario tags'
         required: false
         type: boolean
+  pull_request:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  push:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  release:
+    types: [published]
   schedule:
     - cron: '0 16 * * *'
 concurrency:
@@ -77,11 +91,6 @@ jobs:
           source "$HOME/.cargo/env"
           ./scripts/setup-ios-rust.sh
           WITH_OS=ios-sim WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
-      - name: Populate depedencies
-        run: |
-          # brew update
-          # brew install ninja cmake p7zip
-          brew install ninja
       - name: Set up Xcode version
         run: |
           sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode_version }}.app

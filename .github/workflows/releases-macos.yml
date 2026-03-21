@@ -45,9 +45,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, arm64]
-        build_type: [Release]
-        xcode_version: [26.3]
+        include:
+          - arch: x64
+            build_type: Release
+            xcode_version: 26.3
+          - arch: arm64
+            build_type: Release
+            xcode_version: 26.3
+          - arch: arm64
+            build_type: Debug
+            xcode_version: 26.3
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -63,7 +70,7 @@ jobs:
         with:
           path: |
             third_party/llvm-build/Release+Asserts
-          key: ${{ runner.os }}-toolchain-arm64-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
+          key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
@@ -79,11 +86,6 @@ jobs:
         run: |
           ./scripts/download-clang-prebuilt-binaries.py
           rm -f third_party/llvm-build/Release+Asserts/*.tgz
-      - name: Populate depedencies
-        run: |
-          # brew update
-          # brew install ninja cmake p7zip
-          brew install ninja
       - name: Set up Xcode version
         run: |
           sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode_version }}.app
@@ -141,6 +143,11 @@ jobs:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build-darwin-${{ matrix.arch }}/yass_benchmark
+      - uses: actions/upload-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dmg
+          path: |
+            *.dmg
       - name: Install rosetta
         if: ${{ matrix.arch == 'x64' }}
         run: |
@@ -150,8 +157,21 @@ jobs:
           ./build-darwin-${{ matrix.arch }}/yass_test
           ./build-darwin-${{ matrix.arch }}/yass_benchmark
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ false && github.event_name == 'release' }}
+        if: ${{ false && github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.dmg *.zip
+      - name: Run tests (extra)
+        if: ${{ matrix.arch == 'arm64' }}
+        run: |
+          cd build-darwin-${{ matrix.arch }}
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode

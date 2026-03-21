@@ -49,6 +49,9 @@ jobs:
           - arch: amd64
             build_type: Release
             qemu_suffix: amd64
+          - arch: amd64
+            build_type: Debug
+            qemu_suffix: amd64
           - arch: armhf
             build_type: Release
             qemu_suffix: armhf
@@ -192,9 +195,17 @@ jobs:
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
           path: |
-            build-linux-${{ matrix.arch }}/yass_cli
-            build-linux-${{ matrix.arch }}/yass_server
             build-linux-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-cli
+          path: |
+            build-linux-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-server
+          path: |
+            build-linux-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
@@ -211,7 +222,7 @@ jobs:
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
       - name: Run tests (i386 and amd64)
-        if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
         run: |
           rm -rf $SDK_ROOT/tmp
           mkdir -p $SDK_ROOT/etc/ssl/certs $SDK_ROOT/dev $SDK_ROOT/proc $SDK_ROOT/tmp $SDK_ROOT/build
@@ -233,8 +244,21 @@ jobs:
             $PWD/build-linux-${{ matrix.arch }}/yass_test \
             --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} yass*.tgz
+      - name: Run tests (extra)
+        if: ${{ matrix.arch == 'amd64' }}
+        run: |
+          cd build-linux-${{ matrix.arch }}
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode

@@ -194,9 +194,17 @@ jobs:
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}
           path: |
-            build-linux-openwrt-${{ matrix.arch }}/yass_cli
-            build-linux-openwrt-${{ matrix.arch }}/yass_server
             build-linux-openwrt-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-cli
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-server
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-dbg
@@ -267,13 +275,13 @@ jobs:
             $PWD/build-linux-openwrt-${{ matrix.arch }}/yass_test \
             --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} yass*.tgz
       - name: Upload dist ipk (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

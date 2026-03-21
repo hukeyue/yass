@@ -304,9 +304,17 @@ jobs:
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}
           path: |
-            build-linux-musl-${{ matrix.arch }}/yass_cli
-            build-linux-musl-${{ matrix.arch }}/yass_server
             build-linux-musl-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-cli
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-server
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-dbg
@@ -338,7 +346,7 @@ jobs:
             $PWD/build-linux-musl-${{ matrix.arch }}/yass_test \
             --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
