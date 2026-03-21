@@ -47,13 +47,19 @@ jobs:
       matrix:
         include:
           - arch: i686
+            build_type: Release
             variant: msvcrt
+            suffix: -winxp
           - arch: x86_64
+            build_type: Release
             variant: ucrt
+            suffix: -winxp
           - arch: aarch64
+            build_type: Release
             variant: ucrt
+            suffix:
     env:
-      BUILD_TYPE: 'Release'
+      BUILD_TYPE: ${{ matrix.build_type }}
     steps:
       - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
@@ -165,6 +171,31 @@ jobs:
             -build-test -build-benchmark \
             -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ env.BUILD_OPTIONS }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_cli.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dbg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-test
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_test.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_benchmark.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
       - name: Populate depedencies (Tests-i686)
         if: ${{ matrix.arch == 'i686' }}
         run: |

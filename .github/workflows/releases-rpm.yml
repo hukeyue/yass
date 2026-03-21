@@ -181,6 +181,11 @@ jobs:
       - name: Build RPM packages
         run: |
           ./scripts/build-rpm.sh
+      - uses: actions/upload-artifact@v6
+        with:
+          name: rpm-release-${{ matrix.container }}-${{ matrix.gui_variant }}-${{ github.sha }}
+          path: |
+            yass*.rpm
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:
@@ -295,6 +300,23 @@ jobs:
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -use-static-build -nc
           ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -use-static-build -nc
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -nc
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_cli
+            build-linux-musl-${{ matrix.arch }}/yass_server
+            build-linux-musl-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-dbg
+          path: |
+            build-linux-musl-${{ matrix.arch }}/*.dbg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-test
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_test
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
         run: |

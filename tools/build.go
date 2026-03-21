@@ -1602,8 +1602,10 @@ func postStateStripBinaries() {
 		return
 	}
 	if systemNameFlag == "android" && variantFlag == "gui" {
-		glog.Info("Done in aab build")
-		return
+		if androidAab {
+			glog.Info("Done in aab build")
+			return
+		}
 	}
 	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")

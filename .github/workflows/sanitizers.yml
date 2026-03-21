@@ -76,12 +76,22 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G Ninja -DBUILD_TESTS=on -DGUI=on \
+          cmake -G Ninja -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DGUI=on \
             -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             ${{ matrix.sanitizer.cmake_options }} ..
-          ninja yass_test
+          ninja yass_test yass_benchmark
           cd ..
+      - uses: actions/upload-artifact@v6
+        with:
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-test
+          path: |
+            build/yass_test
+      - uses: actions/upload-artifact@v6
+        with:
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          path: |
+            build/yass_benchmark
       - name: Memory layout fix for old clang
         run: |
           # TODO remove this once upstream fix is available

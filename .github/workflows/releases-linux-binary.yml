@@ -44,26 +44,38 @@ jobs:
       matrix:
         include:
           - arch: i386
+            build_type: Release
             qemu_suffix: i386
           - arch: amd64
+            build_type: Release
             qemu_suffix: amd64
           - arch: armhf
+            build_type: Release
             qemu_suffix: armhf
           - arch: armel
+            build_type: Release
             qemu_suffix: armel
           - arch: arm64
+            build_type: Release
             qemu_suffix: aarch64
           - arch: mipsel
+            build_type: Release
             qemu_suffix: mipsel
           - arch: mips64el
+            build_type: Release
             qemu_suffix: mips64el
           - arch: loongarch64
+            build_type: Release
             qemu_suffix: loongarch64
           - arch: riscv64
+            build_type: Release
             qemu_suffix: riscv64
           - arch: riscv32
+            build_type: Release
             qemu_suffix: riscv32
     runs-on: ubuntu-22.04
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
     permissions:
       contents: write
     steps:
@@ -176,6 +188,28 @@ jobs:
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            build-linux-${{ matrix.arch }}/yass_cli
+            build-linux-${{ matrix.arch }}/yass_server
+            build-linux-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          path: |
+            build-linux-${{ matrix.arch }}/*.dbg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
+          path: |
+            build-linux-${{ matrix.arch }}/yass_test
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          path: |
+            build-linux-${{ matrix.arch }}/yass_benchmark
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
         run: |

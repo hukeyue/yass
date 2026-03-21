@@ -45,25 +45,34 @@ jobs:
         include:
           - abi: 13
             arch: amd64
+            build_type: Release
           - abi: 13
             arch: i386
+            build_type: Release
           - abi: 13
             arch: aarch64
+            build_type: Release
           - abi: 14
             arch: amd64
+            build_type: Release
           - abi: 14
             arch: i386
+            build_type: Release
           - abi: 14
             arch: aarch64
+            build_type: Release
           - abi: 15
             arch: amd64
+            build_type: Release
           - abi: 15
             arch: aarch64
+            build_type: Release
     runs-on: ubuntu-22.04
     permissions:
       contents: write
     env:
       ARCH: ${{ matrix.arch }}
+      BUILD_TYPE: ${{ matrix.build_type }}
     steps:
       - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
@@ -125,6 +134,28 @@ jobs:
           ./tools/build --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
             -build-benchmark -build-test
+      - uses: actions/upload-artifact@v6
+        with:
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_cli
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_server
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-test
+          path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_test
+      - uses: actions/upload-artifact@v6
+        with:
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_benchmark
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

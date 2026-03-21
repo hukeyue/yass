@@ -67,6 +67,11 @@ jobs:
           flatpak build-bundle repo yass-${{ matrix.arch }}.flatpak io.github.chilledheart.yass --arch ${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
           cd ..
           mv -fv flatpak/yass-${{ matrix.arch }}.flatpak yass-${{ matrix.arch }}-${{ github.event.release.tag_name }}.flatpak
+      - uses: actions/upload-artifact@v6
+        with:
+          name: flatpak-release-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            yass*.flatpak
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:
