@@ -226,30 +226,37 @@ jobs:
             yass*.apk
       - uses: actions/upload-artifact@v6
         with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
+      - uses: actions/upload-artifact@v6
+        with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-cli
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-so
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-server
           path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-dbg
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-test
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: "Install dependency: android sysroot (test purpose)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -278,7 +285,7 @@ jobs:
             -E TMPDIR=$PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} \
             $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

@@ -297,26 +297,42 @@ jobs:
           rm -f *.tar.gz
       - name: Build Binary
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -use-static-build -nc
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -use-static-build -nc
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -nc
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -use-static-build -nc
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -use-static-build -nc
+          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -nc
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}
           path: |
-            build-linux-musl-${{ matrix.arch }}/yass_cli
-            build-linux-musl-${{ matrix.arch }}/yass_server
             build-linux-musl-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-cli
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-server
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-dbg
           path: |
             build-linux-musl-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-test
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-benchmark
+          path: |
+            build-linux-musl-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
         run: |
@@ -338,7 +354,7 @@ jobs:
             $PWD/build-linux-musl-${{ matrix.arch }}/yass_test \
             --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

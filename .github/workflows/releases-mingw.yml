@@ -183,27 +183,40 @@ jobs:
         with:
           name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
           path: |
-            build-mingw/yass_cli.exe
-            build-mingw/yass_server.exe
             build-mingw/yass.exe
-            build-mingw/*.dll
+            build-mingw/libgcc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-cli
+          path: |
+            build-mingw/yass_cli.exe
+            build-mingw/libgcc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-server
+          path: |
+            build-mingw/yass_server.exe
+            build-mingw/libgcc*.dll
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
           path: |
             build-mingw/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build-mingw/yass_test.exe
             build-mingw/*.dll
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build-mingw/yass_benchmark.exe
             build-mingw/*.dll
+          compression-level: 9 # maximum compression
       - name: Run unittests
         shell: bash
         run: |
@@ -213,7 +226,7 @@ jobs:
           ./yass_cli --version
           ./yass_server --version
       - name: Upload dist tarball
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
