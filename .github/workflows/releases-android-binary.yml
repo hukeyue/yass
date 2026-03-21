@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
   CACHE_EPOCH: 146-2
@@ -216,46 +216,46 @@ jobs:
           fi
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-aab
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-aab
           path: |
             yass*.aab
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-apk
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-apk
           path: |
             yass*.apk
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-cli
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-cli
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-server
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-server
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-dbg
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dbg
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-test
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-test
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-benchmark
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
           compression-level: 9 # maximum compression

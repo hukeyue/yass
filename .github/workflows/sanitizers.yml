@@ -84,13 +84,13 @@ jobs:
           cd ..
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-test
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build/yass_benchmark
           compression-level: 9 # maximum compression

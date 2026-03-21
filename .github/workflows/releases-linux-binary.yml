@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
   CACHE_EPOCH: 146-2
@@ -193,34 +193,34 @@ jobs:
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             build-linux-${{ matrix.arch }}/yass
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-cli
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-linux-${{ matrix.arch }}/yass_cli
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-server
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-linux-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
           path: |
             build-linux-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-linux-${{ matrix.arch }}/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
           compression-level: 9 # maximum compression

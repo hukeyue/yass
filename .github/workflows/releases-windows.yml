@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 defaults:
   run:
@@ -141,52 +141,52 @@ jobs:
           set VCToolsVersion=
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-cli
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-server
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-server
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-pdb
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-test
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-benchmark
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-nsis-installer
           path: |
             *.exe
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'arm64' }}
         with:
-          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-msi-installer
+          name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
           path: |
             *.msi
           compression-level: 0 # no compression
@@ -322,52 +322,52 @@ jobs:
           goto :eof
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-cli
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-server
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-server
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-pdb
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-test
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-benchmark
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-nsis-installer
           path: |
             *.exe
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'arm64' }}
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-msi-installer
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
           path: |
             *.msi
           compression-level: 0 # no compression

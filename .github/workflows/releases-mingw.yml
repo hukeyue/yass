@@ -181,38 +181,38 @@ jobs:
           del vcredist_x64.exe
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             build-mingw/yass.exe
             build-mingw/libgcc*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-cli
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-mingw/yass_cli.exe
             build-mingw/libgcc*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-server
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-mingw/yass_server.exe
             build-mingw/libgcc*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
           path: |
             build-mingw/*.dbg
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-mingw/yass_test.exe
             build-mingw/*.dll
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-mingw/yass_benchmark.exe
             build-mingw/*.dll
