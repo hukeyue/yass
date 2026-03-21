@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #include "config/config_impl_apple.hpp"
 
@@ -105,6 +105,22 @@ bool ConfigImplApple::HasKeyStringImpl(const std::string& key) {
   return false;
 }
 
+bool ConfigImplApple::HasKeyStringArrayImpl(const std::string& key) {
+  CFArrayRef arr_obj;
+  if (CFDictionaryGetValueIfPresent(root_, SysUTF8ToCFStringRef(key).get(), (const void**)&arr_obj) &&
+      CFGetTypeID(arr_obj) == CFArrayGetTypeID()) {
+    CFIndex count = CFArrayGetCount(arr_obj);
+    for (CFIndex i = 0; i < count; ++i) {
+      CFTypeRef obj = (CFTypeRef)CFArrayGetValueAtIndex(arr_obj, i);
+      if (CFGetTypeID(obj) != CFStringGetTypeID()) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 bool ConfigImplApple::HasKeyBoolImpl(const std::string& key) {
   CFBooleanRef obj;
   if (CFDictionaryGetValueIfPresent(root_, SysUTF8ToCFStringRef(key).get(), (const void**)&obj) &&
@@ -149,6 +165,25 @@ bool ConfigImplApple::ReadImpl(const std::string& key, std::string* value) {
   if (CFDictionaryGetValueIfPresent(root_, SysUTF8ToCFStringRef(key).get(), (const void**)&obj) &&
       CFGetTypeID(obj) == CFStringGetTypeID()) {
     *value = SysCFStringRefToUTF8(obj);
+    return true;
+  }
+  std::cerr << "bad field: " << key << std::endl;
+  return false;
+}
+
+bool ConfigImplApple::ReadImpl(const std::string& key, std::vector<std::string>* value) {
+  CFArrayRef arr_obj;
+  value->clear();
+  if (CFDictionaryGetValueIfPresent(root_, SysUTF8ToCFStringRef(key).get(), (const void**)&arr_obj) &&
+      CFGetTypeID(arr_obj) == CFArrayGetTypeID()) {
+    CFIndex count = CFArrayGetCount(arr_obj);
+    for (CFIndex i = 0; i < count; ++i) {
+      CFTypeRef obj = (CFTypeRef)CFArrayGetValueAtIndex(arr_obj, i);
+      if (CFGetTypeID(obj) != CFStringGetTypeID()) {
+        return false;
+      }
+      value->push_back(SysCFStringRefToUTF8((CFStringRef)obj));
+    }
     return true;
   }
   std::cerr << "bad field: " << key << std::endl;
@@ -209,6 +244,22 @@ bool ConfigImplApple::ReadImpl(const std::string& key, int64_t* value) {
 bool ConfigImplApple::WriteImpl(const std::string& key, std::string_view value) {
   ScopedCFTypeRef<CFStringRef> obj(CFStringCreateWithBytes(
       kCFAllocatorDefault, reinterpret_cast<const UInt8*>(value.data()), value.size(), kCFStringEncodingUTF8, FALSE));
+  CFDictionarySetValue(write_root_, SysUTF8ToCFStringRef(key).get(), obj);
+  return true;
+}
+
+bool ConfigImplApple::WriteImpl(const std::string& key, const std::vector<std::string>& value) {
+  std::vector<ScopedCFTypeRef<CFStringRef>> strs;
+  std::vector<const void*> str_objs;
+  strs.reserve(value.size());
+  for (const auto& v : value) {
+    ScopedCFTypeRef<CFStringRef> str_obj(CFStringCreateWithBytes(
+      kCFAllocatorDefault, reinterpret_cast<const UInt8*>(v.data()), v.size(), kCFStringEncodingUTF8, FALSE));
+    strs.push_back(str_obj);
+    str_objs.push_back(str_obj.get());
+  }
+
+  ScopedCFTypeRef<CFArrayRef> obj(CFArrayCreate(kCFAllocatorDefault, &str_objs[0], str_objs.size(), &kCFTypeArrayCallBacks));
   CFDictionarySetValue(write_root_, SysUTF8ToCFStringRef(key).get(), obj);
   return true;
 }

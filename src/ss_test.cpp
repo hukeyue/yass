@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #include <gtest/gtest-message.h>
 #include <gtest/gtest.h>
@@ -64,6 +64,7 @@ ABSL_FLAG(std::string,
 #include "net/cipher.hpp"
 #include "net/http_parser.hpp"
 #include "net/io_buffer.hpp"
+#include "net/padding.hpp"
 #include "server/server_server.hpp"
 #include "version.h"
 
@@ -148,22 +149,40 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             std::string_view remote_host_ips,
                             std::string_view remote_host_sni,
                             uint16_t remote_port,
+                            std::string_view remote_username,
+                            std::string_view remote_password,
+                            cipher_method remote_cipher,
+                            bool remote_padding_support,
                             bool upstream_https_fallback,
                             bool https_fallback,
                             bool enable_upstream_tls,
                             bool enable_tls,
                             SSL_CTX* upstream_ssl_ctx,
-                            SSL_CTX* ssl_ctx)
+                            SSL_CTX* ssl_ctx,
+                            std::string_view username,
+                            std::string_view password,
+                            cipher_method cipher,
+                            bool padding_support,
+                            bool redir_mode)
       : Connection(io_context,
                    remote_host_ips,
                    remote_host_sni,
                    remote_port,
+                   remote_username,
+                   remote_password,
+                   remote_cipher,
+                   remote_padding_support,
                    upstream_https_fallback,
                    https_fallback,
                    enable_upstream_tls,
                    enable_tls,
                    upstream_ssl_ctx,
-                   ssl_ctx) {}
+                   ssl_ctx,
+                   username,
+                   password,
+                   cipher,
+                   padding_support,
+                   redir_mode) {}
 
   ~ContentProviderConnection() override {
     VLOG(1) << "Connection (content-provider) " << connection_id() << " freed memory";
@@ -677,7 +696,7 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
     asio::error_code ec;
 
     content_provider_server_ = std::make_unique<ContentProviderServer>(io_context_);
-    content_provider_server_->listen(endpoint, {}, backlog, ec);
+    content_provider_server_->listen(endpoint, {}, {}, {}, {}, {}, {}, backlog, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       return ec;
@@ -700,8 +719,15 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
   asio::error_code StartServer(asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
     server_server_ = std::make_unique<server::ServerServer>(io_context_, std::string_view(), std::string_view(),
-                                                            uint16_t(), std::string_view(), kCertificate, kPrivateKey);
-    server_server_->listen(endpoint, "localhost"sv, backlog, ec);
+                                                            uint16_t(), std::string_view(), std::string_view(),
+                                                            cipher_method(), bool(),
+                                                            std::string_view(), kCertificate, kPrivateKey);
+    server_server_->listen(endpoint, "localhost"sv,
+                           absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                           absl::GetFlag(FLAGS_method).method,
+                           absl::GetFlag(FLAGS_padding_support),
+                           false,
+                           backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -725,8 +751,13 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
 
     local_server_ =
         std::make_unique<cli::CliServer>(io_context_, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
-                                         "localhost"sv, remote_endpoint.port(), kCertificate);
-    local_server_->listen(endpoint, {}, backlog, ec);
+                                         "localhost"sv, remote_endpoint.port(),
+                                         absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                                         absl::GetFlag(FLAGS_method).method,
+                                         absl::GetFlag(FLAGS_padding_support),
+                                         kCertificate);
+    local_server_->listen(endpoint, {}, {}, {}, {}, {}, absl::GetFlag(FLAGS_redir_mode), backlog, ec);
+
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -773,18 +804,33 @@ class EndToEndTestPostQuantumnMLKEMOnly : public EndToEndTest {
 };
 }  // namespace
 
+TEST_P(EndToEndTest, 512) {
+  GenerateRandContent(512);
+  SendRequestAndCheckResponse();
+}
+
 TEST_P(EndToEndTest, 4K) {
   GenerateRandContent(4096);
   SendRequestAndCheckResponse();
 }
 
-TEST_P(EndToEndTest, 256K) {
-  GenerateRandContent(256 * 1024);
+TEST_P(EndToEndTest, 32K) {
+  GenerateRandContent(32 * 1024);
   SendRequestAndCheckResponse();
 }
 
-TEST_P(EndToEndTest, 1M) {
-  GenerateRandContent(1024 * 1024);
+TEST_P(EndToEndTest, 64K) {
+  GenerateRandContent(64 * 1024);
+  SendRequestAndCheckResponse();
+}
+
+TEST_P(EndToEndTest, 128K) {
+  GenerateRandContent(128 * 1024);
+  SendRequestAndCheckResponse();
+}
+
+TEST_P(EndToEndTest, 256K) {
+  GenerateRandContent(256 * 1024);
   SendRequestAndCheckResponse();
 }
 

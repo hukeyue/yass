@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_CORE
 #define H_CONFIG_CONFIG_CORE
@@ -61,5 +61,9 @@ std::string AbslUnparseFlag(const RateFlag&);
 #if BUILDFLAG(IS_MAC)
 ABSL_DECLARE_FLAG(bool, ui_display_realtime_status);
 #endif
+
+bool AbslParseFlag(absl::string_view text, StringArrayFlag* flag, std::string* err);
+
+std::string AbslUnparseFlag(const StringArrayFlag&);
 
 #endif  // H_CONFIG_CONFIG_CORE

@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifdef _WIN32
 
@@ -183,7 +183,7 @@ bool SetCurrentThreadName(const std::string& name) {
   return SUCCEEDED(ret);
 }
 
-static uint64_t GetMonotonicTimeQPC() {
+static inline uint64_t GetMonotonicTimeQPC() {
   static LARGE_INTEGER StartTime, Frequency;
   static bool started;
 
@@ -216,10 +216,10 @@ static uint64_t GetMonotonicTimeQPC() {
   // to microseconds *before* dividing by ticks-per-second.
   //
 
-  ElapsedNanoseconds.QuadPart *= NS_PER_SECOND;
-  ElapsedNanoseconds.QuadPart /= Frequency.QuadPart;
+  auto seconds = ElapsedNanoseconds.QuadPart / Frequency.QuadPart;
+  auto fractions = ElapsedNanoseconds.QuadPart % Frequency.QuadPart;
 
-  return ElapsedNanoseconds.QuadPart;
+  return seconds * NS_PER_SECOND + fractions * NS_PER_SECOND / Frequency.QuadPart;
 }
 
 uint64_t GetMonotonicTime() {

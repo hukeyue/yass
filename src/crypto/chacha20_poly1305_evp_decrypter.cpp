@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "crypto/chacha20_poly1305_evp_decrypter.hpp"
 

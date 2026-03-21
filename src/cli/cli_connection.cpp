@@ -20,11 +20,10 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "cli/cli_connection.hpp"
 
-#include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <base/rand_util.h>
 #include <base/strings/string_util.h>
@@ -69,8 +68,8 @@ static std::vector<http2::adapter::Header> GenerateHeaders(std::vector<std::pair
   return response_vector;
 }
 
-static std::string GetProxyAuthorizationIdentity() {
-  auto user_pass = absl::StrCat(absl::GetFlag(FLAGS_username), ":", absl::GetFlag(FLAGS_password));
+static std::string GetProxyAuthorizationIdentity(std::string_view username, std::string_view password) {
+  auto user_pass = absl::StrCat(username, ":", password);
   return Base64Encode(as_bytes(make_span(user_pass)));
 }
 
@@ -167,22 +166,40 @@ CliConnection::CliConnection(asio::io_context& io_context,
                              std::string_view remote_host_ips,
                              std::string_view remote_host_sni,
                              uint16_t remote_port,
+                             std::string_view remote_username,
+                             std::string_view remote_password,
+                             cipher_method remote_cipher,
+                             bool remote_padding_support,
                              bool upstream_https_fallback,
                              bool https_fallback,
                              bool enable_upstream_tls,
                              bool enable_tls,
                              SSL_CTX* upstream_ssl_ctx,
-                             SSL_CTX* ssl_ctx)
+                             SSL_CTX* ssl_ctx,
+                             std::string_view username,
+                             std::string_view password,
+                             cipher_method cipher,
+                             bool padding_support,
+                             bool redir_mode)
     : Connection(io_context,
                  remote_host_ips,
                  remote_host_sni,
                  remote_port,
+                 remote_username,
+                 remote_password,
+                 remote_cipher,
+                 remote_padding_support,
                  upstream_https_fallback,
                  https_fallback,
                  enable_upstream_tls,
                  enable_tls,
                  upstream_ssl_ctx,
-                 ssl_ctx),
+                 ssl_ctx,
+                 username,
+                 password,
+                 cipher,
+                 padding_support,
+                 redir_mode),
       state_(),
       resolver_(io_context) {}
 
@@ -267,7 +284,7 @@ http2::adapter::Http2VisitorInterface::OnHeaderResult CliConnection::OnHeaderFor
 
 bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_id) {
   bool padding_support = request_map_.find("padding"s) != request_map_.end();
-  padding_support_ &= padding_support;
+  padding_support_in_fact_ &= padding_support;
   std::string_view server_field = "(unknown)"sv;
   auto it = request_map_.find("server"s);
   if (it != request_map_.end()) {
@@ -295,7 +312,7 @@ bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_i
   }
 
   LOG(INFO) << "Connection (client) " << connection_id() << " for " << remote_domain() << " Padding support "
-            << (padding_support_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
+            << (padding_support_in_fact_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
 
   // we're done
   request_map_.clear();
@@ -345,7 +362,7 @@ bool CliConnection::OnBeginDataForStream(StreamId stream_id, size_t payload_leng
 }
 
 bool CliConnection::OnDataForStream(StreamId stream_id, absl::string_view data) {
-  if (padding_support_ && num_padding_recv_ < kFirstPaddings) {
+  if (padding_support_in_fact_ && num_padding_recv_ < kFirstPaddings) {
     asio::error_code ec;
     // Append buf to in_middle_buf
     if (padding_in_middle_buf_) {
@@ -455,14 +472,15 @@ void CliConnection::ReadMethodSelect() {
       return;
     }
     if (ec) {
-      OnDisconnect(ec);
-      return;
+      goto done;
     }
     buf->SetCapacity(bytes_transferred);
     DumpHex("HANDSHAKE/METHOD_SELECT->", buf.get());
 
-    ec = OnReadRedirHandshake(buf.get());
-    if (ec == asio::error::operation_not_supported) {
+    if (redir_mode()) {
+      ec = OnReadRedirHandshake(buf.get());
+      goto done;
+    } else {
       ec = asio::error::invalid_argument;
     }
     if (ec == asio::error::invalid_argument) {
@@ -474,6 +492,8 @@ void CliConnection::ReadMethodSelect() {
     if (ec == asio::error::invalid_argument) {
       ec = OnReadHttpRequest(buf.get());
     }
+
+done:
     if (ec) {
       OnDisconnect(ec);
     } else {
@@ -526,10 +546,7 @@ void CliConnection::ReadSocks5Handshake() {
 
 asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
 #if BUILDFLAG(IS_MAC)
-  if (!absl::GetFlag(FLAGS_redir_mode)) {
-    return asio::error::operation_not_supported;
-  }
-  VLOG(2) << "Connection (client) " << connection_id() << " try redir handshake";
+  VLOG(2) << "Connection (client) " << connection_id() << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   const bool ipv4_compatible = peer_endpoint_.address().is_v4();
 
@@ -607,10 +624,7 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   }
   return ec;
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
-  if (!absl::GetFlag(FLAGS_redir_mode)) {
-    return asio::error::operation_not_supported;
-  }
-  VLOG(2) << "Connection (client) " << connection_id() << " try redir handshake";
+  VLOG(2) << "Connection (client) " << connection_id() << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   struct sockaddr_storage ss = {};
   socklen_t ss_len = sizeof(struct sockaddr_in6);
@@ -1183,7 +1197,7 @@ try_again:
       return nullptr;
     }
     // not enough buffer for recv window
-    if (downstream_.byte_length() < H2_STREAM_WINDOW_SIZE) {
+    if (downstream_.byte_length() < H2_CONN_WINDOW_SIZE) {
       goto try_again;
     }
   } else
@@ -1333,7 +1347,7 @@ void CliConnection::WriteUpstreamMethodSelectRequest() {
   method_select_header.ver = socks5::version;
   method_select_header.nmethods = 1;  // we only support auth or non-auth but not all of them.
 
-  bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
 
   auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
   buf->appendBytesAtEnd(&method_select_header, sizeof(method_select_header));
@@ -1401,9 +1415,6 @@ void CliConnection::WriteUpstreamAuthRequest() {
   DCHECK(CIPHER_METHOD_IS_SOCKS5(method()));
   socks5::auth_request_header header;
   header.ver = socks5::version;
-  const std::string username = absl::GetFlag(FLAGS_username);
-  const std::string password = absl::GetFlag(FLAGS_password);
-
   auto buf = upstream_.front();
 
   DCHECK_EQ(0, buf->offset());
@@ -1411,13 +1422,13 @@ void CliConnection::WriteUpstreamAuthRequest() {
 
   buf->appendBytesAtEnd(&header, sizeof(header));
 
-  const uint8_t username_size = username.size();
+  const uint8_t username_size = remote_username_.size();
   buf->appendBytesAtEnd(&username_size, sizeof(username_size));
-  buf->appendBytesAtEnd(username.c_str(), username.size());
+  buf->appendBytesAtEnd(remote_username_.c_str(), remote_username_.size());
 
-  const uint8_t password_size = password.size();
+  const uint8_t password_size = remote_password_.size();
   buf->appendBytesAtEnd(&password_size, sizeof(password_size));
-  buf->appendBytesAtEnd(password.c_str(), password.size());
+  buf->appendBytesAtEnd(remote_password_.c_str(), remote_password_.size());
 
   DCHECK_NE(0, buf->size());
 
@@ -1459,7 +1470,7 @@ err_out:
 }
 
 void CliConnection::WriteUpstreamSocks4Request() {
-  bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
   if (auth_required) {
     LOG(WARNING) << "Client specifies username and password but SOCKS4 doesn't support it";
   }
@@ -1493,7 +1504,7 @@ void CliConnection::WriteUpstreamSocks4Request() {
 }
 
 void CliConnection::WriteUpstreamSocks4ARequest() {
-  bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
   if (auth_required) {
     LOG(WARNING) << "Client specifies username and password but SOCKS4A doesn't support it";
   }
@@ -1768,7 +1779,7 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
   }
 
   scoped_refptr<GrowableIOBuffer> buf;
-  size_t read;
+  size_t read = 0;
   int previous_capacity;
 
 #ifdef HAVE_QUICHE
@@ -1864,7 +1875,7 @@ after_read:
       ec = asio::error::eof;
       return nullptr;
     }
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       buf = AddPadding(buf.get());
       VLOG(2) << "Connection (client) " << connection_id() << " added padding for: " << num_padding_send_
@@ -2231,7 +2242,7 @@ void CliConnection::OnStreamRead(GrowableIOBuffer* buf) {
       return;
     }
     auto send_buf = scoped_refptr<GrowableIOBuffer>(buf);
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       send_buf = AddPadding(buf);
       VLOG(2) << "Connection (client) " << connection_id() << " added padding for: " << num_padding_send_
@@ -2354,18 +2365,18 @@ void CliConnection::connected() {
     options.perspective = http2::adapter::Perspective::kClient;
     adapter_ = http2::adapter::OgHttp2Adapter::Create(*this, options);
 #endif
-    padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    padding_support_in_fact_ = padding_support();
   } else
 #endif
       if (upstream_https_fallback_) {
     // nothing to create
     // TODO should we support it?
-    // padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    // padding_support_in_fact_ = padding_support();
   } else {
     DCHECK(!http2);
     if (!CIPHER_METHOD_IS_SOCKS(method())) {
-      encoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this, true);
-      decoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this);
+      encoder_ = std::make_unique<cipher>("", remote_password_, method(), this, true);
+      decoder_ = std::make_unique<cipher>("", remote_password_, method(), this);
     }
   }
 
@@ -2375,11 +2386,12 @@ void CliConnection::connected() {
     std::vector<http2::adapter::Http2Setting> settings{
         {http2::adapter::Http2KnownSettingsId::HEADER_TABLE_SIZE, kSpdyMaxHeaderTableSize},
         {http2::adapter::Http2KnownSettingsId::MAX_CONCURRENT_STREAMS, kSpdyMaxConcurrentPushedStreams},
-        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_STREAM_WINDOW_SIZE},
+        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_CONN_WINDOW_SIZE},
         {http2::adapter::Http2KnownSettingsId::MAX_HEADER_LIST_SIZE, kSpdyMaxHeaderListSize},
         {http2::adapter::Http2KnownSettingsId::ENABLE_PUSH, kSpdyDisablePush},
     };
     adapter_->SubmitSettings(settings);
+    adapter_->SubmitWindowUpdate(0, HTTP2_HUGE_WINDOW_SIZE);
     SendIfNotProcessing();
   }
 
@@ -2418,13 +2430,14 @@ void CliConnection::connected() {
     //    authority   = [ userinfo "@" ] host [ ":" port ]
     headers.emplace_back(":authority"s, hostname_and_port);
     headers.emplace_back("host"s, hostname_and_port);
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+    bool auth_required = !remote_username_.empty() && !remote_password_.empty();
     if (auth_required) {
-      headers.emplace_back("proxy-authorization"s, absl::StrCat("basic ", GetProxyAuthorizationIdentity()));
+      headers.emplace_back("proxy-authorization"s,
+                           absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_username_, remote_password_)));
     }
     // Send "Padding" header
     // originated from naive_proxy_delegate.go;func ServeHTTP
-    if (padding_support_) {
+    if (padding_support_in_fact_) {
       // Sends client-side padding header regardless of server support
       std::string padding(gurl_base::RandInt(16, 32), '~');
       InitializeNonindexCodes();
@@ -2462,7 +2475,7 @@ void CliConnection::connected() {
       hostname_and_port = absl::StrCat("[", host, "]", ":", port);
     }
 
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+    bool auth_required = !remote_username_.empty() && !remote_password_.empty();
 
     std::string hdr = absl::StrFormat(
         "CONNECT %s HTTP/1.1\r\n"
@@ -2470,7 +2483,8 @@ void CliConnection::connected() {
         "Proxy-Authorization: %s\r\n"
         "Proxy-Connection: Close\r\n"
         "\r\n",
-        hostname_and_port.c_str(), hostname_and_port.c_str(), absl::StrCat("basic ", GetProxyAuthorizationIdentity()));
+        hostname_and_port.c_str(), hostname_and_port.c_str(),
+        absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_username_, remote_password_)));
     if (!auth_required) {
       hdr = absl::StrFormat(
           "CONNECT %s HTTP/1.1\r\n"

@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2025 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
 #include <gtest/gtest-message.h>
 #include <gtest/gtest.h>
@@ -31,6 +31,8 @@
 #include <base/rand_util.h>
 #include <gmock/gmock.h>
 #include <cstdlib>
+#include "config/config_core.hpp"
+#include "config/config_export.hpp"
 #include "config/config_impl.hpp"
 #include "core/utils_fs.hpp"
 
@@ -42,6 +44,7 @@ ABSL_FLAG(uint32_t, test_unsigned_val, 0, "Test uint32_t value");
 ABSL_FLAG(int64_t, test_signed_64val, 0, "Test int64_t value");
 ABSL_FLAG(uint64_t, test_unsigned_64val, 0, "Test uint64_t value");
 ABSL_FLAG(std::string, test_string, "", "Test string value");
+ABSL_FLAG(StringArrayFlag, test_string_array, {}, "Test string value array");
 
 class ConfigTest : public ::testing::Test {
  public:
@@ -278,5 +281,89 @@ TEST_F(ConfigTest, RWString) {
   config_impl = config::ConfigImpl::Create();
   ASSERT_TRUE(config_impl->Open(false));
   EXPECT_FALSE(config_impl->HasKey<std::string>(test_key));
+  ASSERT_TRUE(config_impl->Close());
+}
+
+TEST_F(ConfigTest, RWStringArrayVariant0) {
+  auto config_impl = config::ConfigImpl::Create();
+  const std::vector<std::string> test_string_array = { "test-variant0-str", "test-variant0-str2" };
+  const std::string test_key = absl::StrCat("test_string_array_", key_prefix());
+
+  absl::SetFlag(&FLAGS_test_string_array, test_string_array);
+
+  ASSERT_TRUE(config_impl->Open(true));
+  EXPECT_TRUE(config_impl->Write(test_key, FLAGS_test_string_array));
+  ASSERT_TRUE(config_impl->Close());
+
+  absl::SetFlag(&FLAGS_test_string_array, StringArrayFlag{});
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(false));
+#if !defined(_WIN32)
+  EXPECT_FALSE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_TRUE(config_impl->HasKey<std::vector<std::string>>(test_key));
+#else
+  EXPECT_TRUE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key)); // TBD not implemented
+#endif
+  EXPECT_FALSE(config_impl->HasKey<bool>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<uint32_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<uint64_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<int32_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<int64_t>(test_key));
+  EXPECT_TRUE(config_impl->Read(test_key, &FLAGS_test_string_array));
+  ASSERT_TRUE(config_impl->Close());
+
+  EXPECT_EQ(absl::GetFlag(FLAGS_test_string_array).str_array, test_string_array);
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(true));
+  EXPECT_TRUE(config_impl->Delete(test_key));
+  ASSERT_TRUE(config_impl->Close());
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(false));
+  EXPECT_FALSE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key));
+  ASSERT_TRUE(config_impl->Close());
+}
+
+TEST_F(ConfigTest, RWStringArrayVariant1) {
+  auto config_impl = config::ConfigImpl::Create();
+  const std::vector<std::string> test_string_array = { "test-variant1-str", "test-variant1-str2" };
+  const std::string test_string = absl::StrJoin(test_string_array, ",");
+  const std::string test_key = absl::StrCat("test_string_array_variant1_", key_prefix());
+
+  absl::SetFlag(&FLAGS_test_string, test_string);
+
+  ASSERT_TRUE(config_impl->Open(true));
+  EXPECT_TRUE(config_impl->Write(test_key, FLAGS_test_string));
+  ASSERT_TRUE(config_impl->Close());
+
+  absl::SetFlag(&FLAGS_test_string_array, StringArrayFlag{});
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(false));
+  EXPECT_TRUE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<bool>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<uint32_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<uint64_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<int32_t>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<int64_t>(test_key));
+  EXPECT_TRUE(config_impl->Read(test_key, &FLAGS_test_string_array));
+  ASSERT_TRUE(config_impl->Close());
+
+  EXPECT_EQ(absl::GetFlag(FLAGS_test_string_array).str_array, test_string_array);
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(true));
+  EXPECT_TRUE(config_impl->Delete(test_key));
+  ASSERT_TRUE(config_impl->Close());
+
+  config_impl = config::ConfigImpl::Create();
+  ASSERT_TRUE(config_impl->Open(false));
+  EXPECT_FALSE(config_impl->HasKey<std::string>(test_key));
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key));
   ASSERT_TRUE(config_impl->Close());
 }

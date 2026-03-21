@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2020-2025 Chilledheart  */
+/* Copyright (c) 2020-2026 Chilledheart  */
 
 #ifndef H_NET_NETWORK
 #define H_NET_NETWORK
@@ -65,15 +65,14 @@ const uint32_t kSpdyMaxConcurrentPushedStreams = 1000;
 // Specifies the the default value for the push setting, which is disabled.
 const uint32_t kSpdyDisablePush = 0;
 
-// followed by curl's nghttp adapter
-/* this is how much we want "in flight" for a stream */
-#define H2_STREAM_WINDOW_SIZE (10 * 1024 * 1024)
-#define HTTP2_HUGE_WINDOW_SIZE (100 * H2_STREAM_WINDOW_SIZE)
-
 // from net/spdy/spdy_session.h
 // If more than this many bytes have been read or more than that many
 // milliseconds have passed, return ERR_IO_PENDING from ReadLoop.
+#ifdef _WIN32
+const int kYieldAfterBytesRead = 64 * 1024;
+#else
 const int kYieldAfterBytesRead = 32 * 1024;
+#endif
 const int kYieldAfterDurationMilliseconds = 20;
 
 // from net/spdy/spdy_session.h

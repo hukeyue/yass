@@ -32,10 +32,10 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   openwrt-binary-release:
@@ -190,33 +190,39 @@ jobs:
           ./tools/build --variant server --arch ${{ matrix.arch }} \
             --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
             -build-benchmark -build-test -use-static-build -nc ${{ matrix.extra_flags }}
-      - name: Run tests (x86 and x86_64)
-        if: ${{ matrix.arch_name == 'x86' || matrix.arch_name == 'x86_64' }}
-        run: |
-          rm -rf $SDK_ROOT/tmp
-          mkdir -p $SDK_ROOT/etc/ssl/certs $SDK_ROOT/dev $SDK_ROOT/proc $SDK_ROOT/tmp
-          touch $SDK_ROOT/etc/resolv.conf
-          bwrap --die-with-parent --ro-bind $SDK_ROOT / \
-            --ro-bind /etc/resolv.conf /etc/resolv.conf \
-            --ro-bind /etc/ssl/certs /etc/ssl/certs \
-            --proc /proc --dev /dev \
-            --unshare-all --share-net \
-            --bind $PWD/build-linux-openwrt-${{ matrix.arch }} /tmp \
-            /tmp/yass_test
-      - name: Run tests (non x86, under qemu emulation)
-        if: ${{ matrix.arch_name != 'x86' && matrix.arch_name != 'x86_64' }}
-        run: |
-          # TMPDIR is required by leveldb unittests
-          qemu-${{ matrix.qemu_suffix }} -L $SDK_ROOT \
-            -E TMPDIR=$PWD/build-linux-openwrt-${{ matrix.arch }} \
-            $PWD/build-linux-openwrt-${{ matrix.arch }}/yass_test \
-            --no_exec_proc_tests
-      - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload ${{ github.event.release.tag_name }} yass*.tgz
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-cli
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-server
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_server
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-dbg
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-test
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-benchmark
+          path: |
+            build-linux-openwrt-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Build IPK packages
         run: |
           pushd ${{ env.SDK_HOME }}
@@ -245,8 +251,41 @@ jobs:
           echo "sha512sum "
           echo "======================================================================"
           sha512sum *.ipk
+      - uses: actions/upload-artifact@v6
+        with:
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-ipk
+          path: |
+            yass*.ipk
+          compression-level: 0 # no compression
+      - name: Run tests (x86 and x86_64)
+        if: ${{ matrix.arch_name == 'x86' || matrix.arch_name == 'x86_64' }}
+        run: |
+          rm -rf $SDK_ROOT/tmp
+          mkdir -p $SDK_ROOT/etc/ssl/certs $SDK_ROOT/dev $SDK_ROOT/proc $SDK_ROOT/tmp
+          touch $SDK_ROOT/etc/resolv.conf
+          bwrap --die-with-parent --ro-bind $SDK_ROOT / \
+            --ro-bind /etc/resolv.conf /etc/resolv.conf \
+            --ro-bind /etc/ssl/certs /etc/ssl/certs \
+            --proc /proc --dev /dev \
+            --unshare-all --share-net \
+            --bind $PWD/build-linux-openwrt-${{ matrix.arch }} /tmp \
+            /tmp/yass_test
+      - name: Run tests (non x86, under qemu emulation)
+        if: ${{ matrix.arch_name != 'x86' && matrix.arch_name != 'x86_64' }}
+        run: |
+          # TMPDIR is required by leveldb unittests
+          qemu-${{ matrix.qemu_suffix }} -L $SDK_ROOT \
+            -E TMPDIR=$PWD/build-linux-openwrt-${{ matrix.arch }} \
+            $PWD/build-linux-openwrt-${{ matrix.arch }}/yass_test \
+            --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} yass*.tgz
+      - name: Upload dist ipk (including debuginfo)
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'MinSizeRel' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

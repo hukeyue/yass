@@ -132,7 +132,7 @@ License: GPL-2.0-only
 # see https://github.com/rpm-software-management/rpmlint/blob/main/configs/Fedora/licenses.toml
 License: GPLv2
 %endif
-URL: https://github.com/Chilledheart/%{name}
+URL: https://github.com/hukeyue/%{name}
 Source0: %{url}/releases/download/%{version}/%{name}-%{version}.tar.gz
 %if %{with use_qt6} && !0%{?sle_version}
 BuildRequires: qt6-qtbase-devel
@@ -318,6 +318,21 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Tue Mar 17 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.5-1
+  - improve stability of https/http2 connection latency
+  - miscellaneous fixes
+* Mon Mar 16 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.4-1
+  - miscellaneous fixes
+* Sun Mar 15 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.3-1
+  - miscellaneous fixes
+* Sun Mar 15 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.2-1
+  - support proxy-uri and listen-uri parameters (CLI only)
+  - miscellaneous fixes
+* Wed Mar 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.1-1
+  - add the support of jemalloc
+  - miscellaneous fixes
+* Wed Mar 4 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.0-1
+  - bump to chromium 146 dependents
 * Mon Mar 2 2026 Chilledheart <hukeyue@vip.163.com> - 1.20.5-1
   - miscellaneous fixes
 * Fri Jan 2 2026 Chilledheart <hukeyue@vip.163.com> - 1.20.4-1

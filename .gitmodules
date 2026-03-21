@@ -62,3 +62,6 @@
 [submodule "third_party/llvm-libc/trunk"]
 	path = third_party/llvm-libc/trunk
 	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc
+[submodule "third_party/jemalloc/src"]
+	path = third_party/jemalloc/src
+	url = https://github.com/jemalloc/jemalloc/

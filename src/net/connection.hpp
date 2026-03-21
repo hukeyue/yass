@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_NET_CONNECTION
 #define H_NET_CONNECTION
@@ -191,30 +191,57 @@ class Connection {
   /// \param remote_host_ips the ip addresses used with remote endpoint
   /// \param remote_host_sni the sni name used with remote endpoint
   /// \param remote_port the port used with remote endpoint
+  /// \param remote_username the username used with remote endpoint
+  /// \param remote_password the password used with remote endpoint
+  /// \param remote_cipher the cipher used with remote endpoint
+  /// \param remote_padding_support the padding support used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
   /// \param enable_tls the underlying data channel is using tls
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer
+  /// \param username the username used downlink
+  /// \param password the password used downlink
+  /// \param cipher the cipher used with downlink
+  /// \param padding_support padding support used with downlink
+  /// \param redir_mode redir mode used with downlink
   Connection(asio::io_context& io_context,
              std::string_view remote_host_ips,
              std::string_view remote_host_sni,
              uint16_t remote_port,
+             std::string_view remote_username,
+             std::string_view remote_password,
+             cipher_method remote_cipher,
+             bool remote_padding_support,
              bool upstream_https_fallback,
              bool https_fallback,
              bool enable_upstream_tls,
              bool enable_tls,
              SSL_CTX* upstream_ssl_ctx,
-             SSL_CTX* ssl_ctx)
+             SSL_CTX* ssl_ctx,
+             std::string_view username,
+             std::string_view password,
+             cipher_method cipher,
+             bool padding_support,
+             bool redir_mode)
       : io_context_(&io_context),
         remote_host_ips_(remote_host_ips),
         remote_host_sni_(remote_host_sni),
         remote_port_(remote_port),
+        remote_username_(remote_username),
+        remote_password_(remote_password),
+        remote_cipher_(remote_cipher),
+        remote_padding_support_(remote_padding_support),
         upstream_https_fallback_(upstream_https_fallback),
         enable_upstream_tls_(enable_upstream_tls),
         enable_tls_(enable_tls),
-        upstream_ssl_ctx_(upstream_ssl_ctx) {
+        upstream_ssl_ctx_(upstream_ssl_ctx),
+        username_(username),
+        password_(password),
+        cipher_(cipher),
+        padding_support_(padding_support),
+        redir_mode_(redir_mode) {
     DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
     if (enable_tls) {
       DCHECK(ssl_ctx);
@@ -306,6 +333,14 @@ class Connection {
   std::string remote_host_sni_;
   /// the upstream port to be established with
   uint16_t remote_port_;
+  /// the upstream username to be established with
+  std::string remote_username_;
+  /// the upstream password to be established with
+  std::string remote_password_;
+  /// the upstream cipher to be established with
+  cipher_method remote_cipher_;
+  /// the upstream padding support to be established with
+  bool remote_padding_support_;
 
   /// service's bound endpoint
   asio::ip::tcp::endpoint endpoint_;
@@ -328,6 +363,17 @@ class Connection {
   std::string upstream_certificate_;
   SSL_CTX* upstream_ssl_ctx_;
 
+  /// the downlink username
+  std::string username_;
+  /// the downlink password
+  std::string password_;
+  /// the downlink cipher
+  cipher_method cipher_;
+  /// the downlink padding support
+  bool padding_support_;
+  /// the downlink redir mode
+  bool redir_mode_;
+
   std::unique_ptr<Downlink> downlink_;
 
  protected:
@@ -339,12 +385,6 @@ class Connection {
  private:
   /// the callback invoked when disconnect event happens
   absl::AnyInvocable<void()> disconnect_cb_;
-
- public:
-  cipher_method method() const { return method_; }
-
- private:
-  cipher_method method_ = absl::GetFlag(FLAGS_method).method;
 };
 
 enum ConnectionFactoryType {

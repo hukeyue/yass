@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef YASS_FREEDESKTOP_UTILS
 #define YASS_FREEDESKTOP_UTILS

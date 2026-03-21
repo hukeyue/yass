@@ -16,7 +16,7 @@ command, but also it contains a gtk3/gtk4/qt5/qt6 (all are supported) graphical
 interface client which is more friendly to the new users.
 
 ### How to use
-See <https://github.com/Chilledheart/yass/wiki/Usage>.
+See <https://github.com/hukeyue/yass/wiki/Usage>.
 
 ## OPTIONS
 
@@ -111,6 +111,36 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
 
   See `/proc/sys/net/ipv4/tcp_allowed_congestion_control` for available options and `tcp`(7).
 
+* `--proxy` _proxy_uris_:
+  Routes traffic via the PROXY-URIs
+
+  `PROXY-URI = <PROXY-PROTO>"://"[<USER>":"<PASS>"@"]<HOSTNAME>[":"<PORT>]`
+
+  `PROXY-PROTO = "https" | "http2" | "socks" | "naive"`
+
+  Routes traffic via the proxy URI.
+  The scheme naive proxy is negotiated automatically for Naive padding (controlled by _padding_support_)
+
+  If multiple proxies are specified, they must match the number of specified
+  _LISTEN-URIs_, and each _LISTEN-URI_ is routed to the _PROXY_ matched by position.
+  _PROXY-CHAIN_ is not supported.
+
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _padding_support_, _redir_mode_, _local_host_ and _local_port_ are ignored.
+
+* `--listen` _listen_uris_:
+  Listens at given LISTEN-URIs
+
+  `LISTEN-URI = <LISTEN-PROTO>"://"[<USER>":"<PASS>"@"][<ADDR>][":"<PORT>]`
+
+  `LISTEN-PROTO = "auto" | "socks" | "http" | "redir"`
+
+  Listens at addr:port with protocol _<LISTEN-PROTO>_.
+  Can be specified multiple times to listen on multiple ports.
+  _LISTEN-PROTO_ is required but ignored in use.
+  Default proto, addr, port: `auto`, `0.0.0.0`, `1080`.
+
+  Once specified, all of _server_host_, _server_sni_, _server_port_, _username_, _password_, _method_, _padding_support_, _redir_mode_, _local_host_ and _local_port_ are ignored.
+
 ## ENVIRONMENT VARIABLES
 
 * `SSL_CERT_FILE`:
@@ -121,7 +151,7 @@ See <https://github.com/Chilledheart/yass/wiki/Usage>.
 
 ## COPYRIGHT
 
-Copyright (C) 2019-2024 Chilledheart. All rights reserved.
+Copyright (C) 2019-2026 Chilledheart. All rights reserved.
 
 ## SEE ALSO
 

@@ -20,15 +20,17 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_EXPORT
 #define H_CONFIG_CONFIG_EXPORT
 
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_join.h>
 #include <stdint.h>
 #include <string>
 #include <string_view>
+#include <vector>
 #include "crypto/crypter_export.hpp"
 
 struct PortFlag {
@@ -56,6 +58,16 @@ struct RateFlag {
   }
   operator uint64_t() const { return rate; }
   uint64_t rate;
+};
+
+struct StringArrayFlag {
+  explicit StringArrayFlag(std::vector<std::string> arr = {}) : str_array(arr) {}
+
+  operator std::string() const {
+    return absl::StrJoin(str_array, ",");
+  }
+  operator const std::vector<std::string>&() const { return str_array; }
+  std::vector<std::string> str_array;
 };
 
 #endif  // H_CONFIG_CONFIG_EXPORT

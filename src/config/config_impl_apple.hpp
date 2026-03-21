@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_IMPL_APPLE
 #define H_CONFIG_CONFIG_IMPL_APPLE
@@ -47,13 +47,16 @@ class ConfigImplApple : public ConfigImpl {
   bool CloseImpl() override;
 
   bool HasKeyStringImpl(const std::string& key) override;
+  bool HasKeyStringArrayImpl(const std::string& key) override;
   bool HasKeyBoolImpl(const std::string& key) override;
   bool HasKeyUint32Impl(const std::string& key) override;
   bool HasKeyUint64Impl(const std::string& key) override;
   bool HasKeyInt32Impl(const std::string& key) override;
   bool HasKeyInt64Impl(const std::string& key) override;
 
+
   bool ReadImpl(const std::string& key, std::string* value) override;
+  bool ReadImpl(const std::string& key, std::vector<std::string>* value) override;
   bool ReadImpl(const std::string& key, bool* value) override;
   bool ReadImpl(const std::string& key, uint32_t* value) override;
   bool ReadImpl(const std::string& key, int32_t* value) override;
@@ -61,6 +64,7 @@ class ConfigImplApple : public ConfigImpl {
   bool ReadImpl(const std::string& key, int64_t* value) override;
 
   bool WriteImpl(const std::string& key, std::string_view value) override;
+  bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override;
   bool WriteImpl(const std::string& key, bool value) override;
   bool WriteImpl(const std::string& key, uint32_t value) override;
   bool WriteImpl(const std::string& key, int32_t value) override;

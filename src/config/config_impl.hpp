@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_IMPL
 #define H_CONFIG_CONFIG_IMPL
@@ -28,6 +28,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <absl/flags/declare.h>
 
@@ -105,6 +106,11 @@ class ConfigImpl {
   /// Test the key from ConfigTree
   ///
   /// \param key the key value
+  virtual bool HasKeyStringArrayImpl(const std::string& key) = 0;
+
+  /// Test the key from ConfigTree
+  ///
+  /// \param key the key value
   virtual bool HasKeyBoolImpl(const std::string& key) = 0;
 
   /// Test the key from ConfigTree
@@ -132,6 +138,12 @@ class ConfigImpl {
   /// \param key the key value
   /// \param value the output value (string)
   virtual bool ReadImpl(const std::string& key, std::string* value) = 0;
+
+  /// Read the key from ConfigTree
+  ///
+  /// \param key the key value
+  /// \param value the output value (string array)
+  virtual bool ReadImpl(const std::string& key, std::vector<std::string>* value) = 0;
 
   /// Read the key from ConfigTree
   ///
@@ -180,6 +192,12 @@ class ConfigImpl {
   /// \param key the key value
   /// \param value the value (string_view)
   virtual bool WriteImpl(const std::string& key, std::string_view value) = 0;
+
+  /// Write the key,value into ConfigTree
+  ///
+  /// \param key the key value
+  /// \param value the value (string_view)
+  virtual bool WriteImpl(const std::string& key, const std::vector<std::string>& value) = 0;
 
   /// Write the key,value into ConfigTree
   ///

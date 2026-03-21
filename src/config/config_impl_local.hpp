@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_CONFIG_CONFIG_IMPL_POSIX
 #define H_CONFIG_CONFIG_IMPL_POSIX
@@ -130,6 +130,18 @@ class ConfigImplLocal : public ConfigImpl {
 
   bool HasKeyStringImpl(const std::string& key) override { return root_.isMember(key) && root_[key].isString(); }
 
+  bool HasKeyStringArrayImpl(const std::string& key) override {
+    if (root_.isMember(key) && root_[key].isArray()) {
+      for (const auto &member : root_[key]) {
+        if (!member.isString()) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
   bool HasKeyBoolImpl(const std::string& key) override { return root_.isMember(key) && root_[key].isBool(); }
 
   bool HasKeyUint32Impl(const std::string& key) override { return root_.isMember(key) && root_[key].isUInt(); }
@@ -143,6 +155,22 @@ class ConfigImplLocal : public ConfigImpl {
   bool ReadImpl(const std::string& key, std::string* value) override {
     if (root_.isMember(key) && root_[key].isString()) {
       *value = root_[key].asString();
+      return true;
+    }
+    std::cerr << "bad field: " << key << std::endl;
+    return false;
+  }
+
+  bool ReadImpl(const std::string& key, std::vector<std::string>* value) override {
+    value->clear();
+    if (root_.isMember(key) && root_[key].isArray()) {
+      for (const auto &member : root_[key]) {
+        if (!member.isString()) {
+          std::cerr << "bad field: " << key << std::endl;
+          return false;
+        }
+        value->push_back(member.asString());
+      }
       return true;
     }
     std::cerr << "bad field: " << key << std::endl;
@@ -196,6 +224,13 @@ class ConfigImplLocal : public ConfigImpl {
 
   bool WriteImpl(const std::string& key, std::string_view value) override {
     root_[key] = std::string(value.data(), value.size());
+    return true;
+  }
+
+  bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override {
+    auto &arr = root_[key];
+    for (const auto& v : value)
+      arr.append(v);
     return true;
   }
 

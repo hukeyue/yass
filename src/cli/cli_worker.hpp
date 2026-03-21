@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #ifndef YASS_CLI_WORKER
 #define YASS_CLI_WORKER
@@ -79,6 +79,11 @@ class Worker {
   std::string cached_server_host_;
   std::string cached_server_sni_;
   uint16_t cached_server_port_;
+  std::string cached_server_username_;
+  std::string cached_server_password_;
+  cipher_method cached_server_cipher_;
+  bool cached_server_padding_support_;
+  bool cached_server_redir_mode_;
   std::string cached_local_host_;
   uint16_t cached_local_port_;
 

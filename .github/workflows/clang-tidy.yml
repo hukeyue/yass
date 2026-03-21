@@ -18,7 +18,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   win-clang-tidy:
@@ -248,7 +248,7 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [Release]
-        xcode_version: [26.2]
+        xcode_version: [26.3]
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:

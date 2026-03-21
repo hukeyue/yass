@@ -26,10 +26,6 @@
 
 @_JSONCPP_LICENSE@
 
-=== leveldb ==
-
-@_LEVELDB_LICENSE@
-
 === libc++ ==
 
 @_LIBCXX_LICENSE@
@@ -66,14 +62,6 @@
 
 @_RE2_LICENSE@
 
-== snappy
-
-@_SNAPPY_LICENSE@
-
-== sqlite
-
-@_SQLITE_LICENSE@
-
 === tcmalloc_minimal ==
 
 @_TCMALLOC_LICENSE@
@@ -89,3 +77,7 @@
 === mimalloc ==
 
 @_MIMALLOC_LICENSE@
+
+=== jemalloc ==
+
+@_JEMALLOC_LICENSE@

@@ -32,10 +32,10 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   mingw64-release:
@@ -47,13 +47,31 @@ jobs:
       matrix:
         include:
           - arch: i686
+            build_type: Debug
             variant: msvcrt
+            suffix: -winxp
+          - arch: i686
+            build_type: Release
+            variant: msvcrt
+            suffix: -winxp
           - arch: x86_64
+            build_type: Debug
             variant: ucrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Release
+            variant: ucrt
+            suffix: -winxp
           - arch: aarch64
+            build_type: Debug
             variant: ucrt
+            suffix:
+          - arch: aarch64
+            build_type: Release
+            variant: ucrt
+            suffix:
     env:
-      BUILD_TYPE: 'Release'
+      BUILD_TYPE: ${{ matrix.build_type }}
     steps:
       - uses: actions/checkout@v5
       - name: Checkout with shallow submodules
@@ -127,17 +145,6 @@ jobs:
           sudo tar -C /usr/local --strip-components=1 -xf cmake-3.29.8-linux-x86_64.tar.gz
           cmake --version
           rm -f *.tar.gz
-      - name: Populate depedencies (i686)
-        if: ${{ matrix.arch == 'i686' }}
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update -qq
-          sudo apt-get install -y wine wine32
-      - name: Populate depedencies (x86_64)
-        if: ${{ matrix.arch == 'x86_64' }}
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y wine wine64
       - name: Patch libcxx for windows xp
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |
@@ -175,17 +182,207 @@ jobs:
         run: |
           # copy curl dll required by yass_test
           cp -v third_party/curl-8.4.0_7-win64-mingw/bin/libcurl-x64.dll build-mingw-winxp-${{ matrix.arch }}/
-      - name: Run tests
-        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
-        run: |
-          cd build-mingw-winxp-${{ matrix.arch }}
-          wine yass_test.exe
-          wine yass_benchmark.exe
-          wine yass_cli.exe --version
-          wine yass_server.exe --version
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_cli.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_test.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_benchmark.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-nsis-installer
+          path: |
+            *.exe
+          compression-level: 0 # no compression
       - name: Upload dist tarball
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.zip *.exe
+  mingw64-release-wine-test:
+    runs-on: ubuntu-22.04
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i686
+            build_type: Debug
+            variant: msvcrt
+            suffix: -winxp
+          - arch: i686
+            build_type: Release
+            variant: msvcrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Debug
+            variant: ucrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Release
+            variant: ucrt
+            suffix: -winxp
+    steps:
+      - name: Populate depedencies (i686)
+        if: ${{ matrix.arch == 'i686' }}
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y wine wine32
+      - name: Populate depedencies (x86_64)
+        if: ${{ matrix.arch == 'x86_64' }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y wine wine64
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+      - name: Run tests
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
+        run: |
+          wine yass_cli.exe --version
+          wine yass_server.exe --version
+          wine yass_test.exe
+      - name: Run benchmarks
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
+        run: |
+          wine yass_benchmark.exe
+  mingw64-release-native-test:
+    runs-on: windows-2022
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i686
+            build_type: Debug
+            variant: msvcrt
+            suffix: -winxp
+          - arch: i686
+            build_type: Release
+            variant: msvcrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Debug
+            variant: ucrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Release
+            variant: ucrt
+            suffix: -winxp
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Populate depedencies (Tests-i686)
+        if: ${{ matrix.arch == 'i686' }}
+        run: |
+          REM Install vcredist2010
+          curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
+          vcredist_x86.exe /install /quiet /norestart
+          del vcredist_x86.exe
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
+      - name: Run tests
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
+        run: |
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode || exit /b
+  mingw64-release-native-benchmark:
+    runs-on: windows-2022
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i686
+            build_type: Debug
+            variant: msvcrt
+            suffix: -winxp
+          - arch: i686
+            build_type: Release
+            variant: msvcrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Debug
+            variant: ucrt
+            suffix: -winxp
+          - arch: x86_64
+            build_type: Release
+            variant: ucrt
+            suffix: -winxp
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Populate depedencies (Tests-i686)
+        if: ${{ matrix.arch == 'i686' }}
+        run: |
+          REM Install vcredist2010
+          curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
+          vcredist_x86.exe /install /quiet /norestart
+          del vcredist_x86.exe
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
+        shell: cmd
+        run: |
+          yass_benchmark || exit /b

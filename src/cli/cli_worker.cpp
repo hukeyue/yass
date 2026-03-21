@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #include "cli/cli_worker.hpp"
 
@@ -37,6 +37,7 @@
 #endif
 
 #include "cli/cli_server.hpp"
+#include "net/padding.hpp"
 
 using namespace std::string_literals;
 
@@ -49,11 +50,6 @@ class WorkerPrivate {
 
 Worker::Worker()
     : resolver_(io_context_),
-      cached_server_host_(absl::GetFlag(FLAGS_server_host)),
-      cached_server_sni_(absl::GetFlag(FLAGS_server_sni)),
-      cached_server_port_(absl::GetFlag(FLAGS_server_port)),
-      cached_local_host_(absl::GetFlag(FLAGS_local_host)),
-      cached_local_port_(absl::GetFlag(FLAGS_local_port)),
       private_(new WorkerPrivate) {
 #ifdef _WIN32
   int iResult = 0;
@@ -85,27 +81,15 @@ void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
   asio::post(io_context_, [this]() {
     DCHECK_EQ(private_->cli_server.get(), nullptr);
 
-    // FIXME handle doh_url as well
-#if 0
-    // cached dns results
-    bool cache_hit = absl::GetFlag(FLAGS_server_host) == cached_server_host_ &&
-                     absl::GetFlag(FLAGS_server_sni) == cached_server_sni_ &&
-                     absl::GetFlag(FLAGS_server_port) == cached_server_port_ &&
-                     absl::GetFlag(FLAGS_local_host) == cached_local_host_ &&
-                     absl::GetFlag(FLAGS_local_port) == cached_local_port_;
-
-    if (cache_hit && !remote_server_ips_.empty() && !endpoints_.empty()) {
-      DCHECK(!endpoints_.empty());
-      LOG(INFO) << "worker: using cached remote ip: " << remote_server_ips_ << " local ip: " << local_server_ips_;
-      on_resolve_done({});
-      return;
-    }
-#endif
-
-    // overwrite cached entry
+    // cache all fields
     cached_server_host_ = absl::GetFlag(FLAGS_server_host);
     cached_server_sni_ = absl::GetFlag(FLAGS_server_sni);
     cached_server_port_ = absl::GetFlag(FLAGS_server_port);
+    cached_server_username_ = absl::GetFlag(FLAGS_username);
+    cached_server_password_ = absl::GetFlag(FLAGS_password);
+    cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
+    cached_server_padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    cached_server_redir_mode_ = absl::GetFlag(FLAGS_redir_mode);
     cached_local_host_ = absl::GetFlag(FLAGS_local_host);
     cached_local_port_ = absl::GetFlag(FLAGS_local_port);
 
@@ -118,10 +102,7 @@ void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
 
     std::string host_name = cached_server_host_;
     uint16_t port = cached_server_port_;
-    remote_server_sni_ = cached_server_host_;
-    if (!cached_server_sni_.empty()) {
-      remote_server_sni_ = cached_server_sni_;
-    }
+    remote_server_sni_ = !cached_server_sni_.empty() ? cached_server_sni_ : cached_server_host_;
 
     DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
@@ -296,12 +277,14 @@ void Worker::on_resolve_done(asio::error_code ec) {
     return;
   }
 
-  private_->cli_server =
-      std::make_unique<CliServer>(io_context_, remote_server_ips_, remote_server_sni_, cached_server_port_);
+  private_->cli_server = std::make_unique<CliServer>(io_context_, remote_server_ips_, remote_server_sni_,
+                                                     cached_server_port_,
+                                                     cached_server_username_, cached_server_password_,
+                                                     cached_server_cipher_, cached_server_padding_support_);
 
   local_port_ = 0;
   for (auto& endpoint : endpoints_) {
-    private_->cli_server->listen(endpoint, std::string(), SOMAXCONN, ec);
+    private_->cli_server->listen(endpoint, {}, {}, {}, {}, {}, cached_server_redir_mode_, SOMAXCONN, ec);
     if (ec) {
       break;
     }

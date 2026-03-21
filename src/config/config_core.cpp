@@ -20,13 +20,14 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2024-2025 Chilledheart  */
+/* Copyright (c) 2024-2026 Chilledheart  */
 
 #include "config/config_core.hpp"
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/str_split.h>
 #include <stdint.h>
 #include <optional>
 #include <sstream>
@@ -154,6 +155,21 @@ bool AbslParseFlag(absl::string_view text, RateFlag* flag, std::string* err) {
 // Similarly, for unparsing, we can simply invoke `absl::UnparseFlag()` on
 // the constituent types.
 std::string AbslUnparseFlag(const RateFlag& flag) {
+  return flag;
+}
+
+bool AbslParseFlag(absl::string_view text, StringArrayFlag* flag, std::string* err) {
+  if (text.empty()) {
+    flag->str_array.clear();
+    return true;
+  }
+  flag->str_array = absl::StrSplit(text, ',');
+  return true;
+}
+
+// Similarly, for unparsing, we can simply invoke `absl::UnparseFlag()` on
+// the constituent types.
+std::string AbslUnparseFlag(const StringArrayFlag& flag) {
   return flag;
 }
 

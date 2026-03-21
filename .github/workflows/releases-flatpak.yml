@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
   GOPROXY: direct
@@ -67,6 +67,12 @@ jobs:
           flatpak build-bundle repo yass-${{ matrix.arch }}.flatpak io.github.chilledheart.yass --arch ${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
           cd ..
           mv -fv flatpak/yass-${{ matrix.arch }}.flatpak yass-${{ matrix.arch }}-${{ github.event.release.tag_name }}.flatpak
+      - uses: actions/upload-artifact@v6
+        with:
+          name: flatpak-release-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            yass*.flatpak
+          compression-level: 0 # no compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' }}
         env:

@@ -20,9 +20,10 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "config/config.hpp"
+#include "config/config_cli.hpp"
 
 #include <absl/flags/flag.h>
 #include <absl/flags/usage.h>
@@ -50,20 +51,44 @@ bool ReadConfig() {
     return false;
   }
 
-  /* load required fields */
-  required_fields_loaded &= config_impl->Read("server", &FLAGS_server_host);
-  required_fields_loaded &= config_impl->Read("server_port", &FLAGS_server_port);
-  required_fields_loaded &= config_impl->Read("method", &FLAGS_method);
-  required_fields_loaded &= config_impl->Read("username", &FLAGS_username);
-  required_fields_loaded &= config_impl->Read("password", &FLAGS_password, true);
+  bool overridable_fields_loaded = false;
 
-  if (pType_IsClient()) {
-    required_fields_loaded &= config_impl->Read("local", &FLAGS_local_host);
-    required_fields_loaded &= config_impl->Read("local_port", &FLAGS_local_port);
+  /* priorize loading cli-only options */
+  if (pType == YASS_CLIENT_DEFAULT) {
+    if (config_impl->HasKey<std::vector<std::string>>("proxy") ||
+        config_impl->HasKey<std::string>("proxy")) {
+      config_impl->Read("proxy", &FLAGS_proxy);
+    }
+    if (config_impl->HasKey<std::vector<std::string>>("listen") ||
+        config_impl->HasKey<std::string>("listen")) {
+      config_impl->Read("listen", &FLAGS_listen);
+    }
+
+    if (!absl::GetFlag(FLAGS_proxy).str_array.empty() &&
+        !absl::GetFlag(FLAGS_listen).str_array.empty()) {
+      LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified.";
+      LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, "
+        "padding_support, redir_mode, local_host and local_port fields are ignored now.";
+      overridable_fields_loaded = true;
+    }
   }
 
-  /* optional fields */
-  config_impl->Read("server_sni", &FLAGS_server_sni);
+  /* load required fields */
+  if (!overridable_fields_loaded) {
+    required_fields_loaded &= config_impl->Read("server", &FLAGS_server_host);
+    required_fields_loaded &= config_impl->Read("server_port", &FLAGS_server_port);
+    required_fields_loaded &= config_impl->Read("username", &FLAGS_username);
+    required_fields_loaded &= config_impl->Read("password", &FLAGS_password, true);
+    required_fields_loaded &= config_impl->Read("method", &FLAGS_method);
+
+    if (pType_IsClient()) {
+      required_fields_loaded &= config_impl->Read("local", &FLAGS_local_host);
+      required_fields_loaded &= config_impl->Read("local_port", &FLAGS_local_port);
+    }
+
+    /* optional fields */
+    config_impl->Read("server_sni", &FLAGS_server_sni);
+  }
 
   config_impl->Read("fast_open", &FLAGS_tcp_fastopen);
   config_impl->Read("fast_open_connect", &FLAGS_tcp_fastopen_connect);
@@ -176,6 +201,11 @@ bool SaveConfig() {
 #if BUILDFLAG(IS_MAC)
   all_fields_written &= config_impl->Write("ui_display_realtime_status", FLAGS_ui_display_realtime_status);
 #endif
+
+  if (pType == YASS_CLIENT_DEFAULT) {
+    all_fields_written &= config_impl->Write("proxy", FLAGS_proxy);
+    all_fields_written &= config_impl->Write("listen", FLAGS_listen);
+  }
 
   all_fields_written &= config_impl->Close();
 
@@ -479,7 +509,7 @@ std::string ReadConfigFromArgument(std::string_view server_host,
 }
 
 void SetClientUsageMessage(std::string_view exec_path) {
-  absl::SetProgramUsageMessage(absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", R"(
+  constexpr std::string_view kClientUsage = R"(
   -K, --config <file> Read config from a file
   -t Don't run, just test the configuration file
   -v, --version Print yass version
@@ -499,7 +529,18 @@ void SetClientUsageMessage(std::string_view exec_path) {
   -k, --insecure_mode Skip the verification step and proceed without checking
   --tls13_early_data Enable 0RTTI Early Data
   --enable_post_quantum_kyber Enables post-quantum key-agreements (i.e. ML-KEM) in TLS 1.3 connections.
-)"));
+)";
+  constexpr std::string_view kExtraUsage =
+  R"(
+  --proxy=PROXY-URI[","PROXY-URI] Routes traffic via the proxy URIs
+  --listen=LISTEN-URI[","LISTEN-URI] Listens at given URIs
+  )";
+  std::string_view additionalUsage;
+
+  if (pType == YASS_CLIENT_DEFAULT) {
+    additionalUsage = kExtraUsage;
+  }
+  absl::SetProgramUsageMessage(absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", kClientUsage, additionalUsage));
 }
 
 void SetServerUsageMessage(std::string_view exec_path) {

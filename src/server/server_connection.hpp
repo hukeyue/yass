@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_SS_CONNECTION
 #define H_SS_CONNECTION
@@ -140,22 +140,40 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// \param remote_host_ips the ip addresses used with remote endpoint
   /// \param remote_host_sni the sni name used with remote endpoint
   /// \param remote_port the port used with remote endpoint
+  /// \param remote_username the username used with remote endpoint
+  /// \param remote_password the password used with remote endpoint
+  /// \param remote_cipher the cipher used with remote endpoint
+  /// \param remote_padding_support the padding support used with remote endpoint
   /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
   /// \param enable_tls the underlying data channel is using tls
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer
+  /// \param username the username used downlink
+  /// \param password the password used downlink
+  /// \param cipher the cipher used with downlink
+  /// \param padding_support padding support used with downlink
+  /// \param redir_mode redir mode used with downlink
   ServerConnection(asio::io_context& io_context,
                    std::string_view remote_host_ips,
                    std::string_view remote_host_sni,
                    uint16_t remote_port,
+                   std::string_view remote_username,
+                   std::string_view remote_password,
+                   cipher_method remote_cipher,
+                   bool remote_padding_support,
                    bool upstream_https_fallback,
                    bool https_fallback,
                    bool enable_upstream_tls,
                    bool enable_tls,
                    SSL_CTX* upstream_ssl_ctx,
-                   SSL_CTX* ssl_ctx);
+                   SSL_CTX* ssl_ctx,
+                   std::string_view username,
+                   std::string_view password,
+                   cipher_method cipher,
+                   bool padding_support,
+                   bool redir_mode);
 
   /// Destruct the service
   ~ServerConnection() override;
@@ -323,7 +341,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// copy of connect response
   static const std::string_view http_connect_reply_;
   /// copy of padding support
-  bool padding_support_ = false;
+  bool padding_support_in_fact_ = false;
   int num_padding_send_ = 0;
   int num_padding_recv_ = 0;
   scoped_refptr<GrowableIOBuffer> padding_in_middle_buf_;
@@ -420,6 +438,12 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
 
   /// mark of in-progress writing
   bool write_inprogress_ = false;
+
+  cipher_method method() const { return cipher_; }
+
+  bool padding_support() const { return padding_support_; }
+
+  bool redir_mode() const { return false; }
 
   friend class DataFrameSource;
 };

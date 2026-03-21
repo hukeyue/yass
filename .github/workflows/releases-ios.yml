@@ -1,4 +1,4 @@
-name: OnDemand Build Artifacts (iOS)
+name: Build Artifacts (iOS)
 on:
   workflow_dispatch:
     inputs:
@@ -15,13 +15,27 @@ on:
         description: 'Test scenario tags'
         required: false
         type: boolean
+  pull_request:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  push:
+    branches: [master, develop]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
+  release:
+    types: [published]
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   ios-simulator-release:
@@ -35,11 +49,11 @@ jobs:
           - arch: x64
             build_type: Release
             rust_target: x86_64-apple-ios
-            xcode_version: 26.2
+            xcode_version: 26.3
           - arch: arm64
             build_type: Release
             rust_target: aarch64-apple-ios-sim
-            xcode_version: 26.2
+            xcode_version: 26.3
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -77,11 +91,6 @@ jobs:
           source "$HOME/.cargo/env"
           ./scripts/setup-ios-rust.sh
           WITH_OS=ios-sim WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
-      - name: Populate depedencies
-        run: |
-          # brew update
-          # brew install ninja cmake p7zip
-          brew install ninja
       - name: Set up Xcode version
         run: |
           sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode_version }}.app

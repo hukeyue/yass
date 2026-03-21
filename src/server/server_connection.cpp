@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "server_connection.hpp"
 
@@ -76,7 +76,8 @@ static std::vector<http2::adapter::Header> GenerateHeaders(std::vector<std::pair
 }
 
 static constexpr std::string_view kBasicAuthPrefix = "basic ";
-static bool VerifyProxyAuthorizationIdentity(std::string_view auth) {
+static bool VerifyProxyAuthorizationIdentity(std::string_view auth,
+                                             std::string_view username, std::string_view password) {
   if (auth.size() <= kBasicAuthPrefix.size()) {
     return false;
   }
@@ -88,7 +89,7 @@ static bool VerifyProxyAuthorizationIdentity(std::string_view auth) {
   if (!Base64Decode(auth, &pass, Base64DecodePolicy::kForgiving)) {
     return false;
   }
-  return pass == absl::StrCat(absl::GetFlag(FLAGS_username), ":", absl::GetFlag(FLAGS_password));
+  return pass == absl::StrCat(username, ":", password);
 }
 
 #endif
@@ -141,22 +142,40 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    std::string_view remote_host_ips,
                                    std::string_view remote_host_sni,
                                    uint16_t remote_port,
+                                   std::string_view remote_username,
+                                   std::string_view remote_password,
+                                   cipher_method remote_cipher,
+                                   bool remote_padding_support,
                                    bool upstream_https_fallback,
                                    bool https_fallback,
                                    bool enable_upstream_tls,
                                    bool enable_tls,
                                    SSL_CTX* upstream_ssl_ctx,
-                                   SSL_CTX* ssl_ctx)
+                                   SSL_CTX* ssl_ctx,
+                                   std::string_view username,
+                                   std::string_view password,
+                                   cipher_method cipher,
+                                   bool padding_support,
+                                   bool redir_mode)
     : Connection(io_context,
                  remote_host_ips,
                  remote_host_sni,
                  remote_port,
+                 remote_username,
+                 remote_password,
+                 remote_cipher,
+                 remote_padding_support,
                  upstream_https_fallback,
                  https_fallback,
                  enable_upstream_tls,
                  enable_tls,
                  upstream_ssl_ctx,
-                 ssl_ctx),
+                 ssl_ctx,
+                 username,
+                 password,
+                 cipher,
+                 padding_support,
+                 redir_mode),
       state_() {}
 
 ServerConnection::~ServerConnection() {
@@ -222,14 +241,14 @@ void ServerConnection::Start() {
     options.perspective = http2::adapter::Perspective::kServer;
     adapter_ = http2::adapter::OgHttp2Adapter::Create(*this, options);
 #endif
-    padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    padding_support_in_fact_ = padding_support();
     SetState(state_stream);
 
     // Send Upstream Settings (HTTP2 Only)
     std::vector<http2::adapter::Http2Setting> settings{
         {http2::adapter::Http2KnownSettingsId::HEADER_TABLE_SIZE, kSpdyMaxHeaderTableSize},
         {http2::adapter::Http2KnownSettingsId::MAX_CONCURRENT_STREAMS, kSpdyMaxConcurrentPushedStreams},
-        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_STREAM_WINDOW_SIZE},
+        {http2::adapter::Http2KnownSettingsId::INITIAL_WINDOW_SIZE, H2_CONN_WINDOW_SIZE},
         {http2::adapter::Http2KnownSettingsId::MAX_HEADER_LIST_SIZE, kSpdyMaxHeaderListSize},
         {http2::adapter::Http2KnownSettingsId::ENABLE_PUSH, kSpdyDisablePush},
     };
@@ -243,15 +262,15 @@ void ServerConnection::Start() {
       if (downlink_->https_fallback()) {
     DCHECK(!http2);
     // TODO should we support it?
-    // padding_support_ = absl::GetFlag(FLAGS_padding_support);
+    // padding_support_in_fact_ = padding_support();
     ReadHandshakeViaHttps();
   } else {
     DCHECK(!http2);
     if (CIPHER_METHOD_IS_SOCKS(method())) {
       ReadHandshakeViaSocks();
     } else {
-      encoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this, true);
-      decoder_ = std::make_unique<cipher>("", absl::GetFlag(FLAGS_password), method(), this);
+      encoder_ = std::make_unique<cipher>("", password_, method(), this, true);
+      decoder_ = std::make_unique<cipher>("", password_, method(), this);
       ReadHandshake();
     }
   }
@@ -339,8 +358,8 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
               << " Unexpected pseudo header path: " << path;
     return false;
   }
-  bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
-  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s])) {
+  bool auth_required = !username_.empty() && !password_.empty();
+  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s], username_, password_)) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Unexpected auth token.";
     return false;
   }
@@ -400,11 +419,11 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
   }
 
   bool padding_support = request_map_.find("padding"s) != request_map_.end();
-  if (padding_support_ && padding_support) {
+  if (padding_support_in_fact_ && padding_support) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Padding support enabled.";
   } else {
     VLOG(1) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Padding support disabled.";
-    padding_support_ = false;
+    padding_support_in_fact_ = false;
   }
 
   // we're done
@@ -461,7 +480,7 @@ bool ServerConnection::OnBeginDataForStream(StreamId stream_id, size_t payload_l
 }
 
 bool ServerConnection::OnDataForStream(StreamId stream_id, absl::string_view data) {
-  if (padding_support_ && num_padding_recv_ < kFirstPaddings) {
+  if (padding_support_in_fact_ && num_padding_recv_ < kFirstPaddings) {
     asio::error_code ec;
     // Append buf to in_middle_buf
     if (padding_in_middle_buf_) {
@@ -687,8 +706,8 @@ void ServerConnection::OnReadHandshakeViaHttps() {
       return;
     }
 
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
-    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization())) {
+    bool auth_required = !username_.empty() && !password_.empty();
+    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization(), username_, password_)) {
       LOG(INFO) << "Connection (server) " << connection_id() << " Unexpected auth token.";
       OnDisconnect(asio::error::invalid_argument);
       return;
@@ -788,7 +807,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
   switch (method()) {
     case CRYPTO_SOCKS4:
     case CRYPTO_SOCKS4A: {
-      bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+      bool auth_required = !username_.empty() && !password_.empty();
       if (auth_required) {
         LOG(WARNING) << "Server specifies username and password but SOCKS4/SOCKS4A doesn't support it";
       }
@@ -833,7 +852,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
 
       socks5::method_select_request_parser::result_type result;
 
-      bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+      bool auth_required = !username_.empty() && !password_.empty();
       std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
 
       if (result == socks5::method_select_request_parser::good) {
@@ -937,7 +956,7 @@ void ServerConnection::WriteMethodSelectResponse() {
       ProcessSentData(ec, 0);
       return;
     }
-    bool auth_required = !absl::GetFlag(FLAGS_username).empty() && !absl::GetFlag(FLAGS_password).empty();
+    bool auth_required = !username_.empty() && !password_.empty();
     auto method_select_reply = socks5::method_select_response_stock_reply(auth_required ? socks5::username_or_password
                                                                                         : socks5::no_auth_required);
     auto buf = GrowableIOBuffer::copyBuffer(&method_select_reply, sizeof(method_select_reply));
@@ -1019,8 +1038,7 @@ void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
     return;
   }
 
-  if (auth_request.username() != absl::GetFlag(FLAGS_username) ||
-      auth_request.password() != absl::GetFlag(FLAGS_password)) {
+  if (auth_request.username() != username_ || auth_request.password() != password_) {
     LOG(INFO) << "Connection (server) " << connection_id() << " socks5: dismatched username and password pair.";
     OnDisconnect(asio::error::invalid_argument);
     return;
@@ -1342,7 +1360,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
   }
 
   scoped_refptr<GrowableIOBuffer> buf;
-  size_t read;
+  size_t read = 0;
 
 #ifdef HAVE_QUICHE
   if (data_frame_ && !data_frame_->empty()) {
@@ -1382,7 +1400,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
       ec = asio::error::eof;
       return nullptr;
     }
-    if (padding_support_ && num_padding_send_ < kFirstPaddings) {
+    if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       buf = AddPadding(buf.get());
       VLOG(2) << "Connection (server) " << connection_id() << " added padding for: " << num_padding_send_
@@ -1569,7 +1587,7 @@ try_again:
       return nullptr;
     }
     // not enough buffer for recv window
-    if (upstream_.byte_length() < H2_STREAM_WINDOW_SIZE) {
+    if (upstream_.byte_length() < H2_CONN_WINDOW_SIZE) {
       goto try_again;
     }
   } else
@@ -1712,7 +1730,7 @@ void ServerConnection::OnConnect() {
     headers.emplace_back("server"s, "YASS/" YASS_APP_PRODUCT_VERSION);
     // Send "Padding" header
     // originated from forwardproxy.go;func ServeHTTP
-    if (padding_support_) {
+    if (padding_support_in_fact_) {
       std::string padding(gurl_base::RandInt(30, 64), '~');
       uint64_t bits = gurl_base::RandUint64();
       for (int i = 0; i < 16; ++i) {

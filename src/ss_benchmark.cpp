@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2025 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
 #include <benchmark/benchmark.h>
 
@@ -47,6 +47,7 @@
 #include "feature.h"
 #include "net/cipher.hpp"
 #include "net/io_buffer.hpp"
+#include "net/padding.hpp"
 #include "server/server_server.hpp"
 #include "version.h"
 
@@ -127,22 +128,40 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             std::string_view remote_host_ips,
                             std::string_view remote_host_sni,
                             uint16_t remote_port,
+                            std::string_view remote_username,
+                            std::string_view remote_password,
+                            cipher_method remote_cipher,
+                            bool remote_padding_support,
                             bool upstream_https_fallback,
                             bool https_fallback,
                             bool enable_upstream_tls,
                             bool enable_tls,
                             SSL_CTX* upstream_ssl_ctx,
-                            SSL_CTX* ssl_ctx)
+                            SSL_CTX* ssl_ctx,
+                            std::string_view username,
+                            std::string_view password,
+                            cipher_method cipher,
+                            bool padding_support,
+                            bool redir_mode)
       : Connection(io_context,
                    remote_host_ips,
                    remote_host_sni,
                    remote_port,
+                   remote_username,
+                   remote_password,
+                   remote_cipher,
+                   remote_padding_support,
                    upstream_https_fallback,
                    https_fallback,
                    enable_upstream_tls,
                    enable_tls,
                    upstream_ssl_ctx,
-                   ssl_ctx) {}
+                   ssl_ctx,
+                   username,
+                   password,
+                   cipher,
+                   padding_support,
+                   redir_mode) {}
 
   ~ContentProviderConnection() override { VLOG(1) << "Connection (content-provider) freed memory"; }
 
@@ -450,7 +469,7 @@ class SsEndToEndBM : public benchmark::Fixture {
     asio::error_code ec;
 
     content_provider_server_ = std::make_unique<ContentProviderServer>(io_context_);
-    content_provider_server_->listen(endpoint, {}, backlog, ec);
+    content_provider_server_->listen(endpoint, {}, {}, {}, {}, {}, {}, backlog, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       return ec;
@@ -471,8 +490,15 @@ class SsEndToEndBM : public benchmark::Fixture {
   asio::error_code StartServer(asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
     server_server_ = std::make_unique<server::ServerServer>(io_context_, std::string_view(), std::string_view(),
-                                                            uint16_t(), std::string_view(), kCertificate, kPrivateKey);
-    server_server_->listen(endpoint, "localhost"sv, backlog, ec);
+                                                            uint16_t(), std::string_view(), std::string_view(),
+                                                            cipher_method(), bool(),
+                                                            std::string_view(), kCertificate, kPrivateKey);
+    server_server_->listen(endpoint, "localhost"sv,
+                           absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                           absl::GetFlag(FLAGS_method).method,
+                           absl::GetFlag(FLAGS_padding_support),
+                           false,
+                           backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -494,9 +520,13 @@ class SsEndToEndBM : public benchmark::Fixture {
   asio::error_code StartLocal(asio::ip::tcp::endpoint remote_endpoint, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
 
-    local_server_ = std::make_unique<cli::CliServer>(io_context_, std::string_view(), "localhost"sv,
-                                                     remote_endpoint.port(), kCertificate);
-    local_server_->listen(endpoint, {}, backlog, ec);
+    local_server_ =
+        std::make_unique<cli::CliServer>(io_context_, std::string_view(), "localhost"sv, remote_endpoint.port(),
+                                         absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                                         absl::GetFlag(FLAGS_method).method,
+                                         absl::GetFlag(FLAGS_padding_support),
+                                         kCertificate);
+    local_server_->listen(endpoint, {}, {}, {}, {}, {}, absl::GetFlag(FLAGS_redir_mode), backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -545,7 +575,7 @@ class SsEndToEndBM : public benchmark::Fixture {
   }                                                                                               \
   BENCHMARK_REGISTER_F(SsEndToEndBM, name)                                                        \
       ->Name("SsEndToEndBM_FullDuplex_" #name)                                                    \
-      ->Range(4096, 1 * 1024 * 1024)                                                              \
+      ->Range(512, 32 * 1024)                                                                    \
       ->UseManualTime();
 CIPHER_METHOD_MAP_SODIUM(XX)
 CIPHER_METHOD_MAP_HTTP(XX)

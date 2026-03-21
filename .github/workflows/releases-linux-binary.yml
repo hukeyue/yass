@@ -32,10 +32,10 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   linux-binary-release:
@@ -44,26 +44,44 @@ jobs:
       matrix:
         include:
           - arch: i386
+            build_type: Release
+            qemu_suffix: i386
+          - arch: i386
+            build_type: Debug
             qemu_suffix: i386
           - arch: amd64
+            build_type: Release
+            qemu_suffix: amd64
+          - arch: amd64
+            build_type: Debug
             qemu_suffix: amd64
           - arch: armhf
+            build_type: Release
             qemu_suffix: armhf
           - arch: armel
+            build_type: Release
             qemu_suffix: armel
           - arch: arm64
+            build_type: Release
             qemu_suffix: aarch64
           - arch: mipsel
+            build_type: Release
             qemu_suffix: mipsel
           - arch: mips64el
+            build_type: Release
             qemu_suffix: mips64el
           - arch: loongarch64
+            build_type: Release
             qemu_suffix: loongarch64
           - arch: riscv64
+            build_type: Release
             qemu_suffix: riscv64
           - arch: riscv32
+            build_type: Release
             qemu_suffix: riscv32
     runs-on: ubuntu-22.04
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
     permissions:
       contents: write
     steps:
@@ -176,13 +194,47 @@ jobs:
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
+      - uses: actions/upload-artifact@v6
+        if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            build-linux-${{ matrix.arch }}/yass
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
+          path: |
+            build-linux-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          path: |
+            build-linux-${{ matrix.arch }}/yass_server
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
+          path: |
+            build-linux-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
+          path: |
+            build-linux-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+          path: |
+            build-linux-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
-        if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
         run: |
           rm -rf $SDK_ROOT/tmp
           mkdir -p $SDK_ROOT/etc/ssl/certs $SDK_ROOT/dev $SDK_ROOT/proc $SDK_ROOT/tmp $SDK_ROOT/build
           touch $SDK_ROOT/etc/resolv.conf
-          bwrap --die-with-parent --bind $SDK_ROOT / \
+          timeout 120 bwrap --die-with-parent --bind $SDK_ROOT / \
             --ro-bind /sys /sys \
             --ro-bind /etc/resolv.conf /etc/resolv.conf \
             --ro-bind /etc/ssl/certs /etc/ssl/certs \
@@ -194,13 +246,84 @@ jobs:
         if: ${{ matrix.arch != 'i386' && matrix.arch != 'amd64' }}
         run: |
           # TMPDIR is required by leveldb unittests
-          qemu-${{ matrix.qemu_suffix }} -L $SDK_ROOT \
+          timeout 120 qemu-${{ matrix.qemu_suffix }} -L $SDK_ROOT \
             -E TMPDIR=$PWD/build-linux-${{ matrix.arch }} \
             $PWD/build-linux-${{ matrix.arch }}/yass_test \
             --no_exec_proc_tests
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} yass*.tgz
+  linux-binary-release-native-test:
+    runs-on: ubuntu-22.04
+    needs: linux-binary-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i386
+            build_type: Release
+            qemu_suffix: i386
+          - arch: i386
+            build_type: Debug
+            qemu_suffix: i386
+          - arch: amd64
+            build_type: Release
+            qemu_suffix: amd64
+          - arch: amd64
+            build_type: Debug
+            qemu_suffix: amd64
+    steps:
+      - name: Change ubuntu mirror
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        run: |
+          sudo sed -i 's/azure.archive.ubuntu.com/azure.archive.ubuntu.com/g' /etc/apt/sources.list
+          sudo apt-get update -qq
+      - name: Populate depedencies
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y libcurl4-gnutls-dev:${{ matrix.arch }}
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
+      - name: Run tests
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        run: |
+          chmod 755 yass_test
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode
+  linux-binary-release-native-benchmark:
+    runs-on: ubuntu-22.04
+    needs: linux-binary-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            build_type: Release
+            qemu_suffix: amd64
+          - arch: amd64
+            build_type: Debug
+            qemu_suffix: amd64
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        run: |
+          chmod 755 yass_benchmark
+          ./yass_benchmark

@@ -18,7 +18,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   mingw64-release:
@@ -118,7 +118,7 @@ jobs:
           REM start to build with workaround
           mkdir build-mingw
           cd build-mingw
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on -DCLI=on -DSERVER=on -DGUI=on -DMINGW_MSVCRT100=on -DMINGW_WORKAROUND=on .. ${{ env.CMAKE_OPTIONS }} -DCMAKE_C_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_CXX_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_ASM_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_SYSROOT="%CD%\..\third_party\${{ matrix.mingw_dir }}\${{ matrix.arch }}-w64-mingw32" -DUSE_LIBCXX=on -DENABLE_LLD=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on -DCLI=on -DSERVER=on -DGUI=on -DMINGW_MSVCRT100=on -DMINGW_WORKAROUND=on .. ${{ env.CMAKE_OPTIONS }} -DCMAKE_C_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_CXX_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_ASM_COMPILER_TARGET=${{ matrix.arch }}-pc-windows-gnu -DCMAKE_SYSROOT="%CD%\..\third_party\${{ matrix.mingw_dir }}\${{ matrix.arch }}-w64-mingw32" -DUSE_LIBCXX=on -DENABLE_LLD=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_NGHTTP2=off
           ninja yass yass_benchmark yass_test yass_cli yass_server
       - name: Populate depedencies (libgcc-i686)
         if: ${{ matrix.arch == 'i686' }}
@@ -141,6 +141,14 @@ jobs:
           llvm-objcopy --strip-debug yass.exe
           # to add a link to the debugging info into the stripped executable.
           llvm-objcopy --add-gnu-debuglink=yass.exe.dbg yass.exe
+
+          llvm-objcopy --only-keep-debug yass_cli.exe yass_cli.exe.dbg
+          llvm-objcopy --strip-debug yass_cli.exe
+          llvm-objcopy --add-gnu-debuglink=yass_cli.exe.dbg yass_cli.exe
+
+          llvm-objcopy --only-keep-debug yass_server.exe yass_server.exe.dbg
+          llvm-objcopy --strip-debug yass_server.exe
+          llvm-objcopy --add-gnu-debuglink=yass_server.exe.dbg yass_server.exe
 
           export PREFIX=yass-win-mingw64-${{ matrix.arch }}-${{ github.event.release.tag_name }}
           # generate archive
@@ -171,6 +179,44 @@ jobs:
           curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x64.exe
           vcredist_x64.exe /install /quiet /norestart
           del vcredist_x64.exe
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            build-mingw/yass.exe
+            build-mingw/libgcc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
+          path: |
+            build-mingw/yass_cli.exe
+            build-mingw/libgcc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          path: |
+            build-mingw/yass_server.exe
+            build-mingw/libgcc*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
+          path: |
+            build-mingw/*.dbg
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
+          path: |
+            build-mingw/yass_test.exe
+            build-mingw/*.dll
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64-winxp-old-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+          path: |
+            build-mingw/yass_benchmark.exe
+            build-mingw/*.dll
+          compression-level: 9 # maximum compression
       - name: Run unittests
         shell: bash
         run: |
@@ -180,7 +226,7 @@ jobs:
           ./yass_cli --version
           ./yass_server --version
       - name: Upload dist tarball
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash

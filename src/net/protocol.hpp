@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_NET_PROTOCOL
 #define H_NET_PROTOCOL
@@ -38,8 +38,8 @@
 #include "net/asio.hpp"
 #include "net/io_buffer.hpp"
 
-#define SOCKET_BUF_SIZE (16384)
-#define SOCKET_DEBUF_SIZE (16384)
+#define SOCKET_BUF_SIZE (17 * 1024)
+#define SOCKET_DEBUF_SIZE (17 * 1024)
 #define SS_FRAME_SIZE (16384 - 128)
 
 namespace net {

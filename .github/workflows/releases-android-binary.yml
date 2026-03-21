@@ -32,10 +32,10 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 144-1
+  CACHE_EPOCH: 146-2
   GOPROXY: direct
 jobs:
   android-binary-release:
@@ -179,33 +179,6 @@ jobs:
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
             -build-benchmark -build-test -nc -no-packaging
-      - name: "Install dependency: android sysroot (test purpose)"
-        if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
-        run: |
-          ./scripts/get-android-sys.sh ${{ matrix.arch }} "${{ matrix.SYSROOT }}"
-      - name: Run tests (x86 and x64)
-        if: ${{ matrix.arch == 'x86' ||  matrix.arch == 'x64' }}
-        run: |
-          # android sysimg doesn't like resolv.conf
-          mkdir -p $SYSROOT/sys $SYSROOT/dev $SYSROOT/proc $SYSROOT/data/local/tmp
-          bwrap --die-with-parent --ro-bind $SYSROOT / \
-            --ro-bind /sys /sys \
-            --proc /proc --dev /dev \
-            --unshare-all --share-net \
-            --bind $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} /data/local/tmp \
-            --setenv ANDROID_DATA /data \
-            --setenv ANDROID_ROOT /system \
-            --setenv TMPDIR /data/local/tmp \
-            /data/local/tmp/yass_test
-      - name: Run tests (non x86, under qemu emulation)
-        if: ${{ matrix.arch != 'x86' && matrix.arch != 'x64' }}
-        run: |
-          # TMPDIR is required by leveldb unittests
-          qemu-${{ matrix.qemu_suffix }} -L $SYSROOT \
-            -E ANDROID_DATA=$SYSROOT/data \
-            -E ANDROID_ROOT=$SYSROOT/system \
-            -E TMPDIR=$PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} \
-            $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
       - name: Install the Release certificate
         if: ${{ github.event_name == 'release' }}
         env:
@@ -241,8 +214,80 @@ jobs:
           if [ ! -z $SIGNING_STORE_PATH ]; then
             rm -f $SIGNING_STORE_PATH
           fi
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-aab
+          path: |
+            yass*.aab
+          compression-level: 0 # no compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-apk
+          path: |
+            yass*.apk
+          compression-level: 0 # no compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-cli
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-server
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dbg
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-test
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-benchmark
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
+      - name: "Install dependency: android sysroot (test purpose)"
+        if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
+        run: |
+          ./scripts/get-android-sys.sh ${{ matrix.arch }} "${{ matrix.SYSROOT }}"
+      - name: Run tests (x86 and x64)
+        if: ${{ matrix.arch == 'x86' ||  matrix.arch == 'x64' }}
+        run: |
+          # android sysimg doesn't like resolv.conf
+          mkdir -p $SYSROOT/sys $SYSROOT/dev $SYSROOT/proc $SYSROOT/data/local/tmp
+          bwrap --die-with-parent --ro-bind $SYSROOT / \
+            --ro-bind /sys /sys \
+            --proc /proc --dev /dev \
+            --unshare-all --share-net \
+            --bind $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} /data/local/tmp \
+            --setenv ANDROID_DATA /data \
+            --setenv ANDROID_ROOT /system \
+            --setenv TMPDIR /data/local/tmp \
+            /data/local/tmp/yass_test
+      - name: Run tests (non x86, under qemu emulation)
+        if: ${{ matrix.arch != 'x86' && matrix.arch != 'x64' }}
+        run: |
+          # TMPDIR is required by leveldb unittests
+          qemu-${{ matrix.qemu_suffix }} -L $SYSROOT \
+            -E ANDROID_DATA=$SYSROOT/data \
+            -E ANDROID_ROOT=$SYSROOT/system \
+            -E TMPDIR=$PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }} \
+            $PWD/build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
       - name: Upload dist tarball (including debuginfo)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

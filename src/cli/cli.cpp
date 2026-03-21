@@ -20,10 +20,11 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #include "cli/cli_server.hpp"
 #include "config/config.hpp"
+#include "config/config_cli.hpp"
 #include "crypto/crypter_export.hpp"
 
 #include <absl/debugging/failure_signal_handler.h>
@@ -33,12 +34,17 @@
 #include <absl/strings/str_join.h>
 #include <build/build_config.h>
 #include <locale.h>
+#include <memory>
+#include <vector>
+#include "third_party/googleurl/url/gurl.h"
+#include "third_party/googleurl/url/url_util.h"
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #include "cli/cli_connection_stats.hpp"
 #include "core/logging.hpp"
 #include "crypto/crypter_export.hpp"
 #include "net/asio.hpp"
+#include "net/padding.hpp"
 #include "net/resolver.hpp"
 #include "version.h"
 
@@ -78,6 +84,150 @@ static asio::ip::tcp::resolver::results_type ResolveAddress(const std::string& d
 
     return results;
   }
+}
+
+static asio::error_code ListenAddress(asio::io_context& io_context, std::vector<std::unique_ptr<CliServer>> *servers,
+                                      std::string remote_host_name,
+                                      std::string remote_host_sni,
+                                      uint16_t remote_port,
+                                      std::string remote_username,
+                                      std::string remote_password,
+                                      cipher_method remote_cipher,
+                                      bool remote_padding_support,
+                                      std::string local_host_name,
+                                      uint16_t local_port,
+                                      bool redir_mode) {
+  if (remote_host_sni.empty()) {
+    remote_host_sni = remote_host_name;
+  }
+  if (remote_host_sni.size() > TLSEXT_MAXLEN_host_name) {
+    LOG(WARNING) << "Invalid server name or SNI: " << remote_host_sni;
+    return asio::error::invalid_argument;
+  }
+  std::string remote_host_ips;
+  if (remote_port == 0u) {
+    LOG(WARNING) << "Invalid server port: " << remote_port;
+    return asio::error::invalid_argument;
+  }
+
+  auto results = ResolveAddress(remote_host_name, remote_port);
+  if (results.empty()) {
+    return asio::error::invalid_argument;
+  } else {
+    std::vector<std::string> remote_ips;
+    for (auto result : results) {
+      if (result.endpoint().address().is_unspecified()) {
+        LOG(WARNING) << "Unspecified remote address: " << remote_host_name;
+        return asio::error::invalid_argument;
+      }
+      remote_ips.push_back(result.endpoint().address().to_string());
+    }
+    remote_host_ips = absl::StrJoin(remote_ips, ";");
+    LOG(INFO) << "resolved server ips: " << remote_host_ips << " from " << remote_host_name;
+  }
+
+  std::vector<asio::ip::tcp::endpoint> endpoints;
+
+  results = ResolveAddress(local_host_name, local_port);
+
+  if (results.empty()) {
+    return asio::error::invalid_argument;
+  } else {
+    endpoints.insert(endpoints.end(), std::begin(results), std::end(results));
+
+    std::vector<std::string> local_ips;
+    for (auto result : results) {
+      local_ips.push_back(result.endpoint().address().to_string());
+    }
+    LOG(INFO) << "resolved local ips: " << absl::StrJoin(local_ips, ";") << " from " << local_host_name;
+  }
+
+  asio::error_code ec;
+  auto server = std::make_unique<CliServer>(io_context, remote_host_ips, remote_host_sni, remote_port,
+                                            remote_username, remote_password, remote_cipher, remote_padding_support);
+  for (auto& endpoint : endpoints) {
+    server->listen(endpoint, {}, {}, {}, {}, {}, redir_mode, SOMAXCONN, ec);
+    if (ec) {
+      LOG(ERROR) << "listen failed due to: " << ec;
+      return ec;
+    }
+    endpoint = server->endpoint();
+    LOG(WARNING) << "tcp server listening at " << endpoint << " with upstream sni: " << remote_host_sni << ":"
+                 << remote_port << " (ip " << remote_host_ips << " )";
+  }
+  servers->push_back(std::move(server));
+  return {};
+}
+
+static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector<std::unique_ptr<CliServer>> *servers,
+                                       std::string_view proxy_uri_str, std::string_view listen_uri_str) {
+    std::string remote_host_name;
+    std::string remote_host_sni;
+    uint16_t remote_port;
+    std::string remote_username;
+    std::string remote_password;
+    cipher_method remote_cipher;
+    bool remote_padding_support = false;
+    std::string local_host_name;
+    uint16_t local_port;
+    bool redir_mode = false;
+
+    GURL proxy_uri(proxy_uri_str);
+    if (!proxy_uri.is_valid() || !proxy_uri.has_host() || !proxy_uri.has_scheme()) {
+      LOG(WARNING) << "Invalid Proxy URL: " << proxy_uri_str;
+      return asio::error::invalid_argument;
+    }
+    remote_host_name = proxy_uri.host();
+    remote_port = proxy_uri.EffectiveIntPort();
+    remote_username = proxy_uri.username();
+    remote_password = proxy_uri.password();
+
+    if (proxy_uri.scheme() == "https") {
+      remote_cipher = CRYPTO_HTTPS;
+    } else if (proxy_uri.scheme() == "http2") {
+      remote_cipher = CRYPTO_HTTP2;
+      if (!proxy_uri.has_port()) {
+        remote_port = 443u;
+      }
+    } else if (proxy_uri.scheme() == "naive") {
+      remote_padding_support = true;
+      remote_cipher = CRYPTO_HTTP2;
+      if (!proxy_uri.has_port()) {
+        remote_port = 443u;
+      }
+    } else if (proxy_uri.scheme() == "socks") {
+      remote_cipher = CRYPTO_SOCKS5H;
+      if (!proxy_uri.has_port()) {
+        LOG(WARNING) << "Invalid Proxy URL: " << proxy_uri_str << " Port is required for socks";
+        return asio::error::invalid_argument;
+      }
+    } else {
+      LOG(WARNING) << "Invalid Proxy Scheme: " << proxy_uri.scheme();
+      return asio::error::invalid_argument;
+    }
+
+    GURL listen_uri(listen_uri_str);
+    if (!listen_uri.is_valid() || !listen_uri.has_host() || !listen_uri.has_scheme()) {
+      LOG(WARNING) << "Invalid Listen URL: " << listen_uri_str;
+      return asio::error::invalid_argument;
+    }
+    if (listen_uri.scheme() != "auto" && listen_uri.scheme() != "redir") {
+      LOG(WARNING) << "Following listen uri's scheme is ignored due to automatical detection: " << listen_uri.scheme();
+    }
+    local_host_name = listen_uri.host();
+    local_port = listen_uri.EffectiveIntPort();
+    if (!listen_uri.has_port()) {
+      local_port = 1080u;
+    }
+    if (listen_uri.scheme() == "redir") {
+      redir_mode = true;
+    } else {
+      redir_mode = false;
+    }
+
+    return ListenAddress(io_context, servers, remote_host_name, remote_host_sni, remote_port,
+                         remote_username, remote_password, remote_cipher, remote_padding_support,
+                         local_host_name, local_port, redir_mode);
 }
 
 int main(int argc, const char* argv[]) {
@@ -158,71 +308,8 @@ int main(int argc, const char* argv[]) {
   auto work_guard =
       std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-  std::string remote_host_name = absl::GetFlag(FLAGS_server_host);
-  std::string remote_host_sni = remote_host_name;
-  if (!absl::GetFlag(FLAGS_server_sni).empty()) {
-    remote_host_sni = absl::GetFlag(FLAGS_server_sni);
-  }
-  if (remote_host_sni.size() > TLSEXT_MAXLEN_host_name) {
-    LOG(WARNING) << "Invalid server name or SNI: " << remote_host_sni;
-    return -1;
-  }
-
-  std::string remote_host_ips;
-  uint16_t remote_port = absl::GetFlag(FLAGS_server_port);
-  if (remote_port == 0u) {
-    LOG(WARNING) << "Invalid server port: " << remote_port;
-    return -1;
-  }
-
-  auto results = ResolveAddress(remote_host_name, remote_port);
-  if (results.empty()) {
-    return -1;
-  } else {
-    std::vector<std::string> remote_ips;
-    for (auto result : results) {
-      if (result.endpoint().address().is_unspecified()) {
-        LOG(WARNING) << "Unspecified remote address: " << remote_host_name;
-        return -1;
-      }
-      remote_ips.push_back(result.endpoint().address().to_string());
-    }
-    remote_host_ips = absl::StrJoin(remote_ips, ";");
-    LOG(INFO) << "resolved server ips: " << remote_host_ips << " from " << remote_host_name;
-  }
-
-  std::vector<asio::ip::tcp::endpoint> endpoints;
-  std::string local_host_name = absl::GetFlag(FLAGS_local_host);
-  uint16_t local_port = absl::GetFlag(FLAGS_local_port);
-
-  results = ResolveAddress(local_host_name, local_port);
-
-  if (results.empty()) {
-    return -1;
-  } else {
-    endpoints.insert(endpoints.end(), std::begin(results), std::end(results));
-
-    std::vector<std::string> local_ips;
-    for (auto result : results) {
-      local_ips.push_back(result.endpoint().address().to_string());
-    }
-    LOG(INFO) << "resolved local ips: " << absl::StrJoin(local_ips, ";") << " from " << local_host_name;
-  }
-
+  std::vector<std::unique_ptr<CliServer>> servers;
   asio::error_code ec;
-  CliServer server(io_context, remote_host_ips, remote_host_sni, remote_port);
-  for (auto& endpoint : endpoints) {
-    server.listen(endpoint, std::string(), SOMAXCONN, ec);
-    if (ec) {
-      LOG(ERROR) << "listen failed due to: " << ec;
-      server.stop();
-      work_guard.reset();
-      return -1;
-    }
-    endpoint = server.endpoint();
-    LOG(WARNING) << "tcp server listening at " << endpoint << " with upstream sni: " << remote_host_sni << ":"
-                 << remote_port << " (ip " << remote_host_ips << " )";
-  }
 
   asio::signal_set signals(io_context);
   signals.add(SIGINT, ec);
@@ -246,11 +333,13 @@ int main(int argc, const char* argv[]) {
 #ifdef SIGQUIT
     if (signal_number == SIGQUIT) {
       LOG(WARNING) << "Application shuting down";
-      server.shutdown();
+      for (auto& server : servers)
+        server->shutdown();
     } else {
 #endif
       LOG(WARNING) << "Application exiting";
-      server.stop();
+      for (auto& server : servers)
+        server->stop();
 #ifdef SIGQUIT
     }
 #endif
@@ -259,7 +348,56 @@ int main(int argc, const char* argv[]) {
   };
   signals.async_wait(cb);
 
+  // listen
+  const std::vector<std::string>& proxy_uri_strs = absl::GetFlag(FLAGS_proxy).str_array;
+  const std::vector<std::string>& listen_uri_strs = absl::GetFlag(FLAGS_listen).str_array;
+  if (!proxy_uri_strs.empty() && !listen_uri_strs.empty()) {
+    url::AddStandardScheme("auto",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("socks",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("http2",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("naive",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("redir",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    if (proxy_uri_strs.size() != listen_uri_strs.size()) {
+      LOG(WARNING) << "Listen addresses do not match multiple proxy addresses";
+      return -1;
+    }
+    for (unsigned i = 0; i < proxy_uri_strs.size(); ++i) {
+      ec = ListenProxyUri(io_context, &servers, proxy_uri_strs[i], listen_uri_strs[i]);
+      if (ec) {
+        return -1;
+      }
+    }
+  } else if (proxy_uri_strs.empty() ^ listen_uri_strs.empty()) {
+    LOG(WARNING) << "Both of Listen URLs and Proxy URLs are required. Ignored now";
+  } else {
+    std::string remote_host_name = absl::GetFlag(FLAGS_server_host);
+    std::string remote_host_sni = absl::GetFlag(FLAGS_server_sni);
+    uint16_t remote_port = absl::GetFlag(FLAGS_server_port);
+    std::string remote_username = absl::GetFlag(FLAGS_username);
+    std::string remote_password = absl::GetFlag(FLAGS_password);
+    cipher_method remote_cipher = absl::GetFlag(FLAGS_method);
+    bool remote_padding_support = absl::GetFlag(FLAGS_padding_support);
+    std::string local_host_name = absl::GetFlag(FLAGS_local_host);
+    uint16_t local_port = absl::GetFlag(FLAGS_local_port);
+    bool redir_mode = absl::GetFlag(FLAGS_redir_mode);
+
+    ec = ListenAddress(io_context, &servers, remote_host_name, remote_host_sni, remote_port,
+                       remote_username, remote_password, remote_cipher, remote_padding_support,
+                       local_host_name, local_port, redir_mode);
+    if (ec) {
+      LOG(WARNING) << ec;
+      return -1;
+    }
+  }
+
   io_context.run();
+
+  servers.clear();
 
   PrintMallocStats();
   PrintCliStats();

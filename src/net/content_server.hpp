@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_NET_CONTENT_SERVER
 #define H_NET_CONTENT_SERVER
@@ -72,6 +72,10 @@ class ContentServer {
                          std::string_view remote_host_ips = {},
                          std::string_view remote_host_sni = {},
                          uint16_t remote_port = {},
+                         std::string_view remote_username = {},
+                         std::string_view remote_password = {},
+                         cipher_method remote_cipher = {},
+                         bool remote_padding_support = {},
                          std::string_view upstream_certificate = {},
                          std::string_view certificate = {},
                          std::string_view private_key = {},
@@ -82,10 +86,14 @@ class ContentServer {
         remote_host_ips_(remote_host_ips),
         remote_host_sni_(remote_host_sni),
         remote_port_(remote_port),
-        upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(absl::GetFlag(FLAGS_method).method)),
-        https_fallback_(upstream_https_fallback_),
-        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(absl::GetFlag(FLAGS_method).method)),
-        enable_tls_(enable_upstream_tls_),
+        remote_username_(remote_username),
+        remote_password_(remote_password),
+        remote_cipher_(remote_cipher),
+        remote_padding_support_(remote_padding_support),
+        upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)),
+        https_fallback_(true),
+        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
+        enable_tls_(true),
         upstream_certificate_(upstream_certificate),
         certificate_(certificate),
         private_key_(private_key),
@@ -106,8 +114,6 @@ class ContentServer {
     CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
     CHECK_EQ(connection_map_.size(), 0u) << "ContentServer freed on non-closed connections";
 
-    client_instance_ = nullptr;
-
     work_guard_.reset();
   }
 
@@ -122,6 +128,11 @@ class ContentServer {
 
   void listen(const asio::ip::tcp::endpoint& endpoint,
               std::string_view server_name,
+              std::string_view server_username,
+              std::string_view server_password,
+              cipher_method server_cipher,
+              bool server_padding_support,
+              bool server_redir_mode,
               int backlog,
               asio::error_code& ec) {
     if (next_listen_ctx_ >= MAX_LISTEN_ADDRESSES) {
@@ -134,6 +145,13 @@ class ContentServer {
     }
     ListenCtx& ctx = listen_ctxs_[next_listen_ctx_];
     ctx.server_name = server_name;
+    ctx.server_username = server_username;
+    ctx.server_password = server_password;
+    ctx.server_cipher = server_cipher;
+    ctx.server_padding_support = server_padding_support;
+    ctx.server_redir_mode = server_redir_mode;
+    ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
+    ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_HTTPS_FALLBACK(server_cipher);
     ctx.endpoint = endpoint;
     ctx.acceptor = std::make_unique<asio::ip::tcp::acceptor>(io_context_);
 
@@ -170,7 +188,7 @@ class ContentServer {
         return;
       }
     }
-    if (enable_tls_) {
+    if (ctx.enable_tls) {
       setup_ssl_ctx(ec);
       if (ec) {
         return;
@@ -266,14 +284,21 @@ class ContentServer {
             return;
           }
           tlsext_ctx_t* tlsext_ctx = nullptr;
-          if (enable_tls_) {
+          if (ctx.enable_tls) {
             tlsext_ctx = new tlsext_ctx_t{this, next_connection_id_, listen_ctx_num};
             setup_ssl_ctx_alpn_cb(tlsext_ctx);
             setup_ssl_ctx_tlsext_cb(tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
-              T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_, upstream_https_fallback_,
-                        https_fallback_, enable_upstream_tls_, enable_tls_, upstream_ssl_ctx_.get(), ssl_ctx_.get());
+              T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
+                        remote_username_, remote_password_, remote_cipher_,
+                        remote_padding_support_,
+                        upstream_https_fallback_,
+                        ctx.https_fallback,
+                        enable_upstream_tls_, ctx.enable_tls,
+                        upstream_ssl_ctx_.get(), ssl_ctx_.get(),
+                        ctx.server_username, ctx.server_password, ctx.server_cipher,
+                        ctx.server_padding_support, ctx.server_redir_mode);
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
           if (in_shutdown_) {
             return;
@@ -480,13 +505,15 @@ class ContentServer {
                             void* arg) {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
+    auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
+    auto https_fallback = server->listen_ctxs_[listen_ctx_num].https_fallback;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
         goto err;
       }
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
-      if (!server->https_fallback_ && NextProtoFromString(alpn) == kProtoHTTP2) {
+      if (!https_fallback && NextProtoFromString(alpn) == kProtoHTTP2) {
         VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
         server->set_https_fallback(connection_id, false);
         *out = in + 1;
@@ -623,10 +650,12 @@ class ContentServer {
       VLOG(1) << "Using upstream certificate (in-memory)";
     }
 
-    client_instance_ = this;
-    ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+    std::call_once(boringssl_data_index_init_flag_, [&]{
+      ssl_ctx_data_index_ = SSL_CTX_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+      ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+    });
+    SSL_CTX_set_ex_data(ctx, ssl_ctx_data_index_, this);
     ssl_client_session_cache_ = std::make_unique<SSLClientSessionCache>(SSLClientSessionCache::Config{});
-
     // Disable the internal session cache. Session caching is handled
     // externally (i.e. by SSLClientSessionCache).
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL);
@@ -643,10 +672,11 @@ class ContentServer {
   }
 
  private:
-  int ssl_socket_data_index_ = -1;
-  static ContentServer<T>* client_instance_;
-  static ContentServer* GetInstance() { return client_instance_; }
-  SSLSocket* GetClientSocketFromSSL(const SSL* ssl) {
+  static std::once_flag boringssl_data_index_init_flag_;
+  static int ssl_ctx_data_index_;
+  static int ssl_socket_data_index_;
+
+  static SSLSocket* GetClientSocketFromSSL(const SSL* ssl) {
     DCHECK(ssl);
     SSLSocket* socket = static_cast<SSLSocket*>(SSL_get_ex_data(ssl, ssl_socket_data_index_));
     DCHECK(socket);
@@ -654,7 +684,7 @@ class ContentServer {
   }
 
   static int NewSessionCallback(SSL* ssl, SSL_SESSION* session) {
-    SSLSocket* socket = GetInstance()->GetClientSocketFromSSL(ssl);
+    SSLSocket* socket = GetClientSocketFromSSL(ssl);
     return socket->NewSessionCallback(session);
   }
 
@@ -666,6 +696,10 @@ class ContentServer {
   std::string remote_host_ips_;
   std::string remote_host_sni_;
   uint16_t remote_port_;
+  std::string remote_username_;
+  std::string remote_password_;
+  cipher_method remote_cipher_;
+  bool remote_padding_support_;
 
   bool upstream_https_fallback_;
   bool https_fallback_;
@@ -683,6 +717,13 @@ class ContentServer {
 
   struct ListenCtx {
     std::string server_name;
+    std::string server_username;
+    std::string server_password;
+    cipher_method server_cipher;
+    bool server_padding_support;
+    bool server_redir_mode;
+    bool enable_tls;
+    bool https_fallback;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
@@ -699,7 +740,13 @@ class ContentServer {
 };
 
 template <typename T>
-ContentServer<T>* ContentServer<T>::client_instance_ = nullptr;
+std::once_flag ContentServer<T>::boringssl_data_index_init_flag_ = {};
+
+template <typename T>
+int ContentServer<T>::ssl_ctx_data_index_ = -1;
+
+template <typename T>
+int ContentServer<T>::ssl_socket_data_index_ = -1;
 
 }  // namespace net
 

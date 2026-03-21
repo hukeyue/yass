@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2025 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
 #ifndef H_CRYPTO_AES128_GCM_EVP_ENCRYPTER
 #define H_CRYPTO_AES128_GCM_EVP_ENCRYPTER

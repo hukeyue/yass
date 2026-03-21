@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 package main
 
@@ -582,25 +582,15 @@ func getAndFixHarmonyLibunwind() {
 		if !strings.HasSuffix(entry.Name(), "-ohos") {
 			continue
 		}
-		if _, err = os.Lstat(filepath.Join(target_path, entry.Name())); err == nil {
-			err = os.Remove(filepath.Join(target_path, entry.Name()))
-			if err != nil {
-				glog.Fatalf("%v", err)
-			}
-		}
-		err = os.Symlink(filepath.Join(source_path, entry.Name()),
-			filepath.Join(target_path, entry.Name()))
+		err = replaceFileRecursive(filepath.Join(source_path, entry.Name()),
+			filepath.Join(target_path, entry.Name()), entry.IsDir())
 		if err != nil {
-			glog.Fatalf("%v", err)
+			glog.Fatalf("%v at file %v", err, entry.Name())
 		}
-		glog.Info("Created symbolic links at ", filepath.Join(target_path, entry.Name()))
 	}
 }
 
 func getAndFixLibunwind(source_path string, subdir string) {
-	if runtime.GOOS == "windows" {
-		glog.Fatalf("Symbolic link is not supported on windows")
-	}
 	// ln -sf $PWD/third_party/android_toolchain/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.7/lib/linux/i386 third_party/llvm-build/Release+Asserts/lib/clang/18/lib/linux
 	target_path := fmt.Sprintf(filepath.Join(clangPath, "lib", "clang", getClangVersion(clangPath), "lib", subdir))
 	entries, err := ioutil.ReadDir(source_path)
@@ -617,18 +607,11 @@ func getAndFixLibunwind(source_path string, subdir string) {
 		if subdir == "" && !strings.HasSuffix(entry.Name(), "-ohos") {
 			continue
 		}
-		if _, err = os.Lstat(filepath.Join(target_path, entry.Name())); err == nil {
-			err = os.Remove(filepath.Join(target_path, entry.Name()))
-			if err != nil {
-				glog.Fatalf("%v", err)
-			}
-		}
-		err = os.Symlink(filepath.Join(source_path, entry.Name()),
-			filepath.Join(target_path, entry.Name()))
+		err = replaceFileRecursive(filepath.Join(source_path, entry.Name()),
+			filepath.Join(target_path, entry.Name()), entry.IsDir())
 		if err != nil {
-			glog.Fatalf("%v", err)
+			glog.Fatalf("%v at file %v", err, entry.Name())
 		}
-		glog.Info("Created symbolic links at ", filepath.Join(target_path, entry.Name()))
 	}
 }
 
@@ -916,6 +899,7 @@ func buildStageGenerateBuildScript() {
 		// if msvcCrtLinkageFlag == "dynamic" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
+		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
 	if systemNameFlag == "darwin" {
@@ -993,6 +977,8 @@ func buildStageGenerateBuildScript() {
 		// if !mingwAllowXpFlag && targetAbi != "i686" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
+
+		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
 	if systemNameFlag == "ios" {
@@ -1098,9 +1084,11 @@ func buildStageGenerateBuildScript() {
 			// mimalloc calls madvise internally while
 			// some old system doesn't like it.
 			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
 		} else {
 			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
 			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
 		}
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DENABLE_FORTIFY=on"))
 	}
@@ -1614,8 +1602,10 @@ func postStateStripBinaries() {
 		return
 	}
 	if systemNameFlag == "android" && variantFlag == "gui" {
-		glog.Info("Done in aab build")
-		return
+		if androidAab {
+			glog.Info("Done in aab build")
+			return
+		}
 	}
 	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
@@ -1797,6 +1787,64 @@ func copyFile(src string, dst string) error {
 		if _, err := fout.Write(buf[:n]); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func copyDir(src string, dst string) error {
+	entries, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	err = os.Mkdir(dst, 0777) // FIXME should we ignore the file mode?
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() {
+			err = copyDir(filepath.Join(src, name), filepath.Join(dst, name))
+		} else {
+			err = copyFile(filepath.Join(src, name), filepath.Join(dst, name))
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func replaceFileRecursive(src string, dst string, isDir bool) error {
+	if runtime.GOOS != "windows" {
+		if _, err := os.Lstat(dst); err == nil {
+			err = os.RemoveAll(dst)
+			if err != nil {
+				return err
+			}
+			glog.Info("Removed stall links at ", dst)
+		}
+		err := os.Symlink(src, dst)
+		if err != nil {
+			return err
+		}
+		glog.Info("Created symbolic links at ", dst)
+	} else {
+		if _, err := os.Stat(dst); err == nil {
+			err = os.RemoveAll(dst)
+			if err != nil {
+				return err
+			}
+		}
+		var err error
+		if isDir {
+			err = copyDir(src, dst)
+		} else {
+			err = copyFile(src, dst)
+		}
+		if err != nil {
+			return err
+		}
+		glog.Info("Created hard copy at ", dst)
 	}
 	return nil
 }
@@ -2343,7 +2391,7 @@ func postStateArchives() map[string][]string {
 	if systemNameFlag == "windows" {
 		dbgPaths = append(dbgPaths, APPNAME+".pdb")
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
-	} else if systemNameFlag == "android" && variantFlag == "gui"  {
+	} else if systemNameFlag == "android" && variantFlag == "gui" {
 		// nop because we produces aab now
 		dbgPaths = []string{}
 	} else if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {

@@ -20,7 +20,7 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2022-2025 Chilledheart  */
+/* Copyright (c) 2022-2026 Chilledheart  */
 
 #include "core/utils.hpp"
 
@@ -41,6 +41,10 @@
 
 #ifdef HAVE_MIMALLOC
 #include <mimalloc.h>
+#endif
+
+#ifdef HAVE_JEMALLOC
+#include <jemalloc/jemalloc.h>
 #endif
 
 #if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) || defined(MEMORY_SANITIZER)
@@ -350,6 +354,9 @@ void PrintMallocStats() {
 #elif defined(HAVE_MIMALLOC)
   auto printer = [](const char* msg, void* arg) { LOG(ERROR) << "MIMALLOC: " << msg; };
   mi_stats_print_out(printer, nullptr);
+#elif defined(HAVE_JEMALLOC)
+  auto printer = [](void* arg, const char* msg) { LOG(ERROR) << "JEMALLOC: " << msg; };
+  malloc_stats_print(printer, nullptr, nullptr);
 #elif defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) || defined(MEMORY_SANITIZER)
   LOG(ERROR) << "SANITIZER: current allocated: " << __sanitizer_get_current_allocated_bytes() << " bytes";
   LOG(ERROR) << "SANITIZER: heap size: " << __sanitizer_get_heap_size() << " bytes";
