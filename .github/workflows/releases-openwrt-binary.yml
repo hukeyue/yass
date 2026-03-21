@@ -192,11 +192,6 @@ jobs:
             -build-benchmark -build-test -use-static-build -nc ${{ matrix.extra_flags }}
       - uses: actions/upload-artifact@v6
         with:
-          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}
-          path: |
-            build-linux-openwrt-${{ matrix.arch }}/yass
-      - uses: actions/upload-artifact@v6
-        with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-cli
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_cli
