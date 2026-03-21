@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
   CACHE_EPOCH: 146-2
@@ -146,34 +146,34 @@ jobs:
             -build-benchmark -build-test -nc
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-cli
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_cli
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-server
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_server
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-dbg
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-dbg
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-test
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_benchmark
           compression-level: 9 # maximum compression

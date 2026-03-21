@@ -32,7 +32,7 @@ on:
   schedule:
     - cron: '0 16 * * *'
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
   CACHE_EPOCH: 146-2
@@ -125,32 +125,33 @@ jobs:
           fi
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             build-darwin-${{ matrix.arch }}/yass.app
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dSYM
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dSYM
           path: |
             build-darwin-${{ matrix.arch }}/*.dSYM
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-darwin-${{ matrix.arch }}/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-darwin-${{ matrix.arch }}/yass_benchmark
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dmg
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dmg
           path: |
             *.dmg
+          compression-level: 0 # no compression
       - name: Install rosetta
         if: ${{ matrix.arch == 'x64' }}
         run: |
@@ -158,17 +159,35 @@ jobs:
       - name: Run tests
         run: |
           ./build-darwin-${{ matrix.arch }}/yass_test
-          ./build-darwin-${{ matrix.arch }}/yass_benchmark
       - name: Upload dist tarball (including debuginfo)
         if: ${{ false && github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.dmg *.zip
-      - name: Run tests (extra)
+  mac-release-native-test:
+    runs-on: macos-26
+    needs: mac-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            build_type: Release
+            xcode_version: 26.3
+          - arch: arm64
+            build_type: Debug
+            xcode_version: 26.3
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
+      - name: Run tests
         if: ${{ matrix.arch == 'arm64' }}
         run: |
-          cd build-darwin-${{ matrix.arch }}
+          xattr -d com.apple.quarantine yass_test || :
+          chmod 755 yass_test
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
@@ -178,3 +197,27 @@ jobs:
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
           ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode
+  mac-release-native-benchmark:
+    runs-on: macos-26
+    needs: mac-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            build_type: Release
+            xcode_version: 26.3
+          - arch: arm64
+            build_type: Debug
+            xcode_version: 26.3
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        if: ${{ matrix.arch == 'arm64' }}
+        run: |
+          xattr -d com.apple.quarantine yass_benchmark || :
+          chmod 755 yass_benchmark
+          ./yass_benchmark

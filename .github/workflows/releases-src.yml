@@ -30,7 +30,7 @@ on:
   release:
     types: [published]
 concurrency:
-  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.sha }}
+  group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 jobs:
   src-release:
@@ -63,29 +63,34 @@ jobs:
           ./scripts/build-src.sh
       - uses: actions/upload-artifact@v6
         with:
-          name: src-tgz-${{ github.sha }}
+          name: src-tgz-${{ github.run_id }}
           path: |
             yass*.tar.gz
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: src-tbz2-${{ github.sha }}
+          name: src-tbz2-${{ github.run_id }}
           path: |
             yass*.tar.bz2
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: src-txz-${{ github.sha }}
+          name: src-txz-${{ github.run_id }}
           path: |
             yass*.tar.xz
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: src-tzst-${{ github.sha }}
+          name: src-tzst-${{ github.run_id }}
           path: |
             yass*.tar.zst
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: src-zip-${{ github.sha }}
+          name: src-zip-${{ github.run_id }}
           path: |
             yass*.zip
+          compression-level: 0 # no compression
       - name: Upload tarballs
         if: ${{ github.event_name == 'release' }}
         env:
