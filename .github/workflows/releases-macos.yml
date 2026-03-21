@@ -133,16 +133,19 @@ jobs:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dSYM
           path: |
             build-darwin-${{ matrix.arch }}/*.dSYM
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build-darwin-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build-darwin-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dmg

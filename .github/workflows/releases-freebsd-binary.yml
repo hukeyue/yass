@@ -164,16 +164,19 @@ jobs:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-dbg
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:

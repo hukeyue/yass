@@ -162,18 +162,21 @@ jobs:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-pdb
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-test
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-benchmark
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer
@@ -338,18 +341,21 @@ jobs:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-pdb
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-test
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-benchmark
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.sha }}-nsis-installer

@@ -244,16 +244,19 @@ jobs:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-dbg
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-test
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.sha }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: "Install dependency: android sysroot (test purpose)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |

@@ -210,16 +210,19 @@ jobs:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-dbg
           path: |
             build-linux-openwrt-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-test
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.sha }}-benchmark
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Build IPK packages
         run: |
           pushd ${{ env.SDK_HOME }}

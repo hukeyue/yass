@@ -320,11 +320,13 @@ jobs:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-dbg
           path: |
             build-linux-musl-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.sha }}-test
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
         run: |

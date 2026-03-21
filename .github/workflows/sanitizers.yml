@@ -87,11 +87,13 @@ jobs:
           name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Memory layout fix for old clang
         run: |
           # TODO remove this once upstream fix is available

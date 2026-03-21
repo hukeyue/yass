@@ -211,16 +211,19 @@ jobs:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-dbg
           path: |
             build-linux-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-test
           path: |
             build-linux-${{ matrix.arch }}/yass_test
+          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.sha }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
+          compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
         run: |
