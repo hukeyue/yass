@@ -107,6 +107,13 @@ jobs:
           path: |
             qemu-user*.deb
           key: ${{ runner.os }}-qemu-10.0.8-ds-0
+      - name: Cache cmake
+        id: cmake-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            cmake*.tar.gz
+          key: ${{ runner.os }}-cmake-3-29-8
       - name: Cache openwrt sdkhome (sysroot)
         id: sysroot-cache
         uses: actions/cache@v5
@@ -135,6 +142,10 @@ jobs:
         if: ${{ steps.qemu-user-cache.outputs.cache-hit != 'true' }}
         run: |
           wget http://ftp.us.debian.org/debian/pool/main/q/qemu/qemu-user_10.0.8+ds-0+deb13u1+b1_amd64.deb
+      - name: "Install dependency: cmake cache"
+        if: ${{ steps.cmake-cache.outputs.cache-hit != 'true' }}
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v3.29.8/cmake-3.29.8-linux-x86_64.tar.gz
       - name: "Install dependency: openwrt sdkhome (sysroot)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -178,10 +189,8 @@ jobs:
           sudo dpkg -i qemu-user_*.deb
       - name: Populate dependencie (cmake, overwrite)
         run: |
-          curl -L -O https://github.com/Kitware/CMake/releases/download/v3.29.8/cmake-3.29.8-linux-x86_64.tar.gz
           sudo tar -C /usr/local --strip-components=1 -xf cmake-3.29.8-linux-x86_64.tar.gz
           cmake --version
-          rm -f *.tar.gz
       - name: Build Binary
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} \
