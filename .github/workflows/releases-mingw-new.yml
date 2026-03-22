@@ -86,13 +86,6 @@ jobs:
           path: |
             third_party/llvm-build/Release+Asserts
           key: ${{ runner.os }}-toolchain-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
-      - name: Cache cmake
-        id: cmake-cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            cmake*.tar.gz
-          key: ${{ runner.os }}-cmake-3-29-8
       - name: Cache mingw64 llvm sysroot
         id: sysroot-cache
         uses: actions/cache@v5
@@ -124,10 +117,6 @@ jobs:
         run: |
           ./scripts/download-clang-prebuilt-binaries.py
           rm -f third_party/llvm-build/Release+Asserts/*.tgz
-      - name: "Install dependency: cmake cache"
-        if: ${{ steps.cmake-cache.outputs.cache-hit != 'true' }}
-        run: |
-          wget https://github.com/Kitware/CMake/releases/download/v3.29.8/cmake-3.29.8-linux-x86_64.tar.gz
       - name: "Install dependency: llvm-mingw sysroot"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -149,11 +138,7 @@ jobs:
       - name: Populate depedencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y cmake ninja-build nasm zip nsis locales-all
-      - name: Populate dependencie (cmake, overwrite)
-        run: |
-          sudo tar -C /usr/local --strip-components=1 -xf cmake-3.29.8-linux-x86_64.tar.gz
-          cmake --version
+          sudo apt-get install -y nasm zip nsis locales-all
       - name: Patch libcxx for windows xp
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |
