@@ -248,9 +248,6 @@ jobs:
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-          - arch: x64
-            crt-linkage: dynamic
-            build_type: Debug
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6

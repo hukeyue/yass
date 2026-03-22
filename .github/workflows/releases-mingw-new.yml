@@ -360,16 +360,8 @@ jobs:
       matrix:
         include:
           - arch: i686
-            build_type: Debug
-            variant: msvcrt
-            suffix: -winxp
-          - arch: i686
             build_type: Release
             variant: msvcrt
-            suffix: -winxp
-          - arch: x86_64
-            build_type: Debug
-            variant: ucrt
             suffix: -winxp
           - arch: x86_64
             build_type: Release

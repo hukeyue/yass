@@ -320,11 +320,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - arch: i386
+            build_type: Release
+            qemu_suffix: i386
           - arch: amd64
             build_type: Release
-            qemu_suffix: amd64
-          - arch: amd64
-            build_type: Debug
             qemu_suffix: amd64
     steps:
       - name: Download built executables
