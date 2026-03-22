@@ -111,14 +111,6 @@ jobs:
         if: ${{ steps.curl-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-curl-msvc.bat ${{ matrix.arch }}
-      - name: "Install dependency: cmake (chocolatey)"
-        run: |
-          REM choco install -y cmake.portable --version=3.29.8
-          cmake --version
-      - name: "Install dependency: ninja (chocolatey)"
-        run: |
-          choco install -y ninja
-          ninja --version
       - name: Build Binary
         run: |
           set VCToolsVersion=
@@ -220,19 +212,12 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
-          - arch: arm64
-            crt-linkage: dynamic
-            build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -260,19 +245,12 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
-          - arch: arm64
-            crt-linkage: dynamic
-            build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -347,14 +325,6 @@ jobs:
         if: ${{ steps.toolchain-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-toolchain.bat
-      - name: "Install dependency: cmake (chocolatey)"
-        run: |
-          REM choco install -y cmake.portable --version=3.29.8
-          cmake --version
-      - name: "Install dependency: ninja (chocolatey)"
-        run: |
-          choco install -y ninja
-          ninja --version
       - name: Patch libcxx for windows xp
         shell: bash
         run: |

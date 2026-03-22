@@ -1230,7 +1230,8 @@ func GetWin32SearchPath() []string {
 	// TODO test under shaded libc++
 
 	// VCToolsVersion:PlatformToolchainversion:VisualStudioVersion
-	//  14.30-14.??:v143:Visual Studio 2022
+	//  14.50-14.??:v145:Visual Studio 2026
+	//  14.30-14.49:v143:Visual Studio 2022
 	//  14.20-14.29:v142:Visual Studio 2019
 	//  14.10-14.19:v141:Visual Studio 2017
 	//  14.00-14.00:v140:Visual Studio 2015
@@ -1274,9 +1275,16 @@ func GetWin32SearchPath() []string {
 	//  14.39   Visual Studio 2022 version 17.9            1939
 	//  14.40   Visual Studio 2022 version 17.10           1940
 	//  14.41   Visual Studio 2022 version 17.11           1941
+	//  14.42   Visual Studio 2022 version 17.12           1942
+	//  14.43   Visual Studio 2022 version 17.13           1943
+	//  14.44   Visual Studio 2022 version 17.14           1944
 	//
 	//  Visual Studio 2015 is not supported by this script due to
 	//  the missing environment variable VCToolsVersion
+	//
+	//  Visual Studio 2026 and later (_MSC_VER)
+	//      The compiler minor version is no longer incremented in relation
+	//      to Visual Studio version updates.
 	vctoolsVersionStr := os.Getenv("VCToolsVersion")
 	var vctoolsVersion float64
 	if len(vctoolsVersionStr) >= 4 {
@@ -1288,7 +1296,9 @@ func GetWin32SearchPath() []string {
 	}
 
 	var platformToolchainVersion string
-	if vctoolsVersion >= 14.30 {
+	if vctoolsVersion >= 14.50 {
+		platformToolchainVersion = "145"
+	} else if vctoolsVersion >= 14.30 && vctoolsVersion < 14.50 {
 		platformToolchainVersion = "143"
 	} else if vctoolsVersion >= 14.20 && vctoolsVersion < 14.30 {
 		platformToolchainVersion = "142"
@@ -1450,7 +1460,17 @@ func GetDependenciesByDumpbin(path string, searchDirs []string) ([]string, []str
 			vctoolsVersion, _ = strconv.ParseFloat(vctoolsVersionStr, 32)
 		}
 
-		if vctoolsVersion >= 14.30 {
+		if vctoolsVersion >= 14.38 {
+			// As described in https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/,
+			// Visual Studio 17.8 introduced support for C11 threads, provided by vcruntime140_threads.dll
+			if msvcTargetArchFlag == "x64" || msvcTargetArchFlag == "arm64" {
+				dlls = append(dlls, "concrt140.dll", "msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll",
+					"msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll", "vccorlib140.dll", "vcruntime140.dll", "vcruntime140_1.dll", "vcruntime140_threads.dll")
+			} else if msvcTargetArchFlag == "x86" {
+				dlls = append(dlls, "concrt140.dll", "msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll",
+					"msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll", "vccorlib140.dll", "vcruntime140.dll", "vcruntime140_threads.dll")
+			}
+		} else if vctoolsVersion >= 14.30 && vctoolsVersion < 14.38 {
 			if msvcTargetArchFlag == "x64" || msvcTargetArchFlag == "arm64" {
 				dlls = append(dlls, "concrt140.dll", "msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll",
 					"msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll", "vccorlib140.dll", "vcruntime140.dll", "vcruntime140_1.dll")
