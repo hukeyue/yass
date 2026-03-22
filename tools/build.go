@@ -97,6 +97,7 @@ var iosTestDeviceNameFlag string
 var msvcTargetArchFlag string
 var msvcCrtLinkageFlag string
 var msvcAllowXpFlag bool
+var msvcOnlyBuildMsi bool
 
 var freebsdAbiFlag int
 
@@ -111,6 +112,7 @@ var variantFlag string
 
 var mingwDir string
 var mingwAllowXpFlag bool
+var mingwOnlyBuildMsi bool
 
 var androidApiLevel int
 var androidAab bool
@@ -212,6 +214,7 @@ func InitFlag() {
 	flag.StringVar(&msvcTargetArchFlag, "msvc-tgt-arch", getEnv("VSCMD_ARG_TGT_ARCH", "x64"), "Set Visual C++ Target Achitecture")
 	flag.StringVar(&msvcCrtLinkageFlag, "msvc-crt-linkage", getEnv("MSVC_CRT_LINKAGE", "dynamic"), "Set Visual C++ CRT Linkage")
 	flag.BoolVar(&msvcAllowXpFlag, "msvc-allow-xp", getEnvBool("MSVC_ALLOW_XP", false), "Enable Windows XP Build")
+	flag.BoolVar(&msvcOnlyBuildMsi, "msvc-only-build-msi", false, "Only Build MSI for MSVC")
 
 	flag.IntVar(&freebsdAbiFlag, "freebsd-abi", getFreebsdABI(13), "Select FreeBSD ABI")
 
@@ -226,6 +229,7 @@ func InitFlag() {
 
 	flag.StringVar(&mingwDir, "mingw-dir", "", "MinGW Dir Path")
 	flag.BoolVar(&mingwAllowXpFlag, "mingw-allow-xp", false, "Enable Windows XP Build")
+	flag.BoolVar(&mingwOnlyBuildMsi, "mingw-only-build-msi", false, "Only Build MSI for MinGW")
 
 	flag.BoolVar(&androidAab, "android-aab", false, "Build aab format instead of apk")
 	flag.IntVar(&androidApiLevel, "android-api", 24, "Select Android API Level")
@@ -261,6 +265,17 @@ func InitFlag() {
 		APPNAME = "yass_test"
 	} else {
 		glog.Fatalf("Invalid variant: %s", variantFlag)
+	}
+
+	if msvcOnlyBuildMsi || mingwOnlyBuildMsi {
+		if runtime.GOOS != "windows" {
+			glog.Fatalf("Unsupported platform: %s", runtime.GOOS)
+		}
+		if mingwOnlyBuildMsi {
+			// overwrite msvcTargetArchFlag which is used by
+			// GenerateMSI routine
+			msvcTargetArchFlag = getMSVCArchFromArch(archFlag)
+		}
 	}
 }
 
@@ -442,6 +457,18 @@ func getMinGWTargetAndAppAbi(arch string) (string, string) {
 	}
 	glog.Fatalf("Invalid MinGW arch: %s", arch)
 	return "", ""
+}
+
+func getMSVCArchFromArch(arch string) string {
+	if arch == "x86" || arch == "i686" {
+		return "x86"
+	} else if arch == "x64" || arch == "x86_64" || arch == "amd64" {
+		return "x64"
+	} else if arch == "arm64" || arch == "aarch64" {
+		return "arm64"
+	}
+	glog.Fatalf("Invalid MinGW arch: %s", arch)
+	return ""
 }
 
 // build/config/android/abi.gni
@@ -2368,7 +2395,7 @@ func postStateArchives() map[string][]string {
 	var dbgPaths []string
 
 	if systemNameFlag == "windows" || systemNameFlag == "mingw" {
-		entries, _ := ioutil.ReadDir("./")
+		entries, _ := ioutil.ReadDir(buildDir)
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
@@ -2437,6 +2464,65 @@ func postStateArchives() map[string][]string {
 	if subSystemNameFlag == "openwrt" && variantFlag == "cli" {
 		generateOpenWrtMakefile(archive, archiveSuffix)
 	}
+	return archives
+}
+
+func postStateArchivesBuildMsi() map[string][]string {
+	glog.Info("PostState -- Archives (Build Msi Only)")
+	glog.Info("======================================================================")
+	tag := fullTagFlag
+	var archiveFormat string
+	if systemNameFlag == "windows" {
+		osName := "win"
+		if msvcAllowXpFlag {
+			if msvcTargetArchFlag == "x86" {
+				osName = "winxp"
+			} else {
+				osName = "win7"
+			}
+		}
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, tag)
+	} else if systemNameFlag == "mingw" {
+		osName := "mingw"
+		if mingwAllowXpFlag {
+			if archFlag == "x86" || archFlag == "i686" {
+				osName = "mingw-winxp"
+			} else {
+				osName = "mingw-win7"
+			}
+		}
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%%s%%s", osName, archFlag, tag)
+	} else {
+		glog.Fatalf("Unsupported system: %s", systemNameFlag)
+	}
+
+	if variantFlag != "gui" {
+		glog.Fatalf("Unsupported variant: %s", variantFlag)
+	}
+
+	msiArchive := fmt.Sprintf(archiveFormat, APPNAME, "", ".msi")
+	msiArchive = filepath.Join("..", msiArchive)
+	archives := map[string][]string{}
+
+	var dllPaths []string
+
+	// check dependent dll files
+	entries, _ := ioutil.ReadDir(buildDir)
+	for _, entry := range entries {
+		name := entry.Name()
+		iname := strings.ToLower(name)
+		if strings.HasSuffix(iname, ".dll") {
+			dllPaths = append(dllPaths, name)
+		}
+	}
+
+	// check dependent LICENSEs
+	licensePaths := postStateArchiveLicenses()
+
+	// msi installer
+	generateMsi(msiArchive, dllPaths, licensePaths)
+	archives[msiArchive] = []string{msiArchive}
+
 	return archives
 }
 
@@ -2662,6 +2748,12 @@ func main() {
 	InitFlag()
 	// PreStage Find Source Directory
 	prebuildFindSourceDirectory()
+	// Special mode to build mingw msi
+	if msvcOnlyBuildMsi || mingwOnlyBuildMsi {
+		archives := postStateArchivesBuildMsi()
+		postStateInspectArchives(archives)
+		return
+	}
 	// BuildStage Generate Build Script
 	buildStageGenerateBuildScript()
 	if noConfigureFlag || noBuildFlag {

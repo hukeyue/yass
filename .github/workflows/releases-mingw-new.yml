@@ -50,26 +50,32 @@ jobs:
             build_type: Debug
             variant: msvcrt
             suffix: -winxp
+            build_options: -mingw-allow-xp -enable-lto=false
           - arch: i686
             build_type: Release
             variant: msvcrt
             suffix: -winxp
+            build_options: -mingw-allow-xp -enable-lto=false
           - arch: x86_64
             build_type: Debug
             variant: ucrt
             suffix: -winxp
+            build_options: -mingw-allow-xp -enable-lto=false
           - arch: x86_64
             build_type: Release
             variant: ucrt
             suffix: -winxp
+            build_options: -mingw-allow-xp -enable-lto=false
           - arch: aarch64
             build_type: Debug
             variant: ucrt
             suffix:
+            build_options:
           - arch: aarch64
             build_type: Release
             variant: ucrt
             suffix:
+            build_options:
     env:
       BUILD_TYPE: ${{ matrix.build_type }}
     steps:
@@ -148,15 +154,14 @@ jobs:
           pushd third_party/libc++abi/trunk
           patch -p1 < ../winxp.patch
           popd
-          echo "BUILD_OPTIONS=-mingw-allow-xp -enable-lto=false" >> $GITHUB_ENV
       - name: Build Binary (CLI and Server)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
-            ${{ env.BUILD_OPTIONS }}
+            ${{ matrix.build_options }}
           ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
-            ${{ env.BUILD_OPTIONS }}
+            ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
           # fix cpack error on C.UTF-8 locale
@@ -165,7 +170,7 @@ jobs:
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
             -build-test -build-benchmark \
             -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
-            ${{ env.BUILD_OPTIONS }}
+            ${{ matrix.build_options }}
       - name: Populate depedencies (Tests-i686)
         if: ${{ matrix.arch == 'i686' }}
         run: |
@@ -182,18 +187,21 @@ jobs:
           path: |
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_cli.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
@@ -226,6 +234,84 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.zip *.exe
+  mingw64-release-build-msi:
+    runs-on: windows-2022
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i686
+            build_type: Debug
+            variant: msvcrt
+            suffix: -winxp
+            build_options: -mingw-allow-xp
+          - arch: i686
+            build_type: Release
+            variant: msvcrt
+            suffix: -winxp
+            build_options: -mingw-allow-xp
+          - arch: x86_64
+            build_type: Debug
+            variant: ucrt
+            suffix: -winxp
+            build_options: -mingw-allow-xp
+          - arch: x86_64
+            build_type: Release
+            variant: ucrt
+            suffix: -winxp
+            build_options: -mingw-allow-xp
+          - arch: aarch64
+            build_type: Debug
+            variant: ucrt
+            suffix:
+            build_options:
+          - arch: aarch64
+            build_type: Release
+            variant: ucrt
+            suffix:
+            build_options:
+    defaults:
+      run:
+        shell: cmd
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Checkout with unshallow history
+        run: |
+          # unshallow must come first otherwise submodule may be get unshallowed
+          git fetch --tags --unshallow
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.20.0'
+          cache-dependency-path: |
+            tools/go.sum
+            third_party/boringssl/src/go.sum
+      - name: Build build tool
+        run: |
+          cd tools
+          go build
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: build-mingw${{ matrix.suffix }}-${{ matrix.arch }}
+      - name: Build Binary (MSI)
+        run: |
+          tools\build --variant gui --arch ${{ matrix.arch }} --system mingw ${{ matrix.build_options }} -mingw-only-build-msi -nc
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-msi-installer
+          path: |
+            *.msi
+          compression-level: 0 # no compression
+      - name: Upload dist tarball
+        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} *.msi
   mingw64-release-wine-test:
     runs-on: ubuntu-22.04
     needs: mingw64-release

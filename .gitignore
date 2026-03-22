@@ -13,7 +13,7 @@ sscxx
 /third_party/vcredist
 /third_party/nsis
 /third_party/nasm
-/third_party/wix311
+/third_party/wix314
 /third_party/mingw32
 /third_party/mingw64
 /third_party/libcurl-vc16-x86-release-static-ipv6-sspi-schannel

@@ -137,18 +137,21 @@ jobs:
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-server
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
@@ -343,18 +346,21 @@ jobs:
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-server
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_server.exe
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
