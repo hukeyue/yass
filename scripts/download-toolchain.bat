@@ -27,13 +27,13 @@ del /s /q third_party\llvm-build\Release+Asserts\*.tgz
 echo "Install dependency: wixtoolset 3"
 
 cd third_party
-curl -C - -L -O https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip
+curl -C - -L -O https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
-rmdir /s /q wix311
-"C:\Program Files\7-Zip\7z.exe" x "-owix311" wix311-binaries.zip -aoa
+rmdir /s /q wix314
+"C:\Program Files\7-Zip\7z.exe" x "-owix314" wix314-binaries.zip -aoa
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 cd ..
-del /s /q third_party\wix311*.zip
+del /s /q third_party\wix314*.zip
 
 echo "Install dependency: nsis"
 

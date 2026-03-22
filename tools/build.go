@@ -287,7 +287,7 @@ func prebuildFindSourceDirectory() {
 		path = "C:\\Program Files\\7-Zip;" + path
 		path = "C:\\ProgramData\\chocolatey\\bin;" + path
 		path = filepath.Join(projectDir, "third_party", "nasm") + ";" + path
-		path = filepath.Join(projectDir, "third_party", "wix311") + ";" + path
+		path = filepath.Join(projectDir, "third_party", "wix314") + ";" + path
 		path = filepath.Join(projectDir, "third_party", "nsis") + ";" + path
 		os.Setenv("PATH", path)
 	}
@@ -2392,11 +2392,7 @@ func postStateArchives() map[string][]string {
 	archives[archive] = paths
 
 	// msi installer
-	// FIXME wixtoolset3.14 supports arm64 but only 3.11 is out for release
-	// https://github.com/wixtoolset/issues/issues/5558
-	// error CNDL0265 : The Platform attribute has an invalid value arm64.
-	// Possible values are x86, x64, or ia64.
-	if systemNameFlag == "windows" && msvcTargetArchFlag != "arm64" && variantFlag == "gui" {
+	if systemNameFlag == "windows" && variantFlag == "gui" {
 		generateMsi(msiArchive, dllPaths, licensePaths)
 		archives[msiArchive] = []string{msiArchive}
 	}

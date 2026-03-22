@@ -75,9 +75,9 @@ jobs:
           path: |
             third_party/nasm
             third_party/llvm-build/Release+Asserts
-            third_party/wix311
+            third_party/wix314
             third_party/nsis
-          key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}
+          key: ${{ runner.os }}-toolchain-nsis-${{ hashFiles('CLANG_REVISION') }}-v${{ env.CACHE_EPOCH }}-v2
       - name: Cache msvc curl
         id: curl-cache
         uses: actions/cache@v5
@@ -170,7 +170,6 @@ jobs:
             *.exe
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
-        if: ${{ matrix.arch != 'arm64' }}
         with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
           path: |
@@ -188,14 +187,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          gh release upload ${{ github.event.release.tag_name }} *.zip *.exe
-      - name: Upload dist installers
-        if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' && matrix.arch != 'arm64' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          gh release upload ${{ github.event.release.tag_name }} *.msi
+          gh release upload ${{ github.event.release.tag_name }} *.zip *.exe *.msi
   windows-vs2026-release-native-test:
     runs-on: windows-2025
     needs: windows-vs2026-release
