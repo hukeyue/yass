@@ -207,9 +207,6 @@ jobs:
           - arch: arm64
             build_type: Release
             xcode_version: 26.3
-          - arch: arm64
-            build_type: Debug
-            xcode_version: 26.3
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
