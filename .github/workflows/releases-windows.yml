@@ -220,19 +220,12 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
-          - arch: arm64
-            crt-linkage: dynamic
-            build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -260,19 +253,12 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
-          - arch: arm64
-            crt-linkage: dynamic
-            build_type: Release
-            winsdk_version: 10.0.22621.0
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
