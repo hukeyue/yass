@@ -63,10 +63,6 @@ jobs:
             third_party/curl-8.4.0_7-win64-mingw
             third_party/curl-8.4.0_7-win32-mingw
           key: ${{ runner.os }}-mingw64-curl-${{ matrix.arch }}-v1
-      - name: "Install dependency: clang (chocolatey)"
-        run: |
-          REM choco upgrade -y llvm --version=18.1.8
-          clang -v
       - name: "Install dependency: mingw64 sysroot"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -80,14 +76,6 @@ jobs:
         run: |
           choco install -y nasm
           "C:\Program Files\NASM\nasm" --version
-      - name: "Install dependency: cmake (chocolatey)"
-        run: |
-          REM choco install -y cmake.portable --version=3.29.8
-          cmake --version
-      - name: "Install dependency: ninja (chocolatey)"
-        run: |
-          choco install -y ninja
-          ninja --version
       - name: Patch libcxx for windows xp
         shell: bash
         run: |

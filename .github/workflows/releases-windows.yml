@@ -111,14 +111,6 @@ jobs:
         if: ${{ steps.curl-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-curl-msvc.bat ${{ matrix.arch }}
-      - name: "Install dependency: cmake (chocolatey)"
-        run: |
-          REM choco install -y cmake.portable --version=3.29.8
-          cmake --version
-      - name: "Install dependency: ninja (chocolatey)"
-        run: |
-          choco install -y ninja
-          ninja --version
       - name: Build Binary
         run: |
           set VCToolsVersion=
@@ -333,14 +325,6 @@ jobs:
         if: ${{ steps.toolchain-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-toolchain.bat
-      - name: "Install dependency: cmake (chocolatey)"
-        run: |
-          REM choco install -y cmake.portable --version=3.29.8
-          cmake --version
-      - name: "Install dependency: ninja (chocolatey)"
-        run: |
-          choco install -y ninja
-          ninja --version
       - name: Patch libcxx for windows xp
         shell: bash
         run: |
