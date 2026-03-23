@@ -361,7 +361,7 @@ void GenerateConnectRequest(std::string_view host, int port_num, GrowableIOBuffe
 #endif
 
 // [content provider] <== [ss server] <== [ss local] <== [content consumer]
-class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
+class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, cipher_method>> {
  public:
   static void SetUpTestSuite() {
     // nop
@@ -373,20 +373,22 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
 
   void SetUp() override {
     StartWorkThread();
-    absl::SetFlag(&FLAGS_method, GetParam());
     StartBackgroundTasks();
   }
 
   void StartBackgroundTasks() {
+    auto params = GetParam();
+    auto server_cipher = std::get<0>(params);
+    auto local_cipher = std::get<1>(params);
     std::mutex m;
     bool done = false;
-    asio::post(io_context_, [this, &m, &done]() {
+    asio::post(io_context_, [this, server_cipher, local_cipher, &m, &done]() {
       std::lock_guard<std::mutex> lk(m);
       auto ec = StartContentProvider(GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
-      ec = StartServer(GetReusableEndpoint(), SOMAXCONN);
+      ec = StartServer(server_cipher, GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
-      ec = StartLocal(server_endpoint_, GetReusableEndpoint(), SOMAXCONN);
+      ec = StartLocal(local_cipher, server_endpoint_, GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
       done = true;
     });
@@ -441,8 +443,12 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
   }
 
   void SendRequestAndCheckResponse() {
-    if (GetParam() == CRYPTO_SOCKS4 && absl::GetFlag(FLAGS_ipv6_mode)) {
-      GTEST_SKIP() << "skipped as socks4 not supporint ipv6 address";
+    auto params = GetParam();
+    auto server_cipher = std::get<0>(params);
+    auto local_cipher = std::get<1>(params);
+    if (server_cipher == CRYPTO_SOCKS4 && local_cipher == CRYPTO_SOCKS4 &&
+        absl::GetFlag(FLAGS_ipv6_mode)) {
+      GTEST_SKIP() << "skipped SOCKS4 testcase as socks4 does not support ipv6 address";
       return;
     }
 #ifdef HAVE_CURL
@@ -716,7 +722,7 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
     g_recv_buffer = nullptr;
   }
 
-  asio::error_code StartServer(asio::ip::tcp::endpoint endpoint, int backlog) {
+  asio::error_code StartServer(cipher_method server_cipher, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
     server_server_ = std::make_unique<server::ServerServer>(io_context_, std::string_view(), std::string_view(),
                                                             uint16_t(), std::string_view(), std::string_view(),
@@ -724,7 +730,7 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
                                                             std::string_view(), kCertificate, kPrivateKey);
     server_server_->listen(endpoint, "localhost"sv,
                            absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                           absl::GetFlag(FLAGS_method).method,
+                           server_cipher,
                            absl::GetFlag(FLAGS_padding_support),
                            false,
                            backlog, ec);
@@ -746,14 +752,14 @@ class EndToEndTest : public ::testing::TestWithParam<cipher_method> {
     }
   }
 
-  asio::error_code StartLocal(asio::ip::tcp::endpoint remote_endpoint, asio::ip::tcp::endpoint endpoint, int backlog) {
+  asio::error_code StartLocal(cipher_method remote_cipher, asio::ip::tcp::endpoint remote_endpoint, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
 
     local_server_ =
         std::make_unique<cli::CliServer>(io_context_, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
                                          "localhost"sv, remote_endpoint.port(),
                                          absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                                         absl::GetFlag(FLAGS_method).method,
+                                         remote_cipher,
                                          absl::GetFlag(FLAGS_padding_support),
                                          kCertificate);
     local_server_->listen(endpoint, {}, {}, {}, {}, {}, absl::GetFlag(FLAGS_redir_mode), backlog, ec);
@@ -834,11 +840,19 @@ TEST_P(EndToEndTest, 256K) {
   SendRequestAndCheckResponse();
 }
 
+static constexpr const std::tuple<cipher_method, cipher_method> kCiphersPaired[] = {
+#define XX(num, name, string) std::make_tuple(CRYPTO_##name,CRYPTO_##name),
+    CIPHER_METHOD_VALID_MAP(XX)
+#undef XX
+};
+
 INSTANTIATE_TEST_SUITE_P(Ss,
                          EndToEndTest,
-                         ::testing::ValuesIn(kCipherMethods),
-                         [](const ::testing::TestParamInfo<cipher_method>& info) -> std::string {
-                           return std::string(to_cipher_method_name(info.param));
+                         ::testing::ValuesIn(kCiphersPaired),
+                         [](const ::testing::TestParamInfo<EndToEndTest::ParamType>& info) -> std::string {
+                           auto server_cipher = std::get<0>(info.param);
+                           auto local_cipher = std::get<1>(info.param);
+                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_", to_cipher_method_name(local_cipher));
                          });
 
 static constexpr const cipher_method kCiphersHttps[] = {
@@ -868,9 +882,13 @@ TEST_P(EndToEndTestPostQuantumnMLKEMOnly, 1M) {
 
 INSTANTIATE_TEST_SUITE_P(Ss,
                          EndToEndTestPostQuantumnMLKEMOnly,
-                         ::testing::ValuesIn(kCiphersHttps),
-                         [](const ::testing::TestParamInfo<cipher_method>& info) -> std::string {
-                           return std::string(to_cipher_method_name(info.param));
+                         ::testing::Combine(
+                             ::testing::ValuesIn(kCiphersHttps),
+                             ::testing::ValuesIn(kCiphersHttps)),
+                         [](const ::testing::TestParamInfo<EndToEndTest::ParamType>& info) -> std::string {
+                           auto server_cipher = std::get<0>(info.param);
+                           auto local_cipher = std::get<1>(info.param);
+                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_", to_cipher_method_name(local_cipher));
                          });
 
 #endif  // !(defined(MEMORY_SANITIZER) && !defined(NDEBUG))
