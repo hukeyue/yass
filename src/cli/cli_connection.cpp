@@ -1283,10 +1283,12 @@ void CliConnection::ReadUpstreamHttpsHandshake(GrowableIOBuffer* buf, asio::erro
   }
   if (ok && parser.status_code() == 200) {
     buf->set_offset(buf->offset() + nparsed);
+#if 0
     if (parser.transfer_encoding_is_chunked()) {
       upstream_https_chunked_ = true;
       VLOG(1) << "Connection (client) " << connection_id() << " upstream http chunked encoding";
     }
+#endif
   } else {
     if (!ok) {
       LOG(WARNING) << "Connection (client) " << connection_id()
