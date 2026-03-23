@@ -51,31 +51,37 @@ jobs:
             variant: msvcrt
             suffix: -winxp
             build_options: -mingw-allow-xp -enable-lto=false
+            mingw_version: 20250709
           - arch: i686
             build_type: Release
             variant: msvcrt
             suffix: -winxp
             build_options: -mingw-allow-xp -enable-lto=false
+            mingw_version: 20250709
           - arch: x86_64
             build_type: Debug
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -enable-lto=false
+            mingw_version: 20250709
           - arch: x86_64
             build_type: Release
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -enable-lto=false
+            mingw_version: 20250709
           - arch: aarch64
             build_type: Debug
             variant: ucrt
             suffix:
             build_options:
+            mingw_version: 20250709
           - arch: aarch64
             build_type: Release
             variant: ucrt
             suffix:
             build_options:
+            mingw_version: 20250709
     env:
       BUILD_TYPE: ${{ matrix.build_type }}
     steps:
@@ -97,8 +103,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64
-          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-20250709-${{ matrix.variant }}-v1
+            third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64
+          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-${{ matrix.mingw_version }}-${{ matrix.variant }}-v1
       - name: Cache mingw64 curl
         id: curl-cache
         uses: actions/cache@v5
@@ -127,8 +133,8 @@ jobs:
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
           pushd third_party
-          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/20250709/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
-          tar -xf llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
+          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/${{ matrix.mingw_version }}/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
+          tar -xf llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
           rm -vf llvm-mingw-*.xz
           popd
       - name: "Install dependency: curl"
@@ -157,10 +163,10 @@ jobs:
       - name: Build Binary (CLI and Server)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system mingw \
-            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
           ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
-            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
@@ -169,7 +175,7 @@ jobs:
           export LC_ALL=en_US.UTF-8
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
             -build-test -build-benchmark \
-            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
       - name: Populate depedencies (Tests-i686)
         if: ${{ matrix.arch == 'i686' }}

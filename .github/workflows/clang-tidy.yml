@@ -95,10 +95,13 @@ jobs:
         include:
           - arch: i686
             variant: msvcrt
+            mingw_version: 20250709
           - arch: x86_64
             variant: ucrt
+            mingw_version: 20250709
           - arch: aarch64
             variant: ucrt
+            mingw_version: 20250709
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -120,8 +123,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64
-          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-20250709-${{ matrix.variant }}-v1
+            third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64
+          key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-${{ matrix.mingw_version }}-${{ matrix.variant }}-v1
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
@@ -141,8 +144,8 @@ jobs:
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
           pushd third_party
-          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/20250709/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
-          tar -xf llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
+          curl -L -O https://github.com/mstorsjo/llvm-mingw/releases/download/${{ matrix.mingw_version }}/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
+          tar -xf llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
           rm -vf llvm-mingw-*.xz
           popd
       - name: Change ubuntu mirror
@@ -170,7 +173,7 @@ jobs:
           export LC_ALL=en_US.UTF-8
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
             -build-test -build-benchmark -clang-tidy-mode \
-            -mingw-dir $PWD/third_party/llvm-mingw-20250709-${{ matrix.variant }}-ubuntu-22.04-x86_64 \
+            -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 \
             ${{ env.BUILD_OPTIONS }}
   linux-clang-tidy:
     runs-on: ubuntu-22.04
