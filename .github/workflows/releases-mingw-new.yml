@@ -237,6 +237,8 @@ jobs:
   mingw64-release-build-msi:
     runs-on: windows-2022
     needs: mingw64-release
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
