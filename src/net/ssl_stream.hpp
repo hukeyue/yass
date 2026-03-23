@@ -117,9 +117,9 @@ class ssl_stream : public stream {
       }
 
       auto alpn = ssl_socket_->negotiated_protocol();
-      VLOG(2) << "Alpn selected (client): " << NextProtoToString(alpn);
-      https_fallback_ |= alpn == kProtoHTTP11;
-      if (https_fallback_) {
+      VLOG(1) << "Alpn selected (client): " << NextProtoToString(alpn);
+      https_fallback_ = alpn == kProtoHTTP11;
+      if (alpn == kProtoHTTP11) {
         VLOG(2) << "Alpn fallback to https protocol (client)";
       }
 

@@ -42,6 +42,7 @@ const int kCertVerifyPending = 1;
 const int kDefaultOpenSSLBufferSize = 17 * 1024;
 }  // namespace
 
+#if 0
 static std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos) {
   std::vector<uint8_t> wire_protos;
   for (const NextProto next_proto : next_protos) {
@@ -62,6 +63,7 @@ static std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_prot
 
   return wire_protos;
 }
+#endif
 
 inline SSLClientSessionCache::Key SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
   SSLClientSessionCache::Key key;
@@ -186,12 +188,14 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
     LOG(FATAL) << "SSL_set_verify_algorithm_prefs failed";
   }
 
+#if 0
   NextProtoVector alpn_protos = {kProtoHTTP2, kProtoHTTP11};
   if (https_fallback) {
     alpn_protos = {kProtoHTTP11};
   }
   std::vector<uint8_t> wire_protos = SerializeNextProtos(alpn_protos);
   SSL_set_alpn_protos(ssl_.get(), wire_protos.data(), wire_protos.size());
+#endif
 
   // Enable ALPS for HTTP/2 with empty data.
   if (!https_fallback) {
