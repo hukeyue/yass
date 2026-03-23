@@ -86,7 +86,7 @@ class Downlink {
 
   virtual void shutdown(asio::error_code& ec) { socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec); }
 
-  virtual void set_https_fallback(bool https_fallback) {}
+  virtual void set_https_fallback(bool https_fallback) { DLOG(FATAL) << "Alpn: Unimplemented call"; }
 
   virtual bool https_fallback() const { return false; }
 
@@ -162,7 +162,12 @@ class SSLDownlink : public Downlink {
     ssl_socket_->Shutdown([](asio::error_code ec) {}, true);
   }
 
-  void set_https_fallback(bool https_fallback) override { https_fallback_ = https_fallback; }
+  void set_https_fallback(bool https_fallback) override {
+    if (!https_fallback_ && https_fallback) {
+      DLOG(FATAL) << "Alpn: force enabling https fallback without server support";
+    }
+    https_fallback_ = https_fallback;
+  }
 
   bool https_fallback() const override { return https_fallback_; }
 
