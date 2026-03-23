@@ -90,7 +90,7 @@ class ContentServer {
         remote_password_(remote_password),
         remote_cipher_(remote_cipher),
         remote_padding_support_(remote_padding_support),
-        upstream_https_fallback_(CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)),
+        upstream_https_fallback_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
         https_fallback_(true),
         enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
         enable_tls_(true),
@@ -151,7 +151,7 @@ class ContentServer {
     ctx.server_padding_support = server_padding_support;
     ctx.server_redir_mode = server_redir_mode;
     ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
-    ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_HTTPS_FALLBACK(server_cipher);
+    ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_TLS(server_cipher);
     ctx.endpoint = endpoint;
     ctx.acceptor = std::make_unique<asio::ip::tcp::acceptor>(io_context_);
 
@@ -494,7 +494,22 @@ class ContentServer {
   void setup_ssl_ctx_alpn_cb(tlsext_ctx_t* tlsext_ctx) {
     SSL_CTX* ctx = ssl_ctx_.get();
     SSL_CTX_set_alpn_select_cb(ctx, &ContentServer::on_alpn_select, tlsext_ctx);
-    VLOG(1) << "Alpn support (server) enabled for connection " << next_connection_id_;
+    auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
+    auto https_fallback = listen_ctxs_[listen_ctx_num].https_fallback;
+    auto cipher = listen_ctxs_[listen_ctx_num].server_cipher;
+    std::string protos;
+    if (CIPHER_METHOD_IS_HTTP2(cipher)) {
+      if (https_fallback) {
+        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
+      } else {
+        protos = NextProtoToString(kProtoHTTP2);
+      }
+    } else if (CIPHER_METHOD_IS_HTTPS_FALLBACK(cipher)) {
+      protos = NextProtoToString(kProtoHTTP11);
+    } else {
+      DLOG(FATAL) << "Alpn: Unexpected cipher: " << to_cipher_method_name(cipher);
+    }
+    VLOG(1) << "Alpn support (server) enabled for connection " << next_connection_id_ << " : " << protos;
   }
 
   static int on_alpn_select(SSL* ssl,
@@ -507,13 +522,14 @@ class ContentServer {
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto https_fallback = server->listen_ctxs_[listen_ctx_num].https_fallback;
+    auto cipher = server->listen_ctxs_[listen_ctx_num].server_cipher;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
         goto err;
       }
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
-      if (!https_fallback && NextProtoFromString(alpn) == kProtoHTTP2) {
+      if (CIPHER_METHOD_IS_HTTP2(cipher) && NextProtoFromString(alpn) == kProtoHTTP2) {
         VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
         server->set_https_fallback(connection_id, false);
         *out = in + 1;
@@ -525,7 +541,7 @@ class ContentServer {
                                      data.size());
         return SSL_TLSEXT_ERR_OK;
       }
-      if (NextProtoFromString(alpn) == kProtoHTTP11) {
+      if (https_fallback && NextProtoFromString(alpn) == kProtoHTTP11) {
         VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
         server->set_https_fallback(connection_id, true);
         *out = in + 1;
@@ -613,6 +629,36 @@ class ContentServer {
     if (ec) {
       return;
     }
+
+    // priorize h2 before http/1.1
+    //
+    // don't do it at SSLSocket::SSLSocket as we don't know the context (until we copy the protos array)
+    std::vector<unsigned char> alpn_vec;
+    std::string protos;
+    if (CIPHER_METHOD_IS_HTTP2(remote_cipher_)) {
+      if (upstream_https_fallback_) {
+        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
+        alpn_vec = {2, 'h', '2', 8, 'h', 't', 't', 'p', '/', '1', '.', '1'};
+      } else {
+        // ??? BoringSSL bugs, http1.1 will always be enabled
+        protos = NextProtoToString(kProtoHTTP2);
+        alpn_vec = {2, 'h', '2'};
+      }
+    } else if (CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)) {
+      protos = NextProtoToString(kProtoHTTP11);
+      alpn_vec = {8, 'h', 't', 't', 'p', '/', '1', '.', '1'};
+    } else {
+      DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_cipher_);
+    }
+    int ret;
+    ret = SSL_CTX_set_alpn_protos(ctx, alpn_vec.data(), alpn_vec.size());
+    static_cast<void>(ret);
+    DCHECK_EQ(ret, 0);
+    if (ret) {
+      ec = asio::error::invalid_argument;
+      return;
+    }
+    VLOG(1) << "Alpn support (client) enabled: " << protos;
 
     if (upstream_certificate_.empty()) {
       upstream_certificate_ = g_certificate_chain_content;
