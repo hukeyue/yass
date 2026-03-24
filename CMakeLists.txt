@@ -3129,7 +3129,7 @@ endif()
 target_include_directories(asio_core PUBLIC
   src)
 target_include_directories(asio_core PUBLIC
-  third_party/asio/asio/include
+  third_party/asio/include
   third_party/googleurl/polyfills
 )
 target_compile_definitions(asio_core PUBLIC ASIO_STANDALONE)
@@ -5039,7 +5039,7 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ LICENSES/GPL-2.0                                _YASS_LICENSE)
   file(READ LICENSES/CDDL-1.0                               _YASS_OR1_LICENSE)
   file(READ third_party/abseil-cpp/LICENSE                  _ABSEIL_CPP_LICENSE)
-  file(READ third_party/asio/asio/LICENSE_1_0.txt           _ASIO_LICENSE)
+  file(READ third_party/asio/LICENSE_1_0.txt                _ASIO_LICENSE)
   file(READ third_party/boringssl/src/LICENSE               _BORINGSSL_LICENSE)
   file(READ third_party/googleurl/LICENSE                   _GOOGLEURL_LICENSE)
   file(READ third_party/jsoncpp/LICENSE                     _JSONCPP_LICENSE)

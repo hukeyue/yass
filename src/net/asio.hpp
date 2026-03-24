@@ -57,7 +57,7 @@
 #ifdef __MINGW32__
 #undef _POSIX_THREADS
 #endif
-#include <asio.hpp>
+#include "third_party/asio/include/asio.hpp"
 #include "net/asio_throw_exceptions.hpp"
 
 #pragma GCC diagnostic pop
@@ -70,25 +70,25 @@
 /**
  * @returns <tt>mutable_buffer(tail, tailroom)</tt>.
  */
-inline asio::ASIO_MUTABLE_BUFFER tail_buffer(net::GrowableIOBuffer* io_buf,
+inline asio::mutable_buffer tail_buffer(net::GrowableIOBuffer* io_buf,
                                              uint32_t max_length = UINT32_MAX) ASIO_NOEXCEPT {
-  return asio::ASIO_MUTABLE_BUFFER(io_buf->data(), std::min<uint32_t>(io_buf->size(), max_length));
+  return asio::mutable_buffer(io_buf->data(), std::min<uint32_t>(io_buf->size(), max_length));
 }
 
 /// Create a new modifiable buffer that represents the given memory range.
 /**
  * @returns <tt>mutable_buffer(data, capacity)</tt>.
  */
-inline asio::ASIO_MUTABLE_BUFFER mutable_buffer(net::GrowableIOBuffer* io_buf) ASIO_NOEXCEPT {
-  return asio::ASIO_MUTABLE_BUFFER(io_buf->StartOfBuffer(), io_buf->capacity());
+inline asio::mutable_buffer mutable_buffer(net::GrowableIOBuffer* io_buf) ASIO_NOEXCEPT {
+  return asio::mutable_buffer(io_buf->StartOfBuffer(), io_buf->capacity());
 }
 
 /// Create a new non-modifiable buffer that represents the given memory range.
 /**
  * @returns <tt>const_buffer(data, length)</tt>.
  */
-inline asio::ASIO_CONST_BUFFER const_buffer(net::GrowableIOBuffer* io_buf) ASIO_NOEXCEPT {
-  return asio::ASIO_CONST_BUFFER(io_buf->data(), io_buf->size());
+inline asio::const_buffer const_buffer(net::GrowableIOBuffer* io_buf) ASIO_NOEXCEPT {
+  return asio::const_buffer(io_buf->data(), io_buf->size());
 }
 
 #ifndef ASIO_NO_SSL

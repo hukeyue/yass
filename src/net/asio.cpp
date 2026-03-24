@@ -35,6 +35,6 @@
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif  // (defined(__GNUC__) && (__GNUC__ >= 7)) || defined(__clang__)
 
-#include "asio/impl/src.hpp"
+#include "third_party/asio/include/asio/impl/src.hpp"
 
 #pragma GCC diagnostic pop
