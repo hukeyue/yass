@@ -36,6 +36,13 @@
 #include "feature.h"
 #include "version.h"
 
+#ifdef HAVE_TBBMALLOC
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra-semi"
+#include <tbb/tbb.h>
+#pragma clang diagnostic pop
+#endif
+
 #ifdef HAVE_TCMALLOC
 #include <gperftools/tcmalloc.h>
 #endif
@@ -99,6 +106,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
                 << " type: " << ProgramTypeToStr(pType) << std::endl;
       std::cout << "Last Change: " << YASS_APP_LAST_CHANGE << std::endl;
       std::cout << "Features: " << YASS_APP_FEATURES << std::endl;
+#ifdef HAVE_TBBMALLOC
+      std::cout << "TBBMALLOC: " << TBB_VERSION_STRING << std::endl;
+#endif
 #ifdef HAVE_TCMALLOC
       std::cout << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr) << std::endl;
 #endif
@@ -125,6 +135,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
   ;
   std::cerr << "Last Change: " << YASS_APP_LAST_CHANGE << std::endl;
   std::cerr << "Features: " << YASS_APP_FEATURES << std::endl;
+#ifdef HAVE_TBBMALLOC
+  std::cerr << "TBBMALLOC: " << TBB_VERSION_STRING << std::endl;
+#endif
 #ifdef HAVE_TCMALLOC
   std::cerr << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr) << std::endl;
 #endif
@@ -161,6 +174,9 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   LOG(WARNING) << "Application starting: " << YASS_APP_TAG << " type: " << ProgramTypeToStr(pType);
   LOG(WARNING) << "Last Change: " << YASS_APP_LAST_CHANGE;
   LOG(WARNING) << "Features: " << YASS_APP_FEATURES;
+#ifdef HAVE_TBBMALLOC
+  LOG(WARNING) << "TBBMALLOC: " << TBB_VERSION_STRING;
+#endif
 #ifdef HAVE_TCMALLOC
   LOG(WARNING) << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr);
 #endif

@@ -65,3 +65,6 @@
 [submodule "third_party/jemalloc/src"]
 	path = third_party/jemalloc/src
 	url = https://github.com/jemalloc/jemalloc/
+[submodule "third_party/oneTBB"]
+	path = third_party/oneTBB
+	url = https://github.com/hukeyue/oneTBB

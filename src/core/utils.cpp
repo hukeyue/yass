@@ -35,6 +35,15 @@
 #include <winsock2.h>
 #endif
 
+#ifdef HAVE_TBBMALLOC_STATS
+#define COLLECT_STATISTICS 1
+#define MALLOCENV_COLLECT_STATISTICS "YASS_TBBMALLOC"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include "third_party/oneTBB/src/tbbmalloc/Statistics.h"
+#pragma clang diagnostic pop
+#endif
+
 #ifdef HAVE_TCMALLOC
 #include <gperftools/malloc_extension_c.h>
 #endif
@@ -328,7 +337,14 @@ PlatformFile OpenReadFile(const std::string& path) {
 #endif
 
 void PrintMallocStats() {
-#ifdef HAVE_TCMALLOC
+#ifdef HAVE_TBBMALLOC_STATS
+  if (nullptr != getenv(MALLOCENV_COLLECT_STATISTICS))
+    LOG(ERROR) << "TBBMALLOC: please open stat_ScalableMalloc_thr<tid>.log for more";
+  else
+    LOG(ERROR) << "TBBMALLOC: " << MALLOCENV_COLLECT_STATISTICS << " is not defined, no report";
+#elif defined(HAVE_TBBMALLOC)
+  LOG(ERROR) << "TBBMALLOC: report not support";
+#elif defined(HAVE_TCMALLOC)
   constexpr const char* properties[] = {
       "generic.current_allocated_bytes",       "generic.heap_size",
       "generic.total_physical_bytes",          "tcmalloc.central_cache_free_bytes",

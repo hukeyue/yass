@@ -429,32 +429,62 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 include(CMakeDependentOption)
 
+option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
+
+## Fix RPATH
+if (NOT APPLE AND NOT MSVC)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+  set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+  set(CMAKE_BUILD_RPATH "\$ORIGIN/.")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+  # Add directories from all libraries outside the build tree to the rpath.
+  # This makes the dynamic linker able to find non system libraries that
+  # our libraries require, in particular the Python one (from pyenv for
+  # instance).
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+elseif(APPLE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+  set(CMAKE_BUILD_RPATH "@loader_path/.")
+  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+endif()
+foreach(output_type PDB RUNTIME LIBRARY ARCHIVE)
+  set(CMAKE_${output_type}_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+endforeach()
+
 option(CLI "Build with cli." ON)
 option(SERVER "Build with server." ON)
 cmake_dependent_option(
   CLI_STATIC_BUILD "Build with static build cli." OFF
-  "CLI AND LINUX" OFF)
+  "NOT BUILD_SHARED_LIBS; CLI AND LINUX" OFF)
 cmake_dependent_option(
   SERVER_STATIC_BUILD "Build with static build server." OFF
-  "SERVER AND LINUX" OFF)
+  "NOT BUILD_SHARED_LIBS; SERVER AND LINUX" OFF)
 
 option(GUI "Build against GUI." OFF)
 
 option(BUILD_BENCHMARKS "Build with benchmark." OFF)
-option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 option(BUILD_TESTS "Build with test." OFF)
 option(OPTIMIZED_PROTOC "Force protobuf compiler to be built with optimization" OFF)
 
 cmake_dependent_option(
+  USE_TBBMALLOC "Build with tbbmalloc" OFF
+  "BUILD_SHARED_LIBS; APPLE OR FREEBSD OR LINUX OR MSVC; NOT IOS" OFF)
+
+cmake_dependent_option(
+  USE_SYSTEM_TBBMALLOC "Build with system or vendored tbbmalloc" OFF
+  USE_TBBMALLOC OFF)
+
+cmake_dependent_option(
   USE_TCMALLOC "Build with tcmalloc" OFF
-  "LINUX OR WIN32" OFF)
+  "NOT USE_TBBMALLOC; LINUX OR WIN32" OFF)
+
 cmake_dependent_option(
   USE_SYSTEM_TCMALLOC "Build with system or vendored tcmalloc" OFF
   USE_TCMALLOC OFF)
 
 cmake_dependent_option(
   USE_MIMALLOC "Use mimalloc" OFF
-  "NOT USE_TCMALLOC; NOT IOS; NOT ANDROID; NOT OHOS" OFF)
+  "NOT USE_TBBMALLOC; NOT USE_TCMALLOC; NOT IOS; NOT ANDROID; NOT OHOS" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_MIMALLOC "Use system or vendored mimalloc" OFF
@@ -462,7 +492,7 @@ cmake_dependent_option(
 
 cmake_dependent_option(
   USE_JEMALLOC "Use jemalloc" OFF
-  "NOT USE_TCMALLOC; NOT USE_MIMALLOC; NOT APPLE; NOT ANDROID; NOT OHOS; NOT WIN32" OFF)
+  "NOT USE_TBBMALLOC; NOT USE_TCMALLOC; NOT USE_MIMALLOC; NOT APPLE; NOT ANDROID; NOT OHOS; NOT WIN32" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_JEMALLOC "Use system or vendored jemalloc" OFF
@@ -2338,14 +2368,6 @@ if (NOT MSVC)
     add_compile_options($<$<AND:$<CONFIG:MINSIZEREL>,$<COMPILE_LANGUAGE:C,CXX>>:-D_FORTIFY_SOURCE=2>)
     add_compile_options($<$<AND:$<CONFIG:RELWITHDEBINFO>,$<COMPILE_LANGUAGE:C,CXX>>:-D_FORTIFY_SOURCE=2>)
   endif()
-
-  ## set rpath origin
-  if (NOT APPLE)
-    # Setting this to true makes sure that libraries we build will have our
-    # rpath set even without having to do "make install"
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-  endif()
 else()
   ## Disable RTTI
   set(CompilerFlags
@@ -2487,6 +2509,90 @@ if (USE_LTO_CMAKE)
 endif()
 
 # *****************************************************************************************
+#           tbbmalloc Library
+# *****************************************************************************************
+if (USE_SYSTEM_TBBMALLOC)
+  find_package(TBB)
+  if (NOT TBB_FOUND)
+    message(STATUS "System tcmalloc not found, using bundled one")
+    set(USE_SYSTEM_TBBMALLOC FALSE)
+  endif()
+  if (USE_LIBCXX)
+    message(STATUS "Cannot use system tcmalloc with custom libc++, using bundled one")
+    set(USE_SYSTEM_TBBMALLOC FALSE)
+  endif()
+endif()
+
+if (USE_SYSTEM_TBBMALLOC AND USE_TBBMALLOC)
+  message(STATUS "Compiling with system tbbmalloc support")
+
+  list(APPEND YASS_APP_FEATURES "system tbbmalloc")
+
+  set(TBBMALLOC_LIB TBB::tbbmalloc_proxy TBB::tbbmalloc)
+
+  set(SUPPORT_DEFINITIONS
+    HAVE_TBBMALLOC
+    ${SUPPORT_DEFINITIONS}
+  )
+elseif (USE_TBBMALLOC)
+  message(STATUS "Compiling with bundled tbbmalloc support")
+
+  set(TBB_TEST OFF CACHE BOOL "")
+  set(TBB_EXAMPLES OFF CACHE BOOL "")
+  set(TBB_STRICT OFF CACHE BOOL "")
+  set(TBB_WINDOWS_DRIVER OFF CACHE BOOL "")
+  set(TBB4PY_BUILD OFF CACHE BOOL "")
+  set(TBB_BUILD OFF CACHE BOOL "")
+  set(TBBMALLOC_BUILD ON CACHE BOOL "")
+  set(TBBMALLOC_PROXY_BUILD ON CACHE BOOL "")
+  set(TBB_CPF ON CACHE BOOL "")
+  set(TBB_FIND_PACKAGE OFF CACHE BOOL "")
+  set(TBB_DISABLE_HWLOC_AUTOMATIC_SEARCH OFF CACHE BOOL "")
+  set(TBB_ENABLE_IPO OFF CACHE BOOL "")
+  set(TBB_CONTROL_FLOW_GUARD OFF CACHE BOOL "")
+  set(TBB_FUZZ_TESTING OFF CACHE BOOL "")
+  set(TBB_INSTALL OFF CACHE BOOL "")
+  set(TBB_FILE_TRIM ON CACHE BOOL "")
+  set(TBB_LINUX_SEPARATE_DBG OFF CACHE BOOL "")
+  set(TBB_BUILD_APPLE_FRAMEWORKS OFF CACHE BOOL "")
+  set(TBB_OUTPUT_DIR_BASE "." CACHE STRING "")
+  add_subdirectory(third_party/oneTBB EXCLUDE_FROM_ALL)
+  if (USE_LTO_CMAKE)
+    set_property(TARGET tbbmalloc
+      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET tbbmalloc_proxy
+      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif()
+
+  target_compile_definitions(tbbmalloc PRIVATE MALLOCENV_COLLECT_STATISTICS=YASS_TBBMALLOC)
+
+  #an unwanted dependency on libstdc++.so
+  if (LINUX AND NOT USE_LIBCXX)
+    target_link_libraries(tbbmalloc PRIVATE stdc++)
+  endif()
+
+  list(APPEND YASS_APP_FEATURES "tbbmalloc")
+
+  set(TBBMALLOC_LIB tbbmalloc_proxy tbbmalloc)
+
+  install(TARGETS tbbmalloc RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  install(TARGETS tbbmalloc_proxy RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+  set(SUPPORT_DEFINITIONS
+    HAVE_TBBMALLOC
+    HAVE_TBBMALLOC_STATS
+    ${SUPPORT_DEFINITIONS}
+  )
+  set(SUPPORT_INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}/third_party/oneTBB/include
+    third_party/oneTBB/include
+    ${SUPPORT_INCLUDE_DIRS}
+  )
+endif()
+
+set(DEFAULT_MALLOC_LIB ${TBBMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
+
+# *****************************************************************************************
 #           tcmalloc Library
 # *****************************************************************************************
 
@@ -2621,10 +2727,7 @@ elseif (USE_TCMALLOC AND WIN32)
   endif()
 endif()
 
-set(CORE_LIBS
-  ${TCMALLOC_LIB}
-  ${CORE_LIBS}
-)
+set(DEFAULT_MALLOC_LIB ${TCMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
 
 # *****************************************************************************************
 #           mimalloc Library
@@ -2743,10 +2846,7 @@ elseif(USE_MIMALLOC AND WIN32)
   list(APPEND YASS_APP_FEATURES "mimalloc (dll)")
 endif()
 
-set(CORE_LIBS
-  ${MIMALLOC_LIB}
-  ${CORE_LIBS}
-)
+set(DEFAULT_MALLOC_LIB ${MIMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
 
 function(minject_patch_exetuable target_name)
   if (NOT USE_MIMALLOC_MINJECT)
@@ -2820,10 +2920,7 @@ elseif(USE_JEMALLOC)
   list(APPEND YASS_APP_FEATURES "jemalloc")
 endif()
 
-set(CORE_LIBS
-  ${JEMALLOC_LIB}
-  ${CORE_LIBS}
-)
+set(DEFAULT_MALLOC_LIB ${JEMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
 
 # *****************************************************************************************
 #           re2 Library
@@ -2924,8 +3021,7 @@ endforeach()
 
 if (BORINGSSL_BUILD_TESTS)
   add_custom_target(check_boringssl
-    COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
-            ${CMAKE_CURRENT_BINARY_DIR}/third_party/boringssl/src
+    COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir ${CMAKE_CURRENT_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boringssl/src
     DEPENDS boringssl_all_tests
     USES_TERMINAL)
@@ -3964,10 +4060,12 @@ target_include_directories(yass_core PRIVATE
 target_compile_definitions(yass_core PUBLIC
   ${SUPPORT_DEFINITIONS})
 
+set(CORE_LIBS ${DEFAULT_MALLOC_LIB} ${CORE_LIBS})
 target_link_libraries(yass_core PUBLIC
   ${CORE_LIBS})
 
 set(SUPPORT_LIBS
+  ${DEFAULT_MALLOC_LIB}
   yass_core
   ${CORE_LIBS}
   ${SUPPORT_LIBS})
@@ -4128,9 +4226,7 @@ target_compile_definitions(yass_net PUBLIC
 
 target_link_directories(yass_net PUBLIC ${SUPPORT_LIB_DIRS})
 target_link_libraries(yass_net PUBLIC
-  ${TCMALLOC_LIB}
-  ${MIMALLOC_LIB}
-  ${JEMALLOC_LIB}
+  ${DEFAULT_MALLOC_LIB}
   ${SUPPORT_LIBS})
 
 if (ANDROID)
@@ -4152,9 +4248,7 @@ target_include_directories(yass_cli_nogui_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_cli_nogui_lib PUBLIC
-  ${TCMALLOC_LIB}
-  ${MIMALLOC_LIB}
-  ${JEMALLOC_LIB}
+  ${DEFAULT_MALLOC_LIB}
   yass_net)
 
 add_library(yass_cli_lib STATIC
@@ -4168,9 +4262,7 @@ target_include_directories(yass_cli_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_cli_lib PUBLIC
-  ${TCMALLOC_LIB}
-  ${MIMALLOC_LIB}
-  ${JEMALLOC_LIB}
+  ${DEFAULT_MALLOC_LIB}
   yass_cli_nogui_lib
   yass_net)
 
@@ -4206,9 +4298,7 @@ if (CLI)
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
   target_link_libraries(yass_cli PUBLIC
-    ${TCMALLOC_LIB}
-    ${MIMALLOC_LIB}
-    ${JEMALLOC_LIB}
+    ${DEFAULT_MALLOC_LIB}
     yass_cli_nogui_lib
     yass_net)
 
@@ -4238,9 +4328,7 @@ target_include_directories(yass_server_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_server_lib PUBLIC
-  ${TCMALLOC_LIB}
-  ${MIMALLOC_LIB}
-  ${JEMALLOC_LIB}
+  ${DEFAULT_MALLOC_LIB}
   yass_net)
 
 if (SERVER)
@@ -4275,9 +4363,7 @@ if (SERVER)
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
   target_link_libraries(yass_server PUBLIC
-    ${TCMALLOC_LIB}
-    ${MIMALLOC_LIB}
-    ${JEMALLOC_LIB}
+    ${DEFAULT_MALLOC_LIB}
     yass_server_lib
     yass_net)
 
@@ -4599,9 +4685,7 @@ if (GUI)
     target_link_directories(${APP_NAME} PUBLIC ${GUI_LIBRARY_DIRS})
 
     target_link_libraries(${APP_NAME} PUBLIC
-      ${TCMALLOC_LIB}
-      ${MIMALLOC_LIB}
-      ${JEMALLOC_LIB}
+      ${DEFAULT_MALLOC_LIB}
       ${GUI_LIBRARIES}
       yass_core
     )
@@ -4644,6 +4728,11 @@ if (GUI)
         if (LTO)
           target_link_options(${APP_NAME} PRIVATE "-Wl,-object_path_lto,${CMAKE_BINARY_DIR}/lto_tmp")
         endif()
+        # handle with rpath
+        set_property(TARGET ${APP_NAME}
+          PROPERTY BUILD_RPATH "@loader_path/../Frameworks")
+        set_property(TARGET ${APP_NAME}
+          PROPERTY INSTALL_RPATH "@loader_path/../../../lib")
         # Handle the Storyboard ourselves
         if(NOT ${CMAKE_GENERATOR} MATCHES "^Xcode.*")
           # Compile the storyboard file with the ibtool.
@@ -5030,9 +5119,7 @@ if (BUILD_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_test PUBLIC
-      ${TCMALLOC_LIB}
-      ${MIMALLOC_LIB}
-      ${JEMALLOC_LIB}
+      ${DEFAULT_MALLOC_LIB}
       yass_cli_nogui_lib
       yass_server_lib
       yass_net
@@ -5173,9 +5260,7 @@ if (BUILD_BENCHMARKS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/server
       )
   target_link_libraries(yass_benchmark PUBLIC
-      ${TCMALLOC_LIB}
-      ${MIMALLOC_LIB}
-      ${JEMALLOC_LIB}
+      ${DEFAULT_MALLOC_LIB}
       yass_cli_nogui_lib
       yass_server_lib
       yass_net

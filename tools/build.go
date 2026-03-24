@@ -201,7 +201,7 @@ func InitFlag() {
 
 	flag.BoolVar(&clangTidyModeFlag, "clang-tidy-mode", getEnvBool("ENABLE_CLANG_TIDY", false), "Enable Clang Tidy Build")
 
-	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.14"), "Set Mac OS X deployment target, such as 10.15")
+	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.15"), "Set Mac OS X deployment target, such as 10.15")
 	flag.BoolVar(&macosxUniversalBuildFlag, "macosx-universal-build", getEnvBool("ENABLE_OSX_UNIVERSAL_BUILD", false), "Enable Mac OS X Universal Build")
 	flag.StringVar(&macosxKeychainPathFlag, "macosx-keychain-path", getEnv("KEYCHAIN_PATH", ""), "During signing, only search for the signing identity in the keychain file specified")
 	flag.StringVar(&macosxCodeSignIdentityFlag, "macosx-codesign-identity", getEnv("MAC_CODESIGN_IDENTITY", "-"), "Set Mac OS X CodeSign Identity")
@@ -1629,13 +1629,77 @@ func postStateCopyDependedLibraries() {
 			glog.Infof("--- --- %s", unresolvedDep)
 		}
 		// TBD
+	} else if systemNameFlag == "darwin" {
+		dllPaths := []string{}
+
+		// find dylibs to be copied
+		// find more precisely
+		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
+		otoolOutput := cmdCheckOutput([]string{"otool", "-L", execPath})
+		lines := strings.Split(otoolOutput, "\n")
+		p := regexp.MustCompile("(?i)\\t(@rpath/\\S+.dylib) \\(.*\\)")
+		for _, line := range lines {
+			matches := p.FindStringSubmatch(line)
+			if len(matches) > 1 {
+				dllName := strings.Replace(matches[1], "@rpath/", "", 1)
+				dllPaths = append(dllPaths, dllName)
+			}
+		}
+		/* find more coarsely
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".dylib") {
+				dllPaths = append(dllPaths, name)
+			}
+		}
+		*/
+		// copying all dll files into Frameworks
+		dstDir := filepath.Join(getAppName(), "Contents", "Frameworks")
+		if _, err := os.Stat(dstDir); errors.Is(err, os.ErrNotExist) {
+			err := os.Mkdir(dstDir, 0755)
+			if err != nil {
+				glog.Fatalf("%v", err)
+			}
+		}
+		for _, dllPath := range dllPaths {
+			dstPath := filepath.Join(dstDir, dllPath)
+			symlinkTarget, err := os.Readlink(dllPath)
+			if err == nil {
+				err = os.Symlink(symlinkTarget, dstPath)
+			} else {
+				err = copyFile(dllPath, dstPath)
+			}
+			if err != nil {
+				glog.Fatalf("Failed in copying file %s: %v", dllPath, err)
+			}
+		}
 	}
 }
 
 func postStateFixRPath() {
 	glog.Info("PostState -- Fix RPATH")
 	glog.Info("======================================================================")
-	// TBD
+	if systemNameFlag == "darwin" {
+		removeRpathCmd := []string{
+			"install_name_tool", "-delete_rpath", buildDir,
+		}
+
+		frameworkPath := filepath.Join(buildDir, getAppName(), "Contents", "Frameworks")
+		entries, _ := ioutil.ReadDir(frameworkPath)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".dylib") {
+				removeRpathFinalCmd := append(removeRpathCmd, filepath.Join(frameworkPath, name))
+				cmdRun(removeRpathFinalCmd, false)
+			}
+		}
+		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
+		removeRpathFinalCmd := append(removeRpathCmd, execPath)
+		cmdRun(removeRpathFinalCmd, false)
+	}
 }
 
 func postStateStripBinaries() {
@@ -1671,7 +1735,24 @@ func postStateStripBinaries() {
 	} else if systemNameFlag == "darwin" {
 		cmdRun([]string{"dsymutil", filepath.Join(getAppName(), "Contents", "MacOS", APPNAME),
 			"--statistics", "--update", "-o", getAppName() + ".dSYM"}, false)
-		cmdRun([]string{"strip", "-S", "-x", "-v", filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)}, false)
+		stripCmd := []string{"strip", "-S", "-x", "-v"}
+
+		// strip dependent dll files
+		frameworkPath := filepath.Join(buildDir, getAppName(), "Contents", "Frameworks")
+		entries, _ := ioutil.ReadDir(frameworkPath)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".dylib") {
+				stripFinalCmd := append(stripCmd, filepath.Join(frameworkPath, name))
+				cmdRun(stripFinalCmd, false)
+			}
+		}
+
+		// strip main binary
+		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
+		stripFinalCmd := append(stripCmd, execPath)
+		cmdRun(stripFinalCmd, false)
 	} else if systemNameFlag == "ios" {
 		cmdRun([]string{"dsymutil", filepath.Join(getAppName(), APPNAME),
 			"--statistics", "--update", "-o", getAppName() + ".dSYM"}, false)
@@ -1700,8 +1781,22 @@ func postStateCodeSign() {
 		codesignCmd = append(codesignCmd, "--keychain", macosxKeychainPathFlag)
 	}
 
-	codesignCmd = append(codesignCmd, getAppName())
-	cmdRun(codesignCmd, true)
+	// check dependent dll files
+	frameworkPath := filepath.Join(buildDir, getAppName(), "Contents", "Frameworks")
+	entries, _ := ioutil.ReadDir(frameworkPath)
+	for _, entry := range entries {
+		name := entry.Name()
+		iname := strings.ToLower(name)
+		if strings.HasSuffix(iname, ".dylib") {
+			codesignFinalCmd := append(codesignCmd, filepath.Join(frameworkPath, name))
+			cmdRun(codesignFinalCmd, true)
+		}
+	}
+
+	// check with main binary
+	codesignFinalCmd := append(codesignCmd, getAppName())
+	cmdRun(codesignFinalCmd, true)
+
 	cmdRun([]string{"codesign", "-dv", "--deep", "--strict", "--verbose=4", getAppName()}, true)
 	cmdRun([]string{"codesign", "-d", "--entitlements", ":-", getAppName()}, true)
 
@@ -2400,6 +2495,17 @@ func postStateArchives() map[string][]string {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dll") {
+				dllPaths = append(dllPaths, name)
+			}
+		}
+	}
+
+	if systemNameFlag == "linux" || systemNameFlag == "android" {
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".dylib") {
 				dllPaths = append(dllPaths, name)
 			}
 		}
