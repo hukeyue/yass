@@ -34,7 +34,7 @@ set(RE2_HEADERS
   re2/re2/stringpiece.h
   )
 
-add_library(re2 ${RE2_SOURCES} ${RE2_HEADERS})
+add_library(re2 STATIC ${RE2_SOURCES} ${RE2_HEADERS})
 if (USE_LTO_CMAKE)
   set_property(TARGET re2
     PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
