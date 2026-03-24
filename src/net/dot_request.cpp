@@ -197,6 +197,13 @@ void DoTRequest::OnSSLReadable(asio::error_code ec) {
     OnDoneRequest(ec, nullptr);
     return;
   }
+  if (UNLIKELY(ec)) {
+    DCHECK_EQ(0u, read);
+    VLOG(3) << "DoT Response Try-Again";
+    scoped_refptr<DoTRequest> self(this);
+    ssl_socket_->WaitRead([this, self](asio::error_code ec) { OnSSLReadable(ec); });
+    return;
+  }
   // append buf to the end of recv_buf
   int previous_capacity = recv_buf_->capacity();
   recv_buf_->SetCapacity(previous_capacity + read);

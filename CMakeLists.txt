@@ -5057,6 +5057,7 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   file(READ third_party/zlib/LICENSE                        _ZLIB_LICENSE)
   file(READ third_party/mimalloc/LICENSE                    _MIMALLOC_LICENSE)
   file(READ third_party/jemalloc/src/COPYING                _JEMALLOC_LICENSE)
+  file(READ third_party/oneTBB/LICENSE.txt                  _TBBMALLOC_LICENSE)
 
   set(LICENSE_FILE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE")
   configure_file("LICENSES/LICENSE.cmake.in" "${LICENSE_FILE}" @ONLY)

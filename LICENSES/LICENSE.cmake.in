@@ -81,3 +81,7 @@
 === jemalloc ==
 
 @_JEMALLOC_LICENSE@
+
+=== tbbmalloc ==
+
+@_TBBMALLOC_LICENSE@
