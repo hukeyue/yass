@@ -235,6 +235,7 @@ set(CMAKE_LINKER "${LLVM_NATIVE_TOOLCHAIN}/bin/lld-link" CACHE FILEPATH "")
 set(CMAKE_AR "${LLVM_NATIVE_TOOLCHAIN}/bin/llvm-lib" CACHE FILEPATH "")
 set(CMAKE_RC_COMPILER "${LLVM_NATIVE_TOOLCHAIN}/bin/llvm-rc" CACHE FILEPATH "")
 set(CMAKE_MT "${LLVM_NATIVE_TOOLCHAIN}/bin/llvm-mt" CACHE FILEPATH "")
+set(CMAKE_NM "${LLVM_NATIVE_TOOLCHAIN}/bin/llvm-nm" CACHE FILEPATH "")
 
 # Even though we're cross-compiling, we need some native tools (e.g. llvm-tblgen), and those
 # native tools have to be built before we can start doing the cross-build.  LLVM supports
