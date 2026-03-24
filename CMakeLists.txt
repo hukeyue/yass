@@ -2388,6 +2388,8 @@ endif()
 # *****************************************************************************************
 
 set(ABSL_PROPAGATE_CXX_STD "ON" CACHE STRING "")
+set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "OFF" CACHE STRING "")
+set(ABSL_BUILD_SHARED_LIBS "OFF" CACHE STRING "")
 # override system's abseil-cpp
 include_directories(third_party/abseil-cpp)
 # force win32 thread model for libc++ usage
