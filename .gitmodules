@@ -46,7 +46,7 @@
 	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind
 [submodule "third_party/re2"]
 	path = third_party/re2
-	url = https://github.com/google/re2
+	url = https://github.com/hukeyue/re2
 [submodule "third_party/tun2proxy"]
 	path = third_party/tun2proxy
 	url = https://github.com/hukeyue/tun2proxy
