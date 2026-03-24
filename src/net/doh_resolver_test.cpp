@@ -93,7 +93,7 @@ static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<DoHResol
   io_context.restart();
 
   asio::post(io_context, [&]() {
-    resolver->AsyncResolve("www.google.com", 80,
+    resolver->AsyncResolve("www.cloudflare.com", 80,
                            [&](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
                              work_guard.reset();
                              // Sometimes dns resolver don't get ack in time, ignore it safely
@@ -167,7 +167,7 @@ TEST(DOH_TEST, Timeout) {
       std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
   asio::post(io_context, [&]() {
-    resolver->AsyncResolve("www.google.com", 80,
+    resolver->AsyncResolve("www.cloudflare.com", 80,
                            [&](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
                              work_guard.reset();
                              ASSERT_EQ(ec, asio::error::timed_out) << ec;
