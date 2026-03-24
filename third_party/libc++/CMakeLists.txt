@@ -19,6 +19,9 @@ endif()
 # go in :runtime_library vs. :compiler.
 if (BUILD_SHARED_LIBS)
   set(libcxx_SHARED ON)
+  if (MINGW AND ENABLE_LTO)
+    message(WARNING "Failure might happen with lto enabled")
+  endif()
 else()
   set(libcxx_SHARED OFF)
 endif()
@@ -33,6 +36,12 @@ else()
   # >>> referenced by chrono.cpp
   # >>>               thinlto-cache/llvmcache-C577B9C572ACF510A97E7F74D80906652031E64C:(.eh_frame+0xAC69)
   set(libcxx_USE_EXCEPTIONS OFF)
+endif()
+
+if (ANDROID OR MSVC OR APPLE OR MINGW)
+  set(libcxx_USE_RTTI ON)
+else()
+  set(libcxx_USE_RTTI OFF)
 endif()
 
 # gcc's lto implementation is buggy and cannot find std::terminate if libc++ built with -fexceptions while used with
@@ -422,6 +431,11 @@ if (NOT libcxx_SHARED)
   endif()
 else()
   add_library(cxx SHARED ${libcxx_SOURCES})
+  if (MSVC)
+    set_target_properties(cxx PROPERTIES OUTPUT_NAME "libc++")
+  else()
+    set_target_properties(cxx PROPERTIES OUTPUT_NAME "c++")
+  endif()
   if (NOT MSVC)
     set(libcxx_CFLAGS ${libcxx_CFLAGS}
       "-fvisibility=default"
@@ -502,8 +516,13 @@ if (NOT MSVC)
     ../libc++abi/trunk/src/stdlib_typeinfo.cpp
     # Internal files
     ../libc++abi/trunk/src/fallback_malloc.cpp
-    ../libc++abi/trunk/src/private_typeinfo.cpp
     )
+
+  set(libcxxabi_DEFINITIONS
+    ${libcxxabi_DEFINITIONS}
+    "_LIBCXXABI_BUILDING_LIBRARY"
+    "LIBCXXABI_SILENT_TERMINATE"
+  )
   if (libcxx_USE_EXCEPTIONS)
     set(libcxxabi_SOURCES
       ${libcxxabi_SOURCES}
@@ -516,6 +535,16 @@ if (NOT MSVC)
       # This file is supposed to be used in fno-exception builds of
       # libc++abi.  We build lib++/libc++abi with exceptions enabled.
       ../libc++abi/trunk/src/cxa_noexception.cpp
+      )
+    set(libcxxabi_DEFINITIONS
+     ${libcxxabi_DEFINITIONS}
+     "_LIBCXXABI_NO_EXCEPTIONS"
+    )
+  endif()
+  if (libcxx_USE_RTTI)
+    set(libcxxabi_SOURCES
+      ${libcxxabi_SOURCES}
+      ../libc++abi/trunk/src/private_typeinfo.cpp
       )
   endif()
   if (NOT TSAN)
@@ -560,10 +589,18 @@ if (NOT MSVC)
       )
   endif()
 
+  # libc++'s target type follows that of libc++, except:
+  #  - When libc++ is built as a shared_library, libc++abi should be a
+  #    source_set, so that libc++abi can be be linked into the libc++
+  #    shared_library in full.
+  #  - When exporting libc++abi from executables, libc++abi should be a
+  #    source_set, so that all of libc++abi is linked into executables
+  #    regardless of whether they directly depend on any particular portion of
+  #    it. (see export_libcxxabi_from_executables)
   if (NOT libcxx_SHARED)
     add_library(cxxabi STATIC ${libcxxabi_SOURCES})
   else()
-    add_library(cxxabi SHARED ${libcxxabi_SOURCES})
+    add_library(cxxabi OBJECT ${libcxxabi_SOURCES})
   endif()
 
   target_compile_definitions(cxxabi PRIVATE ${libcxxabi_DEFINITIONS})
@@ -597,7 +634,11 @@ if (NOT MSVC)
     target_compile_options(cxxabi PRIVATE "-fvisibility=default")
   endif()
 
-  target_compile_options(cxxabi PRIVATE "-frtti")
+  if (libcxx_USE_RTTI)
+    target_compile_options(cxxabi PRIVATE "-frtti")
+  else()
+    target_compile_options(cxxabi PRIVATE "-fno-rtti")
+  endif()
   if (libcxx_USE_EXCEPTIONS)
     target_compile_options(cxxabi PRIVATE "-fexceptions")
   else()
@@ -623,7 +664,7 @@ if (ANDROID)
   if (NOT libcxx_SHARED)
     add_library(unwind STATIC ${libunwind_SOURCES})
   else()
-    add_library(unwind SHARED ${libunwind_SOURCES})
+    add_library(unwind OBJECT ${libunwind_SOURCES})
   endif()
 
   target_include_directories(unwind PRIVATE
@@ -640,7 +681,9 @@ if (ANDROID)
     ../libc++abi/trunk/src)
 
   target_compile_definitions(unwind PRIVATE _LIBUNWIND_IS_NATIVE_ONLY)
-  target_compile_definitions(unwind PRIVATE _LIBUNWIND_DISABLE_VISIBILITY_ANNOTATIONS)
+  if (!libcxx_SHARED)
+    target_compile_definitions(unwind PRIVATE _LIBUNWIND_DISABLE_VISIBILITY_ANNOTATIONS)
+  endif()
 
   target_compile_options(unwind PRIVATE "-fstrict-aliasing")
   target_compile_options(unwind PRIVATE "-fPIC")
@@ -651,11 +694,7 @@ if (ANDROID)
   target_compile_options(unwind PRIVATE "-funwind-tables")
 
   target_compile_options(unwind PRIVATE "-frtti")
-  if (libcxx_USE_EXCEPTIONS)
-    target_compile_options(unwind PRIVATE "-fexceptions")
-  else()
-    target_compile_options(unwind PRIVATE "-fno-exceptions")
-  endif()
+  target_compile_options(unwind PRIVATE "-fexceptions")
 
   target_link_libraries(cxx unwind)
 endif()
@@ -711,7 +750,11 @@ if (MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DEFAULTLIB:libcpmt${DLL_SUFFIX}.lib")
   endif()
 else()
-  target_compile_options(cxx PRIVATE "-frtti")
+  if (libcxx_USE_RTTI)
+    target_compile_options(cxx PRIVATE "-frtti")
+  else()
+    target_compile_options(cxx PRIVATE "-fno-rtti")
+  endif()
   if (libcxx_USE_EXCEPTIONS)
     target_compile_options(cxx PRIVATE "-fexceptions")
   else()

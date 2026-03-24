@@ -305,7 +305,7 @@ target_include_directories(url PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/..
   )
 
-target_link_libraries(url PUBLIC absl::optional)
+target_link_libraries(url PUBLIC absl::optional absl::str_format)
 
 target_sources(url PRIVATE
   googleurl/base/files/memory_mapped_file.h
