@@ -160,13 +160,16 @@ jobs:
           pushd third_party/libc++abi/trunk
           patch -p1 < ../winxp.patch
           popd
-      - name: Build Binary (CLI and Server)
+      - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
+      - name: Build Binary (Server)
+        run: |
           ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            -build-test -build-benchmark \
             ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
@@ -174,9 +177,35 @@ jobs:
           # see https://github.com/lightspark/lightspark/discussions/604#discussioncomment-1034262
           export LC_ALL=en_US.UTF-8
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system mingw \
-            -build-test -build-benchmark \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-gui
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-nsis-installer
+          path: |
+            *.exe
+          compression-level: 0 # no compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_cli.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          path: |
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - name: Populate depedencies (Tests-i686)
         if: ${{ matrix.arch == 'i686' }}
         run: |
@@ -189,51 +218,22 @@ jobs:
           cp -v third_party/curl-8.4.0_7-win64-mingw/bin/libcurl-x64.dll build-mingw-winxp-${{ matrix.arch }}/
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}
-          path: |
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.exe
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
-      - uses: actions/upload-artifact@v6
-        with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
-          path: |
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_cli.exe
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
-      - uses: actions/upload-artifact@v6
-        with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
-          path: |
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/tcmalloc*.dll
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
-      - uses: actions/upload-artifact@v6
-        with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
-          path: |
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dbg
-          compression-level: 9 # maximum compression
-      - uses: actions/upload-artifact@v6
-        with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_test.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
-          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_benchmark.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
-          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-nsis-installer
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
           path: |
-            *.exe
-          compression-level: 0 # no compression
+            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dbg
+          compression-level: 9 # maximum compression
       - name: Upload dist tarball
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
@@ -303,7 +303,7 @@ jobs:
       - name: Download built executables
         uses: actions/download-artifact@v6
         with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: build-mingw${{ matrix.suffix }}-${{ matrix.arch }}
       - name: Build Binary (MSI)
         run: |

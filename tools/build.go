@@ -47,6 +47,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/google/uuid"
@@ -157,6 +158,11 @@ func getEnvBool(key string, fallback bool) bool {
 		return result
 	}
 	return fallback
+}
+
+func untouchFile(fileName string) error {
+	oldTime := time.Date(1970, time.January, 0, 0, 0, 0, 0, time.UTC)
+	return os.Chtimes(fileName, oldTime, oldTime)
 }
 
 func InitFlag() {
@@ -416,6 +422,31 @@ func prebuildFindSourceDirectory() {
 				glog.Fatalf("%v", err)
 			}
 			glog.V(2).Infof("Removed previous build directory %s", buildDir)
+		} else {
+			entries, _ := ioutil.ReadDir(buildDir)
+			for _, entry := range entries {
+				name := entry.Name()
+				iname := strings.ToLower(name)
+				if strings.HasSuffix(iname, ".dylib") || strings.HasSuffix(iname, ".so") || strings.HasSuffix(iname, ".dll") || strings.HasSuffix(iname, ".exe") {
+					err = untouchFile(filepath.Join(buildDir, name))
+					if err != nil {
+						glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
+					} else {
+						glog.V(1).Infof("Untouched binary %s under build directory to force rebuild", name)
+					}
+				}
+				if name == getAppName() {
+					if systemNameFlag == "darwin" {
+						name = filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
+					}
+					err = untouchFile(filepath.Join(buildDir, name))
+					if err != nil {
+						glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
+					} else {
+						glog.V(1).Infof("Untouched binary %s under build directory to force rebuild", name)
+					}
+				}
+			}
 		}
 	}
 	if _, err := os.Stat(buildDir); errors.Is(err, os.ErrNotExist) {
@@ -1702,6 +1733,29 @@ func postStateFixRPath() {
 	}
 }
 
+func gnuStripBinary(binName string, dbgName string) {
+	objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
+	if runtime.GOOS == "windows" {
+		objcopy = filepath.Join(clangPath, "bin", "llvm-objcopy.exe")
+	}
+	if _, err := os.Stat(objcopy); errors.Is(err, os.ErrNotExist) {
+		objcopy = "objcopy"
+	}
+	// create a file containing the debugging info.
+	cmdRun([]string{objcopy, "--only-keep-debug", binName, dbgName}, false)
+	// stripped executable.
+	cmdRun([]string{objcopy, "--strip-debug", binName}, false)
+	// to add a link to the debugging info into the stripped executable.
+	cmdRun([]string{objcopy, "--add-gnu-debuglink=" + dbgName, binName}, false)
+}
+
+func darwinStripBinary(binName string, dSYMName string) {
+	// export debugging info
+	cmdRun([]string{"dsymutil", binName, "--statistics", "--update", "-o", dSYMName}, false)
+	// strip debugging info
+	cmdRun([]string{"strip", "-S", "-x", "-v", binName}, false)
+}
+
 func postStateStripBinaries() {
 	glog.Info("PostState -- Strip Binaries")
 	glog.Info("======================================================================")
@@ -1719,24 +1773,28 @@ func postStateStripBinaries() {
 		}
 	}
 	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
-		objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
-		if runtime.GOOS == "windows" {
-			objcopy = filepath.Join(clangPath, "bin", "llvm-objcopy.exe")
+		// strip dependent dll files
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".so") || strings.HasSuffix(iname, ".dll") {
+				gnuStripBinary(filepath.Join(buildDir, name), basename(name)+".dbg")
+			}
 		}
-		if _, err := os.Stat(objcopy); errors.Is(err, os.ErrNotExist) {
-			objcopy = "objcopy"
-		}
-		// create a file containing the debugging info.
-		cmdRun([]string{objcopy, "--only-keep-debug", getAppName(), getAppName() + ".dbg"}, false)
-		// stripped executable.
-		cmdRun([]string{objcopy, "--strip-debug", getAppName()}, false)
-		// to add a link to the debugging info into the stripped executable.
-		cmdRun([]string{objcopy, "--add-gnu-debuglink=" + getAppName() + ".dbg", getAppName()}, false)
-	} else if systemNameFlag == "darwin" {
-		cmdRun([]string{"dsymutil", filepath.Join(getAppName(), "Contents", "MacOS", APPNAME),
-			"--statistics", "--update", "-o", getAppName() + ".dSYM"}, false)
-		stripCmd := []string{"strip", "-S", "-x", "-v"}
 
+		// strip main binary
+		gnuStripBinary(getAppName(), APPNAME+".dbg")
+
+		// strip test binary
+		if buildTestFlag {
+			gnuStripBinary(filepath.Join(buildDir, "yass_test"), "yass_test.dbg")
+		}
+		// strip benchmark binary
+		if buildBenchmarkFlag {
+			gnuStripBinary(filepath.Join(buildDir, "yass_benchmark"), "yass_benchmark.dbg")
+		}
+	} else if systemNameFlag == "darwin" {
 		// strip dependent dll files
 		frameworkPath := filepath.Join(buildDir, getAppName(), "Contents", "Frameworks")
 		entries, _ := ioutil.ReadDir(frameworkPath)
@@ -1744,21 +1802,28 @@ func postStateStripBinaries() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
-				stripFinalCmd := append(stripCmd, filepath.Join(frameworkPath, name))
-				cmdRun(stripFinalCmd, false)
+				darwinStripBinary(filepath.Join(frameworkPath, name), basename(name)+".dSYM")
 			}
 		}
 
 		// strip main binary
 		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
-		stripFinalCmd := append(stripCmd, execPath)
-		cmdRun(stripFinalCmd, false)
+		darwinStripBinary(execPath, APPNAME+".dSYM")
+
+		// strip test binary
+		if buildTestFlag {
+			darwinStripBinary(filepath.Join(buildDir, "yass_test"), "yass_test.dSYM")
+		}
+		// strip benchmark binary
+		if buildBenchmarkFlag {
+			darwinStripBinary(filepath.Join(buildDir, "yass_benchmark"), "yass_benchmark.dSYM")
+		}
 	} else if systemNameFlag == "ios" {
-		cmdRun([]string{"dsymutil", filepath.Join(getAppName(), APPNAME),
-			"--statistics", "--update", "-o", getAppName() + ".dSYM"}, false)
-		cmdRun([]string{"strip", "-S", "-x", "-v", filepath.Join(getAppName(), APPNAME)}, false)
+		// strip main binary
+		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
+		darwinStripBinary(execPath, APPNAME+".dSYM")
 	} else {
-		glog.Warningf("not supported in platform %s", systemNameFlag)
+		glog.Warningf("strip operation not implemented in platform %s", systemNameFlag)
 	}
 }
 
@@ -1804,7 +1869,7 @@ func postStateCodeSign() {
 }
 
 // Main returns the file name excluding extension.
-func Main(path string) string {
+func basename(path string) string {
 	path = filepath.Base(path)
 	for i := len(path) - 1; i >= 0 && !os.IsPathSeparator(path[i]); i-- {
 		if path[i] == '.' {
@@ -1815,7 +1880,7 @@ func Main(path string) string {
 }
 
 func checkUniversalBuildFatBundle(bundlePath string) bool {
-	mainFile := filepath.Join(bundlePath, "Contents", "MacOS", Main(bundlePath))
+	mainFile := filepath.Join(bundlePath, "Contents", "MacOS", basename(bundlePath))
 	// TODO should we check recursilvely?
 	return checkUniversalBuildFatBinary(mainFile)
 }
@@ -2497,16 +2562,36 @@ func postStateArchives() map[string][]string {
 			if strings.HasSuffix(iname, ".dll") {
 				dllPaths = append(dllPaths, name)
 			}
+			if strings.HasSuffix(iname, ".pdb") {
+				dbgPaths = append(dbgPaths, name)
+			}
+			if strings.HasSuffix(iname, ".dbg") {
+				dbgPaths = append(dbgPaths, name)
+			}
 		}
 	}
 
-	if systemNameFlag == "linux" || systemNameFlag == "android" {
+	if systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		entries, _ := ioutil.ReadDir(buildDir)
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
-			if strings.HasSuffix(iname, ".dylib") {
+			if strings.HasSuffix(iname, ".so") {
 				dllPaths = append(dllPaths, name)
+			}
+			if strings.HasSuffix(iname, ".dbg") {
+				dbgPaths = append(dbgPaths, name)
+			}
+		}
+	}
+
+	if systemNameFlag == "darwin" {
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".dsym") {
+				dbgPaths = append(dbgPaths, name)
 			}
 		}
 	}
@@ -2538,16 +2623,13 @@ func postStateArchives() map[string][]string {
 	}
 	// debuginfo file
 	if systemNameFlag == "windows" {
-		dbgPaths = append(dbgPaths, APPNAME+".pdb")
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
-	} else if systemNameFlag == "android" && variantFlag == "gui" {
+	} else if systemNameFlag == "android" && variantFlag == "gui" && androidAab {
 		// nop because we produces aab now
 		dbgPaths = []string{}
 	} else if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
-		dbgPaths = append(dbgPaths, getAppName()+".dbg")
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "darwin" {
-		dbgPaths = append(dbgPaths, getAppName()+".dSYM")
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "ios" {
 		cmdRun([]string{"rm", "-rf", getAppName() + ".dSYM"}, true)

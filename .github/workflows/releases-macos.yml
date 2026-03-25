@@ -114,7 +114,7 @@ jobs:
 
           echo "CODESIGN_IDENTITY=Developer ID Application" >> $GITHUB_ENV
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
-      - name: Build Binary
+      - name: Build Binary (GUI)
         run: |
           ./tools/build --arch ${{ matrix.arch }} -build-test -build-benchmark
       - name: Clean up keychain and provisioning profile
@@ -125,33 +125,33 @@ jobs:
           fi
       - uses: actions/upload-artifact@v6
         with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-app
           path: |
             build-darwin-${{ matrix.arch }}/yass.app
-      - uses: actions/upload-artifact@v6
-        with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dSYM
-          path: |
-            build-darwin-${{ matrix.arch }}/*.dSYM
-          compression-level: 9 # maximum compression
-      - uses: actions/upload-artifact@v6
-        with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
-          path: |
-            build-darwin-${{ matrix.arch }}/yass_test
-          compression-level: 9 # maximum compression
-      - uses: actions/upload-artifact@v6
-        with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
-          path: |
-            build-darwin-${{ matrix.arch }}/yass_benchmark
-          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dmg
           path: |
             *.dmg
           compression-level: 0 # no compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
+          path: |
+            build-darwin-${{ matrix.arch }}/yass_test
+            build-darwin-${{ matrix.arch }}/*.dylib
+      - uses: actions/upload-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+          path: |
+            build-darwin-${{ matrix.arch }}/yass_benchmark
+            build-darwin-${{ matrix.arch }}/*.dylib
+      - uses: actions/upload-artifact@v6
+        with:
+          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dSYM
+          path: |
+            build-darwin-${{ matrix.arch }}/*.dSYM
+          compression-level: 9 # maximum compression
       - name: Install rosetta
         if: ${{ matrix.arch == 'x64' }}
         run: |
