@@ -449,7 +449,7 @@ if (NOT APPLE AND NOT WIN32)
 elseif(APPLE)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
   set(CMAKE_BUILD_RPATH "@loader_path/.")
-  set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+  set(CMAKE_INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
 endif()
 foreach(output_type PDB RUNTIME LIBRARY) # ARCHIVE
   set(CMAKE_${output_type}_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -4766,7 +4766,7 @@ if (GUI)
         set_property(TARGET ${APP_NAME}
           PROPERTY BUILD_RPATH "@loader_path/../Frameworks")
         set_property(TARGET ${APP_NAME}
-          PROPERTY INSTALL_RPATH "@loader_path/../../../lib")
+          PROPERTY INSTALL_RPATH "@loader_path/../../../${CMAKE_INSTALL_LIBDIR}")
         # Handle the Storyboard ourselves
         if(NOT ${CMAKE_GENERATOR} MATCHES "^Xcode.*")
           # Compile the storyboard file with the ibtool.
