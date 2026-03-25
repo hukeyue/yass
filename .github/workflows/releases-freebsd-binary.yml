@@ -125,51 +125,56 @@ jobs:
           # fix warning about
           # /usr/include/machine/proc.h:40:8: error: definition of type 'ptrauth_key' conflicts with typedef of the
           sed -i s/__arm__/__aarch64__/g $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain/usr/include/machine/proc.h
-      - name: Build Binary (CLI and SERVER)
+      - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -build-benchmark -build-test -nc
+            -nc
+      - name: Build Binary (SERVER)
+        run: |
           ./tools/build --variant server --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -build-benchmark -build-test -nc
+            -nc -build-benchmark -build-test
       - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -build-benchmark -build-test -nc
+            -nc
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_cli
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_server
-      - uses: actions/upload-artifact@v6
-        with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-dbg
-          path: |
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
-          compression-level: 9 # maximum compression
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_test
-          compression-level: 9 # maximum compression
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_benchmark
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+      - uses: actions/upload-artifact@v6
+        with:
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-dbg
+          path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}

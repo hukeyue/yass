@@ -19,9 +19,6 @@ endif()
 # go in :runtime_library vs. :compiler.
 if (BUILD_SHARED_LIBS)
   set(libcxx_SHARED ON)
-  if (MINGW AND ENABLE_LTO)
-    message(WARNING "Failure might happen with lto enabled")
-  endif()
 else()
   set(libcxx_SHARED OFF)
 endif()
@@ -795,24 +792,3 @@ endif()
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} PARENT_SCOPE)
 set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} PARENT_SCOPE)
-
-export(
-  TARGETS libc
-  FILE libc.cmake
-)
-if (NOT MSVC)
-  export(
-    TARGETS cxxabi
-    FILE cxxabi.cmake
-  )
-endif()
-if (ANDROID)
-  export(
-    TARGETS unwind
-    FILE unwind.cmake
-  )
-endif()
-export(
-  TARGETS cxx
-  FILE cxx.cmake
-)

@@ -180,47 +180,52 @@ jobs:
           sudo apt remove libc6-i386
 
           sudo dpkg -i qemu-user_*.deb
-      - name: Build Binary (CLI and Server)
+      - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }}
+      - name: Build Binary (Server)
+        run: |
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} -build-benchmark -build-test
       - name: Build Binary (GUI)
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -build-benchmark -build-test -nc ${{ env.EXTRA_BUILD_FLAGS }}
+          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }}
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: |
             build-linux-${{ matrix.arch }}/yass
+            build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-linux-${{ matrix.arch }}/yass_cli
+            build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
           path: |
             build-linux-${{ matrix.arch }}/yass_server
-      - uses: actions/upload-artifact@v6
-        with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
-          path: |
-            build-linux-${{ matrix.arch }}/*.dbg
-          compression-level: 9 # maximum compression
+            build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-linux-${{ matrix.arch }}/yass_test
-          compression-level: 9 # maximum compression
+            build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
+            build-linux-${{ matrix.arch }}/*.so
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
+          path: |
+            build-linux-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}

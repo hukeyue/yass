@@ -103,6 +103,70 @@ task copyTask {
         from '../../build-android24-arm64/libyass.so'
         into 'libs/arm64-v8a'
     }
+    copy {
+        from '../../build-android24-x86/libc++.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libc++.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libc++.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libc++.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libcrypto.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libcrypto.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libcrypto.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libcrypto.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libssl.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libssl.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libssl.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libssl.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libpki.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libpki.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libpki.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libpki.so'
+        into 'libs/arm64-v8a'
+    }
 }
 
 dependencies {

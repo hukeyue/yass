@@ -127,10 +127,22 @@ jobs:
           set VCToolsVersion=
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-gui
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-nsis-installer
+          path: |
+            *.exe
+          compression-level: 0 # no compression
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
+          path: |
+            *.msi
+          compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
@@ -145,36 +157,22 @@ jobs:
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
-          path: |
-            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
-          compression-level: 9 # maximum compression
-      - uses: actions/upload-artifact@v6
-        with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-          compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
           path: |
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
+      - uses: actions/upload-artifact@v6
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
+          path: |
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
           compression-level: 9 # maximum compression
-      - uses: actions/upload-artifact@v6
-        with:
-          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-nsis-installer
-          path: |
-            *.exe
-          compression-level: 0 # no compression
-      - uses: actions/upload-artifact@v6
-        with:
-          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
-          path: |
-            *.msi
-          compression-level: 0 # no compression
       - name: Run tests
         if: ${{ matrix.arch == 'x64' || matrix.arch == 'x86' }}
         run: |

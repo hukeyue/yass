@@ -163,16 +163,15 @@ jobs:
         run: |
           ./scripts/setup-android-rust.sh
           WITH_OS=android WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
-      - name: Build Binary (CLI and SERVER)
+      - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
-             -nc -no-packaging
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
-             -nc -no-packaging
-      - name: Build Binary (GUI)
+            -nc
+      - name: Build Binary (SERVER)
         run: |
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
-            -build-benchmark -build-test -nc -no-packaging
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
+             -build-benchmark -build-test \
+            -nc
       - name: Install the Release certificate
         if: ${{ github.event_name == 'release' }}
         env:
@@ -186,22 +185,14 @@ jobs:
           echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> $GITHUB_ENV
           echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> $GITHUB_ENV
           echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> $GITHUB_ENV
-      - name: Build CLI package
-        run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
-            -build-benchmark -build-test -nc
-      - name: Build SERVER package
-        run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
-            -build-benchmark -build-test -nc
       - name: Build AAB bundle
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
-            -build-benchmark -build-test -nc -android-aab
+            -nc -android-aab
       - name: Build APK package
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system android \
-            -build-benchmark -build-test -nc
+            -nc
       - name: Clean up keychain and provisioning profile
         if: ${{ always() }}
         run: |
@@ -222,36 +213,41 @@ jobs:
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-gui
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
+      - name: Clean up libyass.so
+        run: |
+          rm -fv build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-cli
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-server
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
-      - uses: actions/upload-artifact@v6
-        with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dbg
-          path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
-          compression-level: 9 # maximum compression
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-test
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
-          compression-level: 9 # maximum compression
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dbg
+          path: |
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - name: "Install dependency: android sysroot (test purpose)"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}

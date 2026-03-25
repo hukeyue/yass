@@ -430,13 +430,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 include(CMakeDependentOption)
 
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
+if (BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "component build")
+endif()
+set(YASS_SHARED_LIBS)
 
 ## Fix RPATH
-if (NOT APPLE AND NOT MSVC)
+if (NOT APPLE AND NOT WIN32)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
   set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_BUILD_RPATH "\$ORIGIN/.")
-  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBEXECDIR}/${YASS_APP_NAME};\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
   # Add directories from all libraries outside the build tree to the rpath.
   # This makes the dynamic linker able to find non system libraries that
   # our libraries require, in particular the Python one (from pyenv for
@@ -447,7 +451,7 @@ elseif(APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path/.")
   set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
 endif()
-foreach(output_type PDB RUNTIME LIBRARY ARCHIVE)
+foreach(output_type PDB RUNTIME LIBRARY) # ARCHIVE
   set(CMAKE_${output_type}_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
 
@@ -607,6 +611,11 @@ if (ENABLE_LLD AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR LINKER_LLD) AND NO
   set(USE_LLD ON)
 elseif (COMPILER_GCC)
   set(USE_LLD OFF)
+endif()
+
+if (BUILD_SHARED_LIBS AND WIN32 AND ENABLE_LTO)
+  message(WARNING "Failure might happen with lto enabled component build, disabling...")
+  set(ENABLE_LTO OFF)
 endif()
 
 if (USE_MOLD OR USE_LLD)
@@ -1977,6 +1986,10 @@ if (USE_LIBCXX)
   set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${libcxx_PUBLIC_LIBRARIES}")
   list(APPEND YASS_APP_FEATURES "libc++")
 
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS cxx)
+  endif()
+
   if (MINGW_MSVCRT100)
     list(APPEND YASS_APP_FEATURES "msvcrt100")
   endif()
@@ -2586,8 +2599,7 @@ elseif (USE_TBBMALLOC)
 
   set(TBBMALLOC_LIB tbbmalloc_proxy tbbmalloc)
 
-  install(TARGETS tbbmalloc RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  install(TARGETS tbbmalloc_proxy RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  list(APPEND YASS_SHARED_LIBS ${TBBMALLOC_LIB})
 
   set(SUPPORT_DEFINITIONS
     HAVE_TBBMALLOC
@@ -2697,7 +2709,8 @@ elseif (USE_TCMALLOC AND WIN32)
 
   set(TCMALLOC_LIB tcmalloc_minimal)
 
-  set_target_properties(tcmalloc_minimal PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  list(APPEND YASS_SHARED_LIBS ${TCMALLOC_LIB})
+
   set_target_properties(tcmalloc_minimal PROPERTIES PREFIX "")
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -2717,7 +2730,6 @@ elseif (USE_TCMALLOC AND WIN32)
     ${SUPPORT_INCLUDE_DIRS}
   )
 
-  install(TARGETS tcmalloc_minimal RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
   link_libraries(tcmalloc_minimal)
 
   # patching manually, see tcmalloc's README_windows.txt
@@ -2825,7 +2837,6 @@ elseif(USE_MIMALLOC AND WIN32)
 
   set(MIMALLOC_LIB mimalloc)
 
-  set_target_properties(mimalloc PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(mimalloc PROPERTIES PREFIX "")
   set_target_properties(mimalloc PROPERTIES OUTPUT_NAME "mimalloc-override")
 
@@ -2839,7 +2850,7 @@ elseif(USE_MIMALLOC AND WIN32)
   add_library(mimalloc_override OBJECT src/mimalloc.cc)
   target_link_libraries(mimalloc_override PRIVATE mimalloc)
 
-  install(TARGETS mimalloc RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+  list(APPEND YASS_SHARED_LIBS ${MIMALLOC_LIB})
 
   # On windows, link and copy the mimalloc redirection dll too.
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -2891,10 +2902,6 @@ if (USE_SYSTEM_JEMALLOC)
   endif()
   if(NOT JEMALLOC_FOUND)
     message(STATUS "System jemalloc not found, using bundled one")
-    set(USE_SYSTEM_JEMALLOC FALSE)
-  endif()
-  if (USE_LIBCXX)
-    message(STATUS "Cannot use system jemalloc with custom libc++, using bundled one")
     set(USE_SYSTEM_JEMALLOC FALSE)
   endif()
 endif()
@@ -3026,16 +3033,22 @@ if (MINGW AND USE_LIBCXX)
   set(CMAKE_C_FLAGS "${PREVIOUS_CMAKE_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${PREVIOUS_CMAKE_CXX_FLAGS}")
 endif()
-set(SUPPORT_LIBS crypto ssl pki ${SUPPORT_LIBS})
 foreach(source ${BCM_ASM_SOURCES})
   set_source_files_properties(${source} PROPERTIES GENERATED true)
 endforeach()
 
-if (MSVC)
-  set_target_properties(crypto PROPERTIES OUTPUT_NAME "libcrypto")
-  set_target_properties(ssl PROPERTIES OUTPUT_NAME "libssl")
-  set_target_properties(pki PROPERTIES OUTPUT_NAME "libpki")
+set(boringssl_LIBS crypto ssl pki)
+foreach(lib ${boringssl_LIBS})
+  if (MSVC)
+    set_target_properties(${lib} PROPERTIES OUTPUT_NAME "lib${lib}")
+  endif()
+endforeach()
+
+if (BUILD_SHARED_LIBS)
+  list(APPEND YASS_SHARED_LIBS ${boringssl_LIBS})
 endif()
+
+set(SUPPORT_LIBS ${boringssl_LIBS} ${SUPPORT_LIBS})
 
 if (BORINGSSL_BUILD_TESTS)
   add_custom_target(check_boringssl
@@ -3193,9 +3206,7 @@ endif()
 target_link_libraries(asio PUBLIC
   asio_core
   absl::flags
-  crypto
-  ssl
-  pki)
+  ${boringssl_LIBS})
 
 if (APPLE)
   find_library(SECURITY_FRAMEWORK Security REQUIRED)
@@ -5305,6 +5316,18 @@ if (BUILD_BENCHMARKS)
     endif()
   endif()
 endif()
+
+# Configure Installable binaries
+foreach(lib ${YASS_SHARED_LIBS})
+  if (NOT APPLE AND NOT WIN32)
+    install(TARGETS ${lib} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${YASS_APP_NAME}")
+  elseif(APPLE)
+    install(TARGETS ${lib} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  elseif(MINGW)
+    install(TARGETS ${lib} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    set_target_properties(${lib} PROPERTIES SUFFIX "_${YASS_APP_NAME}.dll")
+  endif()
+endforeach()
 
 # Configure CPack.
 if(NOT DEFINED CPACK_PACKAGE_INSTALL_DIRECTORY)

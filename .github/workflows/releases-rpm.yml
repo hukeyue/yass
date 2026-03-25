@@ -290,43 +290,50 @@ jobs:
           sudo apt-get install -y pkgconf gettext bubblewrap
           # libc6-i386 interferes with x86 build
           sudo apt remove libc6-i386
-      - name: Build Binary
+      - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -use-static-build -nc
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -use-static-build -nc
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -build-test -build-benchmark -nc
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc
+      - name: Build Binary (SERVER)
+        run: |
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -build-test -build-benchmark -nc
+      - name: Build Binary (GUI)
+        run: |
+          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -nc
       - uses: actions/upload-artifact@v6
         with:
-          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-gui
           path: |
             build-linux-musl-${{ matrix.arch }}/yass
+            build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-cli
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_cli
+            build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-server
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_server
-      - uses: actions/upload-artifact@v6
-        with:
-          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dbg
-          path: |
-            build-linux-musl-${{ matrix.arch }}/*.dbg
-          compression-level: 9 # maximum compression
+            build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-test
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_test
-          compression-level: 9 # maximum compression
+            build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_benchmark
+            build-linux-musl-${{ matrix.arch }}/*.so
+      - uses: actions/upload-artifact@v6
+        with:
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dbg
+          path: |
+            build-linux-musl-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
