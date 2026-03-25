@@ -786,7 +786,7 @@ if (MSVC AND COMPILER_CLANG)
     # look back to vs2017, fix issue of linkage of ___dyn_tls_on_demand_init and ___tls_guard defined in msvcrt/libcmt
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fmsc-version=1916>)
   else()
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fmsc-version=1934>)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fmsc-version=1944>)
   endif()
 endif()
 
@@ -2080,9 +2080,9 @@ if (WIN32)
   set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "" FORCE)
 
   if (MSVC)
-    set(SYSTEM_LIBS ${SYSTEM_LIBS} iphlpapi Crypt32 WS2_32 bcrypt User32 shell32 kernel32)
+    set(SYSTEM_LIBS ${SYSTEM_LIBS} AdvAPI32 iphlpapi Crypt32 WS2_32 bcrypt User32 shell32 kernel32)
   else()
-    set(SYSTEM_LIBS ${SYSTEM_LIBS} iphlpapi crypt32 ws2_32 mswsock bcrypt user32 shell32 kernel32)
+    set(SYSTEM_LIBS ${SYSTEM_LIBS} advapi32 iphlpapi crypt32 ws2_32 mswsock bcrypt user32 shell32 kernel32)
   endif()
 
   # Don't use it even if we are compiling with gnu extensions
@@ -2410,8 +2410,13 @@ endif()
 # *****************************************************************************************
 
 set(ABSL_PROPAGATE_CXX_STD "ON" CACHE STRING "")
-set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "OFF" CACHE STRING "")
-set(ABSL_BUILD_SHARED_LIBS "OFF" CACHE STRING "")
+if (BUILD_SHARED_LIBS AND MSVC)
+  set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "ON" CACHE STRING "")
+  set(ABSL_BUILD_SHARED_LIBS "ON" CACHE STRING "")
+else()
+  set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "OFF" CACHE STRING "")
+  set(ABSL_BUILD_SHARED_LIBS "OFF" CACHE STRING "")
+endif()
 # override system's abseil-cpp
 include_directories(third_party/abseil-cpp)
 # force win32 thread model for libc++ usage
@@ -2468,6 +2473,12 @@ add_subdirectory(third_party/abseil-cpp EXCLUDE_FROM_ALL)
 set(SUPPORT_LIBS
   absl::base
   absl::core_headers
+  absl::config
+  absl::debugging
+  absl::str_format
+  absl::strings
+  absl::raw_hash_map
+  absl::raw_hash_set
   absl::flat_hash_map
   absl::flat_hash_set
   absl::inlined_vector
@@ -2479,7 +2490,6 @@ set(SUPPORT_LIBS
   absl::symbolize
   absl::status
   absl::statusor
-  absl::strings
   absl::time
   absl::optional
   absl::failure_signal_handler
@@ -2505,6 +2515,7 @@ if (USE_LTO_CMAKE)
     absl_time
     absl_optional
     absl_failure_signal_handler
+    absl_str_format
     PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
@@ -2707,6 +2718,7 @@ elseif (USE_TCMALLOC AND WIN32)
   )
 
   install(TARGETS tcmalloc_minimal RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+  link_libraries(tcmalloc_minimal)
 
   # patching manually, see tcmalloc's README_windows.txt
   if (MSVC)
@@ -3014,10 +3026,16 @@ if (MINGW AND USE_LIBCXX)
   set(CMAKE_C_FLAGS "${PREVIOUS_CMAKE_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${PREVIOUS_CMAKE_CXX_FLAGS}")
 endif()
-set(SUPPORT_LIBS crypto ssl ${SUPPORT_LIBS})
+set(SUPPORT_LIBS crypto ssl pki ${SUPPORT_LIBS})
 foreach(source ${BCM_ASM_SOURCES})
   set_source_files_properties(${source} PROPERTIES GENERATED true)
 endforeach()
+
+if (MSVC)
+  set_target_properties(crypto PROPERTIES OUTPUT_NAME "libcrypto")
+  set_target_properties(ssl PROPERTIES OUTPUT_NAME "libssl")
+  set_target_properties(pki PROPERTIES OUTPUT_NAME "libpki")
+endif()
 
 if (BORINGSSL_BUILD_TESTS)
   add_custom_target(check_boringssl
@@ -3149,6 +3167,7 @@ if (MSVC AND NOT USE_LIBCXX)
 endif()
 
 target_link_libraries(asio_core PUBLIC
+  absl::str_format
   absl::flags
   url
   )
@@ -4038,8 +4057,11 @@ endif()
 
 target_link_libraries(yass_core PUBLIC url
   absl::flags
+  absl::flags_config
   absl::flags_parse
   absl::flags_marshalling
+  absl::flags_commandlineflag
+  absl::flags_usage
   absl::failure_signal_handler
   asio_core
   )
@@ -4263,6 +4285,7 @@ target_include_directories(yass_cli_lib PRIVATE
 
 target_link_libraries(yass_cli_lib PUBLIC
   ${DEFAULT_MALLOC_LIB}
+  absl::time
   yass_cli_nogui_lib
   yass_net)
 

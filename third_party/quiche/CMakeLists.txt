@@ -780,7 +780,10 @@ target_link_libraries(quiche PUBLIC
   url
   asio
   absl::container_common
+  absl::config
   absl::btree
+  absl::raw_hash_map
+  absl::raw_hash_set
   absl::flat_hash_map
   absl::flat_hash_set
   absl::inlined_vector
