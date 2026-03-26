@@ -239,6 +239,8 @@ cd build
 rm -rf %{buildroot}
 ninja install
 rm -rf %{buildroot}/%{_datadir}/doc
+mkdir -p %{buildroot}/usr/libexec/%{name}
+touch %{buildroot}/usr/libexec/%{name}/placeholder
 cd ..
 desktop-file-validate %{buildroot}%{_datadir}/applications/io.github.chilledheart.yass.desktop
 %find_lang %{name}
@@ -253,6 +255,8 @@ update-desktop-database
 %dir /usr/share/applications/
 %dir /usr/share/pixmaps/
 %{_bindir}/yass
+%dir /usr/libexec/%{name}
+/usr/libexec/%{name}/*
 %{_datadir}/applications/io.github.chilledheart.yass.desktop
 %{_datadir}/pixmaps/io.github.chilledheart.yass.png
 %{_datadir}/icons/hicolor/16x16/apps/io.github.chilledheart.yass.png
@@ -278,6 +282,8 @@ for embedded devices and low end boxes.
 %{_unitdir}/yass-server.service
 %dir /usr/share/man/man1/
 %{_mandir}/man1/yass_server.1*
+%dir /usr/libexec/%{name}
+/usr/libexec/%{name}/*
 
 %post server
 %systemd_post yass-server.service
@@ -304,6 +310,8 @@ for embedded devices and low end boxes.
 %{_unitdir}/yass-redir.service
 %dir /usr/share/man/man1/
 %{_mandir}/man1/yass_cli.1*
+%dir /usr/libexec/%{name}
+/usr/libexec/%{name}/*
 
 %post client
 %systemd_post yass.service

@@ -1,4 +1,5 @@
 usr/bin/yass
+usr/libexec/yass/libtcmalloc_minimal.so
 usr/share/pixmaps/io.github.chilledheart.yass.png
 usr/share/applications/io.github.chilledheart.yass.desktop
 usr/share/icons/hicolor/*/apps/io.github.chilledheart.yass.png

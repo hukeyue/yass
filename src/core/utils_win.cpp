@@ -43,6 +43,7 @@ struct IUnknown;
 
 #include "core/logging.hpp"
 #include "core/utils.hpp"
+#include "version.h"
 
 // use our dynamic version of GetProductInfo
 #undef GetProductInfo
@@ -236,23 +237,106 @@ uint64_t GetMonotonicTime() {
 #endif
 }
 
+#define _STRCAT(A, B) A B
+#define STRCAT(A, B) _STRCAT(A, B)
+
 static const wchar_t* kDllWhiteList[] = {
-#ifdef HAVE_TCMALLOC
+
+#ifdef HAVE_TBBMALLOC
+#ifdef _MSC_VER
 #if defined(_M_X64) || defined(_M_ARM64)
-    L"tcmalloc.dll",
+    L"tbbmalloc64.dll",
+    L"tbbmalloc_proxy64.dll",
 #else
-    L"tcmalloc32.dll",
+    L"tbbmalloc32.dll",
+    L"tbbmalloc_proxy32.dll",
 #endif
+#else // _MSC_VER
+#if defined(_M_X64) || defined(_M_ARM64)
+#define BASE_DLL_NAME STRCAT(L"tbbmalloc64_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#else
+#define BASE_DLL_NAME STRCAT(L"tbbmalloc32_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#endif
+    DLL_NAME,
+#undef BASE_DLL_NAME
+#undef DLL_NAME
+
+#if defined(_M_X64) || defined(_M_ARM64)
+#define BASE_DLL_NAME STRCAT(L"tbbmalloc_proxy64_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#else
+#define BASE_DLL_NAME STRCAT(L"tbbmalloc_proxy32_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#endif
+    DLL_NAME,
+#undef BASE_DLL_NAME
+#undef DLL_NAME
+
+#endif // _MSC_VER
+#endif  //  HAVE_TBBMALLOC
+
+#ifdef HAVE_TCMALLOC
+#ifdef _MSC_VER
+#if defined(_M_X64) || defined(_M_ARM64)
+    L"tcmalloc_minimal64.dll",
+#else
+    L"tcmalloc_minimal32.dll",
+#endif
+#else // _MSC_VER
+#if defined(_M_X64) || defined(_M_ARM64)
+#define BASE_DLL_NAME STRCAT(L"tcmalloc_minimal64_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#else
+#define BASE_DLL_NAME STRCAT(L"tcmalloc_minimal32_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#endif
+    DLL_NAME,
+#undef BASE_DLL_NAME
+#undef DLL_NAME
+#endif // _MSC_VER
 #endif  //  HAVE_TCMALLOC
+
 #ifdef HAVE_MIMALLOC
+#ifdef _MSC_VER
     L"mimalloc-override.dll",
+#else // _MSC_VER
+#define BASE_DLL_NAME STRCAT(L"mimalloc-override_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+    DLL_NAME,
+#undef BASE_DLL_NAME
+#undef DLL_NAME
+#endif // _MSC_VER
 #if defined(_M_X64) || defined(_M_ARM64)
     L"mimalloc-redirect.dll",
 #else
     L"mimalloc-redirect32.dll",
 #endif
 #endif  // HAVE_MIMALLOC
-#ifndef _LIBCPP_MSVCRT
+
+#ifdef HAVE_JEMALLOC
+#ifdef _MSC_VER
+#if defined(_M_X64) || defined(_M_ARM64)
+    L"jemalloc64.dll",
+#else
+    L"jemalloc32.dll",
+#endif
+#else // _MSC_VER
+#if defined(_M_X64) || defined(_M_ARM64)
+#define BASE_DLL_NAME STRCAT(L"jemalloc64_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#else
+#define BASE_DLL_NAME STRCAT(L"jemalloc32_", YASS_APP_LNAME)
+#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
+#endif
+    DLL_NAME,
+#undef BASE_DLL_NAME
+#undef DLL_NAME
+#endif // _MSC_VER
+#endif  //  HAVE_JEMALLOC
+
+#ifndef _MSC_VER
     // msvc runtime, still searched current directory
     // under dll search security mode
     L"MSVCP140.dll",
@@ -260,8 +344,10 @@ static const wchar_t* kDllWhiteList[] = {
     L"msvcp140_2.dll",
     L"msvcp140_atomic_wait.dll",
     L"msvcp140_codecvt_ids.dll",
+    L"VCCORLIB140.dll",
     L"VCRUNTIME140.dll",
     L"VCRUNTIME140_1.dll",
+    L"VCRUNTIME140_THREADS.DLL",
     L"CONCRT140.dll",
     // ucrt
     L"api-ms-win-core-console-l1-1-0.dll",
