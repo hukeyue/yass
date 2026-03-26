@@ -336,8 +336,24 @@ static const wchar_t* kDllWhiteList[] = {
 #endif // _MSC_VER
 #endif  //  HAVE_JEMALLOC
 
-#ifndef _MSC_VER
-    // msvc runtime, still searched current directory
+#if defined(_MSC_VER) && defined(_MSC_DYNAMIC_CRT) && defined(_DEBUG)
+    // msvc debug runtime, still searched current directory
+    // under dll search security mode
+    L"MSVCP140d.dll",
+    L"msvcp140_1d.dll",
+    L"msvcp140_2d.dll",
+    L"msvcp140d_atomic_wait.dll",
+    L"msvcp140d_codecvt_ids.dll",
+    L"VCCORLIB140D.dll",
+    L"VCRUNTIME140D.dll",
+    L"VCRUNTIME140_1D.dll",
+    L"VCRUNTIME140_THREADSD.DLL",
+    L"CONCRT140D.dll",
+    // ucrt (debug runtime)
+    L"ucrtbased.dll",
+#endif
+#if defined(__MINGW32__) || defined(_MSC_VER) && defined(_MSC_DYNAMIC_CRT)
+    // msvc release runtime, still searched current directory
     // under dll search security mode
     L"MSVCP140.dll",
     L"msvcp140_1.dll",
@@ -349,17 +365,22 @@ static const wchar_t* kDllWhiteList[] = {
     L"VCRUNTIME140_1.dll",
     L"VCRUNTIME140_THREADS.DLL",
     L"CONCRT140.dll",
-    // ucrt
+    // ucrt, always
+#if defined(_M_IX86) || defined(_M_X64)
     L"api-ms-win-core-console-l1-1-0.dll",
+    L"api-ms-win-core-console-l1-2-0.dll",
     L"api-ms-win-core-datetime-l1-1-0.dll",
     L"api-ms-win-core-debug-l1-1-0.dll",
     L"api-ms-win-core-errorhandling-l1-1-0.dll",
+    L"api-ms-win-core-fibers-l1-1-0.dll",
+    L"api-ms-win-core-fibers-l1-1-1.dll",
     L"api-ms-win-core-file-l1-1-0.dll",
     L"api-ms-win-core-file-l1-2-0.dll",
     L"api-ms-win-core-file-l2-1-0.dll",
     L"api-ms-win-core-handle-l1-1-0.dll",
     L"api-ms-win-core-heap-l1-1-0.dll",
     L"api-ms-win-core-interlocked-l1-1-0.dll",
+    L"api-ms-win-core-kernel32-legacy-l1-1-1.dll",
     L"api-ms-win-core-libraryloader-l1-1-0.dll",
     L"api-ms-win-core-localization-l1-2-0.dll",
     L"api-ms-win-core-memory-l1-1-0.dll",
@@ -373,6 +394,7 @@ static const wchar_t* kDllWhiteList[] = {
     L"api-ms-win-core-synch-l1-1-0.dll",
     L"api-ms-win-core-synch-l1-2-0.dll",
     L"api-ms-win-core-sysinfo-l1-1-0.dll",
+    L"api-ms-win-core-sysinfo-l1-2-0.dll",
     L"api-ms-win-core-timezone-l1-1-0.dll",
     L"api-ms-win-core-util-l1-1-0.dll",
     L"api-ms-win-crt-conio-l1-1-0.dll",
@@ -390,6 +412,10 @@ static const wchar_t* kDllWhiteList[] = {
     L"api-ms-win-crt-string-l1-1-0.dll",
     L"api-ms-win-crt-time-l1-1-0.dll",
     L"api-ms-win-crt-utility-l1-1-0.dll",
+#ifdef _M_IX86
+    L"API-MS-Win-core-xstate-l2-1-0.dll", // x86 only
+#endif // _M_IX86
+#endif // defined(_M_IX86) || defined(_M_X64)
     L"ucrtbase.dll",
 #endif
     nullptr,

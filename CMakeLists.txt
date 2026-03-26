@@ -4096,6 +4096,10 @@ if (USE_LTO_CMAKE)
     PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+if (MSVC AND MSVC_CRT_LINKAGE STREQUAL "dynamic")
+  target_compile_definitions(yass_core PRIVATE _MSC_DYNAMIC_CRT=1)
+endif()
+
 if (OHOS)
   target_link_libraries(yass_core PUBLIC libhilog_ndk.z.so)
 endif()
