@@ -853,12 +853,14 @@ if (UNIX AND CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT AND COMPILER_CLANG AND NOT C
     endif()
     if (_GCC_SYSROOT)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --gcc-install-dir=${_GCC_SYSROOT}")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --gcc-install-dir=${_GCC_SYSROOT}")
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --gcc-install-dir=${_GCC_SYSROOT}")
       set(CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS} --gcc-install-dir=${_GCC_SYSROOT})
     endif()
   else()
     # not useful usage:
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --gcc-toolchain=${CMAKE_SYSROOT}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --gcc-toolchain=${CMAKE_SYSROOT}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --gcc-toolchain=${CMAKE_SYSROOT}")
     set(CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS} --gcc-toolchain=${CMAKE_SYSROOT})
   endif()
@@ -2707,35 +2709,7 @@ if (USE_SYSTEM_TCMALLOC AND USE_TCMALLOC)
     HAVE_TCMALLOC
     ${SUPPORT_DEFINITIONS}
   )
-elseif (USE_TCMALLOC AND NOT WIN32)
-  message(STATUS "Compiling with bundled tcmalloc support")
-
-  set(GPERFTOOLS_BUILD_DEBUGALLOC OFF CACHE BOOL "")
-  set(gperftools_build_minimal ON CACHE BOOL "")
-  set(gperftools_build_benchmark OFF CACHE BOOL "")
-  set(GPERFTOOLS_BUILD_STATIC ON CACHE BOOL "")
-  set(GPERFTOOLS_ENABLE_INSTALL OFF CACHE BOOL "")
-  set(GPERFTOOLS_BUILD_TESTING OFF CACHE BOOL "")
-  add_subdirectory(third_party/gperftools EXCLUDE_FROM_ALL)
-  if (USE_LTO_CMAKE)
-    set_property(TARGET tcmalloc_minimal_static
-      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
-
-  list(APPEND YASS_APP_FEATURES "tcmalloc_minimal")
-
-  set(TCMALLOC_LIB tcmalloc_minimal_static)
-
-  set(SUPPORT_DEFINITIONS
-    HAVE_TCMALLOC
-    ${SUPPORT_DEFINITIONS}
-  )
-  set(SUPPORT_INCLUDE_DIRS
-    ${CMAKE_CURRENT_BINARY_DIR}/third_party/gperftools
-    third_party/gperftools/src
-    ${SUPPORT_INCLUDE_DIRS}
-  )
-elseif (USE_TCMALLOC AND WIN32)
+elseif (USE_TCMALLOC)
   message(STATUS "Compiling with bundled tcmalloc support")
 
   set(GPERFTOOLS_BUILD_DEBUGALLOC OFF CACHE BOOL "")
@@ -2753,17 +2727,20 @@ elseif (USE_TCMALLOC AND WIN32)
   list(APPEND YASS_APP_FEATURES "tcmalloc_minimal (dll)")
 
   set(TCMALLOC_LIB tcmalloc_minimal)
-
   list(APPEND YASS_SHARED_LIBS ${TCMALLOC_LIB})
 
-  set_target_properties(tcmalloc_minimal PROPERTIES PREFIX "")
+  if (WIN32)
+    set_target_properties(tcmalloc_minimal PROPERTIES PREFIX "")
+  endif()
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(TCMALLOC_DLL_SUFFIX "32")
   else()
-    set(TCMALLOC_DLL_SUFFIX "")
+    set(TCMALLOC_DLL_SUFFIX "64")
   endif()
-  set_target_properties(tcmalloc_minimal PROPERTIES OUTPUT_NAME "tcmalloc${TCMALLOC_DLL_SUFFIX}")
+  if (WIN32)
+    set_target_properties(tcmalloc_minimal PROPERTIES OUTPUT_NAME "tcmalloc_minimal${TCMALLOC_DLL_SUFFIX}")
+  endif()
 
   set(SUPPORT_DEFINITIONS
     HAVE_TCMALLOC

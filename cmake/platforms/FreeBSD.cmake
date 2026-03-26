@@ -12,6 +12,7 @@ set(CMAKE_CXX_COMPILER_RANLIB "${LLVM_SYSROOT}/bin/llvm-ranlib" CACHE FILEPATH "
 set(CMAKE_SYSROOT "${GCC_SYSROOT}" CACHE STRING "")
 
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,-L${CMAKE_SOURCE_DIR}/third_party/libc++/freebsd -fuse-ld=lld")
+set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-L${CMAKE_SOURCE_DIR}/third_party/libc++/freebsd -fuse-ld=lld")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,-L${CMAKE_SOURCE_DIR}/third_party/libc++/freebsd -fuse-ld=lld")
 set(CMAKE_REQUIRED_LINK_OPTIONS -Wl,-L${CMAKE_SOURCE_DIR}/third_party/libc++/freebsd -fuse-ld=lld)
 
