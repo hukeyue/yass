@@ -2965,21 +2965,35 @@ if (USE_JEMALLOC AND USE_SYSTEM_JEMALLOC)
 
 elseif(USE_JEMALLOC)
   message(STATUS "Compiling with bundled jemalloc support")
+  list(APPEND YASS_APP_FEATURES "jemalloc (dll)")
 
   add_subdirectory(third_party/jemalloc EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
-    set_property(TARGET jemalloc-obj
+    set_property(TARGET jemalloc
       PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
   endif()
 
-  set(JEMALLOC_LIB jemalloc-obj)
+  set(JEMALLOC_LIB jemalloc)
+
+  list(APPEND YASS_SHARED_LIBS ${JEMALLOC_LIB})
+
+  if (WIN32)
+    set_target_properties(jemalloc PROPERTIES PREFIX "")
+  endif()
+
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(JEMALLOC_DLL_SUFFIX "32")
+  else()
+    set(JEMALLOC_DLL_SUFFIX "64")
+  endif()
+  if (WIN32)
+    set_target_properties(jemalloc PROPERTIES OUTPUT_NAME "jemalloc${JEMALLOC_DLL_SUFFIX}")
+  endif()
 
   set(SUPPORT_DEFINITIONS
     HAVE_JEMALLOC
     ${SUPPORT_DEFINITIONS}
   )
-
-  list(APPEND YASS_APP_FEATURES "jemalloc")
 endif()
 
 set(DEFAULT_MALLOC_LIB ${JEMALLOC_LIB} ${DEFAULT_MALLOC_LIB})

@@ -143,6 +143,15 @@ configure_file(public_namespace.h
 configure_file(private_namespace.h
   "${CMAKE_CURRENT_BINARY_DIR}/include/jemalloc/internal/private_namespace.h" @ONLY)
 
+add_library(jemalloc SHARED
+  ${jemalloc_C_HDRS}
+  ${jemalloc_C_SRCS})
+
+target_include_directories(jemalloc PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(jemalloc PRIVATE src/include)
+
+target_link_libraries(jemalloc PRIVATE ${CMAKE_DL_LIBS})
+
 add_library(jemalloc-obj OBJECT
   ${jemalloc_C_HDRS}
   ${jemalloc_C_SRCS})
