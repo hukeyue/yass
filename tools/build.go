@@ -1788,11 +1788,19 @@ func postStateStripBinaries() {
 
 		// strip test binary
 		if buildTestFlag {
-			gnuStripBinary(filepath.Join(buildDir, "yass_test"), "yass_test.dbg")
+			binName := "yass_test"
+			if systemNameFlag == "mingw" {
+				binName = "yass_test.exe"
+			}
+			gnuStripBinary(filepath.Join(buildDir, binName), "yass_test.dbg")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
-			gnuStripBinary(filepath.Join(buildDir, "yass_benchmark"), "yass_benchmark.dbg")
+			binName := "yass_benchmark"
+			if systemNameFlag == "mingw" {
+				binName = "yass_benchmark.exe"
+			}
+			gnuStripBinary(filepath.Join(buildDir, binName), "yass_benchmark.dbg")
 		}
 	} else if systemNameFlag == "darwin" {
 		// strip dependent dll files
