@@ -472,7 +472,7 @@ option(OPTIMIZED_PROTOC "Force protobuf compiler to be built with optimization" 
 
 cmake_dependent_option(
   USE_TBBMALLOC "Build with tbbmalloc" OFF
-  "BUILD_SHARED_LIBS; APPLE OR FREEBSD OR LINUX OR MSVC; NOT IOS" OFF)
+  "APPLE OR FREEBSD OR LINUX OR MSVC OR MINGW; NOT IOS" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_TBBMALLOC "Build with system or vendored tbbmalloc" OFF
@@ -2535,6 +2535,17 @@ endif()
 # *****************************************************************************************
 #           tbbmalloc Library
 # *****************************************************************************************
+if (USE_TBBMALLOC AND NOT USE_SYSTEM_TBBMALLOC)
+  if (MSVC AND NOT MSVC_CRT_LINKAGE STREQUAL "dynamic")
+    message(WARNING "tbbmalloc: static crt build is not supported, disabling...")
+    set(USE_TBBMALLOC OFF)
+  endif()
+  if (WIN32 AND OS_AARCH64)
+    message(WARNING "tbbmalloc: aarch64 build on windows is not supported, disabling...")
+    set(USE_TBBMALLOC OFF)
+  endif()
+endif()
+
 if (USE_SYSTEM_TBBMALLOC)
   find_package(TBB)
   if (NOT TBB_FOUND)
@@ -2580,6 +2591,7 @@ elseif (USE_TBBMALLOC)
   set(TBB_LINUX_SEPARATE_DBG OFF CACHE BOOL "")
   set(TBB_BUILD_APPLE_FRAMEWORKS OFF CACHE BOOL "")
   set(TBB_OUTPUT_DIR_BASE "." CACHE STRING "")
+  set(TBB_BUILD_SHARED_LIBS ON CACHE BOOL "")
   add_subdirectory(third_party/oneTBB EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
     set_property(TARGET tbbmalloc
@@ -2595,11 +2607,26 @@ elseif (USE_TBBMALLOC)
     target_link_libraries(tbbmalloc PRIVATE stdc++)
   endif()
 
-  list(APPEND YASS_APP_FEATURES "tbbmalloc")
+  list(APPEND YASS_APP_FEATURES "tbbmalloc (dll)")
 
   set(TBBMALLOC_LIB tbbmalloc_proxy tbbmalloc)
 
   list(APPEND YASS_SHARED_LIBS ${TBBMALLOC_LIB})
+
+  if (WIN32)
+    set_target_properties(tbbmalloc_proxy PROPERTIES PREFIX "")
+    set_target_properties(tbbmalloc PROPERTIES PREFIX "")
+  endif()
+
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(TBBMALLOC_DLL_SUFFIX "32")
+  else()
+    set(TBBMALLOC_DLL_SUFFIX "64")
+  endif()
+  if (WIN32)
+    set_target_properties(tbbmalloc_proxy PROPERTIES OUTPUT_NAME "tbbmalloc_proxy${TBBMALLOC_DLL_SUFFIX}")
+    set_target_properties(tbbmalloc PROPERTIES OUTPUT_NAME "tbbmalloc${TBBMALLOC_DLL_SUFFIX}")
+  endif()
 
   set(SUPPORT_DEFINITIONS
     HAVE_TBBMALLOC
@@ -2611,6 +2638,24 @@ elseif (USE_TBBMALLOC)
     third_party/oneTBB/include
     ${SUPPORT_INCLUDE_DIRS}
   )
+
+  link_libraries(${TBBMALLOC_LIB})
+
+  # patching manually, see tbb/tbbmalloc_proxy.h
+  if (MSVC)
+    if (OS_X86)
+      add_link_options(/INCLUDE:___TBB_malloc_proxy)
+    else()
+      add_link_options(/INCLUDE:__TBB_malloc_proxy)
+    endif()
+  endif()
+  if (MINGW)
+    if (OS_X86)
+      add_link_options(-Wl,-u___TBB_malloc_proxy)
+    else()
+      add_link_options(-Wl,-u__TBB_malloc_proxy)
+    endif()
+  endif()
 endif()
 
 set(DEFAULT_MALLOC_LIB ${TBBMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
@@ -2746,8 +2791,6 @@ elseif (USE_TCMALLOC AND WIN32)
     else()
       add_link_options(-Wl,-u_tcmalloc)
     endif()
-    # reduce the binary size
-    target_link_options(tcmalloc_minimal PRIVATE "-s")
   endif()
 endif()
 
