@@ -1518,6 +1518,19 @@ func GetDependenciesByDumpbin(path string, searchDirs []string) ([]string, []str
 			vctoolsVersion, _ = strconv.ParseFloat(vctoolsVersionStr, 32)
 		}
 
+		debugRedistMap := make(map[string]string)
+
+		debugRedistMap["msvcp140.dll"] = "msvcp140d.dll"
+		debugRedistMap["msvcp140_1.dll"] = "msvcp140_1d.dll"
+		debugRedistMap["msvcp140_2.dll"] = "msvcp140_1d.dll"
+		debugRedistMap["msvcp140_atomic_wait.dll"] = "msvcp140d_atomic_wait.dll"
+		debugRedistMap["msvcp140_codecvt_ids.dll"] = "msvcp140d_codecvt_ids.dll"
+		debugRedistMap["vccorlib140.dll"] = "vccorlib140d.dll"
+		debugRedistMap["vcruntime140.dll"] = "vcruntime140d.dll"
+		debugRedistMap["vcruntime140_1.dll"] = "vcruntime140_1d.dll"
+		debugRedistMap["vcruntime140_threads.dll"] = "vcruntime140_threadsd.dll"
+		debugRedistMap["concrt140.dll"] = "concrt140.dll"
+
 		if vctoolsVersion >= 14.38 {
 			// As described in https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/,
 			// Visual Studio 17.8 introduced support for C11 threads, provided by vcruntime140_threads.dll
@@ -1564,25 +1577,36 @@ func GetDependenciesByDumpbin(path string, searchDirs []string) ([]string, []str
 			// nop
 		}
 
+		// convert dll to debug versions
+		for idx, dll := range dlls {
+			debugDll, found := debugRedistMap[dll]
+			if found {
+				dlls[idx] = debugDll
+			}
+		}
+
 		if cmakeBuildTypeFlag == "Debug" {
 			dlls = append(dlls, "ucrtbased.dll")
 		} else {
 			dlls = append(dlls, "ucrtbase.dll")
-			dlls = append(dlls, "api-ms-win-crt-conio-l1-1-0.dll",
-				"api-ms-win-crt-convert-l1-1-0.dll",
-				"api-ms-win-crt-environment-l1-1-0.dll",
-				"api-ms-win-crt-filesystem-l1-1-0.dll",
-				"api-ms-win-crt-heap-l1-1-0.dll",
-				"api-ms-win-crt-locale-l1-1-0.dll",
-				"api-ms-win-crt-math-l1-1-0.dll",
-				"api-ms-win-crt-multibyte-l1-1-0.dll",
-				"api-ms-win-crt-private-l1-1-0.dll",
-				"api-ms-win-crt-process-l1-1-0.dll",
-				"api-ms-win-crt-runtime-l1-1-0.dll",
-				"api-ms-win-crt-stdio-l1-1-0.dll",
-				"api-ms-win-crt-string-l1-1-0.dll",
-				"api-ms-win-crt-time-l1-1-0.dll",
-				"api-ms-win-crt-utility-l1-1-0.dll")
+
+			if msvcTargetArchFlag != "arm64" {
+				dlls = append(dlls, "api-ms-win-crt-conio-l1-1-0.dll",
+					"api-ms-win-crt-convert-l1-1-0.dll",
+					"api-ms-win-crt-environment-l1-1-0.dll",
+					"api-ms-win-crt-filesystem-l1-1-0.dll",
+					"api-ms-win-crt-heap-l1-1-0.dll",
+					"api-ms-win-crt-locale-l1-1-0.dll",
+					"api-ms-win-crt-math-l1-1-0.dll",
+					"api-ms-win-crt-multibyte-l1-1-0.dll",
+					"api-ms-win-crt-private-l1-1-0.dll",
+					"api-ms-win-crt-process-l1-1-0.dll",
+					"api-ms-win-crt-runtime-l1-1-0.dll",
+					"api-ms-win-crt-stdio-l1-1-0.dll",
+					"api-ms-win-crt-string-l1-1-0.dll",
+					"api-ms-win-crt-time-l1-1-0.dll",
+					"api-ms-win-crt-utility-l1-1-0.dll")
+			}
 		}
 
 	}
@@ -1713,6 +1737,12 @@ func postStateFixRPath() {
 	glog.Info("PostState -- Fix RPATH")
 	glog.Info("======================================================================")
 	if systemNameFlag == "darwin" {
+		addRpathForDylibCmd := []string{
+			"install_name_tool", "-add_rpath", "@loader_path/../Frameworks",
+		}
+		removeRpathForDylibCmd := []string{
+			"install_name_tool", "-delete_rpath", "@loader_path/.",
+		}
 		removeRpathCmd := []string{
 			"install_name_tool", "-delete_rpath", buildDir,
 		}
@@ -1723,6 +1753,10 @@ func postStateFixRPath() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
+				addRpathForDylibCmd := append(addRpathForDylibCmd, filepath.Join(frameworkPath, name))
+				cmdRun(addRpathForDylibCmd, false)
+				removeRpathForDylibCmd := append(removeRpathForDylibCmd, filepath.Join(frameworkPath, name))
+				cmdRun(removeRpathForDylibCmd, false)
 				removeRpathFinalCmd := append(removeRpathCmd, filepath.Join(frameworkPath, name))
 				cmdRun(removeRpathFinalCmd, false)
 			}

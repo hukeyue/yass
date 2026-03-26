@@ -387,7 +387,7 @@ jobs:
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
           path: |
-            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
           compression-level: 9 # maximum compression
       - name: Run tests
         run: |
