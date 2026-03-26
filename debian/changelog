@@ -1,3 +1,10 @@
+yass (1.22.8-1) UNRELEASED; urgency=medium
+
+  * tls: fix potential DoH and DoT resolve issue.
+  * tcmalloc: use shared library now.
+  * add the support of tbbmalloc.
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Thu, 26 Mar 2026 17:36:33 +0800
 yass (1.22.7-1) UNRELEASED; urgency=medium
 
   * tls: fix broken https protocol.
