@@ -1713,6 +1713,12 @@ func postStateFixRPath() {
 	glog.Info("PostState -- Fix RPATH")
 	glog.Info("======================================================================")
 	if systemNameFlag == "darwin" {
+		addRpathForDylibCmd := []string{
+			"install_name_tool", "-add_rpath", "@loader_path/../Frameworks",
+		}
+		removeRpathForDylibCmd := []string{
+			"install_name_tool", "-delete_rpath", "@loader_path/.",
+		}
 		removeRpathCmd := []string{
 			"install_name_tool", "-delete_rpath", buildDir,
 		}
@@ -1723,6 +1729,10 @@ func postStateFixRPath() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
+				addRpathForDylibCmd := append(addRpathForDylibCmd, filepath.Join(frameworkPath, name))
+				cmdRun(addRpathForDylibCmd, false)
+				removeRpathForDylibCmd := append(removeRpathForDylibCmd, filepath.Join(frameworkPath, name))
+				cmdRun(removeRpathForDylibCmd, false)
 				removeRpathFinalCmd := append(removeRpathCmd, filepath.Join(frameworkPath, name))
 				cmdRun(removeRpathFinalCmd, false)
 			}
