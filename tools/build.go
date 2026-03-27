@@ -952,8 +952,11 @@ func buildStageGenerateBuildScript() {
 		}
 
 		if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
+			cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
 		}
+		// if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
+		// 	cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
+		// }
 		// if msvcCrtLinkageFlag == "dynamic" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
