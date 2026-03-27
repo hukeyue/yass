@@ -1580,15 +1580,14 @@ func GetDependenciesByDumpbin(path string, searchDirs []string) ([]string, []str
 			// nop
 		}
 
-		// convert dll to debug versions
-		for idx, dll := range dlls {
-			debugDll, found := debugRedistMap[dll]
-			if found {
-				dlls[idx] = debugDll
-			}
-		}
-
 		if cmakeBuildTypeFlag == "Debug" {
+			// convert dll to debug versions
+			for idx, dll := range dlls {
+				debugDll, found := debugRedistMap[dll]
+				if found {
+					dlls[idx] = debugDll
+				}
+			}
 			dlls = append(dlls, "ucrtbased.dll")
 		} else {
 			dlls = append(dlls, "ucrtbase.dll")
