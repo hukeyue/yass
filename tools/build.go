@@ -952,8 +952,11 @@ func buildStageGenerateBuildScript() {
 		}
 
 		if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
+			cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
 		}
+		// if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
+		// 	cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
+		// }
 		// if msvcCrtLinkageFlag == "dynamic" {
 		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 		// }
@@ -1577,15 +1580,14 @@ func GetDependenciesByDumpbin(path string, searchDirs []string) ([]string, []str
 			// nop
 		}
 
-		// convert dll to debug versions
-		for idx, dll := range dlls {
-			debugDll, found := debugRedistMap[dll]
-			if found {
-				dlls[idx] = debugDll
-			}
-		}
-
 		if cmakeBuildTypeFlag == "Debug" {
+			// convert dll to debug versions
+			for idx, dll := range dlls {
+				debugDll, found := debugRedistMap[dll]
+				if found {
+					dlls[idx] = debugDll
+				}
+			}
 			dlls = append(dlls, "ucrtbased.dll")
 		} else {
 			dlls = append(dlls, "ucrtbase.dll")
