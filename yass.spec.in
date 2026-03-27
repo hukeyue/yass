@@ -326,6 +326,9 @@ for embedded devices and low end boxes.
 %systemd_postun_with_restart yass-redir.service
 
 %changelog
+* Fri Mar 27 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.9-1
+  - tbbmalloc: introduce more fixes
+  - miscellaneous fixes
 * Thu Mar 26 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.8-1
   - tls: fix potential DoH and DoT resolve issue
   - tcmalloc: use shared library now
