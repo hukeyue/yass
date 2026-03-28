@@ -1,6 +1,8 @@
 /* a short cut to compatible with Windows SDK 7.1A */
 
-#ifndef NTDDI_WIN8
+#if __has_include_next(<winapifamily.h>)
+# include_next <winapifamily.h>
+#else
 
 /*
  * When compiling C and C++ code using SDK header files, the development
