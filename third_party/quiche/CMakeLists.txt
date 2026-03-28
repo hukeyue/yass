@@ -779,32 +779,8 @@ target_link_libraries(quiche PUBLIC
   ssl
   url
   asio
-  absl::container_common
-  absl::config
-  absl::btree
-  absl::raw_hash_map
-  absl::raw_hash_set
-  absl::flat_hash_map
-  absl::flat_hash_set
-  absl::inlined_vector
-  absl::node_hash_map
-  absl::hash
-  absl::memory
-  absl::int128
-  absl::status
-  absl::statusor
-  absl::strings
-  absl::str_format
-  absl::time
-  absl::optional
-  absl::span
-
-  absl::synchronization
-  absl::stacktrace
-  absl::symbolize
-  absl::flags
-  absl::flags_parse
-  absl::flags_marshalling
+  ${ABSL_LIBS}
+  ${ABSL_FLAGS_LIBS}
   )
 
 if (USE_NGHTTP2)
@@ -869,9 +845,7 @@ if (USE_BALSA_HTTP_PARSER)
 
   target_link_libraries(balsa PUBLIC
     quiche
-    absl::flat_hash_map
-    absl::flat_hash_set
-    absl::memory
-    absl::strings)
+    ${ABSL_LIBS}
+  )
 endif()
 
