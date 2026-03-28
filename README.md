@@ -18,7 +18,7 @@ _PLANNED BUILDS:_
 - M147's Release (1.23.x) will become Stable Release _from Apr 7, 2026_.
 
 _LANDED BUILDS_(signed against new certificates)_:_
-- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.9) has become Stable Release _from Mar 10, 2026_ (Extended Support).
+- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.10) has become Stable Release _from Mar 10, 2026_ (Extended Support).
 - M145's Release (1.21.x) has become Stable Release _from Feb 10, 2025_.
 - [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.5) has become Stable Release _from Jan 13, 2026_ (Extended Support).
 - M143's Release (1.19.x) has become Stable Release _from Dec 16, 2025_.
@@ -70,9 +70,9 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 
 - Legacy Android [download 64-bit apk][android_64_apk_url] or [download 32-bit apk][android_32_apk_url] (require _Android 7.0_ or above)
 - Legacy iOS [Continue to accept TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_, and _iOS 13.0_ or above)
-- Legacy Windows+MinGW+DynamicRuntime [download 64-bit installer][mingw_64_installer_url] (require [KB2999226] on _windows 7/8/8.1_) or [download 32-bit installer][mingw_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3_) or [download arm64 installer][mingw_arm64_installer_url] (require _windows 10/11_)
-- Legacy Windows+MSVC+DynamicRuntime [download 64-bit installer][windows_64_installer_url] (require [vs 2022 X64 Runtime][vs2022_x64] and _windows 10_) or [download 32-bit installer][windows_32_installer_url] (require [VC++ X86 Runtime][vs2022_x86] and _windows 10_) or [download arm64 installer][windows_arm64_installer_url] (require [VC++ ARM64 Runtime][vs2022_arm64] and _windows 11_)
-- Legacy Windows+MSVC+StaticRuntime [download 64-bit installer][windows_static_64_installer_url] (require _windows 7_) or [download 32-bit installer][windows_static_32_installer_url] (require _windows xp sp3_).
+- Legacy WindowsXPSP3/Windows7SP1+MinGW [download 64-bit installer][mingw_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][mingw_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3 or above_) or [download arm64 installer][mingw_arm64_installer_url] (require _windows 11_)
+- Legacy Windows10+VS2022 (MSVC) [download 64-bit installer][windows_64_installer_url] (require [vs 2022 X64 Runtime][vs2022_x64]) or [download 32-bit installer][windows_32_installer_url] (require [VC++ X86 Runtime][vs2022_x86]) or [download arm64 installer][windows_arm64_installer_url] (require [VC++ ARM64 Runtime][vs2022_arm64] on _windows 11_)
+- Legacy WindowsXPSP3/Windows7SP1+VS2022 (MSVC) [download 64-bit installer][windows_win7_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][windows_winxp_32_installer_url] (require _windows xp sp3 or above_).
 - Legacy macOS [download intel dmg][macos_intel_dmg_url] or [download apple silicon dmg][macos_arm_dmg_url] (require _macOS 10.14_ or above)
 
 > New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.4 FOR NOW).
@@ -180,51 +180,51 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [mlkem]: https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/
 [kyber]: https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/
 
-[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk3.el8.x86_64.1.22.9.rpm
-[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk3-ubuntu-16.04-xenial_amd64.1.22.9.deb
-[gtk3_i686_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk3-ubuntu-16.04-xenial_i386.1.22.9.deb
-[gtk3_arm64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk3-ubuntu-18.04-bionic_arm64.1.22.9.deb
-[gtk3_riscv64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk3-debian-13-trixie_riscv64.1.22.9.deb
-[cli_loong64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-client-debian-sid_loong64.1.22.9.deb
-[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-qt5.el8.x86_64.1.22.9.rpm
-[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-qt5-ubuntu-16.04-xenial_amd64.1.22.9.deb
-[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk4.lp155.x86_64.1.22.9.rpm
-[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-gtk4-ubuntu-22.04-jammy_amd64.1.22.9.deb
-[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-qt6.lp155.x86_64.1.22.9.rpm
-[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-qt6-ubuntu-22.04-jammy_amd64.1.22.9.deb
+[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3.el8.x86_64.1.22.10.rpm
+[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-16.04-xenial_amd64.1.22.10.deb
+[gtk3_i686_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-16.04-xenial_i386.1.22.10.deb
+[gtk3_arm64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-18.04-bionic_arm64.1.22.10.deb
+[gtk3_riscv64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-debian-13-trixie_riscv64.1.22.10.deb
+[cli_loong64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-client-debian-sid_loong64.1.22.10.deb
+[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt5.el8.x86_64.1.22.10.rpm
+[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt5-ubuntu-16.04-xenial_amd64.1.22.10.deb
+[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk4.lp155.x86_64.1.22.10.rpm
+[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk4-ubuntu-22.04-jammy_amd64.1.22.10.deb
+[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt6.lp155.x86_64.1.22.10.rpm
+[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt6-ubuntu-22.04-jammy_amd64.1.22.10.deb
 
-[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-x86_64-1.22.9.flatpak
+[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-x86_64-1.22.10.flatpak
 
-[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-amd64-1.22.9.tgz
-[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-amd64-1.22.9.tgz
-[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-arm64-1.22.9.tgz
-[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-loongarch64-1.22.9.tgz
-[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-riscv64-1.22.9.tgz
-[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-release-riscv32-1.22.9.tgz
+[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-amd64-1.22.10.tgz
+[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-amd64-1.22.10.tgz
+[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-arm64-1.22.10.tgz
+[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-loongarch64-1.22.10.tgz
+[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-riscv64-1.22.10.tgz
+[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-riscv32-1.22.10.tgz
 
-[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-openwrt-release-x86_64-1.22.9.tgz
-[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-openwrt-release-i486-1.22.9.tgz
-[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-openwrt-release-aarch64-1.22.9.tgz
+[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-x86_64-1.22.10.tgz
+[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-i486-1.22.10.tgz
+[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-aarch64-1.22.10.tgz
 
-[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-musl-release-amd64-1.22.9.tgz
-[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-musl-release-i386-1.22.9.tgz
-[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-musl-release-aarch64-1.22.9.tgz
-[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass_cli-linux-musl-release-armhf-1.22.9.tgz
+[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-amd64-1.22.10.tgz
+[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-i386-1.22.10.tgz
+[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-aarch64-1.22.10.tgz
+[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-armhf-1.22.10.tgz
 
-[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-android-release-arm64-1.22.9.apk
-[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-android-release-arm-1.22.9.apk
+[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-android-release-arm64-1.22.10.apk
+[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-android-release-arm-1.22.10.apk
 
-[mingw_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-mingw-win7-release-x86_64-1.22.9-system-installer.exe
-[mingw_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-mingw-winxp-release-i686-1.22.9-system-installer.exe
-[mingw_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-mingw-release-aarch64-1.22.9-system-installer.exe
+[mingw_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-win7-release-x86_64-1.22.10-system-installer.exe
+[mingw_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-winxp-release-i686-1.22.10-system-installer.exe
+[mingw_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-release-aarch64-1.22.10-system-installer.exe
 
-[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-win-release-x86-dynamic-1.22.9-user-installer.exe
-[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-win-release-x64-dynamic-1.22.9-user-installer.exe
-[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-win-release-arm64-dynamic-1.22.9-user-installer.exe
+[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-x86-dynamic-1.22.10-user-installer.exe
+[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-x64-dynamic-1.22.10-user-installer.exe
+[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-arm64-dynamic-1.22.10-user-installer.exe
 
-[windows_static_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-win7-release-x64-static-1.22.9-user-installer.exe
-[windows_static_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-winxp-release-x86-static-1.22.9-user-installer.exe
+[windows_win7_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win7-release-x64-dynamic-1.22.10-user-installer.exe
+[windows_winxp_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-winxp-release-x86-static-1.22.10-user-installer.exe
 
-[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-macos-release-x64-1.22.9.dmg
-[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.9/yass-macos-release-arm64-1.22.9.dmg
+[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-macos-release-x64-1.22.10.dmg
+[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-macos-release-arm64-1.22.10.dmg
 [apple_developer]: https://developer.apple.com
