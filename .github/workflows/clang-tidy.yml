@@ -165,7 +165,7 @@ jobs:
           pushd third_party/libc++abi/trunk
           patch -p1 < ../winxp.patch
           popd
-          echo "BUILD_OPTIONS=-mingw-allow-xp -enable-lto=false" >> $GITHUB_ENV
+          echo "BUILD_OPTIONS=-mingw-allow-xp" >> $GITHUB_ENV
       - name: Build Binary
         run: |
           # fix cpack error on C.UTF-8 locale
