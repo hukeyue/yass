@@ -613,9 +613,14 @@ elseif (COMPILER_GCC)
   set(USE_LLD OFF)
 endif()
 
+# Whether to enable thin lto incremental builds.
+# See: https://clang.llvm.org/docs/ThinLTO.html#incremental
+# The cache can lead to non-determinism: https://crbug.com/1486045
+set(THIN_LTO_ENABLE_CACHE ON)
 if (BUILD_SHARED_LIBS AND WIN32 AND ENABLE_LTO)
-  message(WARNING "Failure might happen with lto enabled component build, disabling...")
+  message(WARNING "Failure might happen with lto enabled component build, disabling lto...")
   set(ENABLE_LTO OFF)
+  set(THIN_LTO_ENABLE_CACHE OFF)
 endif()
 
 if (USE_MOLD OR USE_LLD)
@@ -795,6 +800,9 @@ if (MSVC AND COMPILER_CLANG)
     # look back to vs2017, fix issue of linkage of ___dyn_tls_on_demand_init and ___tls_guard defined in msvcrt/libcmt
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fmsc-version=1916>)
   else()
+    # Required to make the 19041 SDK compatible with clang-cl.
+    # See https://crbug.com/1089996 issue #2 for details.
+    add_compile_definitions($<$<COMPILE_LANGUAGE:C,CXX>:__WRL_ENABLE_FUNCTION_STATICS__>)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fmsc-version=1944>)
   endif()
 endif()
@@ -1202,8 +1210,18 @@ else()
 
   # Do not export inline member functions. This makes component builds
   # faster. This is similar to -fvisibility-inlines-hidden.
-  if (COMPILER_CLANG)
+  if (COMPILER_CLANG AND BUILD_SHARED_LIBS)
     add_compile_options($<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:C,CXX>>:/Zc:dllexportInlines->)
+  endif()
+
+  if (USE_LLD AND NOT LTO)
+    # /Brepro lets the compiler not write the mtime field in the .obj output.
+    # link.exe /incremental relies on this field to work correctly, but lld
+    # never looks at this timestamp, so it's safe to pass this flag with
+    # lld and get more deterministic compiler output in return.
+    # In LTO builds, the compiler doesn't write .obj files containing mtimes,
+    # so /Brepro is ignored there.
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Brepro>)
   endif()
 
   ## Optimization flags
@@ -1344,11 +1362,6 @@ if (LTO AND COMPILER_CLANG AND USE_LLD)
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fsplit-lto-unit>)
   endif()
-
-  # Whether to enable thin lto incremental builds.
-  # See: https://clang.llvm.org/docs/ThinLTO.html#incremental
-  # The cache can lead to non-determinism: https://crbug.com/1486045
-  set(THIN_LTO_ENABLE_CACHE TRUE)
 
   if (THIN_LTO_ENABLE_CACHE)
     # Limit the size of the ThinLTO cache to the lesser of 10% of
@@ -2474,7 +2487,7 @@ endif()
 
 set(ABSL_PROPAGATE_CXX_STD "ON" CACHE STRING "")
 if (BUILD_SHARED_LIBS AND MSVC)
-  set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "ON" CACHE STRING "")
+  set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "ON" CACHE STRING "") # this option always true
   set(ABSL_BUILD_SHARED_LIBS "ON" CACHE STRING "")
 else()
   set(ABSL_BUILD_MONOLITHIC_SHARED_LIBS "OFF" CACHE STRING "")
@@ -2533,52 +2546,65 @@ else()
 endif()
 add_subdirectory(third_party/abseil-cpp EXCLUDE_FROM_ALL)
 
+set(ABSL_LIBS
+  absl_base
+  absl_core_headers
+  absl_config
+  absl_log
+  absl_check
+  absl_debugging
+  absl_raw_hash_map
+  absl_raw_hash_set
+  absl_flat_hash_map
+  absl_flat_hash_set
+  absl_node_hash_map
+  absl_inlined_vector
+  absl_span
+  absl_stacktrace
+  absl_symbolize
+  absl_status
+  absl_statusor
+  absl_str_format
+  absl_strings
+  absl_synchronization
+  absl_time
+  absl_optional
+  absl_failure_signal_handler
+)
+if (ABSL_BUILD_SHARED_LIBS AND MSVC)
+  set(ABSL_LIBS abseil_dll)
+endif()
+
+# FIXME absl::flags are banned from abseil_dll target
+#
+# Banned because each flag registration generates a static initializer, and
+# the flag registration mechanism is problematic in component builds.
+set(ABSL_FLAGS_LIBS
+  absl_flags
+  absl_flags_commandlineflag
+  absl_flags_commandlineflag_internal
+  absl_flags_config
+  absl_flags_internal
+  absl_flags_marshalling
+  absl_flags_parse
+  absl_flags_path_util
+  absl_flags_private_handle_accessor
+  absl_flags_program_name
+  absl_flags_reflection
+  absl_flags_usage
+  absl_flags_usage_internal
+  absl_log_internal_flags
+  absl_log_flags
+)
+
 set(SUPPORT_LIBS
-  absl::base
-  absl::core_headers
-  absl::config
-  absl::debugging
-  absl::str_format
-  absl::strings
-  absl::raw_hash_map
-  absl::raw_hash_set
-  absl::flat_hash_map
-  absl::flat_hash_set
-  absl::inlined_vector
-  absl::flags
-  absl::flags_parse
-  absl::flags_marshalling
-  absl::synchronization
-  absl::stacktrace
-  absl::symbolize
-  absl::status
-  absl::statusor
-  absl::time
-  absl::optional
-  absl::failure_signal_handler
+  ${ABSL_LIBS}
   ${SUPPORT_LIBS}
   )
 
 if (USE_LTO_CMAKE)
   set_target_properties(
-    absl_base
-    absl_core_headers
-    absl_flat_hash_map
-    absl_flat_hash_set
-    absl_inlined_vector
-    absl_flags
-    absl_flags_parse
-    absl_flags_marshalling
-    absl_synchronization
-    absl_stacktrace
-    absl_symbolize
-    absl_status
-    absl_statusor
-    absl_strings
-    absl_time
-    absl_optional
-    absl_failure_signal_handler
-    absl_str_format
+    ${ABSL_LIBS}
     PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
@@ -3266,8 +3292,8 @@ if (MSVC AND NOT USE_LIBCXX)
 endif()
 
 target_link_libraries(asio_core PUBLIC
-  absl::str_format
-  absl::flags
+  ${ABSL_LIBS}
+  ${ABSL_FLAGS_LIBS}
   url
   )
 
@@ -3291,7 +3317,7 @@ if (USE_LTO_CMAKE)
 endif()
 target_link_libraries(asio PUBLIC
   asio_core
-  absl::flags
+  ${ABSL_FLAGS_LIBS}
   ${boringssl_LIBS})
 
 if (APPLE)
@@ -3468,16 +3494,7 @@ if (BUILD_TESTS)
   # absl part support requires re2
   target_compile_definitions(yass_gtest PUBLIC GTEST_HAS_ABSL=1)
   target_link_libraries(yass_gtest PUBLIC
-    absl::failure_signal_handler
-    absl::stacktrace
-    absl::symbolize
-    absl::flags_parse
-    absl::flags_reflection
-    absl::flags_usage
-    absl::strings
-    absl::any
-    absl::optional
-    absl::variant
+    ${ABSL_FLAGS_LIBS}
     re2::re2
   )
 
@@ -4157,13 +4174,7 @@ if (OHOS)
 endif()
 
 target_link_libraries(yass_core PUBLIC url
-  absl::flags
-  absl::flags_config
-  absl::flags_parse
-  absl::flags_marshalling
-  absl::flags_commandlineflag
-  absl::flags_usage
-  absl::failure_signal_handler
+  ${ABSL_FLAGS_LIBS}
   asio_core
   )
 
