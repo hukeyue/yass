@@ -1,3 +1,7 @@
+yass (1.22.10-1) UNRELEASED; urgency=medium
+
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Sat, 28 Mar 2026 11:24:38 +0800
 yass (1.22.9-1) UNRELEASED; urgency=medium
 
   * tbbmalloc: introduce more fixes.
