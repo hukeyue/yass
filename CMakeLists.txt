@@ -1283,13 +1283,19 @@ else()
   add_link_options(/DEBUG)
 
   ## Remove unreferenced data
-  if (USE_ICF)
+  if (USE_ICF AND IS_RELEASE_BUILD AND NOT BUILD_SHARED_LIBS)
     add_link_options(/OPT:REF /OPT:ICF /INCREMENTAL:NO /FIXED:NO)
     list(APPEND YASS_APP_FEATURES "ldflags icf")
-  endif()
 
-  # Tell linker to include FIXUP information symbol data
-  add_link_options(/PROFILE)
+    # String tail merging leads to smaller binaries, but they don't compress
+    # as well, leading to increased mini_installer size (crbug.com/838449).
+    if (USE_LLD)
+      add_link_options(/OPT:NOLLDTAILMERGE)
+    endif()
+
+    # Tell linker to include FIXUP information symbol data
+    add_link_options(/PROFILE)
+  endif()
 
   # Use constructor homing for debug info. This option reduces debug info
   # by emitting class type info only when constructors are emitted
@@ -1883,7 +1889,7 @@ if (WIN32)
   endif()
 
   if (MSVC)
-    add_link_options(/DYNAMICBASE /NXCOMPAT)
+    add_link_options(/FIXED:NO /ignore:4199 /ignore:4221 /DYNAMICBASE /NXCOMPAT)
   endif()
 
   if (MSVC AND ALLOW_XP)
