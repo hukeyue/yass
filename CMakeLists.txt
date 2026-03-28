@@ -1329,7 +1329,7 @@ if (LTO AND COMPILER_CLANG AND USE_MOLD)
     endif()
   endif()
 
-  if (NOT ANDROID AND NOT OHOS AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR APPLE))
+  if (NOT ANDROID AND NOT OHOS)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fwhole-program-vtables>)
     if (NOT MSVC)
       add_link_options(-fwhole-program-vtables)
@@ -1341,30 +1341,66 @@ endif()
 if (LTO AND COMPILER_CLANG AND USE_LLD)
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-flto=thin>)
 
-  if (NOT APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
-    # TODO(lgrey): Enable unit splitting for Mac when supported.
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fsplit-lto-unit>)
   endif()
 
-  # Limit the size of the ThinLTO cache to the lesser of 10% of
-  # available disk space, 40GB and 100000 files.
-  set(cache_policy "cache_size=10%:cache_size_bytes=40g")
+  # Whether to enable thin lto incremental builds.
+  # See: https://clang.llvm.org/docs/ThinLTO.html#incremental
+  # The cache can lead to non-determinism: https://crbug.com/1486045
+  set(THIN_LTO_ENABLE_CACHE TRUE)
 
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0)
-    set(cache_policy "${cache_policy}:cache_size_files=100000")
+  if (THIN_LTO_ENABLE_CACHE)
+    # Limit the size of the ThinLTO cache to the lesser of 10% of
+    # available disk space, 40GB and 100000 files.
+    set(cache_policy "cache_size=10%:cache_size_bytes=40g")
+
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0)
+      set(cache_policy "${cache_policy}:cache_size_files=100000")
+    endif()
+
+    if (MSVC)
+      # When using lld-link, the -flto option need only be added to the compile step
+      add_link_options(/lldltocache:thinlto-cache /lldltocachepolicy:${cache_policy})
+    else()
+      if (APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
+        if (YASS_TARGET_IS_CROSSCOMPILE_HOST)
+          add_link_options(-Wl,-cache_path_lto,${CMAKE_CURRENT_BINARY_DIR}/../thinlto-cache)
+        else()
+          add_link_options(-Wl,-cache_path_lto,thinlto-cache)
+        endif()
+        add_link_options(-Wl,--thinlto-cache-policy=${cache_policy})
+      elseif (NOT APPLE)
+        add_link_options(-Wl,--thinlto-cache-dir=thinlto-cache)
+        add_link_options(-Wl,--thinlto-cache-policy,${cache_policy})
+      endif()
+    endif()
   endif()
 
+  # An import limit of 30 has better performance (per speedometer) and lower
+  # binary size than the default setting of 100.
   # TODO(gbiv): We ideally shouldn't need to specify this; ThinLTO
   # should be able to better manage binary size increases on its own.
-  set(import_instr_limit 5)
+  #
+  # For high-end Android, 30 seems to be the right trade-off between performance
+  # and binary size, at least based on Speedometer. For example, increasing
+  # `import_instr_limit`to 50 improves Speedometer 2.1 score by 0.7% [0], while
+  # Speedometer 3.0 score remains roughly the same (-0.1%) [1]. The binary size
+  # increases by about 2MB [2] (or 1.1%: the arm64 native code size in M124 is
+  # 178MB).
+  # [0]: https://pinpoint-dot-chromeperf.appspot.com/job/16984a18be0000
+  # [1]: https://pinpoint-dot-chromeperf.appspot.com/job/11984a18be0000
+  # [2]: https://ci.chromium.org/ui/p/chromium/builders/try/android-binary-size/1848442
+  set(import_instr_limit 30)
 
   if (MSVC)
     # When using lld-link, the -flto option need only be added to the compile step
-    add_link_options(/opt:lldltojobs=all -mllvm:-import-instr-limit=${import_instr_limit} /lldltocache:thinlto-cache /lldltocachepolicy:${cache_policy})
+    add_link_options(/opt:lldltojobs=all)
+    add_link_options(-mllvm:-import-instr-limit=${import_instr_limit})
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0)
       add_link_options(-mllvm:-disable-auto-upgrade-debug-info)
     endif()
-  elseif (NOT MINGW)
+  else()
     add_link_options(-flto=thin)
     # In ThinLTO builds, we run at most one link process at a time,
     # and let it use all cores.
@@ -1377,26 +1413,42 @@ if (LTO AND COMPILER_CLANG AND USE_LLD)
       ProcessorCount(CPU_NUMBER)
       add_link_options(-Wl,--thinlto-jobs=${CPU_NUMBER})
     endif()
-    if (APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
-      if (YASS_TARGET_IS_CROSSCOMPILE_HOST)
-        add_link_options(-Wl,-cache_path_lto,${CMAKE_CURRENT_BINARY_DIR}/../thinlto-cache)
-      else()
-        add_link_options(-Wl,-cache_path_lto,thinlto-cache)
-      endif()
-      add_link_options(-Wcrl,object_path_lto)
-      add_link_options(-Wl,--thinlto-cache-policy=${cache_policy})
-    elseif (NOT APPLE)
-      add_link_options(-Wl,--thinlto-cache-dir=thinlto-cache)
-      add_link_options(-Wl,--thinlto-cache-policy,${cache_policy})
+
+    if (ANDROID AND upper_CMAKE_BUILD_TYPE MATCHES "MINSIZEREL")
+      # TODO(crbug.com/40219076): Investigate if we can get the > 6% perf win
+      # of import_instr_limit 30 with a binary size hit smaller than ~2 MiB.
+      set(import_instr_limit 5)
     endif()
 
     add_link_options(-Wl,-mllvm,-import-instr-limit=${import_instr_limit})
+
+    if (APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
+      add_link_options(-Wcrl,object_path_lto)
+    endif()
+
+    # We only use one version of LLVM within a build so there's no need to
+    # upgrade debug info, which can be expensive since it runs the verifier.
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0)
       add_link_options(-Wl,-mllvm,-disable-auto-upgrade-debug-info)
     endif()
   endif()
 
-  if (NOT ANDROID AND NOT OHOS AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR APPLE))
+  if (NOT upper_CMAKE_BUILD_TYPE MATCHES "MINSIZEREL")
+    # Ideally the compiler would handle this automatically with PGO (see
+    # comments at https://crrev.com/c/5440500).
+
+    set(InlineHintCmd "SHELL:-mllvm -inlinehint-threshold=360")
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${InlineHintCmd}>)
+    if (MSVC)
+      add_link_options(-mllvm:-inlinehint-threshold=360)
+    else()
+      add_link_options(-Wl,-mllvm,-inlinehint-threshold=360)
+    endif()
+  endif()
+
+  # TODO(crbug.com/40182783): investigate why this isn't effective on
+  # arm32.
+  if (NOT ANDROID AND NOT OHOS)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fwhole-program-vtables>)
     if (NOT MSVC)
       add_link_options(-fwhole-program-vtables)
@@ -1607,9 +1659,9 @@ endif()
 if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0)
   # TODO(hans): Remove this once Clang generates better optimized debug info
   # by default. https://crbug.com/765793
-  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-mllvm>)
-  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-instcombine-lower-dbg-declare=0>)
-  if (USE_LLD)
+  set(DbgLowerCmd "SHELL:-mllvm -instcombine-lower-dbg-declare=0")
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${DbgLowerCmd}>)
+  if (USE_LLD AND IS_RELEASE_BUILD AND LTO)
     if (MSVC)
       add_link_options(-mllvm:-instcombine-lower-dbg-declare=0)
     else()
@@ -1656,7 +1708,7 @@ if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
 endif()
 
 # https://chromium.googlesource.com/chromium/src/build/config/+/refs/heads/main/compiler/BUILD.gn
-if (UNIX AND NOT APPLE)
+if (LINUX OR ANDROID)
   # Since we build with -std=c* and not -std=gnu*, _GNU_SOURCE will not be
   # defined by the compiler.  However, lots of code relies on the
   # non-standard features that _GNU_SOURCE enables, so define it manually.
@@ -1706,12 +1758,11 @@ if (COMPILER_CLANG AND SHOW_INCLUDES)
   if (MSVC)
     # TODO(crbug.com/1223741): Goma mixes the -H and /showIncludes output.
     # assert(!use_goma, "show_includes on Windows is not reliable with goma")
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/clang:-H>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/clang:-fshow-skipped-includes>)
+    set(showIncludeCmd "SHELL:/clang:-H /clang:-fshow-skipped-includes")
   else()
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-H>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fshow-skipped-includes>)
+    set(showIncludeCmd "SHELL:-H -fshow-skipped-includes")
   endif()
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${showIncludeCmd}>)
 endif()
 
 # This flag enforces that member pointer base types are complete. It helps
@@ -1953,7 +2004,7 @@ if (ANDROID)
 
   # https://github.com/android/ndk/issues/1196
   # https://github.com/android/ndk/issues/1589
-  if (ANDROID_API_VERSION LESS 30)
+  if (USE_LLD AND ANDROID_API_VERSION LESS 30)
     add_link_options(-Wl,--no-rosegment)
   endif()
 endif()
