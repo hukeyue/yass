@@ -509,7 +509,7 @@ cmake_dependent_option(
   USE_SYSTEM_NGHTTP2 "Build with system or vendored libnghttp2" OFF
   USE_NGHTTP2 OFF)
 
-option(USE_ICF "Build with ICF" OFF)
+option(USE_ICF "Set to true to use icf, Identical Code Folding" OFF)
 option(USE_CURL "Build with libcurl (test only)" ON)
 
 option(USE_CARES "Build with c-ares" OFF)
@@ -1570,6 +1570,8 @@ if (UNIX AND NOT APPLE)
   # ENABLE_LINKER_BUILD_ID=ON).
   if (IS_RELEASE_BUILD)
     add_link_options(-Wl,--build-id=sha1)
+  elseif(USE_LLD)
+    add_link_options(-Wl,--build-id=fast)
   else()
     add_link_options(-Wl,--build-id)
   endif()
@@ -1600,16 +1602,20 @@ if ((UNIX AND NOT APPLE) OR ANDROID OR OHOS)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-pipe>)
   endif()
 
-  # FIXME see https://github.com/hukeyue/yass/actions/runs/17764358948/
-  if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "mips.*")
+  # https://github.com/llvm/llvm-project/pull/124068
+  if (OS_MIPS OR OS_MIPS64)
+    add_link_options(-Wl,-z,execstack -Wl,-z,relro)
+  else()
     add_link_options(-Wl,-z,noexecstack -Wl,-z,relro)
   endif()
-  add_link_options(-Wl,-z,now)
+  if (NOT BUILD_SHARED_LIBS)
+    add_link_options(-Wl,-z,now)
+  endif()
 endif()
 
 # Linux-specific compiler flags setup.
 # ------------------------------------
-if (USE_ICF AND (NOT APPLE OR COMPILER_CLANG) AND NOT MSVC)
+if (USE_ICF AND (NOT APPLE OR USE_LLD) AND IS_RELEASE_BUILD AND NOT MSVC)
   # Gold doesn't respect section alignment and breaks gcc builds with icf
   # https://sourceware.org/bugzilla/show_bug.cgi?id=17704
   # Landed upstream Fri, 21 Oct 2016 - is in 2.28, such as CentOS 7
@@ -1617,7 +1623,7 @@ if (USE_ICF AND (NOT APPLE OR COMPILER_CLANG) AND NOT MSVC)
   list(APPEND YASS_APP_FEATURES "ldflags icf")
 endif()
 
-if (UNIX AND NOT APPLE)
+if (LINUX)
   # Do not use the -pthread ldflag here since it becomes a no-op
   # when using -nodefaultlibs, which would cause an unused argument
   # error.  "-lpthread" is added in //build/config:default_libs.
