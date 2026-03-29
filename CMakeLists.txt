@@ -1375,6 +1375,11 @@ if (LTO AND COMPILER_CLANG AND USE_MOLD)
   endif()
 endif()
 
+# mold: generate dbg ahead of time
+if (USE_MOLD)
+  add_link_options(-Wl,--separate-debug-file)
+endif()
+
 # use_debug_fission: whether to use split DWARF debug info files. This can
 # reduce link time significantly.
 if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND USE_LLD)

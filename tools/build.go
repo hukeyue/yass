@@ -1808,6 +1808,10 @@ func postStateStripBinaries() {
 			return
 		}
 	}
+	if useMoldFlag {
+		glog.Info("Done in mold linker")
+		return
+	}
 	if systemNameFlag == "mingw" || systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		// strip dependent dll files
 		entries, _ := ioutil.ReadDir(buildDir)
