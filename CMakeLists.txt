@@ -1160,13 +1160,13 @@ if (NOT MSVC)
     if (APPLE)
       # TODO(https://crbug.com/1050118): Investigate missing debug info on mac.
       # Make sure we don't use constructor homing on mac.
-      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Xclang>)
-      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-debug-info-kind=limited>)
+      set(DebugInfoCmd "SHELL:-Xclang -debug-info-kind=limited")
+      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${DebugInfoCmd}>)
     else()
       # Use constructor homing for debug info. This option reduces debug info
       # by emitting class type info only when constructors are emitted
-      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Xclang>)
-      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fuse-ctor-homing>)
+      set(DebugInfoCmd "SHELL:-Xclang -fuse-ctor-homing")
+      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${DebugInfoCmd}>)
     endif()
   endif()
 
@@ -1174,10 +1174,8 @@ if (NOT MSVC)
   # and -fcoverage-compilation-dir=.
   if (COMPILER_CLANG AND NOT COMPILER_APPLE_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14.0)
     add_compile_options($<$<COMPILE_LANGUAGE:ASM>:-Wa,-fdebug-compilation-dir,.>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Xclang>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fdebug-compilation-dir>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Xclang>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:.>)
+    set(DebugCompilationDirCmd "SHELL:-Xclang -fdebug-compilation-dir -Xclang .")
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${DebugCompilationDirCmd}>)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-ffile-compilation-dir=.>)
   endif()
 
@@ -1316,8 +1314,8 @@ else()
   # Use constructor homing for debug info. This option reduces debug info
   # by emitting class type info only when constructors are emitted
   if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Xclang>)
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fuse-ctor-homing>)
+    set(DebugInfoCmd "SHELL:-Xclang -fuse-ctor-homing")
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${DebugInfoCmd}>)
   endif()
 
   if (USE_LLD)
