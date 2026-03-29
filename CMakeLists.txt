@@ -1377,14 +1377,14 @@ endif()
 
 # use_debug_fission: whether to use split DWARF debug info files. This can
 # reduce link time significantly.
-if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND (USE_LLD OR USE_MOLD))
+if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND USE_LLD)
   set(USE_DEBUG_FISSION TRUE)
 else()
   set(USE_DEBUG_FISSION FALSE)
 endif()
 
-# error: <unknown>:0: A dwo section may not contain relocations
-if ((USE_LLD OR USE_MOLD) AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
+# ld.lld: error: <unknown>:0: A dwo section may not contain relocations
+if (USE_LLD AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
   set(USE_DEBUG_FISSION FALSE)
 endif()
 
@@ -1392,9 +1392,6 @@ if (USE_DEBUG_FISSION)
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-gsplit-dwarf>)
   if (LTO AND USE_LLD)
       add_link_options(-gsplit-dwarf)
-  endif()
-  if (USE_MOLD)
-    add_link_options(-gsplit-dwarf)
   endif()
   list(APPEND YASS_APP_FEATURES "debug fission")
 endif()
