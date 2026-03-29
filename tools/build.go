@@ -2612,6 +2612,9 @@ func postStateArchives() map[string][]string {
 			if strings.HasSuffix(iname, ".dbg") {
 				dbgPaths = append(dbgPaths, name)
 			}
+			if strings.HasSuffix(iname, "-dwo") {
+				dbgPaths = append(dbgPaths, name)
+			}
 		}
 	}
 
@@ -2624,6 +2627,9 @@ func postStateArchives() map[string][]string {
 				dllPaths = append(dllPaths, name)
 			}
 			if strings.HasSuffix(iname, ".dbg") {
+				dbgPaths = append(dbgPaths, name)
+			}
+			if strings.HasSuffix(iname, "-dwo") {
 				dbgPaths = append(dbgPaths, name)
 			}
 		}

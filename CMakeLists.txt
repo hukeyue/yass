@@ -545,13 +545,27 @@ cmake_dependent_option(
   USE_SYSTEM_JSONCPP "Build with system or vendered jsoncpp library" OFF
   "USE_JSONCPP AND NOT USE_LIBCXX" OFF)
 
-option(ENABLE_FORTIFY "Enable build with Fortify Source (linux only)" OFF)
-option(ENABLE_LTO "Enable build with LTO" OFF)
+# Enables support for ThinLTO, which links 3x-10x faster than full LTO. See
+# also http://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html
+# Use it by default on official-optimized android and Chrome OS builds, but
+# not ARC or linux-chromeos since it's been seen to not play nicely with
+# Chrome's clang. crbug.com/1033839
+if (COMPILER_CLANG AND (ANDROID OR WIN32 OR LINUX OR FREEBSD OR APPLE) AND OFFICIAL_BUILD)
+  set(ENABLE_LTO_DEFAULTS ON)
+else()
+  set(ENABLE_LTO_DEFAULTS OFF)
+endif()
+if (CFI)
+  set(ENABLE_LTO_DEFAULTS ON)
+endif()
+option(ENABLE_LTO "Enable build with LTO" ${ENABLE_LTO_DEFAULTS})
 
 option(ENABLE_LLD "Enable build with LLD" OFF)
 
 option(USE_MOLD "Build with mold linker" OFF)
 option(USE_LLD "Build with lld linker" OFF)
+
+option(ENABLE_FORTIFY "Enable build with Fortify Source (linux only)" OFF)
 
 # this temporary fix is not working with tests
 # https://discourse.cmake.org/t/dsym-file-not-copied-when-archiving/7691/2
@@ -1274,6 +1288,8 @@ else()
     if (USE_LLD)
       add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-gcodeview-ghash>)
       add_link_options(/DEBUG:GHASH)
+    else()
+      add_link_options(/DEBUG)
     endif()
   else()
     add_compile_options($<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:C,CXX>>:/Zi>)
@@ -1359,6 +1375,27 @@ if (LTO AND COMPILER_CLANG AND USE_MOLD)
       add_link_options(-fwhole-program-vtables)
     endif()
   endif()
+endif()
+
+# use_debug_fission: whether to use split DWARF debug info files. This can
+# reduce link time significantly.
+if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND USE_LLD)
+  set(USE_DEBUG_FISSION TRUE)
+else()
+  set(USE_DEBUG_FISSION FALSE)
+endif()
+
+# ld.lld: error: <unknown>:0: A dwo section may not contain relocations
+if (USE_LLD AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
+  set(USE_DEBUG_FISSION FALSE)
+endif()
+
+if (USE_DEBUG_FISSION)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-gsplit-dwarf>)
+  if (LTO AND USE_LLD)
+      add_link_options(-gsplit-dwarf)
+  endif()
+  list(APPEND YASS_APP_FEATURES "debug fission")
 endif()
 
 ## adopt Thin LTO
@@ -1748,7 +1785,7 @@ if (COMPILER_CLANG)
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-trigraphs>)
 endif()
 
-# TODO(crbug.com/1374347): Cleanup undefined symbol errors caught by
+# TODO(crbug.com/40242425): Cleanup undefined symbol errors caught by
 # --no-undefined-version.
 if (USE_LLD AND NOT WIN32 AND NOT APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
   add_link_options(-Wl,--undefined-version)
