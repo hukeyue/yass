@@ -1401,6 +1401,19 @@ if (USE_DEBUG_FISSION)
   list(APPEND YASS_APP_FEATURES "debug fission")
 endif()
 
+if (NOT MSVC AND NOT APPLE)
+  set(USE_COMPRESS_DEBUG_SECTIONS TRUE)
+else()
+  set(USE_COMPRESS_DEBUG_SECTIONS FALSE)
+endif()
+
+if (USE_COMPRESS_DEBUG_SECTIONS)
+  # command below is the same thing with '-gz'
+  # add_link_options(-Wl,--compress-debug-sections=zlib)
+  add_link_options(-gz)
+  list(APPEND YASS_APP_FEATURES "debug compressed (zlib)")
+endif()
+
 ## adopt Thin LTO
 if (LTO AND COMPILER_CLANG AND USE_LLD)
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-flto=thin>)
