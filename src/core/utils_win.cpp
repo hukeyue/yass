@@ -308,8 +308,10 @@ static const wchar_t* kDllWhiteList[] = {
 #undef BASE_DLL_NAME
 #undef DLL_NAME
 #endif // _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
+#if defined(_M_X64)
     L"mimalloc-redirect.dll",
+#elif defined(_M_ARM64)
+    L"mimalloc-redirect-arm64.dll",
 #else
     L"mimalloc-redirect32.dll",
 #endif
