@@ -3600,6 +3600,9 @@ if (BUILD_BENCHMARKS)
 
   target_compile_definitions(benchmark PUBLIC -DBENCHMARK_STATIC_DEFINE)
   target_compile_definitions(benchmark PRIVATE BENCHMARK_VERSION="1.9.0")
+  if (UNIX AND NOT APPLE AND NOT ANDROID)
+    target_compile_definitions(benchmark PRIVATE BENCHMARK_HAS_PTHREAD_AFFINITY)
+  endif()
 
   target_include_directories(benchmark PUBLIC third_party/benchmark/include)
 
