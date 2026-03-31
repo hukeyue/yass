@@ -506,6 +506,10 @@ cmake_dependent_option(
   USE_SYSTEM_JEMALLOC "Use system or vendored jemalloc" OFF
   USE_JEMALLOC OFF)
 
+cmake_dependent_option(
+  USE_JEMALLOC_OBJ "Use jemalloc object library" ON
+  "USE_JEMALLOC; LINUX" OFF)
+
 option(USE_LIBCXX "Build with custom libc++" OFF)
 
 option(USE_NGHTTP2 "Build with libnghttp2" ON)
@@ -3084,29 +3088,38 @@ if (USE_JEMALLOC AND USE_SYSTEM_JEMALLOC)
 
 elseif(USE_JEMALLOC)
   message(STATUS "Compiling with bundled jemalloc support")
-  list(APPEND YASS_APP_FEATURES "jemalloc (dll)")
+  if (USE_JEMALLOC_OBJ)
+    list(APPEND YASS_APP_FEATURES "jemalloc")
+  else()
+    list(APPEND YASS_APP_FEATURES "jemalloc (dll)")
+  endif()
 
   add_subdirectory(third_party/jemalloc EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
     set_property(TARGET jemalloc
       PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
+    set_property(TARGET jemalloc-obj
+      PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
   endif()
 
-  set(JEMALLOC_LIB jemalloc)
-
-  list(APPEND YASS_SHARED_LIBS ${JEMALLOC_LIB})
-
-  if (WIN32)
-    set_target_properties(jemalloc PROPERTIES PREFIX "")
-  endif()
-
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(JEMALLOC_DLL_SUFFIX "32")
+  if (USE_JEMALLOC_OBJ)
+    set(JEMALLOC_LIB jemalloc-obj)
   else()
-    set(JEMALLOC_DLL_SUFFIX "64")
-  endif()
-  if (WIN32)
-    set_target_properties(jemalloc PROPERTIES OUTPUT_NAME "jemalloc${JEMALLOC_DLL_SUFFIX}")
+    set(JEMALLOC_LIB jemalloc)
+    list(APPEND YASS_SHARED_LIBS ${JEMALLOC_LIB})
+
+    if (WIN32)
+      set_target_properties(jemalloc PROPERTIES PREFIX "")
+    endif()
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(JEMALLOC_DLL_SUFFIX "32")
+    else()
+      set(JEMALLOC_DLL_SUFFIX "64")
+    endif()
+    if (WIN32)
+      set_target_properties(jemalloc PROPERTIES OUTPUT_NAME "jemalloc${JEMALLOC_DLL_SUFFIX}")
+    endif()
   endif()
 
   set(SUPPORT_DEFINITIONS
