@@ -46,39 +46,51 @@ jobs:
           - arch: i386
             build_type: Release
             qemu_suffix: i386
+            build_options: -use-allocator=tcmalloc
           - arch: i386
             build_type: Debug
             qemu_suffix: i386
+            build_options: -use-allocator=tcmalloc
           - arch: amd64
             build_type: Release
             qemu_suffix: amd64
+            build_options: -use-allocator=tcmalloc
           - arch: amd64
             build_type: Debug
             qemu_suffix: amd64
+            build_options: -use-allocator=tcmalloc
           - arch: armhf
             build_type: Release
             qemu_suffix: armhf
+            build_options: -use-allocator=tcmalloc
           - arch: armel
             build_type: Release
             qemu_suffix: armel
+            build_options: -use-allocator=tcmalloc
           - arch: arm64
             build_type: Release
             qemu_suffix: aarch64
+            build_options: -use-allocator=tcmalloc
           - arch: mipsel
             build_type: Release
             qemu_suffix: mipsel
+            build_options: -use-allocator=tcmalloc
           - arch: mips64el
             build_type: Release
             qemu_suffix: mips64el
+            build_options: -use-allocator=tcmalloc
           - arch: loongarch64
             build_type: Release
             qemu_suffix: loongarch64
+            build_options: -use-allocator=tcmalloc
           - arch: riscv64
             build_type: Release
             qemu_suffix: riscv64
+            build_options: -use-allocator=tcmalloc
           - arch: riscv32
             build_type: Release
             qemu_suffix: riscv32
+            build_options:
     runs-on: ubuntu-22.04
     env:
       BUILD_TYPE: ${{ matrix.build_type }}
@@ -182,14 +194,14 @@ jobs:
           sudo dpkg -i qemu-user_*.deb
       - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }}
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - name: Build Binary (Server)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} -build-benchmark -build-test
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} -build-benchmark -build-test ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }}
+          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         with:

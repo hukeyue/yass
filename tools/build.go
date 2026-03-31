@@ -85,6 +85,8 @@ var useStaticBuildFlag bool
 
 var clangTidyModeFlag bool
 
+var useAllocatorFlag string
+
 var macosxVersionMinFlag string
 var macosxUniversalBuildFlag bool
 var macosxKeychainPathFlag string
@@ -206,6 +208,8 @@ func InitFlag() {
 	flag.BoolVar(&useMoldFlag, "use-mold", false, "Use Mold Linker")
 
 	flag.BoolVar(&clangTidyModeFlag, "clang-tidy-mode", getEnvBool("ENABLE_CLANG_TIDY", false), "Enable Clang Tidy Build")
+
+	flag.StringVar(&useAllocatorFlag, "use-allocator", "system", "Use specified allocator such as system")
 
 	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.14"), "Set Mac OS X deployment target, such as 10.15")
 	flag.BoolVar(&macosxUniversalBuildFlag, "macosx-universal-build", getEnvBool("ENABLE_OSX_UNIVERSAL_BUILD", false), "Enable Mac OS X Universal Build")
@@ -839,6 +843,22 @@ func buildStageGenerateBuildScript() {
 	if useStaticBuildFlag {
 		cmakeArgs = append(cmakeArgs, "-DCLI_STATIC_BUILD=ON", "-DSERVER_STATIC_BUILD=ON")
 	}
+	if useAllocatorFlag == "tbbmalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
+	} else if useAllocatorFlag == "tcmalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
+	} else if useAllocatorFlag == "mimalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
+	} else if useAllocatorFlag == "jemalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=on")
+	} else if useAllocatorFlag == "system" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
+	} else {
+		glog.Fatalf("Unsupported allocator %s specified.", useAllocatorFlag)
+	}
 	cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_BUILD_TYPE=%s", cmakeBuildTypeFlag))
 	if systemNameFlag == "ios" {
 		cmakeArgs = append(cmakeArgs, "-G", "Xcode")
@@ -951,15 +971,6 @@ func buildStageGenerateBuildScript() {
 			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_ASM_FLAGS=--target=%s", targetTriple))
 		}
 
-		if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
-		}
-		// if msvcCrtLinkageFlag == "dynamic" && (msvcTargetArchFlag == "x86" || msvcTargetArchFlag == "x64") {
-		// 	cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
-		// }
-		// if msvcCrtLinkageFlag == "dynamic" {
-		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
-		// }
 		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
@@ -1031,13 +1042,6 @@ func buildStageGenerateBuildScript() {
 		if mingwDir != clangPath {
 			getAndFixMinGWLibunwind(mingwDir)
 		}
-
-		if targetAbi == "i686" || targetAbi == "x86_64" {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
-		}
-		// if !mingwAllowXpFlag && targetAbi != "i686" {
-		// 	cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
-		// }
 
 		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
@@ -1138,19 +1142,6 @@ func buildStageGenerateBuildScript() {
 		if (archFlag == "arm64" || archFlag == "aarch64") && armCpuFlag != "" {
 			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DARM_CPU=%s", armCpuFlag))
 		}
-		if subsystem == "" {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
-		} else if subsystem == "musl" {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
-			// mimalloc calls madvise internally while
-			// some old system doesn't like it.
-			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
-			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
-		} else {
-			cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
-			cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
-			cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
-		}
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DENABLE_FORTIFY=on"))
 	}
 
@@ -1185,9 +1176,6 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DGCC_SYSTEM_PROCESSOR=%s", llvmArch))
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DGCC_TARGET=%s", llvmTarget))
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DENABLE_FORTIFY=on"))
-		// FIXME not enabled due to linkage issue
-		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
-		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
 	}
 	cmakeCmd := append([]string{"cmake", ".."}, cmakeArgs...)
 	if noConfigureFlag {
