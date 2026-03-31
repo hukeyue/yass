@@ -495,12 +495,20 @@ cmake_dependent_option(
   USE_MIMALLOC OFF)
 
 cmake_dependent_option(
+  USE_MIMALLOC_OBJ "Use mimalloc object library" ON
+  "USE_MIMALLOC; LINUX" OFF)
+
+cmake_dependent_option(
   USE_JEMALLOC "Use jemalloc" OFF
   "NOT USE_TBBMALLOC; NOT USE_TCMALLOC; NOT USE_MIMALLOC; NOT APPLE; NOT ANDROID; NOT OHOS; NOT WIN32" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_JEMALLOC "Use system or vendored jemalloc" OFF
   USE_JEMALLOC OFF)
+
+cmake_dependent_option(
+  USE_JEMALLOC_OBJ "Use jemalloc object library" ON
+  "USE_JEMALLOC; LINUX" OFF)
 
 option(USE_LIBCXX "Build with custom libc++" OFF)
 
@@ -2957,79 +2965,73 @@ if (USE_MIMALLOC AND USE_SYSTEM_MIMALLOC)
     ${SUPPORT_DEFINITIONS}
   )
 
-elseif(USE_MIMALLOC AND NOT WIN32)
+elseif(USE_MIMALLOC)
   message(STATUS "Compiling with bundled mimalloc support")
-
-  set(MI_BUILD_STATIC OFF CACHE INTERNAL "")
-  set(MI_BUILD_SHARED OFF CACHE INTERNAL "")
-  set(MI_BUILD_OBJECT ON CACHE INTERNAL "")
-  set(MI_BUILD_TESTS OFF CACHE INTERNAL "")
-  set(MI_ENABLE_INSTALL OFF CACHE INTERNAL "")
-  set(MI_LIBC_MUSL "${USE_MUSL}" CACHE INTERNAL "")
-  add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
-  target_compile_definitions(mimalloc-obj PRIVATE MI_USE_ENVIRON=0)
-  if (USE_LTO_CMAKE)
-    set_property(TARGET mimalloc-obj
-      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
-
-  set(MIMALLOC_LIB mimalloc-obj)
-
-  set(SUPPORT_DEFINITIONS
-    HAVE_MIMALLOC
-    ${SUPPORT_DEFINITIONS}
-  )
-
-  list(APPEND YASS_APP_FEATURES "mimalloc")
-elseif(USE_MIMALLOC AND WIN32)
-  message(STATUS "Compiling with bundled mimalloc support")
-
-  set(MI_BUILD_STATIC OFF CACHE INTERNAL "")
-  set(MI_BUILD_SHARED ON CACHE INTERNAL "")
-  set(MI_BUILD_OBJECT OFF CACHE INTERNAL "")
-  set(MI_BUILD_TESTS OFF CACHE INTERNAL "")
-  set(MI_ENABLE_INSTALL OFF CACHE INTERNAL "")
-  set(MI_LIBC_MUSL "${USE_MUSL}" CACHE INTERNAL "")
-  add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
-  target_compile_definitions(mimalloc PRIVATE MI_USE_ENVIRON=0)
-  target_compile_definitions(mimalloc PRIVATE _DLL=1)
-  if (USE_LTO_CMAKE)
-    set_property(TARGET mimalloc
-      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
-
-  set(MIMALLOC_LIB mimalloc)
-
-  set_target_properties(mimalloc PROPERTIES PREFIX "")
-  set_target_properties(mimalloc PROPERTIES OUTPUT_NAME "mimalloc-override")
-
-  set(USE_MIMALLOC_MINJECT ON)
-
-  set(SUPPORT_DEFINITIONS
-    HAVE_MIMALLOC
-    ${SUPPORT_DEFINITIONS}
-  )
-
-  add_library(mimalloc_override OBJECT src/mimalloc.cc)
-  target_link_libraries(mimalloc_override PRIVATE mimalloc)
-
-  list(APPEND YASS_SHARED_LIBS ${MIMALLOC_LIB})
-
-  # On windows, link and copy the mimalloc redirection dll too.
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(MIMALLOC_REDIRECT_SUFFIX "32")
+  if (USE_MIMALLOC_OBJ)
+    list(APPEND YASS_APP_FEATURES "mimalloc")
   else()
-    set(MIMALLOC_REDIRECT_SUFFIX "")
+    list(APPEND YASS_APP_FEATURES "mimalloc (dll)")
   endif()
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/mimalloc-redirect${MIMALLOC_REDIRECT_SUFFIX}.dll"
-    DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
-  set(SUPPORT_LIBS
-    mimalloc_override
-    ${SUPPORT_LIBS}
-    )
+  set(MI_BUILD_STATIC OFF CACHE INTERNAL "")
+  if (USE_MIMALLOC_OBJ)
+    set(MI_BUILD_SHARED OFF CACHE INTERNAL "")
+    set(MI_BUILD_OBJECT ON CACHE INTERNAL "")
+  else()
+    set(MI_BUILD_SHARED ON CACHE INTERNAL "")
+    set(MI_BUILD_OBJECT OFF CACHE INTERNAL "")
+  endif()
+  set(MI_BUILD_TESTS OFF CACHE INTERNAL "")
+  set(MI_ENABLE_INSTALL OFF CACHE INTERNAL "")
+  set(MI_LIBC_MUSL "${USE_MUSL}" CACHE INTERNAL "")
+  add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
+  if (USE_MIMALLOC_OBJ)
+    target_compile_definitions(mimalloc-obj PRIVATE MI_USE_ENVIRON=0)
+    if (USE_LTO_CMAKE)
+      set_property(TARGET mimalloc-obj
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
 
-  list(APPEND YASS_APP_FEATURES "mimalloc (dll)")
+    set(MIMALLOC_LIB mimalloc-obj)
+  else()
+    target_compile_definitions(mimalloc PRIVATE MI_USE_ENVIRON=0)
+    target_compile_definitions(mimalloc PRIVATE _DLL=1)
+    if (USE_LTO_CMAKE)
+      set_property(TARGET mimalloc
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
+    if (WIN32)
+      set_target_properties(mimalloc PROPERTIES PREFIX "")
+      set_target_properties(mimalloc PROPERTIES OUTPUT_NAME "mimalloc-override")
+    endif()
+
+    set(USE_MIMALLOC_MINJECT ON)
+
+    add_library(mimalloc_override OBJECT src/mimalloc.cc)
+    target_link_libraries(mimalloc_override PRIVATE mimalloc)
+
+    set(MIMALLOC_LIB mimalloc)
+
+    list(APPEND YASS_SHARED_LIBS ${MIMALLOC_LIB})
+
+    # On windows, link and copy the mimalloc redirection dll too.
+    if(OS_X86)
+      set(MIMALLOC_REDIRECT_SUFFIX "32")
+    elseif(OS_AARCH64)
+      set(MIMALLOC_REDIRECT_SUFFIX "-arm64")
+    else()
+      set(MIMALLOC_REDIRECT_SUFFIX "")
+    endif()
+    if (WIN32)
+      install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/mimalloc-redirect${MIMALLOC_REDIRECT_SUFFIX}.dll"
+      DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    endif()
+  endif()
+
+  set(SUPPORT_DEFINITIONS
+    HAVE_MIMALLOC
+    ${SUPPORT_DEFINITIONS}
+  )
 endif()
 
 set(DEFAULT_MALLOC_LIB ${MIMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
@@ -3038,8 +3040,10 @@ function(minject_patch_exetuable target_name)
   if (NOT USE_MIMALLOC_MINJECT)
     return()
   endif()
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  if(OS_X86)
     set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject32.exe")
+  elseif(OS_AARCH64)
+    set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject-arm64.exe")
   else()
     set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject.exe")
   endif()
@@ -3053,7 +3057,6 @@ function(minject_patch_exetuable target_name)
     COMMAND ${WINE_PREFIX} "${MINJECT_EXETUABLE}" --force --inplace $<TARGET_FILE:${target_name}>
     COMMENT "minject ${target_name}")
 endfunction()
-
 # *****************************************************************************************
 #           jemalloc Library
 # *****************************************************************************************
@@ -3085,29 +3088,38 @@ if (USE_JEMALLOC AND USE_SYSTEM_JEMALLOC)
 
 elseif(USE_JEMALLOC)
   message(STATUS "Compiling with bundled jemalloc support")
-  list(APPEND YASS_APP_FEATURES "jemalloc (dll)")
+  if (USE_JEMALLOC_OBJ)
+    list(APPEND YASS_APP_FEATURES "jemalloc")
+  else()
+    list(APPEND YASS_APP_FEATURES "jemalloc (dll)")
+  endif()
 
   add_subdirectory(third_party/jemalloc EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
     set_property(TARGET jemalloc
       PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
+    set_property(TARGET jemalloc-obj
+      PROPERTY INTERPROCEDURAL_OPTIJEZATION TRUE)
   endif()
 
-  set(JEMALLOC_LIB jemalloc)
-
-  list(APPEND YASS_SHARED_LIBS ${JEMALLOC_LIB})
-
-  if (WIN32)
-    set_target_properties(jemalloc PROPERTIES PREFIX "")
-  endif()
-
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(JEMALLOC_DLL_SUFFIX "32")
+  if (USE_JEMALLOC_OBJ)
+    set(JEMALLOC_LIB jemalloc-obj)
   else()
-    set(JEMALLOC_DLL_SUFFIX "64")
-  endif()
-  if (WIN32)
-    set_target_properties(jemalloc PROPERTIES OUTPUT_NAME "jemalloc${JEMALLOC_DLL_SUFFIX}")
+    set(JEMALLOC_LIB jemalloc)
+    list(APPEND YASS_SHARED_LIBS ${JEMALLOC_LIB})
+
+    if (WIN32)
+      set_target_properties(jemalloc PROPERTIES PREFIX "")
+    endif()
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(JEMALLOC_DLL_SUFFIX "32")
+    else()
+      set(JEMALLOC_DLL_SUFFIX "64")
+    endif()
+    if (WIN32)
+      set_target_properties(jemalloc PROPERTIES OUTPUT_NAME "jemalloc${JEMALLOC_DLL_SUFFIX}")
+    endif()
   endif()
 
   set(SUPPORT_DEFINITIONS
