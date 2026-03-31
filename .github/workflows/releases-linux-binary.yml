@@ -22,7 +22,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [master, develop, linux]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
@@ -46,19 +46,19 @@ jobs:
           - arch: i386
             build_type: Release
             qemu_suffix: i386
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tbbmalloc
           - arch: i386
             build_type: Debug
             qemu_suffix: i386
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tbbmalloc
           - arch: amd64
             build_type: Release
             qemu_suffix: amd64
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tbbmalloc
           - arch: amd64
             build_type: Debug
             qemu_suffix: amd64
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tbbmalloc
           - arch: armhf
             build_type: Release
             qemu_suffix: armhf
