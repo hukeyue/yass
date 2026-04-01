@@ -23,6 +23,7 @@
 /* Copyright (c) 2024-2026 Chilledheart  */
 
 #include <absl/flags/flag.h>
+#include <absl/time/clock.h>
 #include <build/build_config.h>
 #include <gtest/gtest-message.h>
 #include <gtest/gtest.h>
@@ -34,7 +35,10 @@
 #include "test_util.hpp"
 
 ABSL_FLAG(bool, no_doh_tests, false, "skip doh tests");
-ABSL_FLAG(bool, use_china_dns_tests, false, "use China DNS in tests");
+ABSL_FLAG(bool, use_china_dns_tests, false, "use China DNS in DNS tests");
+ABSL_FLAG(int, use_timeout_dns_tests, 5000, "Timeout (in milliseconds) in DNS tests");
+ABSL_FLAG(int, use_concurrent_dns_tests, 2, "Concurrent DNS tests in a row");
+ABSL_FLAG(int, use_repeated_dns_tests, 2, "Repeated DNS tests in a row");
 
 #define DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://223.5.5.5/dns-query" : \
                  "https://1.1.1.1/dns-query")
@@ -46,14 +50,11 @@ using namespace net;
 
 static void DoLocalResolve(asio::io_context& io_context, scoped_refptr<DoHResolver> resolver) {
   auto work_guard =
-      std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
+      std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-  io_context.restart();
-
-  asio::post(io_context, [&]() {
+  asio::post(io_context, [resolver, work_guard]() {
     resolver->AsyncResolve("doh-test.localhost", 80,
-                           [&](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
-                             work_guard.reset();
+                           [work_guard](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
                              ASSERT_FALSE(ec) << ec;
                              bool has_ipv6 = false;
                              for (auto iter = std::begin(results); iter != std::end(results); ++iter) {
@@ -67,11 +68,9 @@ static void DoLocalResolve(asio::io_context& io_context, scoped_refptr<DoHResolv
                              }
                            });
   });
-
-  EXPECT_NO_FATAL_FAILURE(io_context.run());
 }
 
-TEST(DOH_TEST, LocalBasic) {
+TEST(DNS_DOH_TEST, LocalBasic) {
   if (absl::GetFlag(FLAGS_no_doh_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -80,22 +79,21 @@ TEST(DOH_TEST, LocalBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init(DOH_URL, 5000);
+  int ret = resolver->Init(DOH_URL, absl::GetFlag(FLAGS_use_timeout_dns_tests));
   ASSERT_EQ(ret, 0);
 
+  io_context.restart();
   DoLocalResolve(io_context, resolver);
+  EXPECT_NO_FATAL_FAILURE(io_context.run());
 }
 
 static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<DoHResolver> resolver) {
   auto work_guard =
-      std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
+      std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-  io_context.restart();
-
-  asio::post(io_context, [&]() {
+  asio::post(io_context, [resolver, work_guard]() {
     resolver->AsyncResolve("www.cloudflare.com", 80,
-                           [&](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
-                             work_guard.reset();
+                           [work_guard](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
                              // Sometimes dns resolver don't get ack in time, ignore it safely
                              if (ec == asio::error::timed_out) {
                                return;
@@ -113,11 +111,9 @@ static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<DoHResol
                              }
                            });
   });
-
-  EXPECT_NO_FATAL_FAILURE(io_context.run());
 }
 
-TEST(DOH_TEST, RemoteBasic) {
+TEST(DNS_DOH_TEST, RemoteBasic) {
   if (absl::GetFlag(FLAGS_no_doh_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -126,13 +122,18 @@ TEST(DOH_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init(DOH_URL, 5000);
+  int ret = resolver->Init(DOH_URL, absl::GetFlag(FLAGS_use_timeout_dns_tests));
   ASSERT_EQ(ret, 0);
 
-  DoRemoteResolve(io_context, resolver);
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_repeated_dns_tests); ++i) {
+    io_context.restart();
+    DoRemoteResolve(io_context, resolver);
+    EXPECT_NO_FATAL_FAILURE(io_context.run()) << "Failure at run " << i;
+    absl::SleepFor(absl::Milliseconds(5));
+  }
 }
 
-TEST(DOH_TEST, RemoteMulti) {
+TEST(DNS_DOH_TEST, RemoteConcurrent) {
   if (absl::GetFlag(FLAGS_no_doh_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -140,18 +141,25 @@ TEST(DOH_TEST, RemoteMulti) {
   asio::error_code ec;
   asio::io_context io_context;
 
-  auto resolver = DoHResolver::Create(io_context);
-  int ret = resolver->Init(DOH_URL, 5000);
-  ASSERT_EQ(ret, 0);
+  std::vector<scoped_refptr<DoHResolver>> resolvers;
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_concurrent_dns_tests); ++i) {
+    auto resolver = DoHResolver::Create(io_context);
+    int ret = resolver->Init(DOH_URL, absl::GetFlag(FLAGS_use_timeout_dns_tests));
+    ASSERT_EQ(ret, 0);
+    resolvers.push_back(resolver);
+  }
 
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_repeated_dns_tests); ++i) {
+    io_context.restart();
+    for (int j = 0; j < absl::GetFlag(FLAGS_use_concurrent_dns_tests); ++j) {
+      DoRemoteResolve(io_context, resolvers[j]);
+    }
+    EXPECT_NO_FATAL_FAILURE(io_context.run()) << "Failure at run " << i;
+    absl::SleepFor(absl::Milliseconds(10));
+  }
 }
 
-TEST(DOH_TEST, Timeout) {
+TEST(DNS_DOH_TEST, Timeout) {
   if (absl::GetFlag(FLAGS_no_doh_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;

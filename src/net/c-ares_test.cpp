@@ -25,6 +25,7 @@
 #ifdef HAVE_C_ARES
 
 #include <absl/flags/flag.h>
+#include <absl/time/clock.h>
 #include <build/build_config.h>
 #include <gtest/gtest-message.h>
 #include <gtest/gtest.h>
@@ -44,9 +45,13 @@ ABSL_FLAG(bool, no_cares_tests,
 #endif
           "skip c-ares tests");
 
+ABSL_DECLARE_FLAG(int, use_timeout_dns_tests);
+ABSL_DECLARE_FLAG(int, use_concurrent_dns_tests);
+ABSL_DECLARE_FLAG(int, use_repeated_dns_tests);
+
 using namespace net;
 
-TEST(CARES_TEST, LocalfileBasic) {
+TEST(DNS_CARES_TEST, LocalfileBasic) {
   asio::error_code ec;
   asio::io_context io_context;
   auto resolver = CAresResolver::Create(io_context);
@@ -75,7 +80,7 @@ TEST(CARES_TEST, LocalfileBasic) {
   io_context.run();
 }
 
-TEST(CARES_TEST, RemoteNotFound) {
+TEST(DNS_CARES_TEST, RemoteNotFound) {
   if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -103,14 +108,11 @@ TEST(CARES_TEST, RemoteNotFound) {
 
 static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<CAresResolver> resolver) {
   auto work_guard =
-      std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
+      std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
-  io_context.restart();
-
-  asio::post(io_context, [&]() {
+  asio::post(io_context, [resolver, work_guard]() {
     resolver->AsyncResolve("www.cloudflare.com", "80",
-                           [&](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
-                             work_guard.reset();
+                           [work_guard](asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
                              // Sometimes c-ares don't get ack in time, ignore it safely
                              if (ec == asio::error::timed_out) {
                                return;
@@ -124,11 +126,9 @@ static void DoRemoteResolve(asio::io_context& io_context, scoped_refptr<CAresRes
                              }
                            });
   });
-
-  EXPECT_NO_FATAL_FAILURE(io_context.run());
 }
 
-TEST(CARES_TEST, RemoteBasic) {
+TEST(DNS_CARES_TEST, RemoteBasic) {
   if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -137,13 +137,18 @@ TEST(CARES_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = CAresResolver::Create(io_context);
-  int ret = resolver->Init(5000);
+  int ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
   ASSERT_EQ(ret, 0);
 
-  DoRemoteResolve(io_context, resolver);
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_repeated_dns_tests); ++i) {
+    io_context.restart();
+    DoRemoteResolve(io_context, resolver);
+    EXPECT_NO_FATAL_FAILURE(io_context.run()) << "Failure at run " << i;
+    absl::SleepFor(absl::Milliseconds(5));
+  }
 }
 
-TEST(CARES_TEST, RemoteMulti) {
+TEST(DNS_CARES_TEST, RemoteConcurrent) {
   if (absl::GetFlag(FLAGS_disable_cares) || absl::GetFlag(FLAGS_no_cares_tests)) {
     GTEST_SKIP() << "skipped as required";
     return;
@@ -151,15 +156,22 @@ TEST(CARES_TEST, RemoteMulti) {
   asio::error_code ec;
   asio::io_context io_context;
 
-  auto resolver = CAresResolver::Create(io_context);
-  int ret = resolver->Init(5000);
-  ASSERT_EQ(ret, 0);
+  std::vector<scoped_refptr<CAresResolver>> resolvers;
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_concurrent_dns_tests); ++i) {
+    auto resolver = CAresResolver::Create(io_context);
+    int ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
+    ASSERT_EQ(ret, 0);
+    resolvers.push_back(resolver);
+  }
 
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
-  DoRemoteResolve(io_context, resolver);
+  for (int i = 0; i < absl::GetFlag(FLAGS_use_repeated_dns_tests); ++i) {
+    io_context.restart();
+    for (int j = 0; j < absl::GetFlag(FLAGS_use_concurrent_dns_tests); ++j) {
+      DoRemoteResolve(io_context, resolvers[j]);
+    }
+    EXPECT_NO_FATAL_FAILURE(io_context.run()) << "Failure at run " << i;
+    absl::SleepFor(absl::Milliseconds(10));
+  }
 }
 
 #endif  // HAVE_C_ARES
