@@ -20,6 +20,7 @@ set(quiche_SRCS
   src/quiche/common/lifetime_tracking.h
   src/quiche/common/masque/connect_ip_datagram_payload.cc
   src/quiche/common/masque/connect_udp_datagram_payload.cc
+  src/quiche/common/moq_varint.cc
   src/quiche/common/platform/api/quiche_bug_tracker.h
   src/quiche/common/platform/api/quiche_client_stats.h
   src/quiche/common/platform/api/quiche_containers.h
@@ -83,7 +84,6 @@ set(quiche_SRCS
   src/quiche/common/quiche_socket_address.h
   src/quiche/common/quiche_simple_arena.cc
   src/quiche/common/quiche_status_utils.h
-  src/quiche/common/quiche_stream.h
   src/quiche/common/quiche_weak_ptr.h
   src/quiche/common/quiche_text_utils.cc
   src/quiche/common/quiche_text_utils.h
@@ -720,6 +720,7 @@ set(quiche_quic_SOURCES
   src/quiche/web_transport/complete_buffer_visitor.h
   src/quiche/web_transport/encapsulated/encapsulated_web_transport.cc
   src/quiche/web_transport/encapsulated/encapsulated_web_transport.h
+  src/quiche/web_transport/stream_helpers.h
   src/quiche/web_transport/web_transport.h
   src/quiche/web_transport/web_transport_headers.cc
   src/quiche/web_transport/web_transport_headers.h

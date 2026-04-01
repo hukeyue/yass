@@ -35,7 +35,7 @@ concurrency:
   group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}
 env:
-  CACHE_EPOCH: 146-2
+  CACHE_EPOCH: 148-1
   GOPROXY: direct
 jobs:
   mac-release:
