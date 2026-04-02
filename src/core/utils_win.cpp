@@ -406,11 +406,16 @@ static const wchar_t* kDllWhiteList[] = {
     nullptr,
 };
 
-static void CheckDynamicLibraries() {
+static void CheckDynamicLibraries(bool show_alert_window) {
   std::wstring exe(_MAX_PATH, L'\0');
   const auto exeLength = GetModuleFileNameW(nullptr, const_cast<wchar_t*>(exe.c_str()), exe.size() + 1);
   if (!exeLength || exeLength >= exe.size() + 1) {
-    RAW_LOG(FATAL, "Could not get executable path!");
+    RAW_LOG(ERROR, "Could not get executable path!");
+    if (show_alert_window) {
+      MessageBoxExW(nullptr, L"Could not get executable path!", L"Check Dynamic Libraries",
+                    MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    }
+    _exit(-1);
   }
   exe.resize(exeLength);
   const auto last1 = exe.find_last_of('\\');
@@ -418,7 +423,12 @@ static void CheckDynamicLibraries() {
   const auto last = std::max((last1 == std::wstring::npos) ? -1 : static_cast<int>(last1),
                              (last2 == std::wstring::npos) ? -1 : static_cast<int>(last2));
   if (last < 0) {
-    RAW_LOG(FATAL, "Could not get executable directory!");
+    RAW_LOG(ERROR, "Could not get executable directory!");
+    if (show_alert_window) {
+      MessageBoxExW(nullptr, L"Could not get executable directory!", L"Check Dynamic Libraries",
+                    MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    }
+    _exit(-1);
   }
   // In the ANSI version of this function,
   // the name is limited to MAX_PATH characters.
@@ -443,7 +453,12 @@ static void CheckDynamicLibraries() {
     if (error == ERROR_FILE_NOT_FOUND) {
       return;
     }
-    RAW_LOG(FATAL, "Could not enumerate executable path!");
+    RAW_LOG(ERROR, "Could not enumerate executable path!");
+    if (show_alert_window) {
+      MessageBoxExW(nullptr, L"Could not enumerate executable path!", L"Check Dynamic Libraries",
+                    MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    }
+    _exit(-1);
   }
 
   do {
@@ -462,8 +477,11 @@ static void CheckDynamicLibraries() {
        << L"Please remove all DLL libraries from this directory:\n\n"
        << exe.substr(0, last) << L"\n\n"
        << L"Alternatively, you can move " << me << L" to a new directory.";
-    RAW_LOG(WARNING, SysWideToUTF8(os.str()).c_str());
-    MessageBoxExW(nullptr, os.str().c_str(), L"Suspicious DLL Found", MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    RAW_LOG(ERROR, SysWideToUTF8(os.str()).c_str());
+    if (show_alert_window) {
+      MessageBoxExW(nullptr, os.str().c_str(), L"Check Dynamic Libraries",
+                    MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    }
     _exit(-1);
   } while (FindNextFileW(findHandle, &findData));
   FindClose(findHandle);
@@ -473,7 +491,7 @@ static void CheckDynamicLibraries() {
 #define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
 #endif  //  LOAD_LIBRARY_SEARCH_SYSTEM32
 
-bool EnableSecureDllLoading() {
+bool EnableSecureDllLoading(bool show_alert_window) {
   typedef BOOL(WINAPI * SetDefaultDllDirectoriesFunction)(DWORD flags);
   SetDefaultDllDirectoriesFunction set_default_dll_directories = reinterpret_cast<SetDefaultDllDirectoriesFunction>(
       reinterpret_cast<void*>(::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"), "SetDefaultDllDirectories")));
@@ -481,13 +499,13 @@ bool EnableSecureDllLoading() {
     // Don't assert because this is known to be missing on Windows 7 without
     // KB2533623.
     RAW_LOG(WARNING, "SetDefaultDllDirectories unavailable");
-    CheckDynamicLibraries();
+    CheckDynamicLibraries(show_alert_window);
     return true;
   }
 
   if (!set_default_dll_directories(LOAD_LIBRARY_SEARCH_SYSTEM32)) {
     RAW_LOG(WARNING, "Encountered error calling SetDefaultDllDirectories!");
-    CheckDynamicLibraries();
+    CheckDynamicLibraries(show_alert_window);
     return true;
   }
 
