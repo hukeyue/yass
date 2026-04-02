@@ -45,6 +45,13 @@ export PKG_CONFIG
 override_dh_auto_clean:
 	dh_auto_clean
 
+ifneq ($(AR),)
+CMAKE_OPTIONS += -DCMAKE_AR=$(AR) -DCMAKE_CXX_COMPILER_AR=$(AR)
+endif
+ifneq ($(RANLIB),)
+CMAKE_OPTIONS += -DCMAKE_RANLIB=$(RANLIB) -DCMAKE_CXX_COMPILER_RANLIB=$(RANLIB)
+endif
+CMAKE_OPTIONS += -DUSE_DEBUG_FISSION=OFF -DUSE_COMPRESS_DEBUG_SECTIONS=off
 ifneq ($(filter clang,$(DEB_BUILD_PROFILES)),)
 override_dh_auto_configure: ASMFLAGS += -ccc-gcc-name ${DEB_HOST_GNU_TYPE}-gcc
 override_dh_auto_configure: CFLAGS += -ccc-gcc-name ${DEB_HOST_GNU_TYPE}-gcc

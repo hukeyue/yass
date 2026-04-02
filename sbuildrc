@@ -28,6 +28,8 @@ $environment_filter = ['^PATH$',
 			'^CMAKE_CROSS_TOOLCHAIN_FLAGS_NATIVE$',
 			'^CC$',
 			'^CXX$',
+			'^AR$',
+			'^RANLIB$',
 			'^DH_QUIET$',
 			'^DEB_BUILD_SYSTEM_OPTIONS$',
 			'^DEB_BUILD_MAINT_OPTIONS$' ];

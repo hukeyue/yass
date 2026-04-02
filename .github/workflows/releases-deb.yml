@@ -169,6 +169,8 @@ jobs:
           echo "DEB_BUILD_PROFILES=clang ${{ env.DEB_BUILD_PROFILES }}" >> $GITHUB_ENV
           echo "CC=${{ github.workspace }}/third_party/llvm-build/Release+Asserts/bin/clang" >> $GITHUB_ENV
           echo "CXX=${{ github.workspace }}/third_party/llvm-build/Release+Asserts/bin/clang++" >> $GITHUB_ENV
+          echo "AR=${{ github.workspace }}/third_party/llvm-build/Release+Asserts/bin/llvm-ar" >> $GITHUB_ENV
+          echo "RANLIB=${{ github.workspace }}/third_party/llvm-build/Release+Asserts/bin/llvm-ranlib" >> $GITHUB_ENV
       - name: Set cet build profile
         if: ${{ matrix.use_cet == true }}
         run: |
