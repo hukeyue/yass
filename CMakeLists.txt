@@ -1775,6 +1775,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# that scanning is only performed if C++20 or higher is enabled for the target.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++20")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
@@ -3001,6 +3003,7 @@ elseif(USE_MIMALLOC)
       set_property(TARGET mimalloc
         PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
+    # FIXME it is untested on Windows
     if (WIN32)
       set_target_properties(mimalloc PROPERTIES PREFIX "")
       set_target_properties(mimalloc PROPERTIES OUTPUT_NAME "mimalloc-override")
@@ -3328,6 +3331,12 @@ elseif (USE_MBEDTLS)
     ${SUPPORT_DEFINITIONS}
   )
   set(SUPPORT_LIBS mbedcrypto ${SUPPORT_LIBS})
+
+  if (USE_SHARED_MBEDTLS_LIBRARY)
+    set_target_properties(mbedcrypto PROPERTIES PREFIX "")
+    set_target_properties(mbedcrypto PROPERTIES OUTPUT_NAME mbedcrypto)
+    list(APPEND YASS_SHARED_LIBS mbedcrypto)
+  endif()
 
   if (COMPILER_CLANG)
     target_compile_options(mbedcrypto PRIVATE -Wno-switch-default)
