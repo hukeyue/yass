@@ -3329,6 +3329,12 @@ elseif (USE_MBEDTLS)
   )
   set(SUPPORT_LIBS mbedcrypto ${SUPPORT_LIBS})
 
+  if (USE_SHARED_MBEDTLS_LIBRARY)
+    set_target_properties(mbedcrypto PROPERTIES PREFIX "")
+    set_target_properties(mbedcrypto PROPERTIES OUTPUT_NAME mbedcrypto)
+    list(APPEND YASS_SHARED_LIBS mbedcrypto)
+  endif()
+
   if (COMPILER_CLANG)
     target_compile_options(mbedcrypto PRIVATE -Wno-switch-default)
   endif()
