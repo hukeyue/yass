@@ -1390,14 +1390,13 @@ endif()
 
 # use_debug_fission: whether to use split DWARF debug info files. This can
 # reduce link time significantly.
-if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND USE_LLD)
-  set(USE_DEBUG_FISSION TRUE)
-else()
-  set(USE_DEBUG_FISSION FALSE)
-endif()
+cmake_dependent_option(
+  USE_DEBUG_FISSION "Build with debug fission" ON
+  "NOT ANDROID; NOT APPLE; NOT MSVC; USE_LLD" OFF)
 
 # ld.lld: error: <unknown>:0: A dwo section may not contain relocations
 if (USE_LLD AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
+  message(WARNING "debug fission: arch ${CMAKE_SYSTEM_PROCESSOR} is not supported, disabling...")
   set(USE_DEBUG_FISSION FALSE)
 endif()
 
