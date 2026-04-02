@@ -85,6 +85,7 @@ var useStaticBuildFlag bool
 
 var clangTidyModeFlag bool
 
+var useComponentBuildFlag bool
 var useAllocatorFlag string
 
 var macosxVersionMinFlag string
@@ -209,6 +210,7 @@ func InitFlag() {
 
 	flag.BoolVar(&clangTidyModeFlag, "clang-tidy-mode", getEnvBool("ENABLE_CLANG_TIDY", false), "Enable Clang Tidy Build")
 
+	flag.BoolVar(&useComponentBuildFlag, "component-build", false, "Allow component build")
 	flag.StringVar(&useAllocatorFlag, "use-allocator", "system", "Use specified allocator such as system")
 
 	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.14"), "Set Mac OS X deployment target, such as 10.15")
@@ -842,6 +844,11 @@ func buildStageGenerateBuildScript() {
 	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON")
 	if useStaticBuildFlag {
 		cmakeArgs = append(cmakeArgs, "-DCLI_STATIC_BUILD=ON", "-DSERVER_STATIC_BUILD=ON")
+	}
+	if useComponentBuildFlag {
+		cmakeArgs = append(cmakeArgs, "-DBUILD_SHARED_LIBS=on")
+	} else {
+		cmakeArgs = append(cmakeArgs, "-DBUILD_SHARED_LIBS=off")
 	}
 	if useAllocatorFlag == "tbbmalloc" {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
