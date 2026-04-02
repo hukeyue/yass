@@ -1408,11 +1408,9 @@ if (USE_DEBUG_FISSION)
   list(APPEND YASS_APP_FEATURES "debug fission")
 endif()
 
-if (NOT MSVC AND NOT APPLE)
-  set(USE_COMPRESS_DEBUG_SECTIONS TRUE)
-else()
-  set(USE_COMPRESS_DEBUG_SECTIONS FALSE)
-endif()
+cmake_dependent_option(
+  USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" ON
+  "NOT MSVC; NOT APPLE" OFF)
 
 if (USE_COMPRESS_DEBUG_SECTIONS)
   # command below is the same thing with '-gz'
