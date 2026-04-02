@@ -435,6 +435,11 @@ if (BUILD_SHARED_LIBS)
 endif()
 set(YASS_SHARED_LIBS)
 
+# include before using CMAKE_INSTALL_*DIR
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  include(GNUInstallDirs)
+endif()
+
 ## Fix RPATH
 if (NOT APPLE AND NOT WIN32)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -971,10 +976,6 @@ if(YASS_TARGET_IS_CROSSCOMPILE_HOST)
 # (this is a variable that CrossCompile sets on recursive invocations)
 endif()
 
-if (NOT CMAKE_SKIP_INSTALL_RULES)
-  include(GNUInstallDirs)
-endif()
-
 # *****************************************************************************************
 #           Debug facilities
 # *****************************************************************************************
@@ -1390,14 +1391,13 @@ endif()
 
 # use_debug_fission: whether to use split DWARF debug info files. This can
 # reduce link time significantly.
-if (NOT ANDROID AND NOT APPLE AND NOT MSVC AND USE_LLD)
-  set(USE_DEBUG_FISSION TRUE)
-else()
-  set(USE_DEBUG_FISSION FALSE)
-endif()
+cmake_dependent_option(
+  USE_DEBUG_FISSION "Build with debug fission" ON
+  "NOT ANDROID; NOT APPLE; NOT MSVC; USE_LLD" OFF)
 
 # ld.lld: error: <unknown>:0: A dwo section may not contain relocations
 if (USE_LLD AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
+  message(WARNING "debug fission: arch ${CMAKE_SYSTEM_PROCESSOR} is not supported, disabling...")
   set(USE_DEBUG_FISSION FALSE)
 endif()
 
@@ -1409,11 +1409,9 @@ if (USE_DEBUG_FISSION)
   list(APPEND YASS_APP_FEATURES "debug fission")
 endif()
 
-if (NOT MSVC AND NOT APPLE)
-  set(USE_COMPRESS_DEBUG_SECTIONS TRUE)
-else()
-  set(USE_COMPRESS_DEBUG_SECTIONS FALSE)
-endif()
+cmake_dependent_option(
+  USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" ON
+  "NOT MSVC; NOT APPLE" OFF)
 
 if (USE_COMPRESS_DEBUG_SECTIONS)
   # command below is the same thing with '-gz'
