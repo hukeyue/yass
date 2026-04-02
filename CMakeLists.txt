@@ -435,6 +435,11 @@ if (BUILD_SHARED_LIBS)
 endif()
 set(YASS_SHARED_LIBS)
 
+# include before using CMAKE_INSTALL_*DIR
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  include(GNUInstallDirs)
+endif()
+
 ## Fix RPATH
 if (NOT APPLE AND NOT WIN32)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -969,10 +974,6 @@ endif()
 if(YASS_TARGET_IS_CROSSCOMPILE_HOST)
 # Dummy use to avoid CMake Warning: Manually-specified variables were not used
 # (this is a variable that CrossCompile sets on recursive invocations)
-endif()
-
-if (NOT CMAKE_SKIP_INSTALL_RULES)
-  include(GNUInstallDirs)
 endif()
 
 # *****************************************************************************************
