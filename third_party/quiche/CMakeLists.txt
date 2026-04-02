@@ -651,8 +651,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_stream_id_manager.h
   src/quiche/quic/core/quic_stream_priority.cc
   src/quiche/quic/core/quic_stream_priority.h
-  src/quiche/quic/core/quic_stream_send_buffer.cc
-  src/quiche/quic/core/quic_stream_send_buffer.h
   src/quiche/quic/core/quic_stream_send_buffer_base.cc
   src/quiche/quic/core/quic_stream_send_buffer_base.h
   src/quiche/quic/core/quic_stream_send_buffer_inling.cc
