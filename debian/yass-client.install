@@ -1,5 +1,4 @@
 usr/bin/yass_cli
-usr/libexec/yass/libtcmalloc_minimal.so
 etc/yass/config.json
 etc/yass/redir.json
 usr/lib/systemd/system/yass.service

@@ -35,6 +35,7 @@ Recommends:
 Depends:
  lsb-base (>= 3.0-6),
  ca-certificates,
+ yass-common (= ${binary:Version}),
  ${misc:Depends},
  ${shlibs:Depends}
 Description: lightweight and secure http/socks4/socks5 proxy
@@ -57,6 +58,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends:
  lsb-base (>= 3.0-6),
  ca-certificates,
+ yass-common (= ${binary:Version}),
  ${misc:Depends},
  ${shlibs:Depends}
 Recommends: ca-certificates
@@ -79,6 +81,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends:
  lsb-base (>= 3.0-6),
  ca-certificates,
+ yass-common (= ${binary:Version}),
  ${misc:Depends},
  ${shlibs:Depends}
 Recommends: ca-certificates
@@ -94,3 +97,23 @@ Depends:
     ${misc:Depends},
 Description: Debugging symbols for the yass-client package.
  This package contains the debugging symbols for the yass-client package.
+
+Package: yass-common
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends:
+ lsb-base (>= 3.0-6),
+ ${misc:Depends},
+ ${shlibs:Depends}
+Description: lightweight and secure http/socks4/socks5 proxy
+ yass is a lightweight and secure http/socks proxy
+ for embedded devices and low end boxes.
+
+Package: yass-common-dbg
+Section: debug
+Architecture: any
+Depends:
+    yass-common (= ${binary:Version}),
+    ${misc:Depends},
+Description: Debugging symbols for the yass-common package.
+ This package contains the debugging symbols for the yass-common package.

@@ -121,6 +121,8 @@ mv -f ../"yass-server_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-server-${DISTR
 mv -f ../"yass-server-dbg_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-server-${DISTRO}-dbg_${ARCH}.${TAG}${SUBVERSION_SUFFIX}.deb"
 mv -f ../"yass-client_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-client-${DISTRO}_${ARCH}.${TAG}${SUBVERSION_SUFFIX}.deb"
 mv -f ../"yass-client-dbg_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-client-${DISTRO}-dbg_${ARCH}.${TAG}${SUBVERSION_SUFFIX}.deb"
+mv -f ../"yass-common_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-common-${DISTRO}_${ARCH}.${TAG}${SUBVERSION_SUFFIX}.deb"
+mv -f ../"yass-common-dbg_${VERSION}-${SUBVERSION}_${ARCH}.deb" "yass-common-${DISTRO}-dbg_${ARCH}.${TAG}${SUBVERSION_SUFFIX}.deb"
 
 echo "Generated debs: "
 for deb in *.deb; do
