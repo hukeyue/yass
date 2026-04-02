@@ -55,6 +55,10 @@
 #include <jemalloc/jemalloc.h>
 #endif
 
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
 namespace config {
 
 bool testOnlyMode = false;
@@ -118,6 +122,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
 #ifdef HAVE_JEMALLOC
       std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
+#ifdef HAVE_ZLIB
+      std::cout << "ZLIB: " << zlibVersion() << std::endl;
+#endif
 #ifndef NDEBUG
       std::cout << "Debug build (NDEBUG not #defined)" << std::endl;
 #endif
@@ -146,6 +153,9 @@ static void ParseConfigFileOption(int argc, const char** argv) {
 #endif
 #ifdef HAVE_JEMALLOC
   std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
+#endif
+#ifdef HAVE_ZLIB
+  std::cout << "ZLIB: " << zlibVersion() << std::endl;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   std::cerr << "Assertions build (DCHECK_ALWAYS_ON #defined)" << std::endl;
@@ -184,7 +194,10 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   LOG(WARNING) << "MIMALLOC: " << mi_version();
 #endif
 #ifdef HAVE_JEMALLOC
-  LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
+  LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION;
+#endif
+#ifdef HAVE_ZLIB
+  LOG(WARNING) << "ZLIB: " << zlibVersion();
 #endif
 #ifdef DCHECK_ALWAYS_ON
   LOG(WARNING) << "Assertions build (DCHECK_ALWAYS_ON #defined)";

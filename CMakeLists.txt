@@ -3686,14 +3686,30 @@ if (USE_SYSTEM_ZLIB)
   message(STATUS "Compiling with system zlib")
   list(APPEND YASS_APP_FEATURES "system zlib")
   set(ZLIB_LIBRARIES PkgConfig::ZLIB)
-  set(SUPPORT_LIBS PkgConfig::ZLIB ${SUPPORT_LIBS})
+  set(SUPPORT_DEFINITIONS
+    HAVE_ZLIB
+    ${SUPPORT_DEFINITIONS}
+  )
 elseif(USE_ZLIB)
   message(STATUS "Compiling with bundled zlib")
   add_subdirectory(third_party/zlib EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "zlib")
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "zlib (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "zlib")
+  endif()
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS zlib)
+  endif()
+  set_target_properties(zlib PROPERTIES PREFIX "")
+  set_target_properties(zlib PROPERTIES OUTPUT_NAME "zlib")
   set(ZLIB_LIBRARIES zlib)
-  set(SUPPORT_LIBS zlib ${SUPPORT_LIBS})
+  set(SUPPORT_DEFINITIONS
+    HAVE_ZLIB
+    ${SUPPORT_DEFINITIONS}
+  )
 endif()
+set(CORE_LIBS ${ZLIB_LIBRARIES} ${CORE_LIBS})
 
 # *****************************************************************************************
 #           c-ares Library
@@ -4295,6 +4311,7 @@ target_compile_definitions(yass_core PUBLIC
 
 set(CORE_LIBS ${DEFAULT_MALLOC_LIB} ${CORE_LIBS})
 target_link_libraries(yass_core PUBLIC
+  ${DEFAULT_MALLOC_LIB}
   ${CORE_LIBS})
 
 set(SUPPORT_LIBS
