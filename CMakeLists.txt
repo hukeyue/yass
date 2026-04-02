@@ -3312,8 +3312,13 @@ if (USE_SYSTEM_MBEDTLS)
   endif()
 elseif (USE_MBEDTLS)
   message(STATUS "Compiling with bundled mbedtls library")
-  set(USE_SHARED_MBEDTLS_LIBRARY "OFF" CACHE STRING "")
-  set(USE_STATIC_MBEDTLS_LIBRARY "ON" CACHE STRING "")
+  if (BUILD_SHARED_LIBS)
+    set(USE_SHARED_MBEDTLS_LIBRARY "ON" CACHE STRING "")
+    set(USE_STATIC_MBEDTLS_LIBRARY "OFF" CACHE STRING "")
+  else()
+    set(USE_SHARED_MBEDTLS_LIBRARY "OFF" CACHE STRING "")
+    set(USE_STATIC_MBEDTLS_LIBRARY "ON" CACHE STRING "")
+  endif()
   set(ENABLE_TESTING "OFF" CACHE STRING "")
   set(ENABLE_PROGRAMS "OFF" CACHE STRING "")
   set(MBEDTLS_FATAL_WARNINGS OFF CACHE BOOL "")
@@ -3323,9 +3328,14 @@ elseif (USE_MBEDTLS)
     set(MBEDTLS_NO_ASM ON CACHE BOOL "")
   endif()
 
+  if (USE_SHARED_MBEDTLS_LIBRARY)
+    list(APPEND YASS_APP_FEATURES "mbedtls (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "mbedtls")
+  endif()
+
   add_subdirectory(third_party/mbedtls EXCLUDE_FROM_ALL)
 
-  list(APPEND YASS_APP_FEATURES "mbedtls")
   set(SUPPORT_DEFINITIONS
     HAVE_MBEDTLS
     ${SUPPORT_DEFINITIONS}
@@ -3677,14 +3687,30 @@ if (USE_SYSTEM_ZLIB)
   message(STATUS "Compiling with system zlib")
   list(APPEND YASS_APP_FEATURES "system zlib")
   set(ZLIB_LIBRARIES PkgConfig::ZLIB)
-  set(SUPPORT_LIBS PkgConfig::ZLIB ${SUPPORT_LIBS})
+  set(SUPPORT_DEFINITIONS
+    HAVE_ZLIB
+    ${SUPPORT_DEFINITIONS}
+  )
 elseif(USE_ZLIB)
   message(STATUS "Compiling with bundled zlib")
   add_subdirectory(third_party/zlib EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "zlib")
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "zlib (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "zlib")
+  endif()
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS zlib)
+  endif()
+  set_target_properties(zlib PROPERTIES PREFIX "")
+  set_target_properties(zlib PROPERTIES OUTPUT_NAME "zlib")
   set(ZLIB_LIBRARIES zlib)
-  set(SUPPORT_LIBS zlib ${SUPPORT_LIBS})
+  set(SUPPORT_DEFINITIONS
+    HAVE_ZLIB
+    ${SUPPORT_DEFINITIONS}
+  )
 endif()
+set(CORE_LIBS ${ZLIB_LIBRARIES} ${CORE_LIBS})
 
 # *****************************************************************************************
 #           c-ares Library
@@ -3756,33 +3782,52 @@ elseif (USE_NGHTTP2)
   set(ENABLE_HPACK_TOOLS OFF CACHE BOOL "")
   set(ENABLE_EXAMPLES OFF CACHE BOOL "")
   set(ENABLE_LIB_ONLY ON CACHE BOOL "")
-  set(NGHTTP2_BUILD_SHARED_LIBS OFF CACHE BOOL "")
-  set(NGHTTP2_BUILD_STATIC_LIBS ON CACHE BOOL "")
+  set(ENABLE_WERROR OFF CACHE BOOL "")
+  if (BUILD_SHARED_LIBS)
+    set(NGHTTP2_BUILD_SHARED_LIBS ON CACHE BOOL "")
+    set(NGHTTP2_BUILD_STATIC_LIBS OFF CACHE BOOL "")
+  else()
+    set(NGHTTP2_BUILD_SHARED_LIBS OFF CACHE BOOL "")
+    set(NGHTTP2_BUILD_STATIC_LIBS ON CACHE BOOL "")
+  endif()
   set(NGHTTP2_ENABLE_DOC OFF CACHE BOOL "")
   set(NGHTTP2_BUILD_TESTING OFF CACHE BOOL "")
   set(DISABLE_INSTALL ON CACHE BOOL "")
+
+  if (NGHTTP2_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "nghttp2 (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "nghttp2")
+  endif()
   add_subdirectory(third_party/nghttp2 EXCLUDE_FROM_ALL)
+  if (NGHTTP2_BUILD_SHARED_LIBS)
+    set(NGHTTP2_LIBRARIES nghttp2)
+    list(APPEND YASS_SHARED_LIBS ${NGHTTP2_LIBRARIES})
+  else()
+    set(NGHTTP2_LIBRARIES nghttp2_static)
+  endif()
+  if (WIN32)
+    set_target_properties(${NGHTTP2_LIBRARIES} PROPERTIES PREFIX "")
+  endif()
   if (COMPILER_CLANG)
-    target_compile_options(nghttp2_static PRIVATE -Wno-cast-qual)
-    target_compile_options(nghttp2_static PRIVATE -Wno-implicit-fallthrough)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-cast-qual)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-implicit-fallthrough)
     if (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
-      target_compile_options(nghttp2_static PRIVATE -Wno-unsafe-buffer-usage)
-      target_compile_options(nghttp2_static PRIVATE -Wno-extra-semi)
+      target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-unsafe-buffer-usage)
+      target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-extra-semi)
     endif()
-    target_compile_options(nghttp2_static PRIVATE -Wno-documentation)
-    target_compile_options(nghttp2_static PRIVATE -Wno-documentation-unknown-command)
-    target_compile_options(nghttp2_static PRIVATE -Wno-switch-enum)
-    target_compile_options(nghttp2_static PRIVATE -Wno-shorten-64-to-32)
-    target_compile_options(nghttp2_static PRIVATE -Wno-extra-semi-stmt)
-    target_compile_options(nghttp2_static PRIVATE -Wno-covered-switch-default)
-    target_compile_options(nghttp2_static PRIVATE -Wno-switch-default)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-documentation)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-documentation-unknown-command)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-switch-enum)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-shorten-64-to-32)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-extra-semi-stmt)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-covered-switch-default)
+    target_compile_options(${NGHTTP2_LIBRARIES} PRIVATE -Wno-switch-default)
   endif()
   set(NGHTTP2_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nghttp2/lib/includes
     ${CMAKE_CURRENT_BINARY_DIR}/third_party/nghttp2/lib/includes
     )
-  set(NGHTTP2_LIBRARIES nghttp2_static)
-  list(APPEND YASS_APP_FEATURES "nghttp2")
   set(SUPPORT_DEFINITIONS
     HAVE_NGHTTP2
     ${SUPPORT_DEFINITIONS}
@@ -3792,7 +3837,7 @@ elseif (USE_NGHTTP2)
     ${SUPPORT_INCLUDE_DIRS}
   )
   set(SUPPORT_LIBS
-    nghttp2_static
+    ${NGHTTP2_LIBRARIES}
     ${SUPPORT_LIBS}
   )
 else()
@@ -4286,6 +4331,7 @@ target_compile_definitions(yass_core PUBLIC
 
 set(CORE_LIBS ${DEFAULT_MALLOC_LIB} ${CORE_LIBS})
 target_link_libraries(yass_core PUBLIC
+  ${DEFAULT_MALLOC_LIB}
   ${CORE_LIBS})
 
 set(SUPPORT_LIBS

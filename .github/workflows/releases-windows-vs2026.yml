@@ -43,27 +43,27 @@ jobs:
             crt-linkage: dynamic
             build_type: Release
             winsdk_version: 10.0.26100.0
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -component-build
           - arch: x86
             crt-linkage: dynamic
             build_type: Debug
             winsdk_version: 10.0.26100.0
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -component-build
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
             winsdk_version: 10.0.26100.0
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -component-build
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
             winsdk_version: 10.0.26100.0
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -component-build
           - arch: arm64
             crt-linkage: dynamic
             build_type: Release
             winsdk_version: 10.0.26100.0
-            build_options:
+            build_options: -component-build
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
