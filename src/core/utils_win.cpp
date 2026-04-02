@@ -30,6 +30,9 @@
 struct IUnknown;
 #include <windows.h>
 
+#define __W(x) L##x
+#define _W(x) __W(x)
+
 #if _WIN32_WINNT > 0x0601
 #include <processthreadsapi.h>
 #endif
@@ -237,77 +240,40 @@ uint64_t GetMonotonicTime() {
 #endif
 }
 
-#define _STRCAT(A, B) A B
-#define STRCAT(A, B) _STRCAT(A, B)
+#ifdef _MSC_VER
+#define _APP_SUFFIX ".dll"
+#else
+#define _APP_SUFFIX "_" YASS_APP_NAME ".dll"
+#endif
+
+#if defined(_M_X64) || defined(_M_ARM64)
+#define _DLL_SUFFIX "64"
+#else
+#define _DLL_SUFFIX "32"
+#endif
 
 static const wchar_t* kDllWhiteList[] = {
 
 #ifdef HAVE_TBBMALLOC
-#ifdef _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-    L"tbbmalloc64.dll",
-    L"tbbmalloc_proxy64.dll",
-#else
-    L"tbbmalloc32.dll",
-    L"tbbmalloc_proxy32.dll",
-#endif
-#else // _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-#define BASE_DLL_NAME STRCAT(L"tbbmalloc64_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#else
-#define BASE_DLL_NAME STRCAT(L"tbbmalloc32_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#endif
-    DLL_NAME,
-#undef BASE_DLL_NAME
+#define DLL_NAME "tbbmalloc" _DLL_SUFFIX _APP_SUFFIX
+    _W(DLL_NAME),
 #undef DLL_NAME
 
-#if defined(_M_X64) || defined(_M_ARM64)
-#define BASE_DLL_NAME STRCAT(L"tbbmalloc_proxy64_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#else
-#define BASE_DLL_NAME STRCAT(L"tbbmalloc_proxy32_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#endif
-    DLL_NAME,
-#undef BASE_DLL_NAME
+#define DLL_NAME "tbbmalloc_proxy" _DLL_SUFFIX _APP_SUFFIX
+    _W(DLL_NAME),
 #undef DLL_NAME
-
-#endif // _MSC_VER
 #endif  //  HAVE_TBBMALLOC
 
 #ifdef HAVE_TCMALLOC
-#ifdef _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-    L"tcmalloc_minimal64.dll",
-#else
-    L"tcmalloc_minimal32.dll",
-#endif
-#else // _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-#define BASE_DLL_NAME STRCAT(L"tcmalloc_minimal64_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#else
-#define BASE_DLL_NAME STRCAT(L"tcmalloc_minimal32_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#endif
-    DLL_NAME,
-#undef BASE_DLL_NAME
+#define DLL_NAME "tcmalloc_minimal" _DLL_SUFFIX _APP_SUFFIX
+    _W(DLL_NAME),
 #undef DLL_NAME
-#endif // _MSC_VER
 #endif  //  HAVE_TCMALLOC
 
 #ifdef HAVE_MIMALLOC
-#ifdef _MSC_VER
-    L"mimalloc-override.dll",
-#else // _MSC_VER
-#define BASE_DLL_NAME STRCAT(L"mimalloc-override_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-    DLL_NAME,
-#undef BASE_DLL_NAME
+#define DLL_NAME "mimalloc-override" _APP_SUFFIX
+    _W(DLL_NAME),
 #undef DLL_NAME
-#endif // _MSC_VER
 #if defined(_M_X64)
     L"mimalloc-redirect.dll",
 #elif defined(_M_ARM64)
@@ -318,25 +284,42 @@ static const wchar_t* kDllWhiteList[] = {
 #endif  // HAVE_MIMALLOC
 
 #ifdef HAVE_JEMALLOC
-#ifdef _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-    L"jemalloc64.dll",
-#else
-    L"jemalloc32.dll",
-#endif
-#else // _MSC_VER
-#if defined(_M_X64) || defined(_M_ARM64)
-#define BASE_DLL_NAME STRCAT(L"jemalloc64_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#else
-#define BASE_DLL_NAME STRCAT(L"jemalloc32_", YASS_APP_LNAME)
-#define DLL_NAME STRCAT(BASE_DLL_NAME, L".dll")
-#endif
-    DLL_NAME,
-#undef BASE_DLL_NAME
+#define DLL_NAME "jemalloc" _DLL_SUFFIX _APP_SUFFIX
+    _W(DLL_NAME),
 #undef DLL_NAME
-#endif // _MSC_VER
 #endif  //  HAVE_JEMALLOC
+
+// Abseil-cpp
+#define DLL_NAME "abseil_dll" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+// BoringSSL
+#define DLL_NAME "libcrypto" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+#define DLL_NAME "libpki" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+#define DLL_NAME "libssl" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+// libc++
+#ifdef HAVE_LIBCXX
+#define DLL_NAME "libc++" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_LIBCXX
+
+// mbedtls
+#ifdef HAVE_MBEDTLS
+#define DLL_NAME "mbedcrypto" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_LIBCXX
 
 #if defined(_MSC_VER) && defined(_MSC_DYNAMIC_CRT) && defined(_DEBUG)
     // msvc debug runtime, still searched current directory
@@ -479,7 +462,9 @@ static void CheckDynamicLibraries() {
        << L"Please remove all DLL libraries from this directory:\n\n"
        << exe.substr(0, last) << L"\n\n"
        << L"Alternatively, you can move " << me << L" to a new directory.";
-    RAW_LOG(FATAL, SysWideToUTF8(os.str()).c_str());
+    RAW_LOG(WARNING, SysWideToUTF8(os.str()).c_str());
+    MessageBoxExW(nullptr, os.str().c_str(), L"Suspicious DLL Found", MB_OK | MB_ICONERROR, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    _exit(-1);
   } while (FindNextFileW(findHandle, &findData));
   FindClose(findHandle);
 }
