@@ -3341,9 +3341,12 @@ elseif (USE_MBEDTLS)
   set(SUPPORT_LIBS mbedcrypto ${SUPPORT_LIBS})
 
   if (USE_SHARED_MBEDTLS_LIBRARY)
+    list(APPEND YASS_SHARED_LIBS mbedcrypto)
+  endif()
+
+  if (WIN32)
     set_target_properties(mbedcrypto PROPERTIES PREFIX "")
     set_target_properties(mbedcrypto PROPERTIES OUTPUT_NAME mbedcrypto)
-    list(APPEND YASS_SHARED_LIBS mbedcrypto)
   endif()
 
   if (COMPILER_CLANG)
@@ -3700,8 +3703,12 @@ elseif(USE_ZLIB)
   if (BUILD_SHARED_LIBS)
     list(APPEND YASS_SHARED_LIBS zlib)
   endif()
-  set_target_properties(zlib PROPERTIES PREFIX "")
-  set_target_properties(zlib PROPERTIES OUTPUT_NAME "zlib")
+  if (WIN32)
+    set_target_properties(zlib PROPERTIES PREFIX "")
+    set_target_properties(zlib PROPERTIES OUTPUT_NAME "zlib")
+  else()
+    set_target_properties(zlib PROPERTIES OUTPUT_NAME "z")
+  endif()
   set(ZLIB_LIBRARIES zlib)
   set(SUPPORT_DEFINITIONS
     HAVE_ZLIB
