@@ -76,7 +76,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   // Fix log output name
   SetExecutablePath(exec_path);
 
-  if (!EnableSecureDllLoading()) {
+  // Ensure that the common control DLL is loaded.
+  InitCommonControls();
+
+  // Allow calling MessageBoxExW inside
+  if (!EnableSecureDllLoading(true)) {
     return -1;
   }
 
@@ -160,9 +164,6 @@ BOOL CYassApp::InitInstance() {
   state_ = STOPPED;
 
   Utils::SetDpiAwareness();
-
-  // Ensure that the common control DLL is loaded.
-  InitCommonControls();
 
   frame_ = new CYassFrame;
   if (frame_ == nullptr) {
