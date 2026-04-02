@@ -110,3 +110,4 @@ else ifneq ($(filter gtk3,$(DEB_BUILD_PROFILES)),)
 endif
 	dh_strip -pyass-server --dbg-package=yass-server-dbg
 	dh_strip -pyass-client --dbg-package=yass-client-dbg
+	dh_strip -pyass-common --dbg-package=yass-common-dbg
