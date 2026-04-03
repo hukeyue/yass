@@ -1,3 +1,4 @@
+usr/libexec/yass/libasio.so
 usr/libexec/yass/libc++.so
 usr/libexec/yass/libcares.so
 usr/libexec/yass/libcrypto.so

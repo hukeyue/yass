@@ -3370,11 +3370,26 @@ endif()
 #           asio_core Library
 # *****************************************************************************************
 
-add_library(asio_core STATIC
+cmake_dependent_option(
+  ASIO_BUILD_SHARED_LIBS "Build with shared asio library." ON
+  "BUILD_SHARED_LIBS" OFF)
+
+if (ASIO_BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "asio (dll)")
+else()
+  list(APPEND YASS_APP_FEATURES "asio")
+endif()
+
+set(asio_SOURCES
   src/net/asio.hpp
   src/net/asio.cpp
   src/net/asio_throw_exceptions.hpp
 )
+if (ASIO_BUILD_SHARED_LIBS)
+  add_library(asio_core SHARED ${asio_SOURCES})
+else()
+  add_library(asio_core STATIC ${asio_SOURCES})
+endif()
 if (USE_LTO_CMAKE)
   set_property(TARGET asio_core
     PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -3389,7 +3404,11 @@ target_compile_definitions(asio_core PUBLIC ASIO_STANDALONE)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_TYPEID)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_EXCEPTIONS)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_TS_EXECUTORS)
-target_compile_definitions(asio_core PUBLIC ASIO_SEPARATE_COMPILATION)
+if (ASIO_BUILD_SHARED_LIBS)
+  target_compile_definitions(asio_core PUBLIC ASIO_DYN_LINK)
+else()
+  target_compile_definitions(asio_core PUBLIC ASIO_SEPARATE_COMPILATION)
+endif()
 target_compile_definitions(asio_core PUBLIC ASIO_NO_DEPRECATED)
 target_compile_definitions(asio_core PRIVATE ASIO_NO_SSL)
 # forward libcxx present
@@ -3407,6 +3426,15 @@ target_link_libraries(asio_core PUBLIC
   url
   )
 
+if (WIN32)
+  set_target_properties(asio_core PROPERTIES PREFIX "")
+endif()
+set_target_properties(asio_core PROPERTIES OUTPUT_NAME "asio")
+
+if (ASIO_BUILD_SHARED_LIBS)
+  list(APPEND YASS_SHARED_LIBS asio_core)
+endif()
+
 if (USE_IOURING)
   target_compile_definitions(asio_core PUBLIC ASIO_HAS_IO_URING)
   target_compile_definitions(asio_core PUBLIC ASIO_HAS_IO_URING_AS_DEFAULT)
@@ -3418,21 +3446,21 @@ endif()
 #           asio Library
 # *****************************************************************************************
 
-add_library(asio STATIC
+add_library(asio_ssl STATIC
   src/net/asio_ssl.cpp
 )
 if (USE_LTO_CMAKE)
-  set_property(TARGET asio
+  set_property(TARGET asio_ssl
     PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(asio PUBLIC
+target_link_libraries(asio_ssl PUBLIC
   asio_core
   ${ABSL_FLAGS_LIBS}
   ${boringssl_LIBS})
 
 if (APPLE)
   find_library(SECURITY_FRAMEWORK Security REQUIRED)
-  target_link_libraries(asio PRIVATE ${SECURITY_FRAMEWORK})
+  target_link_libraries(asio_ssl PRIVATE ${SECURITY_FRAMEWORK})
 endif()
 
 #
@@ -3476,7 +3504,7 @@ add_library(asio_ca_bundle_crt OBJECT ${ASIO_CA_BUNDLE_CRT_SRC})
 target_include_directories(asio_ca_bundle_crt PRIVATE third_party/ca-certificates)
 
 list(APPEND YASS_APP_FEATURES "ca-certificates 20260223.3.121")
-target_sources(asio PRIVATE $<TARGET_OBJECTS:asio_ca_bundle_crt>)
+target_sources(asio_ssl PRIVATE $<TARGET_OBJECTS:asio_ca_bundle_crt>)
 
 #
 # required supplementary ca-bundle crt support
@@ -3518,9 +3546,9 @@ endif()
 add_library(asio_supplementary_ca_bundle_crt OBJECT ${ASIO_SUPPLEMENARY_CA_BUNDLE_CRT_SRC})
 target_include_directories(asio_supplementary_ca_bundle_crt PRIVATE third_party/ca-certificates)
 
-target_sources(asio PRIVATE $<TARGET_OBJECTS:asio_supplementary_ca_bundle_crt>)
+target_sources(asio_ssl PRIVATE $<TARGET_OBJECTS:asio_supplementary_ca_bundle_crt>)
 
-set(SUPPORT_LIBS asio ${SUPPORT_LIBS})
+set(SUPPORT_LIBS asio_ssl ${SUPPORT_LIBS})
 
 # *****************************************************************************************
 #           jsoncpp Library

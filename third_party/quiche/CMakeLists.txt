@@ -777,7 +777,7 @@ target_link_libraries(quiche PUBLIC
   crypto
   ssl
   url
-  asio
+  asio_core
   ${ABSL_LIBS}
   ${ABSL_FLAGS_LIBS}
   )

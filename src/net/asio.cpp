@@ -22,6 +22,8 @@
 
 /* Copyright (c) 2022-2026 Chilledheart  */
 
+#define ASIO_SOURCE
+
 #include "net/asio.hpp"
 
 #pragma GCC diagnostic push
