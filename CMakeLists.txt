@@ -2116,11 +2116,15 @@ endif()
 # *****************************************************************************************
 
 if (USE_LIBCXX)
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "libc++ (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "libc++")
+  endif()
   add_compile_definitions(-DHAVE_LIBCXX)
   add_subdirectory(third_party/libc++ EXCLUDE_FROM_ALL)
   link_libraries(cxx ${libcxx_PUBLIC_LIBRARIES})
   set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${libcxx_PUBLIC_LIBRARIES}")
-  list(APPEND YASS_APP_FEATURES "libc++")
 
   if (BUILD_SHARED_LIBS)
     list(APPEND YASS_SHARED_LIBS cxx)
