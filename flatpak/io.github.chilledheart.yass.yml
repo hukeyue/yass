@@ -65,6 +65,9 @@ modules:
       - -DGUI=on
       - -DCLI=off
       - -DSERVER=off
+      - -DBUILD_SHARED_LIBS=on
+      - -DUSE_DEBUG_FISSION=off
+      - -DUSE_COMPRESS_DEBUG_SECTIONS=off
     sources:
       - type: dir
         path: ../
