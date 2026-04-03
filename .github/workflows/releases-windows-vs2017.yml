@@ -38,7 +38,7 @@ defaults:
   run:
     shell: cmd
 env:
-  CACHE_EPOCH: 148-1
+  CACHE_EPOCH: 148-2
   GOPROXY: direct
 jobs:
   windows-xp-release:
