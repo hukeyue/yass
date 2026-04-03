@@ -3370,7 +3370,7 @@ endif()
 # *****************************************************************************************
 
 cmake_dependent_option(
-  ASIO_BUILD_SHARED_LIBS "Build with shared asio library." ON
+  ASIO_BUILD_SHARED_LIBS "Build with shared asio library." OFF
   "BUILD_SHARED_LIBS" OFF)
 
 if (ASIO_BUILD_SHARED_LIBS)
