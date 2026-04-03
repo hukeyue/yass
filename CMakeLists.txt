@@ -412,6 +412,16 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   set(FREEBSD ON)
 endif()
 
+if (WIN32)
+  if (OS_X86)
+    set(YASS_APP_PROCESS_ARCHITECTURE "x86")
+  elseif(OS_X64)
+    set(YASS_APP_PROCESS_ARCHITECTURE "amd64")
+  else()
+    set(YASS_APP_PROCESS_ARCHITECTURE "*")
+  endif()
+endif()
+
 # handling bug with cmake+clang-cl
 # newer clang-cl produces "Note: including file: .\\foo.h"
 # unable to parse by cmake's CMakeDetermineCompilerId.cmake
@@ -4268,6 +4278,11 @@ if (WIN32)
       "/DELAYLOAD:wintrust.dll"
       "/DELAYLOAD:ws2_32.dll"
       "/DELAYLOAD:mswsock.dll"
+
+      # we are delayload network-related dlls
+      "/DELAYLOAD:asio.dll"
+      "/DELAYLOAD:cares.dll"
+      "/DELAYLOAD:nghttp2.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
@@ -4333,6 +4348,11 @@ if (WIN32)
       "-Wl,--delayload=wintrust.dll"
       "-Wl,--delayload=ws2_32.dll"
       "-Wl,--delayload=mswsock.dll"
+
+      # we are delayload network-related dlls as they are causing troubles with mingw build
+      "-Wl,--delayload=asio_${YASS_APP_NAME}.dll"
+      "-Wl,--delayload=cares_${YASS_APP_NAME}.dll"
+      "-Wl,--delayload=nghttp2_${YASS_APP_NAME}.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
