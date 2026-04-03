@@ -77,7 +77,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   SetExecutablePath(exec_path);
 
   // Ensure that the common control DLL is loaded.
+#if _WIN32_WINNT >= 0x0600
+  // Under Comctl32.dll version 6.0 and later, InitCommonControls does nothing.
+  // Applications must explicitly register all common controls through InitCommonControlsEx.
+  INITCOMMONCONTROLSEX ctx;
+  ctx.dwSize = sizeof(ctx);
+  ctx.dwICC = ICC_STANDARD_CLASSES;
+  InitCommonControlsEx(&ctx);
+#else
   InitCommonControls();
+#endif
 
   // Allow calling MessageBoxExW inside
   if (!EnableSecureDllLoading(true)) {
