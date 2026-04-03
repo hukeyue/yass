@@ -296,10 +296,10 @@ jobs:
           sudo apt remove libc6-i386
       - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc -build-test -build-benchmark ${{ matrix.build_options }}
       - name: Build Binary (SERVER)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -build-test -build-benchmark -nc ${{ matrix.build_options }}
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -nc ${{ matrix.build_options }}

@@ -194,10 +194,10 @@ jobs:
           sudo dpkg -i qemu-user_*.deb
       - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc -build-benchmark -build-test ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - name: Build Binary (Server)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} -build-benchmark -build-test ${{ matrix.build_options }}
+          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |

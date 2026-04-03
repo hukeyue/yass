@@ -164,12 +164,12 @@ jobs:
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
+            -build-test -build-benchmark \
             ${{ matrix.build_options }}
       - name: Build Binary (Server)
         run: |
           ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
-            -build-test -build-benchmark \
             ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
