@@ -129,12 +129,12 @@ jobs:
         run: |
           ./tools/build --variant cli --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -nc
+            -nc -build-benchmark -build-test
       - name: Build Binary (SERVER)
         run: |
           ./tools/build --variant server --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
-            -nc -build-benchmark -build-test
+            -nc
       - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
