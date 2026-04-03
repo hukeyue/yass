@@ -43,7 +43,7 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "harmony/tun2proxy.h"
-#include "version.h"
+#include "_yass/version.h"
 
 using namespace std::string_literals;
 

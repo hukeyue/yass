@@ -60,13 +60,13 @@ ABSL_FLAG(std::string,
 
 #include "cli/cli_server.hpp"
 #include "config/config.hpp"
-#include "feature.h"
 #include "net/cipher.hpp"
 #include "net/http_parser.hpp"
 #include "net/io_buffer.hpp"
 #include "net/padding.hpp"
 #include "server/server_server.hpp"
-#include "version.h"
+#include "_yass/feature.h"
+#include "_yass/version.h"
 
 #include "test_util.hpp"
 

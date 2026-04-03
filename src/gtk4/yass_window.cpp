@@ -31,13 +31,13 @@
 
 #include "cli/cli_connection_stats.hpp"
 #include "core/utils.hpp"
-#include "feature.h"
 #include "freedesktop/utils.hpp"
 #include "gtk/utils.hpp"
 #include "gtk4/option_dialog.hpp"
 #include "gtk4/yass.hpp"
-#include "gui_variant.h"
-#include "version.h"
+#include "_yass/feature.h"
+#include "_yass/gui_variant.h"
+#include "_yass/version.h"
 
 #include <gtk/gtkwindow.h>
 

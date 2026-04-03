@@ -24,7 +24,7 @@
 
 #include "config/config_ptype.hpp"
 
-#include "gui_variant.h"
+#include "_yass/gui_variant.h"
 
 namespace config {
 

@@ -45,7 +45,7 @@
 #include "freedesktop/utils.hpp"
 #include "gtk/utils.hpp"
 #include "gtk/yass_window.hpp"
-#include "version.h"
+#include "_yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;

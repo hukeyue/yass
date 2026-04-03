@@ -43,9 +43,9 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
-#include "feature.h"
 #include "freedesktop/utils.hpp"
-#include "version.h"
+#include "_yass/feature.h"
+#include "_yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;

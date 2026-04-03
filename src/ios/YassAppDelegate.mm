@@ -37,10 +37,10 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
-#include "feature.h"
 #include "ios/YassViewController.h"
 #include "ios/utils.h"
-#include "version.h"
+#include "_yass/feature.h"
+#include "_yass/version.h"
 
 @interface YassAppDelegate ()
 - (std::string)SaveConfig;
