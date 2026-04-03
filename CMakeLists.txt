@@ -3525,6 +3525,9 @@ set(SUPPORT_LIBS asio ${SUPPORT_LIBS})
 # *****************************************************************************************
 #           jsoncpp Library
 # *****************************************************************************************
+cmake_dependent_option(
+  JSONCPP_BUILD_SHARED_LIBS "Build with shared jsoncpp library." ON
+  "USE_JSONCPP; BUILD_SHARED_LIBS" OFF)
 
 if (USE_SYSTEM_JSON)
   message(WARNING "Compiling with nlohmann json support is no longer supported, ignoring...")
@@ -3548,7 +3551,13 @@ if (USE_SYSTEM_JSONCPP)
   set(CORE_LIBS PkgConfig::JSONCPP ${CORE_LIBS})
 elseif (USE_JSONCPP)
   message(STATUS "Compiling with bundled jsoncpp library")
-  add_library(jsoncpp OBJECT
+
+  if (JSONCPP_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "jsoncpp (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "jsoncpp")
+  endif()
+  set(jsoncpp_SOURCES
     third_party/jsoncpp/include/json/allocator.h
     third_party/jsoncpp/include/json/assertions.h
     third_party/jsoncpp/include/json/config.h
@@ -3565,6 +3574,11 @@ elseif (USE_JSONCPP)
     third_party/jsoncpp/src/lib_json/json_writer.cpp
     third_party/jsoncpp/src/lib_json/json_valueiterator.inl
   )
+  if (JSONCPP_BUILD_SHARED_LIBS)
+    add_library(jsoncpp SHARED ${jsoncpp_SOURCES})
+  else()
+    add_library(jsoncpp STATIC ${jsoncpp_SOURCES})
+  endif()
   if (USE_LTO_CMAKE)
     set_property(TARGET jsoncpp
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -3574,11 +3588,24 @@ elseif (USE_JSONCPP)
   )
   target_include_directories(jsoncpp PUBLIC third_party/jsoncpp/include)
   target_include_directories(jsoncpp PRIVATE third_party/jsoncpp/src/lib_json)
-  list(APPEND YASS_APP_FEATURES "jsoncpp")
-  set(SUPPORT_INCLUDE_DIRS
-    third_party/jsoncpp/include
-    ${SUPPORT_INCLUDE_DIRS}
-  )
+
+  if (JSONCPP_BUILD_SHARED_LIBS)
+    target_compile_definitions(jsoncpp
+      PRIVATE
+        JSON_DLL_BUILD
+      INTERFACE
+        JSON_DLL
+    )
+  endif()
+
+  if (JSONCPP_BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS jsoncpp)
+  endif()
+  if (WIN32)
+    set_target_properties(jsoncpp PROPERTIES PREFIX "")
+    set_target_properties(jsoncpp PROPERTIES OUTPUT_NAME "jsoncpp")
+  endif()
+
   set(CORE_LIBS jsoncpp ${CORE_LIBS})
 else()
   message(FATAL_ERROR "Compiling without jsoncpp support is no longer supported")

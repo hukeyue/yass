@@ -1,8 +1,9 @@
 usr/libexec/yass/libc++.so
 usr/libexec/yass/libcrypto.so
+usr/libexec/yass/libjsoncpp.so
+usr/libexec/yass/libmbedcrypto.so
 usr/libexec/yass/libnghttp2.so
 usr/libexec/yass/libpki.so
 usr/libexec/yass/libssl.so
 usr/libexec/yass/libtcmalloc_minimal.so
-usr/libexec/yass/libmbedcrypto.so
 usr/share/doc/yass/LICENSE
