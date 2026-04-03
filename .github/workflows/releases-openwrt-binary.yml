@@ -180,12 +180,12 @@ jobs:
         run: |
           ./tools/build --variant server --arch ${{ matrix.arch }} \
             --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
+            -build-benchmark -build-test \
             -use-static-build -nc ${{ matrix.extra_flags }}
       - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} \
             --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
-            -build-benchmark -build-test \
             -use-static-build -nc ${{ matrix.extra_flags }}
       - uses: actions/upload-artifact@v6
         with:
