@@ -62,9 +62,6 @@ target_include_directories(zlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (BUILD_SHARED_LIBS)
   target_compile_definitions(zlib PUBLIC ZLIB_DLL)
-  if (NOT WIN32)
-    target_compile_options(zlib PRIVATE -fvisibility=default)
-  endif()
 endif()
 
 if (COMPILER_CLANG)
