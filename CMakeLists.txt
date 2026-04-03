@@ -3758,6 +3758,9 @@ set(CORE_LIBS ${ZLIB_LIBRARIES} ${CORE_LIBS})
 # *****************************************************************************************
 #           c-ares Library
 # *****************************************************************************************
+cmake_dependent_option(
+  CARES_BUILD_SHARED_LIBS "Build with shared c-ares library." ON
+  "USE_CARES; BUILD_SHARED_LIBS" OFF)
 
 if (USE_SYSTEM_CARES)
   find_package(PkgConfig)
@@ -3780,18 +3783,34 @@ if (USE_SYSTEM_CARES AND USE_CARES)
   set(SUPPORT_LIBS PkgConfig::CARES ${SUPPORT_LIBS})
 elseif (USE_CARES)
   message(STATUS "Compiling with bundled cares")
-  list(APPEND YASS_APP_FEATURES "c-ares")
   set(SUPPORT_DEFINITIONS
     HAVE_C_ARES
     ${SUPPORT_DEFINITIONS}
   )
   set(CARES_BUILD_TOOLS OFF CACHE BOOL "")
-  set(CARES_SHARED OFF CACHE BOOL "")
-  set(CARES_STATIC ON CACHE BOOL "")
-  set(CARES_STATIC_PIC ON CACHE BOOL "")
+  if (CARES_BUILD_SHARED_LIBS)
+    set(CARES_SHARED ON CACHE BOOL "")
+    set(CARES_STATIC OFF CACHE BOOL "")
+  else()
+    set(CARES_SHARED OFF CACHE BOOL "")
+    set(CARES_STATIC ON CACHE BOOL "")
+    set(CARES_STATIC_PIC ON CACHE BOOL "")
+  endif()
   set(CARES_BUILD_TESTS OFF CACHE BOOL "")
   set(CARES_INSTALL OFF CACHE BOOL "")
+  if (CARES_SHARED)
+    list(APPEND YASS_APP_FEATURES "c-ares (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "c-ares")
+  endif()
   add_subdirectory(third_party/c-ares EXCLUDE_FROM_ALL)
+
+  if (CARES_SHARED)
+    list(APPEND YASS_SHARED_LIBS c-ares)
+  endif()
+  if (WIN32)
+    set_target_properties(c-ares PROPERTIES PREFIX "")
+  endif()
 
   set(SUPPORT_LIBS c-ares ${SUPPORT_LIBS})
 endif()
