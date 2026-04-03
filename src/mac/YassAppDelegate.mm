@@ -35,13 +35,13 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
-#include "feature.h"
-#include "gui_variant.h"
 #include "mac/OptionViewController.h"
 #include "mac/YassViewController.h"
 #include "mac/YassWindowController.h"
 #include "mac/utils.h"
-#include "version.h"
+#include "_yass/feature.h"
+#include "_yass/gui_variant.h"
+#include "_yass/version.h"
 
 @interface YassAppDelegate ()
 - (std::string)SaveConfig;

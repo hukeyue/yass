@@ -46,7 +46,7 @@
 #include "net/asio.hpp"
 #include "net/padding.hpp"
 #include "net/resolver.hpp"
-#include "version.h"
+#include "_yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_DEFAULT;
