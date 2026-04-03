@@ -131,10 +131,10 @@ set(YASS_APP_COPYRIGHT "Copyright 2019-2026 Chilledheart. All rights reserved.")
 message(STATUS "Source Tag: ${YASS_APP_TAG}-${YASS_APP_SUBTAG}")
 message(STATUS "Source LastChange: ${YASS_APP_LAST_CHANGE}")
 
-set(APP_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/version.h")
+set(APP_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/version.h")
 configure_file("src/version.h.in" "${APP_VERSION_HEADER}" @ONLY)
 # for version.h
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 set(YASS_APP_FEATURES)
 
@@ -2472,12 +2472,8 @@ else()
   set(GUI_FLAVOUR "unspec")
 endif()
 
-set(GUI_VARIANT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/gui_variant.h")
+set(GUI_VARIANT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/gui_variant.h")
 configure_file("src/gui_variant.h.in" "${GUI_VARIANT_HEADER}" @ONLY)
-set(SUPPORT_INCLUDE_DIRS
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${SUPPORT_INCLUDE_DIRS}
-)
 
 # *****************************************************************************************
 #           Compiler compiler and link flags (common)
@@ -4652,7 +4648,7 @@ if (SERVER)
   endif()
 endif()
 
-set(APP_FEATURE_HEADER "${CMAKE_CURRENT_BINARY_DIR}/feature.h")
+set(APP_FEATURE_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/feature.h")
 configure_file("src/feature.h.in" "${APP_FEATURE_HEADER}" @ONLY)
 message(STATUS "Enabled Feature: ${YASS_APP_FEATURES}")
 
