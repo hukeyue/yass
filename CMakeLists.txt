@@ -3413,15 +3413,18 @@ target_compile_definitions(asio_core PUBLIC ASIO_NO_TYPEID)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_EXCEPTIONS)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_TS_EXECUTORS)
 if (ASIO_BUILD_SHARED_LIBS)
+  # (Note: If symbols are hidden, extra care
+  #  must be taken to ensure that Asio types are not passed across shared
+  #  library API boundaries.)
   target_compile_definitions(asio_core PUBLIC ASIO_DYN_LINK)
 else()
   target_compile_definitions(asio_core PUBLIC ASIO_SEPARATE_COMPILATION)
+  # forward libcxx present
+  # we control the visiblity
+  target_compile_definitions(asio_core PUBLIC ASIO_DISABLE_VISIBILITY)
 endif()
 target_compile_definitions(asio_core PUBLIC ASIO_NO_DEPRECATED)
 target_compile_definitions(asio_core PRIVATE ASIO_NO_SSL)
-# forward libcxx present
-# we control the visiblity
-target_compile_definitions(asio_core PUBLIC ASIO_DISABLE_VISIBILITY)
 # both of asio and quiche use std::allocator<void>
 if (MSVC AND NOT USE_LIBCXX)
   target_compile_definitions(asio_core PUBLIC _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING)
