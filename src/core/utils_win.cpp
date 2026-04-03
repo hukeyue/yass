@@ -321,6 +321,37 @@ static const wchar_t* kDllWhiteList[] = {
 #undef DLL_NAME
 #endif // HAVE_LIBCXX
 
+// zlib
+#ifdef HAVE_ZLIB
+#define DLL_NAME "zlib" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_ZLIB
+
+// nghttp2
+#ifdef HAVE_NGHTTP2
+#define DLL_NAME "nghttp2" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_NGHTTP2
+
+// jsoncpp
+#define DLL_NAME "jsoncpp" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+// c-ares
+#ifdef HAVE_C_ARES
+#define DLL_NAME "cares" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_C_ARES
+
+// asio
+#define DLL_NAME "asio" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
 #if defined(_MSC_VER) && defined(_MSC_DYNAMIC_CRT) && defined(_DEBUG)
     // msvc debug runtime, still searched current directory
     // under dll search security mode
