@@ -1,4 +1,5 @@
 usr/libexec/yass/libc++.so
+usr/libexec/yass/libcares.so
 usr/libexec/yass/libcrypto.so
 usr/libexec/yass/libjsoncpp.so
 usr/libexec/yass/libmbedcrypto.so
