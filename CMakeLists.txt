@@ -2681,6 +2681,12 @@ if (USE_LTO_CMAKE)
     PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+if (ABSL_BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "abseil-cpp (dll)")
+else()
+  list(APPEND YASS_APP_FEATURES "abseil-cpp")
+endif()
+
 # *****************************************************************************************
 #           tbbmalloc Library
 # *****************************************************************************************
@@ -3236,6 +3242,12 @@ endforeach()
 
 if (BUILD_SHARED_LIBS)
   list(APPEND YASS_SHARED_LIBS ${boringssl_LIBS})
+endif()
+
+if (BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "boringssl (dll)")
+else()
+  list(APPEND YASS_APP_FEATURES "boringssl")
 endif()
 
 set(SUPPORT_LIBS ${boringssl_LIBS} ${SUPPORT_LIBS})
