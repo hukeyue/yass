@@ -3738,6 +3738,9 @@ add_protoc(protoc yass)
 # *****************************************************************************************
 #           Zlib Library
 # *****************************************************************************************
+cmake_dependent_option(
+  ZLIB_BUILD_SHARED_LIBS "Build with shared zlib library." ON
+  "USE_ZLIB; BUILD_SHARED_LIBS" OFF)
 
 if (USE_SYSTEM_ZLIB)
   find_package(PkgConfig)
@@ -3762,12 +3765,12 @@ if (USE_SYSTEM_ZLIB)
 elseif(USE_ZLIB)
   message(STATUS "Compiling with bundled zlib")
   add_subdirectory(third_party/zlib EXCLUDE_FROM_ALL)
-  if (BUILD_SHARED_LIBS)
+  if (ZLIB_BUILD_SHARED_LIBS)
     list(APPEND YASS_APP_FEATURES "zlib (dll)")
   else()
     list(APPEND YASS_APP_FEATURES "zlib")
   endif()
-  if (BUILD_SHARED_LIBS)
+  if (ZLIB_BUILD_SHARED_LIBS)
     list(APPEND YASS_SHARED_LIBS zlib)
   endif()
   if (WIN32)

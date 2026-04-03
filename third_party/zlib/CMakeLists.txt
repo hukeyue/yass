@@ -56,11 +56,15 @@ if (ZLIB_ENABLE_INTEL_QAT_COMPRESSION)
   add_compile_definitions(QAT_COMPRESSION_ENABLED)
 endif()
 
-add_library(zlib ${zlib_SRCS})
+if (ZLIB_BUILD_SHARED_LIBS)
+  add_library(zlib SHARED ${zlib_SRCS})
+else()
+  add_library(zlib STATIC ${zlib_SRCS})
+endif()
 
 target_include_directories(zlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-if (BUILD_SHARED_LIBS)
+if (ZLIB_BUILD_SHARED_LIBS)
   target_compile_definitions(zlib PUBLIC ZLIB_DLL)
 endif()
 
