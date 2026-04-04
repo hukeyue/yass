@@ -14,11 +14,11 @@ we are following [chromium's release schedule](https://chromiumdash.appspot.com/
 _PLANNED BUILDS:_
 - M150's Release (1.26.x) will become Stable Release _from Jun 30, 2026_ (Extended Support).
 - M149's Release (1.25.x) will become Stable Release _from Jun 2, 2026_.
-- M148's Release (1.24.x) will become Stable Release _from May 5, 2026_ (Extended Support).
-- M147's Release (1.23.x) will become Stable Release _from Apr 7, 2026_.
 
 _LANDED BUILDS_(signed against new certificates)_:_
-- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.10) has become Stable Release _from Mar 10, 2026_ (Extended Support).
+- [M148's Release (1.24.x)](https://github.com/hukeyue/yass/releases/tag/1.24.0) will become Stable Release _from May 5, 2026_ (Extended Support).
+- M147's Release (1.23.x) will become Stable Release _from Apr 7, 2026_.
+- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.11) has become Stable Release _from Mar 10, 2026_ (Extended Support).
 - M145's Release (1.21.x) has become Stable Release _from Feb 10, 2025_.
 - [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.5) has become Stable Release _from Jan 13, 2026_ (Extended Support).
 - M143's Release (1.19.x) has become Stable Release _from Dec 16, 2025_.
@@ -35,14 +35,25 @@ _BAKED BUILDS_(signed with baked certificates)_:_
 - [Latest M131's Release (1.15.x)](https://github.com/hukeyue/yass/releases/tag/1.15.4) has become Stable Release since _Nov 12, 2024_.
 
 ### Prebuilt binaries (Supported platforms)
-- GTK3 [download rpm][gtk3_rpm_url] or [download deb][gtk3_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
+- GTK3 for AMD64 [download rpm][gtk3_rpm_url] or [download deb][gtk3_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 16.04_)
 - GTK3 for i686 [download i686 deb][gtk3_i686_deb_url] (minimum requirement: _Ubuntu 16.04 Xenial_)
 - GTK3 for ARM64 [download arm64 deb][gtk3_arm64_deb_url] (minimum requirement: _Ubuntu 18.04 Bionic_)
 - GTK3 for RISCV64 [download riscv64 deb][gtk3_riscv64_deb_url] (minimum requirement: _Debian 13 Trixie_)
 - CLI for LOONG64 [download loong64 deb][cli_loong64_deb_url] (minimum requirement: _Debian 14 Forky/Sid_)
-- Qt5 [download rpm][qt5_rpm_url] or [download deb][qt5_deb_url] (minimum requirement: _CentOS 8_ or _Ubuntu 16.04_)
-- GTK4 [download rpm][gtk4_rpm_url] or [download deb][gtk4_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 22.04_)
-- Qt6 [download rpm][qt6_rpm_url] or [download deb][qt6_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ with epel or _Ubuntu 22.04_)
+- Qt5 for AMD64 [download rpm][qt5_rpm_url] or [download deb][qt5_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 16.04_)
+- GTK4 for AMD64 [download rpm][gtk4_rpm_url] or [download deb][gtk4_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 22.04_)
+- Qt6 for AMD64 [download rpm][qt6_rpm_url] or [download deb][qt6_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ with epel or _Ubuntu 22.04_)
+
+> please download and install yass-common package (list below) as well
+
+- GTK3 Common for AMD64 [download rpm][gtk3_common_rpm_url] or [download deb][gtk3_common_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 16.04_)
+- GTK3 Common for i686 [download i686 deb][gtk3_i686_common_deb_url] (minimum requirement: _Ubuntu 16.04 Xenial_)
+- GTK3 Common for ARM64 [download arm64 deb][gtk3_arm64_common_deb_url] (minimum requirement: _Ubuntu 18.04 Bionic_)
+- GTK3 Common for RISCV64 [download riscv64 deb][gtk3_riscv64_common_deb_url] (minimum requirement: _Debian 13 Trixie_)
+- CLI Common for LOONG64 [download loong64 deb][cli_loong64_common_deb_url] (minimum requirement: _Debian 14 Forky/Sid_)
+- Qt5 Common for AMD64 [download rpm][qt5_common_rpm_url] or [download deb][qt5_common_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 16.04_)
+- GTK4 Common for AMD64 [download rpm][gtk4_common_rpm_url] or [download deb][gtk4_common_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ or _Ubuntu 22.04_)
+- GTK4 Common for AMD64 [download rpm][qt6_common_rpm_url] or [download deb][qt6_common_deb_url] (minimum requirement: _openSUSE Leap 15.5_, _CentOS 9_ with epel or _Ubuntu 22.04_)
 
 [![aur yass-proxy-gtk3](https://img.shields.io/aur/version/yass-proxy-gtk3)](https://aur.archlinux.org/packages/yass-proxy-gtk3)
 [![aur yass-proxy-qt5](https://img.shields.io/aur/version/yass-proxy-qt5)](https://aur.archlinux.org/packages/yass-proxy-qt5)
@@ -180,51 +191,64 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [mlkem]: https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/
 [kyber]: https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/
 
-[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3.el8.x86_64.1.22.10.rpm
-[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-16.04-xenial_amd64.1.22.10.deb
-[gtk3_i686_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-16.04-xenial_i386.1.22.10.deb
-[gtk3_arm64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-ubuntu-18.04-bionic_arm64.1.22.10.deb
-[gtk3_riscv64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk3-debian-13-trixie_riscv64.1.22.10.deb
-[cli_loong64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-client-debian-sid_loong64.1.22.10.deb
-[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt5.el8.x86_64.1.22.10.rpm
-[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt5-ubuntu-16.04-xenial_amd64.1.22.10.deb
-[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk4.lp155.x86_64.1.22.10.rpm
-[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-gtk4-ubuntu-22.04-jammy_amd64.1.22.10.deb
-[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt6.lp155.x86_64.1.22.10.rpm
-[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-qt6-ubuntu-22.04-jammy_amd64.1.22.10.deb
+[gtk3_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk3.lp155.x86_64.1.24.0.rpm
+[gtk3_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk3-ubuntu-16.04-xenial_amd64.1.24.0.deb
+[gtk3_i686_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk3-ubuntu-16.04-xenial_i386.1.24.0.deb
+[gtk3_arm64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk3-ubuntu-18.04-bionic_arm64.1.24.0.deb
+[gtk3_riscv64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk3-debian-13-trixie_riscv64.1.24.0.deb
+[cli_loong64_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-client-debian-sid_loong64.1.24.0.deb
+[qt5_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-qt5.lp155.x86_64.1.24.0.rpm
+[qt5_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-qt5-ubuntu-16.04-xenial_amd64.1.24.0.deb
+[gtk4_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk4.lp155.x86_64.1.24.0.rpm
+[gtk4_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-gtk4-ubuntu-22.04-jammy_amd64.1.24.0.deb
+[qt6_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-qt6.lp155.x86_64.1.24.0.rpm
+[qt6_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-qt6-ubuntu-22.04-jammy_amd64.1.24.0.deb
 
-[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-x86_64-1.22.10.flatpak
+[gtk3_common_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common.lp155.x86_64.1.24.0.rpm
+[gtk3_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-16.04-xenial_amd64.1.24.0.deb
+[gtk3_i686_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-16.04-xenial_i386.1.24.0.deb
+[gtk3_arm64_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-18.04-bionic_arm64.1.24.0.deb
+[gtk3_riscv64_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-debian-13-trixie_riscv64.1.24.0.deb
+[cli_loong64_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-debian-sid_loong64.1.24.0.deb
+[qt5_common_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common.lp155.x86_64.1.24.0.rpm
+[qt5_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-16.04-xenial_amd64.1.24.0.deb
+[gtk4_common_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common.lp155.x86_64.1.24.0.rpm
+[gtk4_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-22.04-jammy_amd64.1.24.0.deb
+[qt6_common_rpm_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common.lp155.x86_64.1.24.0.rpm
+[qt6_common_deb_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-common-ubuntu-22.04-jammy_amd64.1.24.0.deb
 
-[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-amd64-1.22.10.tgz
-[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-amd64-1.22.10.tgz
-[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-arm64-1.22.10.tgz
-[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-loongarch64-1.22.10.tgz
-[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-riscv64-1.22.10.tgz
-[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-release-riscv32-1.22.10.tgz
+[qt6_flatpak_x86_64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-x86_64-1.24.0.flatpak
 
-[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-x86_64-1.22.10.tgz
-[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-i486-1.22.10.tgz
-[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-openwrt-release-aarch64-1.22.10.tgz
+[cli_tgz_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-amd64-1.24.0.tgz
+[cli_tgz_i386_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-amd64-1.24.0.tgz
+[cli_tgz_arm64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-arm64-1.24.0.tgz
+[cli_tgz_loongarch64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-loongarch64-1.24.0.tgz
+[cli_tgz_riscv64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-riscv64-1.24.0.tgz
+[cli_tgz_riscv32_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-release-riscv32-1.24.0.tgz
 
-[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-amd64-1.22.10.tgz
-[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-i386-1.22.10.tgz
-[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-aarch64-1.22.10.tgz
-[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass_cli-linux-musl-release-armhf-1.22.10.tgz
+[cli_openwrt_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-openwrt-release-x86_64-1.24.0.tgz
+[cli_openwrt_i486_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-openwrt-release-i486-1.24.0.tgz
+[cli_openwrt_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-openwrt-release-aarch64-1.24.0.tgz
 
-[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-android-release-arm64-1.22.10.apk
-[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-android-release-arm-1.22.10.apk
+[cli_musl_amd64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-musl-release-amd64-1.24.0.tgz
+[cli_musl_i386_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-musl-release-i386-1.24.0.tgz
+[cli_musl_aarch64_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-musl-release-aarch64-1.24.0.tgz
+[cli_musl_armhf_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass_cli-linux-musl-release-armhf-1.24.0.tgz
 
-[mingw_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-win7-release-x86_64-1.22.10-system-installer.exe
-[mingw_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-winxp-release-i686-1.22.10-system-installer.exe
-[mingw_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-mingw-release-aarch64-1.22.10-system-installer.exe
+[android_64_apk_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-android-release-arm64-1.24.0.apk
+[android_32_apk_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-android-release-arm-1.24.0.apk
 
-[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-x86-dynamic-1.22.10-user-installer.exe
-[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-x64-dynamic-1.22.10-user-installer.exe
-[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win-release-arm64-dynamic-1.22.10-user-installer.exe
+[mingw_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-mingw-win7-release-x86_64-1.24.0-system-installer.exe
+[mingw_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-mingw-winxp-release-i686-1.24.0-system-installer.exe
+[mingw_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-mingw-release-aarch64-1.24.0-system-installer.exe
 
-[windows_win7_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-win7-release-x64-dynamic-1.22.10-user-installer.exe
-[windows_winxp_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-winxp-release-x86-static-1.22.10-user-installer.exe
+[windows_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-win-release-x86-dynamic-1.24.0-user-installer.exe
+[windows_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-win-release-x64-dynamic-1.24.0-user-installer.exe
+[windows_arm64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-win-release-arm64-dynamic-1.24.0-user-installer.exe
 
-[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-macos-release-x64-1.22.10.dmg
-[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.22.10/yass-macos-release-arm64-1.22.10.dmg
+[windows_win7_64_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-win7-release-x64-dynamic-1.24.0-user-installer.exe
+[windows_winxp_32_installer_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-winxp-release-x86-static-1.24.0-user-installer.exe
+
+[macos_intel_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-macos-release-x64-1.24.0.dmg
+[macos_arm_dmg_url]: https://github.com/hukeyue/yass/releases/download/1.24.0/yass-macos-release-arm64-1.24.0.dmg
 [apple_developer]: https://developer.apple.com
