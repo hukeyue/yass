@@ -166,11 +166,11 @@ jobs:
       - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
+             -build-benchmark -build-test \
             -nc
       - name: Build Binary (SERVER)
         run: |
           ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
-             -build-benchmark -build-test \
             -nc
       - name: Install the Release certificate
         if: ${{ github.event_name == 'release' }}
