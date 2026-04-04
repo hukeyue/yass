@@ -90,15 +90,16 @@ class ContentServer {
         remote_password_(remote_password),
         remote_cipher_(remote_cipher),
         remote_padding_support_(remote_padding_support),
-        upstream_https_fallback_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
         https_fallback_(true),
         enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
         enable_tls_(true),
         upstream_certificate_(upstream_certificate),
+        upstream_ssl_config_(),
         certificate_(certificate),
         private_key_(private_key),
         delegate_(delegate) {
-    upstream_https_fallback_ &= T::Type == CONNECTION_FACTORY_CLIENT;
+    upstream_ssl_config_.allow_fallback_to_http11 = CIPHER_METHOD_IS_TLS(remote_cipher_);
+    upstream_ssl_config_.allow_fallback_to_http11 &= T::Type == CONNECTION_FACTORY_CLIENT;
     https_fallback_ &= T::Type == CONNECTION_FACTORY_SERVER;
     enable_upstream_tls_ &= T::Type == CONNECTION_FACTORY_CLIENT;
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
@@ -293,7 +294,7 @@ class ContentServer {
               T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
                         remote_username_, remote_password_, remote_cipher_,
                         remote_padding_support_,
-                        upstream_https_fallback_,
+                        upstream_ssl_config_,
                         ctx.https_fallback,
                         enable_upstream_tls_, ctx.enable_tls,
                         upstream_ssl_ctx_.get(), ssl_ctx_.get(),
@@ -504,7 +505,7 @@ class ContentServer {
       } else {
         protos = NextProtoToString(kProtoHTTP2);
       }
-    } else if (CIPHER_METHOD_IS_HTTPS_FALLBACK(cipher)) {
+    } else if (CIPHER_METHOD_IS_HTTPS(cipher)) {
       protos = NextProtoToString(kProtoHTTP11);
     } else {
       DLOG(FATAL) << "Alpn: Unexpected cipher: " << to_cipher_method_name(cipher);
@@ -546,6 +547,11 @@ class ContentServer {
         server->set_https_fallback(connection_id, true);
         *out = in + 1;
         *outlen = in[0];
+
+        // Enable ALPS for HTTP/1.1 with empty data.
+        std::vector<uint8_t> data;
+        SSL_add_application_settings(ssl, reinterpret_cast<const uint8_t*>(alpn.data()), alpn.size(), data.data(),
+                                     data.size());
         return SSL_TLSEXT_ERR_OK;
       }
       VLOG(2) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) skipped: " << alpn;
@@ -633,32 +639,25 @@ class ContentServer {
     // priorize h2 before http/1.1
     //
     // don't do it at SSLSocket::SSLSocket as we don't know the context (until we copy the protos array)
-    std::vector<unsigned char> alpn_vec;
+    NextProtoVector alpn_protos;
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(remote_cipher_)) {
-      if (upstream_https_fallback_) {
+      if (upstream_ssl_config_.allow_fallback_to_http11) {
         protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
-        alpn_vec = {2, 'h', '2', 8, 'h', 't', 't', 'p', '/', '1', '.', '1'};
+        alpn_protos = {kProtoHTTP2, kProtoHTTP11};
       } else {
         // ??? BoringSSL bugs, http1.1 will always be enabled
         protos = NextProtoToString(kProtoHTTP2);
-        alpn_vec = {2, 'h', '2'};
+        alpn_protos = {kProtoHTTP2};
       }
-    } else if (CIPHER_METHOD_IS_HTTPS_FALLBACK(remote_cipher_)) {
+    } else if (CIPHER_METHOD_IS_HTTPS(remote_cipher_)) {
       protos = NextProtoToString(kProtoHTTP11);
-      alpn_vec = {8, 'h', 't', 't', 'p', '/', '1', '.', '1'};
+      alpn_protos = {kProtoHTTP11};
     } else {
       DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_cipher_);
     }
-    int ret;
-    ret = SSL_CTX_set_alpn_protos(ctx, alpn_vec.data(), alpn_vec.size());
-    static_cast<void>(ret);
-    DCHECK_EQ(ret, 0);
-    if (ret) {
-      ec = asio::error::invalid_argument;
-      return;
-    }
     VLOG(1) << "Alpn support (client) enabled: " << protos;
+    upstream_ssl_config_.alpn_protos = std::move(alpn_protos);
 
     if (upstream_certificate_.empty()) {
       upstream_certificate_ = g_certificate_chain_content;
@@ -747,13 +746,13 @@ class ContentServer {
   cipher_method remote_cipher_;
   bool remote_padding_support_;
 
-  bool upstream_https_fallback_;
   bool https_fallback_;
   bool enable_upstream_tls_;
   bool enable_tls_;
   std::string upstream_certificate_;
   bssl::UniquePtr<SSL_CTX> upstream_ssl_ctx_;
   std::unique_ptr<SSLClientSessionCache> ssl_client_session_cache_;
+  SSLConfig upstream_ssl_config_;
 
   std::string certificate_;
   std::string private_key_;

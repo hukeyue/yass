@@ -20,28 +20,36 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2019-2026 Chilledheart  */
+/* Copyright (c) 2023-2026 Chilledheart  */
 
-#ifndef H_CONFIG_CONFIG_TLS
-#define H_CONFIG_CONFIG_TLS
+#include "net/ssl_config.hpp"
 
-#include <absl/flags/declare.h>
-#include <string>
+#include <absl/container/flat_hash_map.h>
+#include "config/config_tls.hpp"
 
-extern std::string g_certificate_chain_content;
-extern std::string g_private_key_content;
-ABSL_DECLARE_FLAG(std::string, certificate_chain_file);
-ABSL_DECLARE_FLAG(std::string, private_key_file);
-ABSL_DECLARE_FLAG(std::string, private_key_password);
-ABSL_DECLARE_FLAG(bool, insecure_mode);
-ABSL_DECLARE_FLAG(std::string, cacert);
-ABSL_DECLARE_FLAG(std::string, capath);
-ABSL_DECLARE_FLAG(bool, tls13_early_data);
-ABSL_DECLARE_FLAG(bool, enable_post_quantum_kyber);
-ABSL_DECLARE_FLAG(bool, use_new_alps_codepoint_http2);
+using namespace std::string_view_literals;
 
-namespace config {
-bool ReadTLSConfigFile();
-}  // namespace config
+namespace net {
 
-#endif  // H_CONFIG_CONFIG_TLS
+std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos) {
+  std::vector<uint8_t> wire_protos;
+  for (const NextProto next_proto : next_protos) {
+    const std::string_view proto = NextProtoToString(next_proto);
+    if (proto.size() > 255) {
+      LOG(WARNING) << "Ignoring overlong ALPN protocol: " << proto;
+      continue;
+    }
+    if (proto.size() == 0) {
+      LOG(WARNING) << "Ignoring empty ALPN protocol";
+      continue;
+    }
+    wire_protos.push_back(proto.size());
+    for (const char ch : proto) {
+      wire_protos.push_back(static_cast<uint8_t>(ch));
+    }
+  }
+
+  return wire_protos;
+}
+
+}  // namespace net

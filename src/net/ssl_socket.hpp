@@ -37,38 +37,9 @@
 #include "net/openssl_util.hpp"
 #include "net/protocol.hpp"
 #include "net/ssl_client_session_cache.hpp"
+#include "net/ssl_config.hpp"
 
 namespace net {
-
-constexpr const std::string_view kSSLDefaultCiphersList = "ALL:!aPSK:!ECDSA+SHA1:!3DES";
-
-// This enum is persisted into histograms. Values may not be renumbered.
-enum class SSLHandshakeDetails {
-  // TLS 1.2 (or earlier) full handshake (2-RTT)
-  kTLS12Full = 0,
-  // TLS 1.2 (or earlier) resumption (1-RTT)
-  kTLS12Resume = 1,
-  // TLS 1.2 full handshake with False Start (1-RTT)
-  kTLS12FalseStart = 2,
-  // 3 was previously used for TLS 1.3 full handshakes with or without HRR.
-  // 4 was previously used for TLS 1.3 resumptions with or without HRR.
-  // TLS 1.3 0-RTT handshake (0-RTT)
-  kTLS13Early = 5,
-  // TLS 1.3 full handshake without HelloRetryRequest (1-RTT)
-  kTLS13Full = 6,
-  // TLS 1.3 resumption handshake without HelloRetryRequest (1-RTT)
-  kTLS13Resume = 7,
-  // TLS 1.3 full handshake with HelloRetryRequest (2-RTT)
-  kTLS13FullWithHelloRetryRequest = 8,
-  // TLS 1.3 resumption handshake with HelloRetryRequest (2-RTT)
-  kTLS13ResumeWithHelloRetryRequest = 9,
-  kMaxValue = kTLS13ResumeWithHelloRetryRequest,
-};
-
-// A OnceCallback specialization that takes a single int parameter. Usually this
-// is used to report a byte count or network error code.
-using CompletionOnceCallback = absl::AnyInvocable<void(int)>;
-using WaitCallback = absl::AnyInvocable<void(asio::error_code ec)>;
 
 class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
  public:
@@ -77,7 +48,7 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
             asio::io_context* io_context,
             asio::ip::tcp::socket* socket,
             SSL_CTX* ssl_ctx,
-            bool https_fallback,
+            const SSLConfig& ssl_config,
             const std::string& host_name,
             int port);
   ~SSLSocket();
@@ -140,6 +111,7 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   bool IsCachingEnabled() const { return ssl_client_session_cache_ != nullptr; }
 
   std::pair<std::string, int> host_and_port_;
+  SSLConfig ssl_config_;
   SSLClientSessionCache* ssl_client_session_cache_;
 
   CompletionOnceCallback user_connect_callback_;

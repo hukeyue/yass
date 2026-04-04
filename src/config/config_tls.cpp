@@ -68,6 +68,8 @@ ABSL_FLAG(bool,
           true,
           "Enables post-quantum key-agreements (i.e. ML-KEM) in TLS 1.3 connections.");
 
+ABSL_FLAG(bool, use_new_alps_codepoint_http2, true, "Use New Alps Codepoint Http2.");
+
 namespace config {
 bool ReadTLSConfigFile() {
   do {

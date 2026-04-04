@@ -26,6 +26,7 @@
 #define H_NET_SSL_STREAM
 
 #include "net/ssl_client_session_cache.hpp"
+#include "net/ssl_config.hpp"
 #include "net/stream.hpp"
 
 namespace net {
@@ -48,7 +49,7 @@ class ssl_stream : public stream {
   /// \param host_sni the sni name used with endpoint
   /// \param port the sni port used with endpoint
   /// \param channel the underlying data channel used in stream
-  /// \param https_fallback the data channel falls back to https (alpn)
+  /// \param ssl_config the data channel's ssl config
   /// \param ssl_ctx the ssl context object for tls data transfer
   ssl_stream(int ssl_socket_data_index,
              SSLClientSessionCache* ssl_client_session_cache,
@@ -57,19 +58,19 @@ class ssl_stream : public stream {
              const std::string& host_sni,
              uint16_t port,
              Channel* channel,
-             bool https_fallback,
+             SSLConfig ssl_config,
              SSL_CTX* ssl_ctx)
       : stream(io_context, host_ips, host_sni, port, channel),
         enable_tls_(true),
         ssl_socket_data_index_(ssl_socket_data_index),
         ssl_client_session_cache_(ssl_client_session_cache),
         ssl_ctx_(ssl_ctx),
-        https_fallback_(https_fallback),
+        ssl_config_(ssl_config),
         ssl_socket_(nullptr) {}
 
   ~ssl_stream() override {}
 
-  bool https_fallback() const override { return https_fallback_; }
+  NextProto negotiated_protocol() const override { return ssl_socket_->negotiated_protocol(); }
 
  protected:
   void s_wait_read(handle_t&& cb) override { ssl_socket_->WaitRead(std::move(cb)); }
@@ -103,7 +104,7 @@ class ssl_stream : public stream {
     }
     scoped_refptr<stream> self(this);
     ssl_socket_ = SSLSocket::Create(ssl_socket_data_index_, ssl_client_session_cache_, &io_context_, &socket_, ssl_ctx_,
-                                    https_fallback_, host_sni_, port_);
+                                    ssl_config_, host_sni_, port_);
     ssl_socket_->Connect([this, channel, self](int rv) {
       if (closed_) {
         DCHECK(!user_connect_callback_);
@@ -118,10 +119,10 @@ class ssl_stream : public stream {
 
       auto alpn = ssl_socket_->negotiated_protocol();
       VLOG(1) << "Alpn selected (client): " << NextProtoToString(alpn);
-      https_fallback_ = alpn == kProtoHTTP11;
       if (alpn == kProtoHTTP11) {
         VLOG(2) << "Alpn fallback to https protocol (client)";
       }
+      ssl_config_.alpn_protos = {alpn};
 
       scoped_refptr<stream> self(this);
       // Also queue a ConfirmHandshake. It should also be blocked on ServerHello.
@@ -153,7 +154,7 @@ class ssl_stream : public stream {
   SSLClientSessionCache* const ssl_client_session_cache_;
   SSL_CTX* const ssl_ctx_;
 
-  bool https_fallback_;
+  SSLConfig ssl_config_;
   scoped_refptr<SSLSocket> ssl_socket_;
 };
 

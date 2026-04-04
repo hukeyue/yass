@@ -200,7 +200,7 @@ class Connection {
   /// \param remote_password the password used with remote endpoint
   /// \param remote_cipher the cipher used with remote endpoint
   /// \param remote_padding_support the padding support used with remote endpoint
-  /// \param upstream_https_fallback the data channel (upstream) falls back to https (alpn)
+  /// \param upstream_ssl_config ssl config such as alpn used for upstream
   /// \param https_fallback the data channel falls back to https (alpn)
   /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
   /// \param enable_tls the underlying data channel is using tls
@@ -219,7 +219,7 @@ class Connection {
              std::string_view remote_password,
              cipher_method remote_cipher,
              bool remote_padding_support,
-             bool upstream_https_fallback,
+             const SSLConfig& upstream_ssl_config,
              bool https_fallback,
              bool enable_upstream_tls,
              bool enable_tls,
@@ -238,7 +238,7 @@ class Connection {
         remote_password_(remote_password),
         remote_cipher_(remote_cipher),
         remote_padding_support_(remote_padding_support),
-        upstream_https_fallback_(upstream_https_fallback),
+        upstream_ssl_config_(upstream_ssl_config),
         enable_upstream_tls_(enable_upstream_tls),
         enable_tls_(enable_tls),
         upstream_ssl_ctx_(upstream_ssl_ctx),
@@ -360,8 +360,8 @@ class Connection {
   /// the ssl client context cache
   SSLClientSessionCache* ssl_client_session_cache_ = nullptr;
 
-  /// if https fallback
-  bool upstream_https_fallback_;
+  /// ssl config such as alpn used for upstream
+  SSLConfig upstream_ssl_config_;
   /// if enable ssl layer
   bool enable_upstream_tls_;
   bool enable_tls_;
