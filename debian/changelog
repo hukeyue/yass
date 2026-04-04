@@ -1,3 +1,7 @@
+yass (1.24.0-1) UNRELEASED; urgency=medium
+
+  * bump to chromium 148 dependents.
+ -- Chilledheart <hukeyue@vip.163.com>  Sat, 4 Apr 2026 13:16:54 +0800
 yass (1.22.11-1) UNRELEASED; urgency=medium
 
   * enable component build.
