@@ -1,3 +1,7 @@
+yass (1.24.1-1) UNRELEASED; urgency=medium
+
+  * net: add --use_new_alps_codepoint_http2 option (default).
+ -- Chilledheart <hukeyue@vip.163.com>  Sat, 4 Apr 2026 19:46:36 +0800
 yass (1.24.0-1) UNRELEASED; urgency=medium
 
   * bump to chromium 148 dependents.
