@@ -31,40 +31,6 @@ using namespace std::string_view_literals;
 
 namespace net {
 
-namespace {
-// This constant can be any non-negative/non-zero value (eg: it does not
-// overlap with any value of the net::Error range, including net::OK).
-const int kSSLClientSocketNoPendingResult = 1;
-// This constant can be any non-negative/non-zero value (eg: it does not
-// overlap with any value of the net::Error range, including net::OK).
-const int kCertVerifyPending = 1;
-// Default size of the internal BoringSSL buffers.
-const int kDefaultOpenSSLBufferSize = 17 * 1024;
-}  // namespace
-
-#if 0
-static std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos) {
-  std::vector<uint8_t> wire_protos;
-  for (const NextProto next_proto : next_protos) {
-    const std::string_view proto = NextProtoToString(next_proto);
-    if (proto.size() > 255) {
-      LOG(WARNING) << "Ignoring overlong ALPN protocol: " << proto;
-      continue;
-    }
-    if (proto.size() == 0) {
-      LOG(WARNING) << "Ignoring empty ALPN protocol";
-      continue;
-    }
-    wire_protos.push_back(proto.size());
-    for (const char ch : proto) {
-      wire_protos.push_back(static_cast<uint8_t>(ch));
-    }
-  }
-
-  return wire_protos;
-}
-#endif
-
 inline SSLClientSessionCache::Key SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
   SSLClientSessionCache::Key key;
   key.server = host_and_port_;
@@ -77,13 +43,14 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
                      asio::io_context* io_context,
                      asio::ip::tcp::socket* socket,
                      SSL_CTX* ssl_ctx,
-                     bool https_fallback,
+                     const SSLConfig& ssl_config,
                      const std::string& host_name,
                      int port)
     : ssl_socket_data_index_(ssl_socket_data_index),
       io_context_(io_context),
       stream_socket_(socket),
       host_and_port_(host_name, port),
+      ssl_config_(ssl_config),
       ssl_client_session_cache_(ssl_client_session_cache),
       early_data_enabled_(absl::GetFlag(FLAGS_tls13_early_data)),
       pending_read_error_(kSSLClientSocketNoPendingResult) {
@@ -136,27 +103,12 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
 
   SSL_set_early_data_enabled(ssl_.get(), early_data_enabled_);
 
-  // OpenSSL defaults some options to on, others to off. To avoid ambiguity,
-  // set everything we care about to an absolute value.
-  SslSetClearMask options;
-  options.ConfigureFlag(SSL_OP_NO_COMPRESSION, true);
+  // TODO(crbug.com/41393419): Make this option not a no-op in BoringSSL and
+  // then disable it.
+  SSL_set_options(ssl_.get(), SSL_OP_LEGACY_SERVER_CONNECT);
 
-  // TODO(joth): Set this conditionally, see http://crbug.com/55410
-  options.ConfigureFlag(SSL_OP_LEGACY_SERVER_CONNECT, true);
-
-  SSL_set_options(ssl_.get(), options.set_mask);
-  SSL_clear_options(ssl_.get(), options.clear_mask);
-
-  // Same as above, this time for the SSL mode.
-  SslSetClearMask mode;
-
-  mode.ConfigureFlag(SSL_MODE_RELEASE_BUFFERS, true);
-  mode.ConfigureFlag(SSL_MODE_CBC_RECORD_SPLITTING, true);
-
-  mode.ConfigureFlag(SSL_MODE_ENABLE_FALSE_START, true);
-
-  SSL_set_mode(ssl_.get(), mode.set_mask);
-  SSL_clear_mode(ssl_.get(), mode.clear_mask);
+  SSL_set_mode(ssl_.get(),
+               SSL_MODE_CBC_RECORD_SPLITTING | SSL_MODE_ENABLE_FALSE_START);
 
   std::string command(kSSLDefaultCiphersList);
 
@@ -179,6 +131,9 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
     LOG(FATAL) << "SSL_set_cipher_list('" << command << "') failed";
   }
 
+  // Disable SHA-1 server signatures.
+  // TODO(crbug.com/boringssl/699): Once the default is flipped in BoringSSL, we
+  // no longer need to override it.
   static const uint16_t kVerifyPrefs[] = {
       SSL_SIGN_ECDSA_SECP256R1_SHA256, SSL_SIGN_RSA_PSS_RSAE_SHA256, SSL_SIGN_RSA_PKCS1_SHA256,
       SSL_SIGN_ECDSA_SECP384R1_SHA384, SSL_SIGN_RSA_PSS_RSAE_SHA384, SSL_SIGN_RSA_PKCS1_SHA384,
@@ -188,22 +143,20 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
     LOG(FATAL) << "SSL_set_verify_algorithm_prefs failed";
   }
 
-#if 0
-  NextProtoVector alpn_protos = {kProtoHTTP2, kProtoHTTP11};
-  if (https_fallback) {
-    alpn_protos = {kProtoHTTP11};
-  }
-  std::vector<uint8_t> wire_protos = SerializeNextProtos(alpn_protos);
+  std::vector<uint8_t> wire_protos = SerializeNextProtos(ssl_config_.alpn_protos);
   SSL_set_alpn_protos(ssl_.get(), wire_protos.data(), wire_protos.size());
-#endif
 
-  // Enable ALPS for HTTP/2 with empty data.
-  if (!https_fallback) {
-    std::string_view proto_string = NextProtoToString(kProtoHTTP2);
+  // SSL_set_alps_use_new_codepoint configures whether to use the new ALPS
+  // codepoint. By default, the new codepoint is used.
+  SSL_set_alps_use_new_codepoint(ssl_.get(), absl::GetFlag(FLAGS_use_new_alps_codepoint_http2));
+
+  // Enable ALPS for HTTP/2 and HTTP/1.1 with empty data.
+  for (auto proto : ssl_config_.alpn_protos) {
+    std::string_view proto_string = NextProtoToString(proto);
     std::vector<uint8_t> data;
     if (!SSL_add_application_settings(ssl_.get(), reinterpret_cast<const uint8_t*>(proto_string.data()),
                                       proto_string.size(), data.data(), data.size())) {
-      LOG(FATAL) << "SSL_add_application_settings failed";
+      LOG(FATAL) << "SSL_add_application_settings failed" << proto_string;
     };
   }
 
@@ -220,7 +173,15 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
 
   SSL_set_shed_handshake_config(ssl_.get(), 1);
 
+  // TODO placeholder for ECH
+  // SSL_set_enable_ech_grease(ssl_.get(), 1);
+
   SSL_set_permute_extensions(ssl_.get(), 1);
+
+  // Configure BoringSSL to send Trust Anchor IDs, if provided.
+
+  // The compliance policy must be the last thing configured in order to have
+  // defined behavior.
 }
 
 int SSLSocket::Connect(CompletionOnceCallback callback) {

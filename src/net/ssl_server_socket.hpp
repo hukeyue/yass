@@ -35,13 +35,9 @@
 #include "net/net_errors.hpp"
 #include "net/openssl_util.hpp"
 #include "net/protocol.hpp"
+#include "net/ssl_config.hpp"
 
 namespace net {
-
-// A OnceCallback specialization that takes a single int parameter. Usually this
-// is used to report a byte count or network error code.
-using CompletionOnceCallback = absl::AnyInvocable<void(int)>;
-using WaitCallback = absl::AnyInvocable<void(asio::error_code ec)>;
 
 class SSLServerSocket : public gurl_base::RefCountedThreadSafe<SSLServerSocket> {
  public:

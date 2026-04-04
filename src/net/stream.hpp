@@ -414,7 +414,7 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
     resolver_.Cancel();
   }
 
-  virtual bool https_fallback() const { return false; }
+  virtual NextProto negotiated_protocol() const { return kProtoUnknown; }
 
  private:
   void on_try_next_endpoint(Channel* channel) {

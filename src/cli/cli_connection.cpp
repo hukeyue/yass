@@ -170,7 +170,7 @@ CliConnection::CliConnection(asio::io_context& io_context,
                              std::string_view remote_password,
                              cipher_method remote_cipher,
                              bool remote_padding_support,
-                             bool upstream_https_fallback,
+                             const SSLConfig& upstream_ssl_config,
                              bool https_fallback,
                              bool enable_upstream_tls,
                              bool enable_tls,
@@ -189,7 +189,7 @@ CliConnection::CliConnection(asio::io_context& io_context,
                  remote_password,
                  remote_cipher,
                  remote_padding_support,
-                 upstream_https_fallback,
+                 upstream_ssl_config,
                  https_fallback,
                  enable_upstream_tls,
                  enable_tls,
@@ -1202,7 +1202,7 @@ try_again:
     }
   } else
 #endif
-      if (upstream_https_fallback_) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     if (upstream_https_handshake_) {
       ReadUpstreamHttpsHandshake(buf.get(), ec);
       if (ec) {
@@ -1886,7 +1886,7 @@ after_read:
     data_frame_->AddChunk(buf.get());
   } else
 #endif
-      if (upstream_https_fallback_) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     upstream_.push_back(buf);
   } else {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
@@ -2208,7 +2208,8 @@ void CliConnection::OnConnect() {
   // create lazy
   if (enable_upstream_tls_) {
     channel_ = ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_, remote_host_ips_,
-                                  remote_host_sni_, remote_port_, this, upstream_https_fallback_, upstream_ssl_ctx_);
+                                  remote_host_sni_, remote_port_, this, upstream_ssl_config_,
+                                  upstream_ssl_ctx_);
 
   } else {
     channel_ = stream::create(*io_context_, remote_host_ips_, remote_host_sni_, remote_port_, this);
@@ -2256,7 +2257,7 @@ void CliConnection::OnStreamRead(GrowableIOBuffer* buf) {
     SendIfNotProcessing();
   } else
 #endif
-      if (upstream_https_fallback_) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     upstream_.push_back(buf);
   } else {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
@@ -2352,9 +2353,9 @@ void CliConnection::connected() {
           << " remote: established upstream connection with: " << remote_domain();
 
   bool http2 = CIPHER_METHOD_IS_HTTP2(method());
-  if (http2 && channel_->https_fallback()) {
+  if (channel_->negotiated_protocol() == kProtoHTTP11) {
     http2 = false;
-    upstream_https_fallback_ = true;
+    remote_cipher_ = CRYPTO_HTTPS;
   }
 
   // Create adapters
@@ -2370,7 +2371,7 @@ void CliConnection::connected() {
     padding_support_in_fact_ = padding_support();
   } else
 #endif
-      if (upstream_https_fallback_) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     // nothing to create
     // TODO should we support it?
     // padding_support_in_fact_ = padding_support();
@@ -2456,7 +2457,7 @@ void CliConnection::connected() {
     SendIfNotProcessing();
   } else
 #endif
-      if (upstream_https_fallback_) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     std::string hostname_and_port;
     std::string host;
     int port;

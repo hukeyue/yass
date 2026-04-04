@@ -4459,6 +4459,7 @@ set(SUPPORT_LIBS
 set(files
     src/net/network.cpp
     src/net/x509_util.cpp
+    src/net/ssl_config.cpp
     src/net/ssl_socket.cpp
     src/net/ssl_server_socket.cpp
     src/net/ssl_client_session_cache.cpp
@@ -4523,6 +4524,7 @@ set(hfiles
     src/net/stream.hpp
     src/net/ssl_stream.hpp
     src/net/x509_util.hpp
+    src/net/ssl_config.hpp
     src/net/ssl_socket.hpp
     src/net/ssl_server_socket.hpp
     src/net/ssl_client_session_cache.hpp
