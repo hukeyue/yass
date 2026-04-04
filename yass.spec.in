@@ -334,6 +334,9 @@ for embedded devices and low end boxes.
 /usr/libexec/%{name}/*
 
 %changelog
+* Sat Apr 4 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.11-1
+  - enable component build
+  - miscellaneous fixes
 * Sat Mar 28 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.10-1
   - miscellaneous fixes
 * Fri Mar 27 2026 Chilledheart <hukeyue@vip.163.com> - 1.22.9-1
