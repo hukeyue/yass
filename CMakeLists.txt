@@ -4281,7 +4281,6 @@ if (WIN32)
       # we are delayload network-related dlls
       "/DELAYLOAD:asio.dll"
       "/DELAYLOAD:cares.dll"
-      "/DELAYLOAD:nghttp2.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
@@ -4351,7 +4350,6 @@ if (WIN32)
       # we are delayload network-related dlls as they are causing troubles with mingw build
       "-Wl,--delayload=asio_${YASS_APP_NAME}.dll"
       "-Wl,--delayload=cares_${YASS_APP_NAME}.dll"
-      "-Wl,--delayload=nghttp2_${YASS_APP_NAME}.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
