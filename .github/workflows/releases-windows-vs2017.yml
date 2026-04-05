@@ -186,11 +186,14 @@ jobs:
           path: |
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
           compression-level: 9 # maximum compression
+      - name: Run tests (dummy)
+        run: |
+          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
+          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_server --version || exit /b
+          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass --version || exit /b
       - name: Run tests
         run: |
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_test || exit /b
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_server --version || exit /b
       - name: Run benchmarks
         run: |
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_benchmark || exit /b
