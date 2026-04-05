@@ -304,14 +304,6 @@ if (WIN32)
       COMPILE_FLAGS "-fno-builtin")
   endif()
 
-  # turn on win32 thread model manually
-  if (MINGW)
-    set(libcxx_PUBLIC_DEFINITIONS
-      ${libcxx_PUBLIC_DEFINITIONS}
-      "_LIBCPP_HAS_THREAD_API_WIN32"
-    )
-  endif()
-
   # Explicitly set version macros to Windows 7 to prevent libc++ from adding a
   # hard dependency on GetSystemTimePreciseAsFileTime, which was introduced in
   # Windows 8.
