@@ -54,26 +54,10 @@ index e9cedf8db..c93f8cb36 100644
    mutex(const mutex&)            = delete;
    mutex& operator=(const mutex&) = delete;
 diff --git a/include/__mutex/once_flag.h b/include/__mutex/once_flag.h
-index ad15b2eb6..45776a4bb 100644
+index ad15b2eb6..a53482a88 100644
 --- a/include/__mutex/once_flag.h
 +++ b/include/__mutex/once_flag.h
-@@ -11,6 +11,7 @@
- 
- #include <__config>
- #include <__memory/addressof.h>
-+#include <__thread/support.h>
- #include <__tuple/tuple_size.h>
- #include <__type_traits/invoke.h>
- #include <__utility/forward.h>
-@@ -48,11 +49,15 @@ _LIBCPP_HIDE_FROM_ABI void call_once(once_flag&, const _Callable&);
- #endif // _LIBCPP_CXX03_LANG
- 
- struct once_flag {
-+#if !_LIBCPP_HAS_THREAD_API_WIN32
-   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR once_flag() _NOEXCEPT : __state_(_Unset) {}
-+#else
-+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR once_flag() _NOEXCEPT : __state_(_LIBCPP_EXEC_ONCE_INITIALIZER) {}
-+#endif
+@@ -52,7 +52,7 @@ struct once_flag {
    once_flag(const once_flag&)            = delete;
    once_flag& operator=(const once_flag&) = delete;
  
@@ -82,74 +66,6 @@ index ad15b2eb6..45776a4bb 100644
    typedef uintptr_t _State_type;
  #else
    typedef unsigned long _State_type;
-@@ -113,6 +118,38 @@ void _LIBCPP_HIDE_FROM_ABI __call_once_proxy(void* __vp) {
-   (*__p)();
- }
- 
-+#if _LIBCPP_HAS_THREAD_API_WIN32
-+
-+#  ifndef _LIBCPP_CXX03_LANG
-+
-+template <class _Callable, class... _Args>
-+inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, _Callable&& __func, _Args&&... __args) {
-+  typedef tuple<_Callable&&, _Args&&...> _Gp;
-+  _Gp __f(std::forward<_Callable>(__func), std::forward<_Args>(__args)...);
-+  __call_once_param<_Gp> __p(__f);
-+  __libcpp_execute_once(reinterpret_cast<__libcpp_exec_once_flag*>(&__flag.__state_), &__p, &__call_once_proxy<_Gp>);
-+}
-+
-+#  else // _LIBCPP_CXX03_LANG
-+
-+template <class _Callable>
-+inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, _Callable& __func) {
-+  __call_once_param<_Callable> __p(__func);
-+  __libcpp_execute_once(
-+      reinterpret_cast<__libcpp_exec_once_flag*>(&__flag.__state_), &__p, &__call_once_proxy<_Callable>);
-+}
-+
-+template <class _Callable>
-+inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, const _Callable& __func) {
-+  __call_once_param<const _Callable> __p(__func);
-+  __libcpp_execute_once(
-+      reinterpret_cast<__libcpp_exec_once_flag*>(&__flag.__state_), &__p, &__call_once_proxy<const _Callable>);
-+}
-+
-+#  endif // _LIBCPP_CXX03_LANG
-+
-+#else // _LIBCPP_HAS_THREAD_API_WIN32
-+
- _LIBCPP_EXPORTED_FROM_ABI void __call_once(volatile once_flag::_State_type&, void*, void (*)(void*));
- 
- template <class _ValueType>
-@@ -124,7 +161,7 @@ inline _LIBCPP_HIDE_FROM_ABI _ValueType __libcpp_acquire_load(_ValueType const*
- #endif
- }
- 
--#ifndef _LIBCPP_CXX03_LANG
-+#  ifndef _LIBCPP_CXX03_LANG
- 
- template <class _Callable, class... _Args>
- inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, _Callable&& __func, _Args&&... __args) {
-@@ -136,7 +173,7 @@ inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, _Callable&& __fun
-   }
- }
- 
--#else // _LIBCPP_CXX03_LANG
-+#  else // _LIBCPP_CXX03_LANG
- 
- template <class _Callable>
- inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, _Callable& __func) {
-@@ -154,7 +191,9 @@ inline _LIBCPP_HIDE_FROM_ABI void call_once(once_flag& __flag, const _Callable&
-   }
- }
- 
--#endif // _LIBCPP_CXX03_LANG
-+#  endif // _LIBCPP_CXX03_LANG
-+
-+#endif // _LIBCPP_HAS_THREAD_API_WIN32
- 
- _LIBCPP_END_NAMESPACE_STD
- 
 diff --git a/include/__thread/support/windows.h b/include/__thread/support/windows.h
 index 558b5c81d..2f23223b7 100644
 --- a/include/__thread/support/windows.h
@@ -323,6 +239,34 @@ index b2f51aa81..8cc4b2d65 100644
    [[__nodiscard__]] _LIBCPP_HIDE_FROM_ABI native_handle_type native_handle() _NOEXCEPT { return __t_; }
  
    [[__nodiscard__]] static unsigned hardware_concurrency() _NOEXCEPT;
+diff --git a/src/call_once.cpp b/src/call_once.cpp
+index 237969aac..118d1f54a 100644
+--- a/src/call_once.cpp
++++ b/src/call_once.cpp
+@@ -27,6 +27,13 @@ _LIBCPP_BEGIN_NAMESPACE_STD
+ #if _LIBCPP_HAS_THREADS
+ static constinit __libcpp_mutex_t mut  = _LIBCPP_MUTEX_INITIALIZER;
+ static constinit __libcpp_condvar_t cv = _LIBCPP_CONDVAR_INITIALIZER;
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++static constinit __libcpp_exec_once_flag lock_once_ = _LIBCPP_EXEC_ONCE_INITIALIZER;
++static void static_lock_init() {
++  __libcpp_mutex_init(&mut);
++  __libcpp_condvar_init(&cv);
++}
++#endif
+ #endif
+ 
+ void __call_once(volatile once_flag::_State_type& flag, void* arg, void (*func)(void*)) {
+@@ -42,6 +49,9 @@ void __call_once(volatile once_flag::_State_type& flag, void* arg, void (*func)(
+ 
+ #else // !_LIBCPP_HAS_THREADS
+ 
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  __libcpp_execute_once(&lock_once_, static_lock_init);
++#endif
+   __libcpp_mutex_lock(&mut);
+   while (flag == once_flag::_Pending)
+     __libcpp_condvar_wait(&cv, &mut);
 diff --git a/src/condition_variable.cpp b/src/condition_variable.cpp
 index a87399d1b..4500ce040 100644
 --- a/src/condition_variable.cpp
@@ -444,7 +388,7 @@ index 4f2669a6c..39f1ab125 100644
  #endif
    __c_ = 1;
 diff --git a/src/support/win32/thread_win32.cpp b/src/support/win32/thread_win32.cpp
-index 3a67d759f..f893cc1dd 100644
+index 3a67d759f..83237cc86 100644
 --- a/src/support/win32/thread_win32.cpp
 +++ b/src/support/win32/thread_win32.cpp
 @@ -11,23 +11,49 @@
@@ -504,7 +448,7 @@ index 3a67d759f..f893cc1dd 100644
    return 0;
  }
  
-+#  if _WIN32_WINNT >= _WIN32_WINNT_WIN7
++#  if _WIN32_WINNT >= 0x0600
 +
 +int __libcpp_mutex_init(__libcpp_mutex_t* __m) {
 +  *__m = _LIBCPP_MUTEX_INITIALIZER;
@@ -518,7 +462,7 @@ index 3a67d759f..f893cc1dd 100644
    return 0;
  }
  
-+#  else // _WIN32_WINNT >= _WIN32_WINNT_WIN7
++#  else // _WIN32_WINNT >= 0x0600
 +
 +int __libcpp_mutex_init(__libcpp_mutex_t* __m) {
 +  InitializeCriticalSection((LPCRITICAL_SECTION)__m);
@@ -542,7 +486,7 @@ index 3a67d759f..f893cc1dd 100644
 +  return 0;
 +}
 +
-+#  endif // _WIN32_WINNT >= _WIN32_WINNT_WIN7
++#  endif // _WIN32_WINNT >= 0x0600
 +
  // Condition Variable
 +
