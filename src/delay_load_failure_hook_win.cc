@@ -33,6 +33,8 @@
 #include "base/debug/alias.h"
 #include "core/logging.hpp"
 
+using namespace gurl_base;
+
 namespace yass {
 
 extern void DisableDelayLoadFailureHooksForMainExecutable();
@@ -47,7 +49,7 @@ FARPROC WINAPI HandleDelayLoadFailureCommon(unsigned reason,
   // ERROR_COMMITMENT_LIMIT means that there is no memory. Convert this into a
   // more suitable crash rather than just CHECKing in this function.
   if (dll_info->dwLastError == ERROR_COMMITMENT_LIMIT) {
-    RAW_LOG(FATAL, "Out of memory");
+    logging::RawCheck("Out of memory");
   }
 
   DEBUG_ALIAS_FOR_CSTR(dll_name, dll_info->szDll, 256);
