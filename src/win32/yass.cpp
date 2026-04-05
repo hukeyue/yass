@@ -89,7 +89,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #endif
 
   // Allow calling MessageBoxExW inside
-  if (!EnableSecureDllLoading(true)) {
+  if (!EnableSecureDllLoading()) {
     return -1;
   }
 
