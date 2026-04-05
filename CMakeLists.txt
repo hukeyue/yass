@@ -4363,6 +4363,10 @@ if (WIN32)
   # https://docs.microsoft.com/en-us/cpp/build/reference/understanding-the-helper-function?view=msvc-170
   # see chrome/app/delay_load_failure_hook_win.cc
   add_library(delayload_hook STATIC src/delay_load_failure_hook_win.cc)
+  target_include_directories(delayload_hook PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
+    ${CMAKE_CURRENT_SOURCE_DIR})
   link_libraries(delayload_hook)
 endif()
 

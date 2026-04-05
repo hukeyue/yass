@@ -30,10 +30,16 @@
 #undef __pfnDliFailureHook2
 #include <stdlib.h>
 
+#include "base/debug/alias.h"
+#include "core/logging.hpp"
+
 namespace yass {
 
 extern void DisableDelayLoadFailureHooksForMainExecutable();
 
+// This function is called from both the delay load failure hooks present in the
+// main EXE and the main DLL to perform any additional common processing during
+// a delay load failure event.
 extern FARPROC WINAPI HandleDelayLoadFailureCommon(unsigned reason, DelayLoadInfo* dll_info);
 
 FARPROC WINAPI HandleDelayLoadFailureCommon(unsigned reason,
@@ -41,18 +47,19 @@ FARPROC WINAPI HandleDelayLoadFailureCommon(unsigned reason,
   // ERROR_COMMITMENT_LIMIT means that there is no memory. Convert this into a
   // more suitable crash rather than just CHECKing in this function.
   if (dll_info->dwLastError == ERROR_COMMITMENT_LIMIT) {
-    _exit(255);
+    RAW_LOG(FATAL, "Out of memory");
   }
 
-  // DEBUG_ALIAS_FOR_CSTR(dll_name, dll_info->szDll, 256);
+  DEBUG_ALIAS_FOR_CSTR(dll_name, dll_info->szDll, 256);
   // SCOPED_CRASH_KEY_STRING256("DelayLoad", "ModuleName", dll_name);
+  // SCOPED_CRASH_KEY_NUMBER("DelayLoad", "LastError", dll_info->dwLastError);
 
   // Deterministically crash here. Returning 0 from the hook would likely result
   // in the process crashing anyway, but in a form that might trigger undefined
   // behavior or be hard to diagnose. See https://crbug.com/1320845.
-  abort();
+  NOTREACHED();
 
-  return nullptr;
+  return 0;
 }
 
 namespace {
