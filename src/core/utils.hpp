@@ -83,7 +83,7 @@ using gurl_base::StringToUint;
 using gurl_base::StringToUint64;
 
 #ifdef _WIN32
-bool EnableSecureDllLoading(bool show_alert_window = false);
+bool EnableSecureDllLoading();
 
 void GetWindowsVersion(int* major, int* minor, int* build_number, int* os_type);
 

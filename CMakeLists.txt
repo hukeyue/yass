@@ -2808,21 +2808,19 @@ elseif (USE_TBBMALLOC)
     ${SUPPORT_INCLUDE_DIRS}
   )
 
-  link_libraries(${TBBMALLOC_LIB})
-
   # patching manually, see tbb/tbbmalloc_proxy.h
   if (MSVC)
     if (OS_X86)
-      add_link_options(/INCLUDE:___TBB_malloc_proxy)
+      set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:___TBB_malloc_proxy)
     else()
-      add_link_options(/INCLUDE:__TBB_malloc_proxy)
+      set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:__TBB_malloc_proxy)
     endif()
   endif()
   if (MINGW)
     if (OS_X86)
-      add_link_options(-Wl,-u___TBB_malloc_proxy)
+      set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u___TBB_malloc_proxy)
     else()
-      add_link_options(-Wl,-u__TBB_malloc_proxy)
+      set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u__TBB_malloc_proxy)
     endif()
   endif()
 endif()
@@ -2919,21 +2917,19 @@ elseif (USE_TCMALLOC)
     ${SUPPORT_INCLUDE_DIRS}
   )
 
-  link_libraries(tcmalloc_minimal)
-
   # patching manually, see tcmalloc's README_windows.txt
   if (MSVC)
     if (OS_X86)
-      add_link_options(/INCLUDE:__tcmalloc)
+      set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:__tcmalloc)
     else()
-      add_link_options(/INCLUDE:_tcmalloc)
+      set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:_tcmalloc)
     endif()
   endif()
   if (MINGW)
     if (OS_X86)
-      add_link_options(-Wl,-u__tcmalloc)
+      set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u__tcmalloc)
     else()
-      add_link_options(-Wl,-u_tcmalloc)
+      set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u_tcmalloc)
     endif()
   endif()
 endif()
@@ -4285,7 +4281,6 @@ if (WIN32)
       # we are delayload network-related dlls
       "/DELAYLOAD:asio.dll"
       "/DELAYLOAD:cares.dll"
-      "/DELAYLOAD:nghttp2.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
@@ -4355,7 +4350,6 @@ if (WIN32)
       # we are delayload network-related dlls as they are causing troubles with mingw build
       "-Wl,--delayload=asio_${YASS_APP_NAME}.dll"
       "-Wl,--delayload=cares_${YASS_APP_NAME}.dll"
-      "-Wl,--delayload=nghttp2_${YASS_APP_NAME}.dll"
       )
     add_link_options(${DELAY_LDFLAGS})
   endif()
@@ -4363,6 +4357,10 @@ if (WIN32)
   # https://docs.microsoft.com/en-us/cpp/build/reference/understanding-the-helper-function?view=msvc-170
   # see chrome/app/delay_load_failure_hook_win.cc
   add_library(delayload_hook STATIC src/delay_load_failure_hook_win.cc)
+  target_include_directories(delayload_hook PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
+    ${CMAKE_CURRENT_SOURCE_DIR})
   link_libraries(delayload_hook)
 endif()
 
@@ -4691,6 +4689,8 @@ if (CLI)
     yass_cli_nogui_lib
     yass_net)
 
+  target_link_options(yass_cli PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
+
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_cli RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
     install(FILES doc/yass_cli.1 DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
@@ -4755,6 +4755,8 @@ if (SERVER)
     ${DEFAULT_MALLOC_LIB}
     yass_server_lib
     yass_net)
+
+  target_link_options(yass_server PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS yass_server RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -5078,6 +5080,8 @@ if (GUI)
       ${GUI_LIBRARIES}
       yass_core
     )
+
+    target_link_options(${APP_NAME} PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
     if (NOT IOS)
       target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
@@ -5515,6 +5519,7 @@ if (BUILD_TESTS)
       yass_net
       yass_gtest
       )
+  target_link_options(yass_test PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
   if (WIN32)
     set(TEST_MSVC_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/yass_test.manifest")
     configure_file("src/core/win32.manifest" "${TEST_MSVC_MANIFEST}" @ONLY)
@@ -5656,6 +5661,7 @@ if (BUILD_BENCHMARKS)
       yass_net
       benchmark::benchmark
       )
+  target_link_options(yass_benchmark PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
   if (WIN32)
     set(BENCHMARK_MSVC_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/yass_benchmark.manifest")
     configure_file("src/core/win32.manifest" "${BENCHMARK_MSVC_MANIFEST}" @ONLY)
