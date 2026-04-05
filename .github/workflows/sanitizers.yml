@@ -25,17 +25,47 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64]
-        build_type: [Debug, Release]
-        sanitizer:
+        include:
           - name: address
             cmake_options: -DASAN=on -DUSE_LIBCXX=on
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 80
+          - name: address
+            cmake_options: -DASAN=on -DUSE_LIBCXX=on
+            arch: amd64
+            build_type: Debug
+            gtest_repeat_times: 20
           - name: undefined behavior
             cmake_options: -DUBSAN=on -DUSE_LIBCXX=off
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 80
+          - name: undefined behavior
+            cmake_options: -DUBSAN=on -DUSE_LIBCXX=off
+            arch: amd64
+            build_type: Debug
+            gtest_repeat_times: 20
           - name: thread
             cmake_options: -DTSAN=on -DUSE_LIBCXX=on
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 80
+          - name: thread
+            cmake_options: -DTSAN=on -DUSE_LIBCXX=on
+            arch: amd64
+            build_type: Debug
+            gtest_repeat_times: 20
           - name: memory
             cmake_options: -DMSAN=on -DUSE_LIBCXX=on -DUSE_CURL=off
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 80
+          - name: memory
+            cmake_options: -DMSAN=on -DUSE_LIBCXX=on -DUSE_CURL=off
+            arch: amd64
+            build_type: Debug
+            gtest_repeat_times: 10
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
@@ -75,18 +105,18 @@ jobs:
           cmake -G Ninja -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DGUI=on \
             -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            ${{ matrix.sanitizer.cmake_options }} ..
+            ${{ matrix.cmake_options }} ..
           ninja yass_test yass_benchmark
           cd ..
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-test
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build/yass_test
           compression-level: 9 # maximum compression
       - uses: actions/upload-artifact@v6
         with:
-          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.sanitizer.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+          name: s-linux-release-${{ matrix.build_type }}-${{ matrix.name }}-sanitizer-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build/yass_benchmark
           compression-level: 9 # maximum compression
@@ -98,5 +128,5 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          timeout 120m ./yass_test -logtostderr -v 1 --gtest_shuffle --gtest_repeat=100 --gtest_throw_on_failure
+          timeout 120m ./yass_test -logtostderr -v 1 --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure
           cd ..

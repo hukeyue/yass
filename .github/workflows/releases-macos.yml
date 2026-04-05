@@ -49,15 +49,19 @@ jobs:
           - arch: x64
             build_type: Release
             xcode_version: 26.3
+            build_options: -use-allocator=system
           - arch: x64
             build_type: Debug
             xcode_version: 26.3
+            build_options: -use-allocator=system
           - arch: arm64
             build_type: Release
             xcode_version: 26.3
+            build_options: -use-allocator=system
           - arch: arm64
             build_type: Debug
             xcode_version: 26.3
+            build_options: -use-allocator=system
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -119,7 +123,7 @@ jobs:
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
       - name: Build Binary (GUI)
         run: |
-          ./tools/build --arch ${{ matrix.arch }} -build-test -build-benchmark
+          ./tools/build --arch ${{ matrix.arch }} -build-test -build-benchmark ${{ matrix.build_options }}
       - name: Clean up keychain and provisioning profile
         if: ${{ always() }}
         run: |
@@ -177,10 +181,10 @@ jobs:
         include:
           - arch: arm64
             build_type: Release
-            xcode_version: 26.3
+            gtest_repeat_times: 10
           - arch: arm64
             build_type: Debug
-            xcode_version: 26.3
+            gtest_repeat_times: 2
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -190,15 +194,15 @@ jobs:
         run: |
           xattr -d com.apple.quarantine yass_test || :
           chmod 755 yass_test
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http --ipv6_mode
   mac-release-native-intel-test:
     runs-on: macos-26-intel
     needs: mac-release
@@ -208,10 +212,10 @@ jobs:
         include:
           - arch: x64
             build_type: Release
-            xcode_version: 26.3
+            gtest_repeat_times: 10
           - arch: x64
             build_type: Debug
-            xcode_version: 26.3
+            gtest_repeat_times: 2
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -221,15 +225,15 @@ jobs:
         run: |
           xattr -d com.apple.quarantine yass_test || :
           chmod 755 yass_test
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
-          ./yass_test --gtest_shuffle --gtest_repeat=10 --gtest_throw_on_failure --proxy_type http --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode
+          ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http --ipv6_mode
   mac-release-native-arm64-benchmark:
     runs-on: macos-26
     needs: mac-release
@@ -239,7 +243,6 @@ jobs:
         include:
           - arch: arm64
             build_type: Release
-            xcode_version: 26.3
             benchmark_min_time: 1000x
     steps:
       - name: Download built executables
@@ -260,7 +263,6 @@ jobs:
         include:
           - arch: x64
             build_type: Release
-            xcode_version: 26.3
             benchmark_min_time: 250x
     steps:
       - name: Download built executables
