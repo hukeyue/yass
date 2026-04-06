@@ -1766,8 +1766,20 @@ func postStateFixRPath() {
 
 func gnuStripBinary(binName string, dbgName string) {
 	objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
+	binutilCOFFFallback := false
 	if runtime.GOOS == "windows" {
-		objcopy = filepath.Join(clangPath, "bin", "llvm-objcopy.exe")
+		objcopy = objcopy + ".exe"
+	}
+	if systemNameFlag == "mingw" {
+		objcopyInplace := fmt.Sprintf("%s-w64-mingw32-objcopy", archFlag)
+		if runtime.GOOS == "windows" {
+			objcopyInplace = objcopyInplace + ".exe"
+		}
+		path, err := exec.LookPath(objcopyInplace)
+		if err == nil {
+			objcopy = path
+		}
+		binutilCOFFFallback = true
 	}
 	if _, err := os.Stat(objcopy); errors.Is(err, os.ErrNotExist) {
 		objcopy = "objcopy"
@@ -1775,7 +1787,13 @@ func gnuStripBinary(binName string, dbgName string) {
 	// create a file containing the debugging info.
 	// FIXME it looks like mingw's --compress-debug-sections isn't implemented
 	// see https://github.com/mstorsjo/llvm-mingw/issues/553
-	cmdRun([]string{objcopy, "--only-keep-debug", "--compress-debug-sections=zstd", binName, dbgName}, false)
+	compressionOption := "--compress-debug-sections=zstd"
+	// FIXME migrate to llvm-objcopy once llvm supports COFF
+	// x86_64-w64-mingw32-objcopy: --compress-debug-sections=[zlib|zlib-gnu|zlib-gabi|zstd] is unsupported on `a.dll' ]
+	if binutilCOFFFallback {
+		compressionOption = "--compress-debug-sections"
+	}
+	cmdRun([]string{objcopy, "--only-keep-debug", compressionOption, binName, dbgName}, false)
 	// stripped executable.
 	cmdRun([]string{objcopy, "--strip-debug", binName}, false)
 	// to add a link to the debugging info into the stripped executable.
