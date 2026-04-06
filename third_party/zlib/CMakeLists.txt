@@ -1,4 +1,18 @@
-option(ZLIB_ENABLE_INTEL_QAT_COMPRESSION "Enable Intel Quick Assist Technology use for compression" OFF)
+include(CheckTypeSize)
+include(CheckFunctionExists)
+include(CheckIncludeFile)
+
+#
+# Check to see if we have large file support
+#
+set(CMAKE_REQUIRED_DEFINITIONS -D_LARGEFILE64_SOURCE=1)
+check_type_size(off64_t OFF64_T)
+unset(CMAKE_REQUIRED_DEFINITIONS) # clear variable
+
+#
+# Check for fseeko
+#
+check_function_exists(fseeko HAVE_FSEEKO)
 
 set (zlib_SRCS
   adler32.c
@@ -32,30 +46,6 @@ set (zlib_SRCS
   zutil.h
   )
 
-if (ZLIB_ENABLE_INTEL_QAT_COMPRESSION)
-  pkg_check_modules(QATZPP qatzpp)
-  if(NOT QATZPP_FOUND)
-    message(STATUS "package qatzpp not found, disabling")
-    set(ZLIB_ENABLE_INTEL_QAT_COMPRESSION OFF)
-  endif()
-endif()
-
-if (ZLIB_ENABLE_INTEL_QAT_COMPRESSION)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/deflate_qat.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/io_buffers.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/memory.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/qat_buffer_list.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/qat.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/qat_instance.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/session.cpp)
-  list(APPEND zlib_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp/qat_task.cpp)
-
-  # TODO(gustavoa): Find a way to include the qatzpp headers without having the
-  # presubmit check throw errors.
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/contrib/qat/qatzpp)
-  add_compile_definitions(QAT_COMPRESSION_ENABLED)
-endif()
-
 if (ZLIB_BUILD_SHARED_LIBS)
   add_library(zlib SHARED ${zlib_SRCS})
 else()
@@ -77,12 +67,6 @@ elseif (COMPILER_GCC)
 elseif (COMPILER_MSVC)
   set_target_properties(zlib PROPERTIES
     COMPILE_FLAGS "/wd4131 /wd4255 /wd4245 /wd4244 /wd4100 /wd4702 /wd4127 /wd4267")
-endif()
-
-if (ZLIB_ENABLE_INTEL_QAT_COMPRESSION)
-  target_include_directories(zlib PRIVATE ${QATZPP_INCLUDE_DIRS})
-  target_link_libraries(zlib ${QATZPP_LIBRARY})
-  target_link_libraries(zlib qat)
 endif()
 
 # use_x86_x64_optimizations
@@ -115,24 +99,20 @@ if (OS_RISCV64)
 endif()
 
 if (ZLIB_USE_X86_X64_OPTIMIZATIONS)
+  # zlib_inflate_chunk_simd
+  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_SIMD_SSE2")
   # zlib_adler32_simd
   target_compile_definitions(zlib PUBLIC "ADLER32_SIMD_SSSE3")
   target_sources(zlib PRIVATE
     adler32_simd.c
     adler32_simd.h
   )
-  if (WIN32)
-    target_compile_definitions(zlib PUBLIC "X86_WINDOWS")
-  else()
-    target_compile_definitions(zlib PUBLIC "X86_NOT_WINDOWS")
-  endif()
   if (COMPILER_CLANG OR COMPILER_GCC)
     target_compile_options(zlib PRIVATE "-mssse3")
   endif()
-  # zlib_inflate_chunk_simd
-  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_SIMD_SSE2")
   if (OS_X64)
     target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_READ_64LE")
+    target_compile_definitions(zlib PUBLIC "DEFLATE_CHUNK_WRITE_64LE")
   endif()
   target_sources(zlib PRIVATE
     contrib/optimizations/chunkcopy.h
@@ -155,32 +135,28 @@ if (ZLIB_USE_X86_X64_OPTIMIZATIONS)
   if (COMPILER_CLANG OR COMPILER_GCC)
     target_compile_options(zlib PRIVATE -msse4.2 -mpclmul)
   endif()
+
+  # Required by CPU features detection code.
+  if (WIN32)
+    target_compile_definitions(zlib PUBLIC "X86_WINDOWS")
+  else()
+    target_compile_definitions(zlib PUBLIC "X86_NOT_WINDOWS")
+  endif()
 elseif(ZLIB_USE_ARM_NEON)
+  # zlib_inflate_chunk_simd
+  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_SIMD_NEON")
   # zlib_adler32_simd
   target_compile_definitions(zlib PUBLIC "ADLER32_SIMD_NEON")
   target_sources(zlib PRIVATE
     adler32_simd.c
     adler32_simd.h
   )
-
-  target_compile_definitions(zlib PUBLIC "CRC32_ARMV8_CRC32")
-  if (ANDROID)
-    target_compile_definitions(zlib PUBLIC "ARMV8_OS_ANDROID")
-  elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_compile_definitions(zlib PUBLIC "ARMV8_OS_LINUX")
-  elseif (APPLE AND NOT IOS)
-    target_compile_definitions(zlib PUBLIC "ARMV8_OS_MACOS")
-  elseif (IOS)
-    target_compile_definitions(zlib PUBLIC "ARMV8_OS_IOS")
-  elseif (WIN32)
-    target_compile_definitions(zlib PUBLIC "ARMV8_OS_WINDOWS")
-  endif()
-
-  # zlib_inflate_chunk_simd
-  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_SIMD_NEON")
   if (OS_AARCH64)
     target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_READ_64LE")
+    target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_WRITE_64LE")
   endif()
+  target_compile_definitions(zlib PUBLIC "CRC32_ARMV8_CRC32")
+
   target_sources(zlib PRIVATE
     contrib/optimizations/chunkcopy.h
     contrib/optimizations/inffast_chunk.c
@@ -196,14 +172,52 @@ elseif(ZLIB_USE_ARM_NEON)
   target_sources(zlib PRIVATE
     crc32_simd.c
     crc32_simd.h
+    crc_folding.c
   )
+
+  # Required by CPU features detection code.
+  if (ANDROID)
+    target_compile_definitions(zlib PUBLIC "ARMV8_OS_ANDROID")
+  elseif (LINUX)
+    target_compile_definitions(zlib PUBLIC "ARMV8_OS_LINUX")
+  elseif (APPLE AND NOT IOS)
+    target_compile_definitions(zlib PUBLIC "ARMV8_OS_MACOS")
+  elseif (IOS)
+    target_compile_definitions(zlib PUBLIC "ARMV8_OS_IOS")
+  elseif (WIN32)
+    target_compile_definitions(zlib PUBLIC "ARMV8_OS_WINDOWS")
+  endif()
 elseif (ZLIB_USE_RISCV64_OPTIMIZATIONS)
   target_compile_definitions(zlib PUBLIC "RISCV_RVV")
   target_compile_definitions(zlib PUBLIC "DEFLATE_SLIDE_HASH_RVV")
   target_compile_definitions(zlib PUBLIC "ADLER32_SIMD_RVV")
+
+  # chunk_copy is required for READ64 and unconditional decode of literals.
+  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_GENERIC")
+  # zlib_adler32_simd
+  target_sources(zlib PRIVATE
+    adler32_simd.c
+    adler32_simd.h
+  )
+  target_compile_definitions(zlib PUBLIC "INFLATE_CHUNK_READ_64LE")
+  target_compile_definitions(zlib PUBLIC "DEFLATE_CHUNK_WRITE_64LE")
+  target_sources(zlib PRIVATE
+    contrib/optimizations/chunkcopy.h
+    contrib/optimizations/inffast_chunk.c
+    contrib/optimizations/inffast_chunk.h
+    contrib/optimizations/inflate.c
+  )
+
   target_compile_options(zlib PRIVATE "-march=rv64gcv")
-  target_sources(zlib PRIVATE inflate.c)
 else()
   target_compile_definitions(zlib PUBLIC "CPU_NO_SIMD")
   target_sources(zlib PRIVATE inflate.c)
 endif()
+
+target_compile_definitions(
+    zlib
+    PRIVATE ZLIB_BUILD
+            $<$<BOOL:NOT:${HAVE_FSEEKO}>:NO_FSEEKO>
+            $<$<BOOL:${MSVC}>:_CRT_SECURE_NO_DEPRECATE>
+            $<$<BOOL:${MSVC}>:_CRT_NONSTDC_NO_DEPRECATE>
+    PUBLIC $<$<BOOL:${HAVE_OFF64_T}>:_LARGEFILE64_SOURCE=1>)

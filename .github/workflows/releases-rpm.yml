@@ -55,7 +55,7 @@ jobs:
             platform: 'linux/arm64'
           - container: 'opensuse15'
             platform: 'linux/amd64'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
     steps:
@@ -118,7 +118,7 @@ jobs:
             gui_variant: gtk4
           - container: 'opensuse15'
             gui_variant: qt6
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs: docker_publish
@@ -218,7 +218,7 @@ jobs:
             build_type: MinSizeRel
             platform: 'linux/arm64'
             build_options:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     env:
@@ -339,6 +339,13 @@ jobs:
           path: |
             build-linux-musl-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
+      - name: Disable AppArmor Restrictions (i386 and amd64)
+        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        run: |
+          # see https://github.com/DevToys-app/DevToys/issues/1373#issuecomment-2985518849
+          sudo apt-get install -y apparmor-profiles apparmor-profiles-extra
+          sudo ln -s /usr/share/apparmor/extra-profiles/bwrap-userns-restrict /etc/apparmor.d/bwrap
+          sudo apparmor_parser /etc/apparmor.d/bwrap
       - name: Run tests (i386 and amd64)
         if: ${{ matrix.arch == 'i386' ||  matrix.arch == 'amd64' }}
         run: |
