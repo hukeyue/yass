@@ -522,49 +522,26 @@ class ContentServer {
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto renego_allowed_for_http11_proto = server->listen_ctxs_[listen_ctx_num].renego_allowed_for_http11_proto;
-    auto cipher = server->listen_ctxs_[listen_ctx_num].server_config.cipher;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
         goto err;
       }
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
-      if (CIPHER_METHOD_IS_HTTP2(cipher) && NextProtoFromString(alpn) == kProtoHTTP2) {
-        bool ret = server->on_alpn_select(connection_id, kProtoHTTP2);
-        if (!ret) {
-          VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) rejected: " << alpn;
-          goto try_next;
-        }
+      NextProto proto = NextProtoFromString(alpn);
+      if (server->on_alpn_select(connection_id, proto)) {
+        VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
 
         *out = in + 1;
         *outlen = in[0];
-        VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
 
-        // Enable ALPS for HTTP/2 with empty data.
-        std::vector<uint8_t> data;
-        SSL_add_application_settings(ssl, reinterpret_cast<const uint8_t*>(alpn.data()), alpn.size(), data.data(),
-                                     data.size());
-        return SSL_TLSEXT_ERR_OK;
-      }
-      if (renego_allowed_for_http11_proto && NextProtoFromString(alpn) == kProtoHTTP11) {
-        int ret = server->on_alpn_select(connection_id, kProtoHTTP11);
-        if (!ret) {
-          VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) rejected: " << alpn;
-          goto try_next;
-        }
-
-        *out = in + 1;
-        *outlen = in[0];
-        VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
-
-        // Enable ALPS for HTTP/1.1 with empty data.
+        // Enable ALPS for give proto with empty data.
         std::vector<uint8_t> data;
         SSL_add_application_settings(ssl, reinterpret_cast<const uint8_t*>(alpn.data()), alpn.size(), data.data(),
                                      data.size());
         return SSL_TLSEXT_ERR_OK;
       }
 
-try_next:
       VLOG(2) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) skipped: " << alpn;
       inlen -= 1u + in[0];
       in += 1u + in[0];
