@@ -198,7 +198,7 @@ class Connection {
   /// \param remote_config the network config used for upstream
   /// \param local_config the network config used for downstream
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
-  /// \param https_fallback the data channel falls back to https (alpn)
+  /// \param https_fallback the data channel falls back to http1.1 (via alpn)
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   Connection(asio::io_context& io_context,
