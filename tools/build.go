@@ -1775,7 +1775,7 @@ func gnuStripBinary(binName string, dbgName string) {
 	// create a file containing the debugging info.
 	// FIXME it looks like mingw's --compress-debug-sections isn't implemented
 	// see https://github.com/mstorsjo/llvm-mingw/issues/553
-	cmdRun([]string{objcopy, "--only-keep-debug", "--compress-debug-sections=zlib", binName, dbgName}, false)
+	cmdRun([]string{objcopy, "--only-keep-debug", "--compress-debug-sections=zstd", binName, dbgName}, false)
 	// stripped executable.
 	cmdRun([]string{objcopy, "--strip-debug", binName}, false)
 	// to add a link to the debugging info into the stripped executable.

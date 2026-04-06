@@ -1402,8 +1402,8 @@ endif()
 # use_debug_fission: whether to use split DWARF debug info files. This can
 # reduce link time significantly.
 cmake_dependent_option(
-  USE_DEBUG_FISSION "Build with debug fission" ON
-  "NOT ANDROID; NOT APPLE; NOT MSVC; USE_LLD" OFF)
+  USE_DEBUG_FISSION "Build with debug fission" OFF
+  "NOT APPLE; NOT MSVC" OFF)
 
 # ld.lld: error: <unknown>:0: A dwo section may not contain relocations
 if (USE_LLD AND (OS_RISCV64 OR OS_RISCV32 OR OS_LOONGARCH64))
@@ -1420,10 +1420,13 @@ if (USE_DEBUG_FISSION)
 endif()
 
 cmake_dependent_option(
-  USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" ON
+  USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" OFF
   "NOT MSVC; NOT APPLE" OFF)
 
-if (USE_COMPRESS_DEBUG_SECTIONS)
+if ((USE_COMPRESS_DEBUG_SECTIONS AND USE_LLD) OR USE_MOLD)
+  add_link_options(-Wl,--compress-debug-sections=zstd)
+  list(APPEND YASS_APP_FEATURES "debug compressed (zstd)")
+elseif(USE_COMPRESS_DEBUG_SECTIONS)
   # command below is the same thing with '-gz'
   # add_link_options(-Wl,--compress-debug-sections=zlib)
   add_link_options(-gz)
