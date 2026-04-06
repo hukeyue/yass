@@ -84,14 +84,11 @@ using WaitCallback = absl::AnyInvocable<void(asio::error_code ec)>;
 std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos);
 
 struct SSLConfig {
-  bool allow_fallback_to_http11 = true;
-
   // The list of application level protocols supported with ALPN (Application
   // Layer Protocol Negotiation), in decreasing order of preference.  Protocols
   // will be advertised in this order during TLS handshake.
   NextProtoVector alpn_protos;
 
-#if 0
   // True if renegotiation should be allowed for the default application-level
   // protocol when the peer does not negotiate ALPN.
   bool renego_allowed_default = false;
@@ -99,6 +96,7 @@ struct SSLConfig {
   // The list of application-level protocols to enable renegotiation for.
   NextProtoVector renego_allowed_for_protos;
 
+#if 0
   // If non-empty, a serialized ECHConfigList to use to encrypt the ClientHello.
   // If this field is non-empty, callers should handle |ERR_ECH_NOT_NEGOTIATED|
   // errors from Connect() by calling GetECHRetryConfigs() to determine how to

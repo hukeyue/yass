@@ -106,9 +106,15 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   asio::io_context* io_context_;
   asio::ip::tcp::socket* stream_socket_;
 
-  SSLClientSessionCache::Key GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const;
+  // Returns a session cache key for this socket.
+  SSLClientSessionCache::Key GetSessionCacheKey(
+      std::optional<asio::ip::address> dest_ip_addr) const;
 
-  bool IsCachingEnabled() const { return ssl_client_session_cache_ != nullptr; }
+  // Returns true if renegotiations are allowed.
+  bool IsRenegotiationAllowed() const;
+
+  // Returns true when we should be using the ssl_client_session_cache_
+  bool IsCachingEnabled() const;
 
   std::pair<std::string, int> host_and_port_;
   SSLConfig ssl_config_;
@@ -175,19 +181,6 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   bool send_client_cert_;
 
   NextProto negotiated_protocol_ = kProtoUnknown;
-
-  bool IsRenegotiationAllowed() const {
-    // Prior to HTTP/2 and SPDY, some servers use TLS renegotiation to request
-    // TLS client authentication after the HTTP request was sent. Allow
-    // renegotiation for only those connections.
-    if (negotiated_protocol_ == kProtoHTTP11) {
-      return true;
-    }
-    // True if renegotiation should be allowed for the default application-level
-    // protocol when the peer does not negotiate ALPN.
-    bool renego_allowed_default = false;
-    return renego_allowed_default;
-  }
 
   // True if SCTs were received via a TLS extension.
   bool signed_cert_timestamps_received_ = false;

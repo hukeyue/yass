@@ -98,8 +98,8 @@ class ContentServer {
         certificate_(certificate),
         private_key_(private_key),
         delegate_(delegate) {
-    upstream_ssl_config_.allow_fallback_to_http11 = CIPHER_METHOD_IS_TLS(remote_cipher_);
-    upstream_ssl_config_.allow_fallback_to_http11 &= T::Type == CONNECTION_FACTORY_CLIENT;
+    upstream_ssl_config_.renego_allowed_default = CIPHER_METHOD_IS_TLS(remote_cipher_);
+    upstream_ssl_config_.renego_allowed_default &= T::Type == CONNECTION_FACTORY_CLIENT;
     https_fallback_ &= T::Type == CONNECTION_FACTORY_SERVER;
     enable_upstream_tls_ &= T::Type == CONNECTION_FACTORY_CLIENT;
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
@@ -642,9 +642,10 @@ class ContentServer {
     NextProtoVector alpn_protos;
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(remote_cipher_)) {
-      if (upstream_ssl_config_.allow_fallback_to_http11) {
+      if (upstream_ssl_config_.renego_allowed_default) {
         protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
         alpn_protos = {kProtoHTTP2, kProtoHTTP11};
+        upstream_ssl_config_.renego_allowed_for_protos = {kProtoHTTP11};
       } else {
         // ??? BoringSSL bugs, http1.1 will always be enabled
         protos = NextProtoToString(kProtoHTTP2);
