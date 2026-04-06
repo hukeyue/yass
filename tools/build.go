@@ -1773,7 +1773,9 @@ func gnuStripBinary(binName string, dbgName string) {
 		objcopy = "objcopy"
 	}
 	// create a file containing the debugging info.
-	cmdRun([]string{objcopy, "--only-keep-debug", binName, dbgName}, false)
+	// FIXME it looks like mingw's --compress-debug-sections isn't implemented
+	// see https://github.com/mstorsjo/llvm-mingw/issues/553
+	cmdRun([]string{objcopy, "--only-keep-debug", "--compress-debug-sections=zstd", binName, dbgName}, false)
 	// stripped executable.
 	cmdRun([]string{objcopy, "--strip-debug", binName}, false)
 	// to add a link to the debugging info into the stripped executable.
@@ -1814,12 +1816,12 @@ func postStateStripBinaries() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".so") || strings.HasSuffix(iname, ".dll") {
-				gnuStripBinary(filepath.Join(buildDir, name), basename(name)+".dbg")
+				gnuStripBinary(name, name+".dbg")
 			}
 		}
 
 		// strip main binary
-		gnuStripBinary(getAppName(), APPNAME+".dbg")
+		gnuStripBinary(getAppName(), getAppName()+".dbg")
 
 		// strip test binary
 		if buildTestFlag {
@@ -1827,7 +1829,7 @@ func postStateStripBinaries() {
 			if systemNameFlag == "mingw" {
 				binName = "yass_test.exe"
 			}
-			gnuStripBinary(filepath.Join(buildDir, binName), "yass_test.dbg")
+			gnuStripBinary(binName, binName+".dbg")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
@@ -1835,36 +1837,36 @@ func postStateStripBinaries() {
 			if systemNameFlag == "mingw" {
 				binName = "yass_benchmark.exe"
 			}
-			gnuStripBinary(filepath.Join(buildDir, binName), "yass_benchmark.dbg")
+			gnuStripBinary(binName, binName+".dbg")
 		}
 	} else if systemNameFlag == "darwin" {
 		// strip dependent dll files
-		frameworkPath := filepath.Join(buildDir, getAppName(), "Contents", "Frameworks")
+		frameworkPath := filepath.Join(getAppName(), "Contents", "Frameworks")
 		entries, _ := ioutil.ReadDir(frameworkPath)
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
-				darwinStripBinary(filepath.Join(frameworkPath, name), basename(name)+".dSYM")
+				darwinStripBinary(filepath.Join(frameworkPath, name), name+".dSYM")
 			}
 		}
 
 		// strip main binary
-		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
-		darwinStripBinary(execPath, APPNAME+".dSYM")
+		execPath := filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
+		darwinStripBinary(execPath, getAppName()+".dSYM")
 
 		// strip test binary
 		if buildTestFlag {
-			darwinStripBinary(filepath.Join(buildDir, "yass_test"), "yass_test.dSYM")
+			darwinStripBinary("yass_test", "yass_test.dSYM")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
-			darwinStripBinary(filepath.Join(buildDir, "yass_benchmark"), "yass_benchmark.dSYM")
+			darwinStripBinary("yass_benchmark", "yass_benchmark.dSYM")
 		}
 	} else if systemNameFlag == "ios" {
 		// strip main binary
-		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
-		darwinStripBinary(execPath, APPNAME+".dSYM")
+		execPath := filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
+		darwinStripBinary(execPath, getAppName()+".dSYM")
 	} else {
 		glog.Warningf("strip operation not implemented in platform %s", systemNameFlag)
 	}
