@@ -146,39 +146,19 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
  public:
   ContentProviderConnection(asio::io_context& io_context,
-                            std::string_view remote_host_ips,
-                            std::string_view remote_host_sni,
-                            uint16_t remote_port,
-                            std::string_view remote_username,
-                            std::string_view remote_password,
-                            cipher_method remote_cipher,
-                            bool remote_padding_support,
+                            const ClientConnectionConfig& remote_config,
+                            const ServerConnectionConfig& local_config,
                             const SSLConfig& upstream_ssl_config,
                             bool https_fallback,
                             SSL_CTX* upstream_ssl_ctx,
-                            SSL_CTX* ssl_ctx,
-                            std::string_view username,
-                            std::string_view password,
-                            cipher_method cipher,
-                            bool padding_support,
-                            bool redir_mode)
-      : Connection(io_context,
-                   remote_host_ips,
-                   remote_host_sni,
-                   remote_port,
-                   remote_username,
-                   remote_password,
-                   remote_cipher,
-                   remote_padding_support,
-                   upstream_ssl_config,
-                   https_fallback,
-                   upstream_ssl_ctx,
-                   ssl_ctx,
-                   username,
-                   password,
-                   cipher,
-                   padding_support,
-                   redir_mode) {}
+                            SSL_CTX* ssl_ctx)
+    : Connection(io_context,
+                 remote_config,
+                 local_config,
+                 upstream_ssl_config,
+                 https_fallback,
+                 upstream_ssl_ctx,
+                 ssl_ctx) {}
 
   ~ContentProviderConnection() override {
     VLOG(1) << "Connection (content-provider) " << connection_id() << " freed memory";

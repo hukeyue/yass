@@ -163,39 +163,19 @@ bool DataFrameSource::Send(absl::string_view frame_header, size_t payload_length
 #endif
 
 CliConnection::CliConnection(asio::io_context& io_context,
-                             std::string_view remote_host_ips,
-                             std::string_view remote_host_sni,
-                             uint16_t remote_port,
-                             std::string_view remote_username,
-                             std::string_view remote_password,
-                             cipher_method remote_cipher,
-                             bool remote_padding_support,
+                             const ClientConnectionConfig& remote_config,
+                             const ServerConnectionConfig& local_config,
                              const SSLConfig& upstream_ssl_config,
                              bool https_fallback,
                              SSL_CTX* upstream_ssl_ctx,
-                             SSL_CTX* ssl_ctx,
-                             std::string_view username,
-                             std::string_view password,
-                             cipher_method cipher,
-                             bool padding_support,
-                             bool redir_mode)
+                             SSL_CTX* ssl_ctx)
     : Connection(io_context,
-                 remote_host_ips,
-                 remote_host_sni,
-                 remote_port,
-                 remote_username,
-                 remote_password,
-                 remote_cipher,
-                 remote_padding_support,
+                 remote_config,
+                 local_config,
                  upstream_ssl_config,
                  https_fallback,
                  upstream_ssl_ctx,
-                 ssl_ctx,
-                 username,
-                 password,
-                 cipher,
-                 padding_support,
-                 redir_mode),
+                 ssl_ctx),
       state_(),
       resolver_(io_context) {}
 
@@ -1345,7 +1325,7 @@ void CliConnection::WriteUpstreamMethodSelectRequest() {
   method_select_header.ver = socks5::version;
   method_select_header.nmethods = 1;  // we only support auth or non-auth but not all of them.
 
-  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
+  bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
 
   auto buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
   buf->appendBytesAtEnd(&method_select_header, sizeof(method_select_header));
@@ -1420,13 +1400,13 @@ void CliConnection::WriteUpstreamAuthRequest() {
 
   buf->appendBytesAtEnd(&header, sizeof(header));
 
-  const uint8_t username_size = remote_username_.size();
+  const uint8_t username_size = remote_config_.username.size();
   buf->appendBytesAtEnd(&username_size, sizeof(username_size));
-  buf->appendBytesAtEnd(remote_username_.c_str(), remote_username_.size());
+  buf->appendBytesAtEnd(remote_config_.username.c_str(), remote_config_.username.size());
 
-  const uint8_t password_size = remote_password_.size();
+  const uint8_t password_size = remote_config_.password.size();
   buf->appendBytesAtEnd(&password_size, sizeof(password_size));
-  buf->appendBytesAtEnd(remote_password_.c_str(), remote_password_.size());
+  buf->appendBytesAtEnd(remote_config_.password.c_str(), remote_config_.password.size());
 
   DCHECK_NE(0, buf->size());
 
@@ -1468,7 +1448,7 @@ err_out:
 }
 
 void CliConnection::WriteUpstreamSocks4Request() {
-  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
+  bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
   if (auth_required) {
     LOG(WARNING) << "Client specifies username and password but SOCKS4 doesn't support it";
   }
@@ -1502,7 +1482,7 @@ void CliConnection::WriteUpstreamSocks4Request() {
 }
 
 void CliConnection::WriteUpstreamSocks4ARequest() {
-  bool auth_required = !remote_username_.empty() && !remote_password_.empty();
+  bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
   if (auth_required) {
     LOG(WARNING) << "Client specifies username and password but SOCKS4A doesn't support it";
   }
@@ -2203,12 +2183,13 @@ void CliConnection::OnConnect() {
   LOG(INFO) << "Connection (client) " << connection_id() << " connect " << remote_domain();
   // create lazy
   if (upstream_ssl_ctx_ != nullptr) {
-    channel_ = ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_, remote_host_ips_,
-                                  remote_host_sni_, remote_port_, this, upstream_ssl_config_,
+    channel_ = ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_,
+                                  remote_config_.host_ips, remote_config_.host_sni, remote_config_.port,
+                                  this, upstream_ssl_config_,
                                   upstream_ssl_ctx_);
 
   } else {
-    channel_ = stream::create(*io_context_, remote_host_ips_, remote_host_sni_, remote_port_, this);
+    channel_ = stream::create(*io_context_, remote_config_.host_ips, remote_config_.host_sni, remote_config_.port, this);
   }
   channel_->async_connect([this, self](asio::error_code ec) {
     if (UNLIKELY(closed_)) {
@@ -2351,7 +2332,7 @@ void CliConnection::connected() {
   bool http2 = CIPHER_METHOD_IS_HTTP2(method());
   if (channel_->negotiated_protocol() == kProtoHTTP11) {
     http2 = false;
-    remote_cipher_ = CRYPTO_HTTPS;
+    remote_config_.cipher = CRYPTO_HTTPS;
   }
 
   // Create adapters
@@ -2374,8 +2355,8 @@ void CliConnection::connected() {
   } else {
     DCHECK(!http2);
     if (!CIPHER_METHOD_IS_SOCKS(method())) {
-      encoder_ = std::make_unique<cipher>("", remote_password_, method(), this, true);
-      decoder_ = std::make_unique<cipher>("", remote_password_, method(), this);
+      encoder_ = std::make_unique<cipher>("", remote_config_.password, method(), this, true);
+      decoder_ = std::make_unique<cipher>("", remote_config_.password, method(), this);
     }
   }
 
@@ -2429,10 +2410,10 @@ void CliConnection::connected() {
     //    authority   = [ userinfo "@" ] host [ ":" port ]
     headers.emplace_back(":authority"s, hostname_and_port);
     headers.emplace_back("host"s, hostname_and_port);
-    bool auth_required = !remote_username_.empty() && !remote_password_.empty();
+    bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
     if (auth_required) {
       headers.emplace_back("proxy-authorization"s,
-                           absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_username_, remote_password_)));
+                           absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_config_.username, remote_config_.password)));
     }
     // Send "Padding" header
     // originated from naive_proxy_delegate.go;func ServeHTTP
@@ -2474,7 +2455,7 @@ void CliConnection::connected() {
       hostname_and_port = absl::StrCat("[", host, "]", ":", port);
     }
 
-    bool auth_required = !remote_username_.empty() && !remote_password_.empty();
+    bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
 
     std::string hdr = absl::StrFormat(
         "CONNECT %s HTTP/1.1\r\n"
@@ -2483,7 +2464,7 @@ void CliConnection::connected() {
         "Proxy-Connection: Close\r\n"
         "\r\n",
         hostname_and_port.c_str(), hostname_and_port.c_str(),
-        absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_username_, remote_password_)));
+        absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_config_.username, remote_config_.password)));
     if (!auth_required) {
       hdr = absl::StrFormat(
           "CONNECT %s HTTP/1.1\r\n"

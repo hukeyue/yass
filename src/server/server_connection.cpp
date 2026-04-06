@@ -139,39 +139,19 @@ bool DataFrameSource::Send(absl::string_view frame_header, size_t payload_length
 #endif
 
 ServerConnection::ServerConnection(asio::io_context& io_context,
-                                   std::string_view remote_host_ips,
-                                   std::string_view remote_host_sni,
-                                   uint16_t remote_port,
-                                   std::string_view remote_username,
-                                   std::string_view remote_password,
-                                   cipher_method remote_cipher,
-                                   bool remote_padding_support,
+                                   const ClientConnectionConfig& remote_config,
+                                   const ServerConnectionConfig& local_config,
                                    const SSLConfig& upstream_ssl_config,
                                    bool https_fallback,
                                    SSL_CTX* upstream_ssl_ctx,
-                                   SSL_CTX* ssl_ctx,
-                                   std::string_view username,
-                                   std::string_view password,
-                                   cipher_method cipher,
-                                   bool padding_support,
-                                   bool redir_mode)
+                                   SSL_CTX* ssl_ctx)
     : Connection(io_context,
-                 remote_host_ips,
-                 remote_host_sni,
-                 remote_port,
-                 remote_username,
-                 remote_password,
-                 remote_cipher,
-                 remote_padding_support,
+                 remote_config,
+                 local_config,
                  upstream_ssl_config,
                  https_fallback,
                  upstream_ssl_ctx,
-                 ssl_ctx,
-                 username,
-                 password,
-                 cipher,
-                 padding_support,
-                 redir_mode),
+                 ssl_ctx),
       state_() {}
 
 ServerConnection::~ServerConnection() {
@@ -265,8 +245,8 @@ void ServerConnection::Start() {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
       ReadHandshakeViaSocks();
     } else {
-      encoder_ = std::make_unique<cipher>("", password_, method(), this, true);
-      decoder_ = std::make_unique<cipher>("", password_, method(), this);
+      encoder_ = std::make_unique<cipher>("", local_config_.password, method(), this, true);
+      decoder_ = std::make_unique<cipher>("", local_config_.password, method(), this);
       ReadHandshake();
     }
   }
@@ -354,8 +334,8 @@ bool ServerConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId strea
               << " Unexpected pseudo header path: " << path;
     return false;
   }
-  bool auth_required = !username_.empty() && !password_.empty();
-  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s], username_, password_)) {
+  bool auth_required = !local_config_.username.empty() && !local_config_.password.empty();
+  if (auth_required && !VerifyProxyAuthorizationIdentity(request_map_["proxy-authorization"s], local_config_.username, local_config_.password)) {
     LOG(INFO) << "Connection (server) " << connection_id() << " from: " << peer_endpoint << " Unexpected auth token.";
     return false;
   }
@@ -702,8 +682,8 @@ void ServerConnection::OnReadHandshakeViaHttps() {
       return;
     }
 
-    bool auth_required = !username_.empty() && !password_.empty();
-    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization(), username_, password_)) {
+    bool auth_required = !local_config_.username.empty() && !local_config_.password.empty();
+    if (auth_required && !VerifyProxyAuthorizationIdentity(parser.proxy_authorization(), local_config_.username, local_config_.password)) {
       LOG(INFO) << "Connection (server) " << connection_id() << " Unexpected auth token.";
       OnDisconnect(asio::error::invalid_argument);
       return;
@@ -803,7 +783,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
   switch (method()) {
     case CRYPTO_SOCKS4:
     case CRYPTO_SOCKS4A: {
-      bool auth_required = !username_.empty() && !password_.empty();
+      bool auth_required = !local_config_.username.empty() && !local_config_.password.empty();
       if (auth_required) {
         LOG(WARNING) << "Server specifies username and password but SOCKS4/SOCKS4A doesn't support it";
       }
@@ -848,7 +828,7 @@ void ServerConnection::OnReadHandshakeViaSocks() {
 
       socks5::method_select_request_parser::result_type result;
 
-      bool auth_required = !username_.empty() && !password_.empty();
+      bool auth_required = !local_config_.username.empty() && !local_config_.password.empty();
       std::tie(result, std::ignore) = parser.parse(request, buf->data(), buf->data() + buf->size());
 
       if (result == socks5::method_select_request_parser::good) {
@@ -952,7 +932,7 @@ void ServerConnection::WriteMethodSelectResponse() {
       ProcessSentData(ec, 0);
       return;
     }
-    bool auth_required = !username_.empty() && !password_.empty();
+    bool auth_required = !local_config_.username.empty() && !local_config_.password.empty();
     auto method_select_reply = socks5::method_select_response_stock_reply(auth_required ? socks5::username_or_password
                                                                                         : socks5::no_auth_required);
     auto buf = GrowableIOBuffer::copyBuffer(&method_select_reply, sizeof(method_select_reply));
@@ -1034,7 +1014,7 @@ void ServerConnection::OnReadSocks5UsernamePasswordAuth() {
     return;
   }
 
-  if (auth_request.username() != username_ || auth_request.password() != password_) {
+  if (auth_request.username() != local_config_.username || auth_request.password() != local_config_.password) {
     LOG(INFO) << "Connection (server) " << connection_id() << " socks5: dismatched username and password pair.";
     OnDisconnect(asio::error::invalid_argument);
     return;

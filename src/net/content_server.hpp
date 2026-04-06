@@ -46,6 +46,8 @@
 #include "net/connection.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
+#include "net/client_connection_config.hpp"
+#include "net/server_connection_config.hpp"
 #include "net/ssl_client_session_cache.hpp"
 #include "net/ssl_socket.hpp"
 #include "net/x509_util.hpp"
@@ -83,28 +85,29 @@ class ContentServer {
       : io_context_(io_context),
         work_guard_(
             std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor())),
-        remote_host_ips_(remote_host_ips),
-        remote_host_sni_(remote_host_sni),
-        remote_port_(remote_port),
-        remote_username_(remote_username),
-        remote_password_(remote_password),
-        remote_cipher_(remote_cipher),
-        remote_padding_support_(remote_padding_support),
+        remote_config_(),
         https_fallback_(true),
-        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
+        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher)),
         enable_tls_(true),
         upstream_certificate_(upstream_certificate),
         upstream_ssl_config_(),
         certificate_(certificate),
         private_key_(private_key),
         delegate_(delegate) {
-    upstream_ssl_config_.renego_allowed_default = CIPHER_METHOD_IS_TLS(remote_cipher_);
+    remote_config_.host_ips = remote_host_ips;
+    remote_config_.host_sni = remote_host_sni;
+    remote_config_.port = remote_port;
+    remote_config_.username = remote_username;
+    remote_config_.password = remote_password;
+    remote_config_.cipher = remote_cipher;
+    remote_config_.padding_support = remote_padding_support;
+    upstream_ssl_config_.renego_allowed_default = CIPHER_METHOD_IS_TLS(remote_config_.cipher);
     upstream_ssl_config_.renego_allowed_default &= T::Type == CONNECTION_FACTORY_CLIENT;
     upstream_ssl_config_.early_data_enabled = absl::GetFlag(FLAGS_tls13_early_data);
     https_fallback_ &= T::Type == CONNECTION_FACTORY_SERVER;
     enable_upstream_tls_ &= T::Type == CONNECTION_FACTORY_CLIENT;
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
-    DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
+    DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
     VLOG(1) << "ContentServer (" << T::Name << ") allocated memory";
   }
@@ -147,11 +150,11 @@ class ContentServer {
     }
     ListenCtx& ctx = listen_ctxs_[next_listen_ctx_];
     ctx.server_name = server_name;
-    ctx.server_username = server_username;
-    ctx.server_password = server_password;
-    ctx.server_cipher = server_cipher;
-    ctx.server_padding_support = server_padding_support;
-    ctx.server_redir_mode = server_redir_mode;
+    ctx.server_config.username = server_username;
+    ctx.server_config.password = server_password;
+    ctx.server_config.cipher = server_cipher;
+    ctx.server_config.padding_support = server_padding_support;
+    ctx.server_config.redir_mode = server_redir_mode;
     ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
     ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_TLS(server_cipher);
     ctx.endpoint = endpoint;
@@ -292,14 +295,9 @@ class ContentServer {
             setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
-              T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
-                        remote_username_, remote_password_, remote_cipher_,
-                        remote_padding_support_,
-                        upstream_ssl_config_,
-                        ctx.https_fallback,
-                        upstream_ssl_ctx_.get(), ctx.ssl_ctx.get(),
-                        ctx.server_username, ctx.server_password, ctx.server_cipher,
-                        ctx.server_padding_support, ctx.server_redir_mode);
+              T::Create(io_context_, remote_config_, ctx.server_config,
+                        upstream_ssl_config_, ctx.https_fallback,
+                        upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
           if (in_shutdown_) {
             return;
@@ -498,7 +496,7 @@ class ContentServer {
     SSL_CTX_set_alpn_select_cb(ctx, &ContentServer::on_alpn_select, tlsext_ctx);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto https_fallback = listen_ctxs_[listen_ctx_num].https_fallback;
-    auto cipher = listen_ctxs_[listen_ctx_num].server_cipher;
+    auto cipher = listen_ctxs_[listen_ctx_num].server_config.cipher;
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(cipher)) {
       if (https_fallback) {
@@ -524,7 +522,7 @@ class ContentServer {
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto https_fallback = server->listen_ctxs_[listen_ctx_num].https_fallback;
-    auto cipher = server->listen_ctxs_[listen_ctx_num].server_cipher;
+    auto cipher = server->listen_ctxs_[listen_ctx_num].server_config.cipher;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
@@ -641,7 +639,7 @@ class ContentServer {
     // don't do it at SSLSocket::SSLSocket as we don't know the context (until we copy the protos array)
     NextProtoVector alpn_protos;
     std::string protos;
-    if (CIPHER_METHOD_IS_HTTP2(remote_cipher_)) {
+    if (CIPHER_METHOD_IS_HTTP2(remote_config_.cipher)) {
       if (upstream_ssl_config_.renego_allowed_default) {
         protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
         alpn_protos = {kProtoHTTP2, kProtoHTTP11};
@@ -651,11 +649,11 @@ class ContentServer {
         protos = NextProtoToString(kProtoHTTP2);
         alpn_protos = {kProtoHTTP2};
       }
-    } else if (CIPHER_METHOD_IS_HTTPS(remote_cipher_)) {
+    } else if (CIPHER_METHOD_IS_HTTPS(remote_config_.cipher)) {
       protos = NextProtoToString(kProtoHTTP11);
       alpn_protos = {kProtoHTTP11};
     } else {
-      DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_cipher_);
+      DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_config_.cipher);
     }
     VLOG(1) << "Alpn support (client) enabled: " << protos;
     upstream_ssl_config_.alpn_protos = std::move(alpn_protos);
@@ -739,13 +737,7 @@ class ContentServer {
   /// stopping the io_context from running out of work
   std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
 
-  std::string remote_host_ips_;
-  std::string remote_host_sni_;
-  uint16_t remote_port_;
-  std::string remote_username_;
-  std::string remote_password_;
-  cipher_method remote_cipher_;
-  bool remote_padding_support_;
+  ClientConnectionConfig remote_config_;
 
   bool https_fallback_;
   bool enable_upstream_tls_;
@@ -762,11 +754,7 @@ class ContentServer {
 
   struct ListenCtx {
     std::string server_name;
-    std::string server_username;
-    std::string server_password;
-    cipher_method server_cipher;
-    bool server_padding_support;
-    bool server_redir_mode;
+    ServerConnectionConfig server_config;
     bool enable_tls;
     bool https_fallback;
     bssl::UniquePtr<SSL_CTX> ssl_ctx;
