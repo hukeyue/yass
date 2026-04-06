@@ -1423,7 +1423,10 @@ cmake_dependent_option(
   USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" OFF
   "NOT MSVC; NOT APPLE" OFF)
 
-if ((USE_COMPRESS_DEBUG_SECTIONS AND USE_LLD) OR USE_MOLD)
+# mingw's lld doesn't like it
+# lld: error: unknown argument: --compress-debug-sections=zlib
+# lld: error: unknown argument: --compress-debug-sections=zstd
+if ((USE_COMPRESS_DEBUG_SECTIONS AND USE_LLD AND NOT MINGW) OR USE_MOLD)
   add_link_options(-Wl,--compress-debug-sections=zstd)
   list(APPEND YASS_APP_FEATURES "debug compressed (zstd)")
 elseif(USE_COMPRESS_DEBUG_SECTIONS)
@@ -4460,6 +4463,8 @@ set(SUPPORT_LIBS
 set(files
     src/net/network.cpp
     src/net/x509_util.cpp
+    src/net/client_connection_config.cpp
+    src/net/server_connection_config.cpp
     src/net/ssl_config.cpp
     src/net/ssl_socket.cpp
     src/net/ssl_server_socket.cpp
@@ -4522,6 +4527,8 @@ set(hfiles
     src/net/connection.hpp
     src/net/content_server.hpp
     src/net/protocol.hpp
+    src/net/client_connection_config.hpp
+    src/net/server_connection_config.hpp
     src/net/stream.hpp
     src/net/ssl_stream.hpp
     src/net/x509_util.hpp

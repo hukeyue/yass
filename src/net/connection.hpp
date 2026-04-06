@@ -37,6 +37,8 @@
 #include "net/asio.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
+#include "net/client_connection_config.hpp"
+#include "net/server_connection_config.hpp"
 #include "net/ssl_client_session_cache.hpp"
 #include "net/ssl_server_socket.hpp"
 
@@ -86,9 +88,7 @@ class Downlink {
 
   virtual void shutdown(asio::error_code& ec) { socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec); }
 
-  virtual void set_https_fallback(bool https_fallback) { DLOG(FATAL) << "Alpn: Unimplemented call"; }
-
-  virtual bool https_fallback() const { return false; }
+  virtual bool on_alpn_select(NextProto proto) { LOG(INFO) << "Alpn: Unexpected call"; return false; }
 
   virtual void close(asio::error_code& ec) { socket_.close(ec); }
 
@@ -102,9 +102,10 @@ class Downlink {
 
 class SSLDownlink : public Downlink {
  public:
-  SSLDownlink(asio::io_context& io_context, bool https_fallback, SSL_CTX* ssl_ctx)
+  SSLDownlink(asio::io_context& io_context, bool renego_allowed_for_http11_proto, cipher_method *local_cipher, SSL_CTX* ssl_ctx)
       : Downlink(io_context),
-        https_fallback_(https_fallback),
+        renego_allowed_for_http11_proto_(renego_allowed_for_http11_proto),
+        local_cipher_(local_cipher),
         ssl_socket_(SSLServerSocket::Create(&io_context, &socket_, ssl_ctx)) {}
 
   ~SSLDownlink() override { DCHECK(!handshake_callback_); }
@@ -117,18 +118,10 @@ class SSLDownlink : public Downlink {
       DCHECK(!handshake_callback_);
       asio::error_code ec = result == OK ? asio::error_code() : asio::error::connection_refused;
       if (!ec) {
-        auto alpn = ssl_socket_->negotiated_protocol();
-        switch (alpn) {
-          case kProtoHTTP2:
-            DCHECK(!https_fallback_) << " unexpected alpn: " << NextProtoToString(alpn);
-            break;
-          case kProtoHTTP11:
-            DCHECK(https_fallback_) << " unexpected alpn: " << NextProtoToString(alpn);
-            break;
-          default:
-            LOG(WARNING) << "Alpn unexpected: " << NextProtoToString(alpn);
-        }
-        VLOG(1) << "Alpn selected (server): " << NextProtoToString(alpn);
+        auto proto = ssl_socket_->negotiated_protocol();
+        DCHECK_EQ(selected_proto_, proto);
+        static_cast<void>(proto);
+        VLOG(1) << "Alpn selected (server): " << NextProtoToString(proto);
       }
       if (callback) {
         callback(ec);
@@ -162,19 +155,39 @@ class SSLDownlink : public Downlink {
     ssl_socket_->Shutdown([](asio::error_code ec) {}, true);
   }
 
-  void set_https_fallback(bool https_fallback) override {
-    if (!https_fallback_ && https_fallback) {
-      DLOG(FATAL) << "Alpn: force enabling https fallback without server support";
+  bool on_alpn_select(NextProto proto) override {
+    DCHECK(CIPHER_METHOD_IS_TLS(*local_cipher_));
+    switch (proto) {
+      case kProtoHTTP2:
+        if (CIPHER_METHOD_IS_HTTP2(*local_cipher_))
+          goto alpn_selected;
+        break;
+      case kProtoHTTP11:
+        if (CIPHER_METHOD_IS_HTTP2(*local_cipher_) && renego_allowed_for_http11_proto_)
+          goto alpn_selected;
+        if (CIPHER_METHOD_IS_HTTPS(*local_cipher_))
+          goto alpn_selected;
+        break;
+      default:
+        break;
     }
-    https_fallback_ = https_fallback;
-  }
+    // rejected
+    return false;
 
-  bool https_fallback() const override { return https_fallback_; }
+alpn_selected:
+    selected_proto_ = proto;
+    if (proto == kProtoHTTP11) {
+      *local_cipher_ = CRYPTO_HTTPS;
+    }
+    return true;
+  }
 
   void close(asio::error_code& ec) override { ssl_socket_->Disconnect(); }
 
  private:
-  bool https_fallback_;
+  NextProto selected_proto_ = kProtoUnknown;
+  bool renego_allowed_for_http11_proto_;
+  cipher_method* local_cipher_;
   scoped_refptr<SSLServerSocket> ssl_socket_;
 };
 
@@ -193,66 +206,31 @@ class Connection {
   /// Construct the connection with io context
   ///
   /// \param io_context the io context associated with the service
-  /// \param remote_host_ips the ip addresses used with remote endpoint
-  /// \param remote_host_sni the sni name used with remote endpoint
-  /// \param remote_port the port used with remote endpoint
-  /// \param remote_username the username used with remote endpoint
-  /// \param remote_password the password used with remote endpoint
-  /// \param remote_cipher the cipher used with remote endpoint
-  /// \param remote_padding_support the padding support used with remote endpoint
+  /// \param remote_config the network config used for upstream
+  /// \param local_config the network config used for downstream
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
-  /// \param https_fallback the data channel falls back to https (alpn)
-  /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
-  /// \param enable_tls the underlying data channel is using tls
+  /// \param renego_allowed_for_http11_proto the data channel falls back to http1.1 (via alpn)
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
-  /// \param ssl_ctx the ssl context object for tls data transfer
-  /// \param username the username used downlink
-  /// \param password the password used downlink
-  /// \param cipher the cipher used with downlink
-  /// \param padding_support padding support used with downlink
-  /// \param redir_mode redir mode used with downlink
+  /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   Connection(asio::io_context& io_context,
-             std::string_view remote_host_ips,
-             std::string_view remote_host_sni,
-             uint16_t remote_port,
-             std::string_view remote_username,
-             std::string_view remote_password,
-             cipher_method remote_cipher,
-             bool remote_padding_support,
+             const ClientConnectionConfig& remote_config,
+             const ServerConnectionConfig& local_config,
              const SSLConfig& upstream_ssl_config,
-             bool https_fallback,
-             bool enable_upstream_tls,
-             bool enable_tls,
+             bool renego_allowed_for_http11_proto,
              SSL_CTX* upstream_ssl_ctx,
-             SSL_CTX* ssl_ctx,
-             std::string_view username,
-             std::string_view password,
-             cipher_method cipher,
-             bool padding_support,
-             bool redir_mode)
+             SSL_CTX* ssl_ctx)
       : io_context_(&io_context),
-        remote_host_ips_(remote_host_ips),
-        remote_host_sni_(remote_host_sni),
-        remote_port_(remote_port),
-        remote_username_(remote_username),
-        remote_password_(remote_password),
-        remote_cipher_(remote_cipher),
-        remote_padding_support_(remote_padding_support),
+        remote_config_(remote_config),
+        local_config_(local_config),
+        remote_cipher_(remote_config.cipher),
+        local_cipher_(local_config.cipher),
         upstream_ssl_config_(upstream_ssl_config),
-        enable_upstream_tls_(enable_upstream_tls),
-        enable_tls_(enable_tls),
         upstream_ssl_ctx_(upstream_ssl_ctx),
-        username_(username),
-        password_(password),
-        cipher_(cipher),
-        padding_support_(padding_support),
-        redir_mode_(redir_mode) {
-    DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
-    if (enable_tls) {
-      DCHECK(ssl_ctx);
-      downlink_ = std::make_unique<SSLDownlink>(io_context, https_fallback, ssl_ctx);
+        ssl_ctx_(ssl_ctx) {
+    DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
+    if (ssl_ctx_ != nullptr) {
+      downlink_ = std::make_unique<SSLDownlink>(io_context, renego_allowed_for_http11_proto, &local_cipher_, ssl_ctx_);
     } else {
-      DCHECK(!ssl_ctx);
       downlink_ = std::make_unique<Downlink>(io_context);
     }
   }
@@ -260,12 +238,12 @@ class Connection {
   Connection(const Connection&) = delete;
   Connection& operator=(const Connection&) = delete;
 
-  Connection(Connection&&) = default;
-  Connection& operator=(Connection&&) = default;
+  Connection(Connection&&) = delete;
+  Connection& operator=(Connection&&) = delete;
 
   virtual ~Connection() = default;
 
-  void set_https_fallback(bool https_fallback) { downlink_->set_https_fallback(https_fallback); }
+  bool on_alpn_select(NextProto proto) { return downlink_->on_alpn_select(proto); }
 
  public:
   /// Construct the connection with socket
@@ -332,20 +310,15 @@ class Connection {
  protected:
   /// the io context associated with
   asio::io_context* io_context_;
-  /// the upstream ip to be established with
-  std::string remote_host_ips_;
-  /// the upstream sni to be established with
-  std::string remote_host_sni_;
-  /// the upstream port to be established with
-  uint16_t remote_port_;
-  /// the upstream username to be established with
-  std::string remote_username_;
-  /// the upstream password to be established with
-  std::string remote_password_;
-  /// the upstream cipher to be established with
+  /// the upstream network config
+  const ClientConnectionConfig& remote_config_;
+  /// the downstream network config
+  const ServerConnectionConfig& local_config_;
+
+  /// selected cipher after negotiated
   cipher_method remote_cipher_;
-  /// the upstream padding support to be established with
-  bool remote_padding_support_;
+  /// selected cipher after negotiated
+  cipher_method local_cipher_;
 
   /// service's bound endpoint
   asio::ip::tcp::endpoint endpoint_;
@@ -361,23 +334,11 @@ class Connection {
   SSLClientSessionCache* ssl_client_session_cache_ = nullptr;
 
   /// ssl config such as alpn used for upstream
-  SSLConfig upstream_ssl_config_;
-  /// if enable ssl layer
-  bool enable_upstream_tls_;
-  bool enable_tls_;
-  std::string upstream_certificate_;
+  const SSLConfig& upstream_ssl_config_;
+  /// ssl context for upstream
   SSL_CTX* upstream_ssl_ctx_;
-
-  /// the downlink username
-  std::string username_;
-  /// the downlink password
-  std::string password_;
-  /// the downlink cipher
-  cipher_method cipher_;
-  /// the downlink padding support
-  bool padding_support_;
-  /// the downlink redir mode
-  bool redir_mode_;
+  /// ssl context for downstream
+  SSL_CTX* ssl_ctx_;
 
   std::unique_ptr<Downlink> downlink_;
 

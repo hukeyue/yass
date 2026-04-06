@@ -46,6 +46,8 @@
 #include "net/connection.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
+#include "net/client_connection_config.hpp"
+#include "net/server_connection_config.hpp"
 #include "net/ssl_client_session_cache.hpp"
 #include "net/ssl_socket.hpp"
 #include "net/x509_util.hpp"
@@ -83,27 +85,29 @@ class ContentServer {
       : io_context_(io_context),
         work_guard_(
             std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor())),
-        remote_host_ips_(remote_host_ips),
-        remote_host_sni_(remote_host_sni),
-        remote_port_(remote_port),
-        remote_username_(remote_username),
-        remote_password_(remote_password),
-        remote_cipher_(remote_cipher),
-        remote_padding_support_(remote_padding_support),
-        https_fallback_(true),
-        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher_)),
+        remote_config_(),
+        renego_allowed_for_http11_proto_(true),
+        enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher)),
         enable_tls_(true),
         upstream_certificate_(upstream_certificate),
         upstream_ssl_config_(),
         certificate_(certificate),
         private_key_(private_key),
         delegate_(delegate) {
-    upstream_ssl_config_.allow_fallback_to_http11 = CIPHER_METHOD_IS_TLS(remote_cipher_);
-    upstream_ssl_config_.allow_fallback_to_http11 &= T::Type == CONNECTION_FACTORY_CLIENT;
-    https_fallback_ &= T::Type == CONNECTION_FACTORY_SERVER;
+    remote_config_.host_ips = remote_host_ips;
+    remote_config_.host_sni = remote_host_sni;
+    remote_config_.port = remote_port;
+    remote_config_.username = remote_username;
+    remote_config_.password = remote_password;
+    remote_config_.cipher = remote_cipher;
+    remote_config_.padding_support = remote_padding_support;
+    upstream_ssl_config_.renego_allowed_default = CIPHER_METHOD_IS_TLS(remote_config_.cipher);
+    upstream_ssl_config_.renego_allowed_default &= T::Type == CONNECTION_FACTORY_CLIENT;
+    upstream_ssl_config_.early_data_enabled = absl::GetFlag(FLAGS_tls13_early_data);
+    renego_allowed_for_http11_proto_ &= T::Type == CONNECTION_FACTORY_SERVER;
     enable_upstream_tls_ &= T::Type == CONNECTION_FACTORY_CLIENT;
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
-    DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
+    DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
     VLOG(1) << "ContentServer (" << T::Name << ") allocated memory";
   }
@@ -146,13 +150,13 @@ class ContentServer {
     }
     ListenCtx& ctx = listen_ctxs_[next_listen_ctx_];
     ctx.server_name = server_name;
-    ctx.server_username = server_username;
-    ctx.server_password = server_password;
-    ctx.server_cipher = server_cipher;
-    ctx.server_padding_support = server_padding_support;
-    ctx.server_redir_mode = server_redir_mode;
+    ctx.server_config.username = server_username;
+    ctx.server_config.password = server_password;
+    ctx.server_config.cipher = server_cipher;
+    ctx.server_config.padding_support = server_padding_support;
+    ctx.server_config.redir_mode = server_redir_mode;
     ctx.enable_tls = enable_tls_ && CIPHER_METHOD_IS_TLS(server_cipher);
-    ctx.https_fallback = https_fallback_ && CIPHER_METHOD_IS_TLS(server_cipher);
+    ctx.renego_allowed_for_http11_proto = renego_allowed_for_http11_proto_ && CIPHER_METHOD_IS_TLS(server_cipher);
     ctx.endpoint = endpoint;
     ctx.acceptor = std::make_unique<asio::ip::tcp::acceptor>(io_context_);
 
@@ -190,7 +194,7 @@ class ContentServer {
       }
     }
     if (ctx.enable_tls) {
-      setup_ssl_ctx(ec);
+      ctx.ssl_ctx = setup_ssl_ctx(ec);
       if (ec) {
         return;
       }
@@ -287,19 +291,13 @@ class ContentServer {
           tlsext_ctx_t* tlsext_ctx = nullptr;
           if (ctx.enable_tls) {
             tlsext_ctx = new tlsext_ctx_t{this, next_connection_id_, listen_ctx_num};
-            setup_ssl_ctx_alpn_cb(tlsext_ctx);
-            setup_ssl_ctx_tlsext_cb(tlsext_ctx);
+            setup_ssl_ctx_alpn_cb(ctx.ssl_ctx.get(), tlsext_ctx);
+            setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
-              T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
-                        remote_username_, remote_password_, remote_cipher_,
-                        remote_padding_support_,
-                        upstream_ssl_config_,
-                        ctx.https_fallback,
-                        enable_upstream_tls_, ctx.enable_tls,
-                        upstream_ssl_ctx_.get(), ssl_ctx_.get(),
-                        ctx.server_username, ctx.server_password, ctx.server_cipher,
-                        ctx.server_padding_support, ctx.server_redir_mode);
+              T::Create(io_context_, remote_config_, ctx.server_config,
+                        upstream_ssl_config_, ctx.renego_allowed_for_http11_proto,
+                        upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
           if (in_shutdown_) {
             return;
@@ -371,13 +369,13 @@ class ContentServer {
     }
   }
 
-  void setup_ssl_ctx(asio::error_code& ec) {
-    ssl_ctx_.reset(::SSL_CTX_new(::TLS_server_method()));
-    SSL_CTX* ctx = ssl_ctx_.get();
+  bssl::UniquePtr<SSL_CTX> setup_ssl_ctx(asio::error_code& ec) {
+    bssl::UniquePtr<SSL_CTX> ssl_ctx {::SSL_CTX_new(::TLS_server_method())};
+    SSL_CTX* ctx = ssl_ctx.get();
     if (!ctx) {
       print_openssl_error();
       ec = asio::error::no_memory;
-      return;
+      return nullptr;
     }
 
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, ::SSL_CTX_get_verify_callback(ctx));
@@ -414,7 +412,7 @@ class ContentServer {
       if (!cert) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
 
       ERR_clear_error();
@@ -422,7 +420,7 @@ class ContentServer {
       if (result == 0 || ::ERR_peek_error() != 0) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
 
       VLOG(1) << "Using certificate (in-memory)";
@@ -432,7 +430,7 @@ class ContentServer {
       if (SSL_CTX_use_PrivateKey(ctx, pkey.get()) != 1) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
       VLOG(1) << "Using privated key (in-memory)";
     }
@@ -490,17 +488,18 @@ class ContentServer {
     SSL_CTX_set0_buffer_pool(ctx, x509_util::GetBufferPool());
 
     load_ca_to_ssl_ctx(ctx);
+
+    return ssl_ctx;
   }
 
-  void setup_ssl_ctx_alpn_cb(tlsext_ctx_t* tlsext_ctx) {
-    SSL_CTX* ctx = ssl_ctx_.get();
+  void setup_ssl_ctx_alpn_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
     SSL_CTX_set_alpn_select_cb(ctx, &ContentServer::on_alpn_select, tlsext_ctx);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
-    auto https_fallback = listen_ctxs_[listen_ctx_num].https_fallback;
-    auto cipher = listen_ctxs_[listen_ctx_num].server_cipher;
+    auto renego_allowed_for_http11_proto = listen_ctxs_[listen_ctx_num].renego_allowed_for_http11_proto;
+    auto cipher = listen_ctxs_[listen_ctx_num].server_config.cipher;
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(cipher)) {
-      if (https_fallback) {
+      if (renego_allowed_for_http11_proto) {
         protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
       } else {
         protos = NextProtoToString(kProtoHTTP2);
@@ -522,38 +521,27 @@ class ContentServer {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
-    auto https_fallback = server->listen_ctxs_[listen_ctx_num].https_fallback;
-    auto cipher = server->listen_ctxs_[listen_ctx_num].server_cipher;
+    auto renego_allowed_for_http11_proto = server->listen_ctxs_[listen_ctx_num].renego_allowed_for_http11_proto;
     int connection_id = tlsext_ctx->connection_id;
     while (inlen) {
       if (in[0] + 1u > inlen) {
         goto err;
       }
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
-      if (CIPHER_METHOD_IS_HTTP2(cipher) && NextProtoFromString(alpn) == kProtoHTTP2) {
+      NextProto proto = NextProtoFromString(alpn);
+      if (server->on_alpn_select(connection_id, proto)) {
         VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
-        server->set_https_fallback(connection_id, false);
+
         *out = in + 1;
         *outlen = in[0];
 
-        // Enable ALPS for HTTP/2 with empty data.
+        // Enable ALPS for give proto with empty data.
         std::vector<uint8_t> data;
         SSL_add_application_settings(ssl, reinterpret_cast<const uint8_t*>(alpn.data()), alpn.size(), data.data(),
                                      data.size());
         return SSL_TLSEXT_ERR_OK;
       }
-      if (https_fallback && NextProtoFromString(alpn) == kProtoHTTP11) {
-        VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
-        server->set_https_fallback(connection_id, true);
-        *out = in + 1;
-        *outlen = in[0];
 
-        // Enable ALPS for HTTP/1.1 with empty data.
-        std::vector<uint8_t> data;
-        SSL_add_application_settings(ssl, reinterpret_cast<const uint8_t*>(alpn.data()), alpn.size(), data.data(),
-                                     data.size());
-        return SSL_TLSEXT_ERR_OK;
-      }
       VLOG(2) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) skipped: " << alpn;
       inlen -= 1u + in[0];
       in += 1u + in[0];
@@ -564,8 +552,7 @@ class ContentServer {
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
-  void setup_ssl_ctx_tlsext_cb(tlsext_ctx_t* tlsext_ctx) {
-    SSL_CTX* ctx = ssl_ctx_.get();
+  void setup_ssl_ctx_tlsext_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
     SSL_CTX_set_tlsext_servername_callback(ctx, &ContentServer::on_tlsext);
     SSL_CTX_set_tlsext_servername_arg(ctx, tlsext_ctx);
 
@@ -596,14 +583,14 @@ class ContentServer {
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
-  void set_https_fallback(int connection_id, bool https_fallback) {
+  bool on_alpn_select(int connection_id, NextProto proto) {
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
-      iter->second->set_https_fallback(https_fallback);
+      return iter->second->on_alpn_select(proto);
     } else {
-      VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Set Https Fallback fatal error:"
-              << " invalid connection id";
+      LOG(INFO) << "Connection (" << T::Name << ") invalid connection id: " << connection_id;
     }
+    return false;
   }
 
   void setup_upstream_ssl_ctx(asio::error_code& ec) {
@@ -641,20 +628,21 @@ class ContentServer {
     // don't do it at SSLSocket::SSLSocket as we don't know the context (until we copy the protos array)
     NextProtoVector alpn_protos;
     std::string protos;
-    if (CIPHER_METHOD_IS_HTTP2(remote_cipher_)) {
-      if (upstream_ssl_config_.allow_fallback_to_http11) {
+    if (CIPHER_METHOD_IS_HTTP2(remote_config_.cipher)) {
+      if (upstream_ssl_config_.renego_allowed_default) {
         protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
         alpn_protos = {kProtoHTTP2, kProtoHTTP11};
+        upstream_ssl_config_.renego_allowed_for_protos = {kProtoHTTP11};
       } else {
         // ??? BoringSSL bugs, http1.1 will always be enabled
         protos = NextProtoToString(kProtoHTTP2);
         alpn_protos = {kProtoHTTP2};
       }
-    } else if (CIPHER_METHOD_IS_HTTPS(remote_cipher_)) {
+    } else if (CIPHER_METHOD_IS_HTTPS(remote_config_.cipher)) {
       protos = NextProtoToString(kProtoHTTP11);
       alpn_protos = {kProtoHTTP11};
     } else {
-      DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_cipher_);
+      DLOG(FATAL) << "Alpn: Unexpected remote cipher: " << to_cipher_method_name(remote_config_.cipher);
     }
     VLOG(1) << "Alpn support (client) enabled: " << protos;
     upstream_ssl_config_.alpn_protos = std::move(alpn_protos);
@@ -738,15 +726,9 @@ class ContentServer {
   /// stopping the io_context from running out of work
   std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
 
-  std::string remote_host_ips_;
-  std::string remote_host_sni_;
-  uint16_t remote_port_;
-  std::string remote_username_;
-  std::string remote_password_;
-  cipher_method remote_cipher_;
-  bool remote_padding_support_;
+  ClientConnectionConfig remote_config_;
 
-  bool https_fallback_;
+  bool renego_allowed_for_http11_proto_;
   bool enable_upstream_tls_;
   bool enable_tls_;
   std::string upstream_certificate_;
@@ -756,19 +738,15 @@ class ContentServer {
 
   std::string certificate_;
   std::string private_key_;
-  bssl::UniquePtr<SSL_CTX> ssl_ctx_;
 
   ContentServer::Delegate* delegate_;
 
   struct ListenCtx {
     std::string server_name;
-    std::string server_username;
-    std::string server_password;
-    cipher_method server_cipher;
-    bool server_padding_support;
-    bool server_redir_mode;
+    ServerConnectionConfig server_config;
     bool enable_tls;
-    bool https_fallback;
+    bool renego_allowed_for_http11_proto;
+    bssl::UniquePtr<SSL_CTX> ssl_ctx;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;

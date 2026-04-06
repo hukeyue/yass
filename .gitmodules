@@ -6,7 +6,7 @@
 	url = https://github.com/hukeyue/abseil-cpp
 [submodule "third_party/lss"]
 	path = third_party/lss
-	url = https://chromium.googlesource.com/linux-syscall-support
+	url = https://github.com/hukeyue/linux-syscall-support
 [submodule "third_party/boringssl"]
 	path = third_party/boringssl/src
 	url = https://github.com/hukeyue/boringssl
@@ -22,10 +22,10 @@
 	url = https://github.com/hukeyue/protobuf
 [submodule "third_party/libc++abi"]
 	path = third_party/libc++abi/trunk
-	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi
+	url = https://github.com/hukeyue/libcxxabi
 [submodule "third_party/libc++"]
 	path = third_party/libc++/trunk
-	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx
+	url = https://github.com/hukeyue/libcxx
 [submodule "third_party/googleurl"]
 	path = third_party/googleurl
 	url = https://github.com/hukeyue/googleurl
@@ -43,7 +43,7 @@
 	url = https://github.com/hukeyue/mbedtls
 [submodule "third_party/libunwind/trunk"]
 	path = third_party/libunwind/trunk
-	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind
+	url = https://github.com/hukeyue/libunwind
 [submodule "third_party/re2"]
 	path = third_party/re2
 	url = https://github.com/hukeyue/re2
@@ -61,7 +61,7 @@
 	url = https://github.com/hukeyue/jsoncpp
 [submodule "third_party/llvm-libc/trunk"]
 	path = third_party/llvm-libc/trunk
-	url = https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc
+	url = https://github.com/hukeyue/llvm-libc
 [submodule "third_party/jemalloc/src"]
 	path = third_party/jemalloc/src
 	url = https://github.com/jemalloc/jemalloc/

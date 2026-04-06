@@ -84,14 +84,35 @@ using WaitCallback = absl::AnyInvocable<void(asio::error_code ec)>;
 std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos);
 
 struct SSLConfig {
-  bool allow_fallback_to_http11 = true;
+  SSLConfig();
+  SSLConfig(const SSLConfig& other);
+  SSLConfig(SSLConfig&& other);
+  ~SSLConfig();
+  SSLConfig& operator=(const SSLConfig&);
+  SSLConfig& operator=(SSLConfig&&);
+
+  // Whether early data is enabled on this connection. Note that early data has
+  // weaker security properties than normal data and changes the
+  // SSLClientSocket's behavior. The caller must only send replayable data prior
+  // to handshake confirmation. See StreamSocket::ConfirmHandshake for details.
+  //
+  // Additionally, early data may be rejected by the server, resulting in some
+  // socket operation failing with ERR_EARLY_DATA_REJECTED or
+  // ERR_WRONG_VERSION_ON_EARLY_DATA before any data is returned from the
+  // server. The caller must handle these cases, typically by retrying the
+  // high-level operation.
+  //
+  // If unsure, do not enable this option.
+  bool early_data_enabled = false;
+
+  // If true, causes only ECDHE cipher suites to be enabled.
+  bool require_ecdhe = false;
 
   // The list of application level protocols supported with ALPN (Application
   // Layer Protocol Negotiation), in decreasing order of preference.  Protocols
   // will be advertised in this order during TLS handshake.
   NextProtoVector alpn_protos;
 
-#if 0
   // True if renegotiation should be allowed for the default application-level
   // protocol when the peer does not negotiate ALPN.
   bool renego_allowed_default = false;
@@ -99,6 +120,7 @@ struct SSLConfig {
   // The list of application-level protocols to enable renegotiation for.
   NextProtoVector renego_allowed_for_protos;
 
+#if 0
   // If non-empty, a serialized ECHConfigList to use to encrypt the ClientHello.
   // If this field is non-empty, callers should handle |ERR_ECH_NOT_NEGOTIATED|
   // errors from Connect() by calling GetECHRetryConfigs() to determine how to

@@ -150,43 +150,19 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// Construct the service with io context and socket
   ///
   /// \param io_context the io context associated with the service
-  /// \param remote_host_ips the ip addresses used with remote endpoint
-  /// \param remote_host_sni the sni name used with remote endpoint
-  /// \param remote_port the port used with remote endpoint
-  /// \param remote_username the username used with remote endpoint
-  /// \param remote_password the password used with remote endpoint
-  /// \param remote_cipher the cipher used with remote endpoint
-  /// \param remote_padding_support the padding support used with remote endpoint
+  /// \param remote_config the network config used for upstream
+  /// \param local_config the network config used for downstream
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
-  /// \param https_fallback the data channel falls back to https (alpn)
-  /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
-  /// \param enable_tls the underlying data channel is using tls
+  /// \param renego_allowed_for_http11_proto the data channel falls back to http1.1 (via alpn)
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
-  /// \param ssl_ctx the ssl context object for tls data transfer
-  /// \param username the username used downlink
-  /// \param password the password used downlink
-  /// \param cipher the cipher used with downlink
-  /// \param padding_support padding support used with downlink
-  /// \param redir_mode redir mode used with downlink
+  /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   CliConnection(asio::io_context& io_context,
-                std::string_view remote_host_ips,
-                std::string_view remote_host_sni,
-                uint16_t remote_port,
-                std::string_view remote_username,
-                std::string_view remote_password,
-                cipher_method remote_cipher,
-                bool remote_padding_support,
+                const ClientConnectionConfig& remote_config,
+                const ServerConnectionConfig& local_config,
                 const SSLConfig& upstream_ssl_config,
-                bool https_fallback,
-                bool enable_upstream_tls,
-                bool enable_tls,
+                bool renego_allowed_for_http11_proto,
                 SSL_CTX* upstream_ssl_ctx,
-                SSL_CTX* ssl_ctx,
-                std::string_view username,
-                std::string_view password,
-                cipher_method cipher,
-                bool padding_support,
-                bool redir_mode);
+                SSL_CTX* ssl_ctx);
 
   /// Destruct the service
   ~CliConnection() override;
@@ -539,9 +515,9 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
 
   cipher_method method() const { return remote_cipher_; }
 
-  bool padding_support() const { return remote_padding_support_; }
+  bool padding_support() const { return remote_config_.padding_support; }
 
-  bool redir_mode() const { return redir_mode_; }
+  bool redir_mode() const { return local_config_.redir_mode; }
 
   friend class DataFrameSource;
 };

@@ -129,7 +129,6 @@ void DoHRequest::OnSocketConnect() {
   SetTCPKeepAlive(socket_.native_handle(), ec);
   SetSocketTcpNoDelay(&socket_, ec);
   SSLConfig ssl_config;
-  ssl_config.allow_fallback_to_http11 = true;
   ssl_config.alpn_protos = {kProtoHTTP11};
 
   ssl_socket_ = SSLSocket::Create(ssl_socket_data_index_, nullptr, &io_context_, &socket_, ssl_ctx_,

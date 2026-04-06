@@ -31,11 +31,28 @@ using namespace std::string_view_literals;
 
 namespace net {
 
-inline SSLClientSessionCache::Key SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
+SSLClientSessionCache::Key
+SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
   SSLClientSessionCache::Key key;
   key.server = host_and_port_;
   key.dest_ip_addr = dest_ip_addr;
   return key;
+}
+
+bool SSLSocket::IsRenegotiationAllowed() const {
+  if (negotiated_protocol_ == NextProto::kProtoUnknown) {
+    return ssl_config_.renego_allowed_default;
+  }
+
+  for (NextProto allowed : ssl_config_.renego_allowed_for_protos) {
+    if (negotiated_protocol_ == allowed)
+      return true;
+  }
+  return false;
+}
+
+bool SSLSocket::IsCachingEnabled() const {
+  return ssl_client_session_cache_ != nullptr;
 }
 
 SSLSocket::SSLSocket(int ssl_socket_data_index,
@@ -52,7 +69,6 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
       host_and_port_(host_name, port),
       ssl_config_(ssl_config),
       ssl_client_session_cache_(ssl_client_session_cache),
-      early_data_enabled_(absl::GetFlag(FLAGS_tls13_early_data)),
       pending_read_error_(kSSLClientSocketNoPendingResult) {
   DCHECK(!ssl_);
   DCHECK(ssl_ctx);
@@ -101,7 +117,7 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
     }
   }
 
-  SSL_set_early_data_enabled(ssl_.get(), early_data_enabled_);
+  SSL_set_early_data_enabled(ssl_.get(), ssl_config_.early_data_enabled);
 
   // TODO(crbug.com/41393419): Make this option not a no-op in BoringSSL and
   // then disable it.
@@ -112,11 +128,11 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
 
   std::string command(kSSLDefaultCiphersList);
 
-#if 0
   if (ssl_config_.require_ecdhe) {
     command.append(":!kRSA");
   }
 
+#if 0
   // Remove any disabled ciphers.
   for (uint16_t id : context_->config().disabled_cipher_suites) {
     const SSL_CIPHER* cipher = SSL_get_cipher_by_value(id);
@@ -586,7 +602,7 @@ int SSLSocket::DoHandshakeComplete(int result) {
     SSL_set_renegotiate_mode(ssl_.get(), ssl_renegotiate_never);
 
   uint16_t signature_algorithm = SSL_get_peer_signature_algorithm(ssl_.get());
-  (void)signature_algorithm;
+  static_cast<void>(signature_algorithm);
 
   SSLHandshakeDetails details;
   if (SSL_version(ssl_.get()) < TLS1_3_VERSION) {
@@ -844,7 +860,7 @@ void SSLSocket::DoPeek() {
 
   DCHECK(ssl_.get());
 
-  if (early_data_enabled_ && !handled_early_data_result_) {
+  if (ssl_config_.early_data_enabled && !handled_early_data_result_) {
     // |SSL_peek| will implicitly run |SSL_do_handshake| if needed, but run it
     // manually to pick up the reject reason.
     int rv = SSL_do_handshake(ssl_.get());
