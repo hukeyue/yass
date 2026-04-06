@@ -149,14 +149,14 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             const ClientConnectionConfig& remote_config,
                             const ServerConnectionConfig& local_config,
                             const SSLConfig& upstream_ssl_config,
-                            bool https_fallback,
+                            bool renego_allowed_for_http11_proto,
                             SSL_CTX* upstream_ssl_ctx,
                             SSL_CTX* ssl_ctx)
     : Connection(io_context,
                  remote_config,
                  local_config,
                  upstream_ssl_config,
-                 https_fallback,
+                 renego_allowed_for_http11_proto,
                  upstream_ssl_ctx,
                  ssl_ctx) {}
 

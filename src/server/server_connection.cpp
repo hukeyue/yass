@@ -142,14 +142,14 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    const ClientConnectionConfig& remote_config,
                                    const ServerConnectionConfig& local_config,
                                    const SSLConfig& upstream_ssl_config,
-                                   bool https_fallback,
+                                   bool renego_allowed_for_http11_proto,
                                    SSL_CTX* upstream_ssl_ctx,
                                    SSL_CTX* ssl_ctx)
     : Connection(io_context,
                  remote_config,
                  local_config,
                  upstream_ssl_config,
-                 https_fallback,
+                 renego_allowed_for_http11_proto,
                  upstream_ssl_ctx,
                  ssl_ctx),
       state_() {}
@@ -205,7 +205,7 @@ void ServerConnection::close() {
 
 void ServerConnection::Start() {
   bool http2 = CIPHER_METHOD_IS_HTTP2(method());
-  if (http2 && downlink_->https_fallback()) {
+  if (http2 && CIPHER_METHOD_IS_HTTPS(method())) {
     http2 = false;
   }
 #ifdef HAVE_QUICHE
@@ -235,7 +235,7 @@ void ServerConnection::Start() {
     OnUpstreamWriteFlush();
   } else
 #endif
-      if (downlink_->https_fallback()) {
+      if (CIPHER_METHOD_IS_HTTPS(local_cipher_)) {
     DCHECK(!http2);
     // TODO should we support it?
     // padding_support_in_fact_ = padding_support();
@@ -1385,7 +1385,7 @@ scoped_refptr<GrowableIOBuffer> ServerConnection::GetNextDownstreamBuf(asio::err
     data_frame_->AddChunk(buf);
   } else
 #endif
-      if (downlink_->https_fallback()) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     downstream_.push_back(buf);
   } else {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
@@ -1568,7 +1568,7 @@ try_again:
     }
   } else
 #endif
-      if (downlink_->https_fallback()) {
+      if (CIPHER_METHOD_IS_HTTPS(method())) {
     upstream_.push_back(buf);
   } else {
     if (CIPHER_METHOD_IS_SOCKS(method())) {
@@ -1722,7 +1722,7 @@ void ServerConnection::OnConnect() {
     }
   } else
 #endif
-      if (downlink_->https_fallback() && http_is_connect_) {
+      if (CIPHER_METHOD_IS_HTTPS(method()) && http_is_connect_) {
     auto buf = GrowableIOBuffer::copyBuffer(http_connect_reply_.data(), http_connect_reply_.size());
     OnDownstreamWrite(buf.get());
   }

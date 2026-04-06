@@ -88,9 +88,7 @@ class Downlink {
 
   virtual void shutdown(asio::error_code& ec) { socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec); }
 
-  virtual void set_https_fallback(bool https_fallback) { DLOG(FATAL) << "Alpn: Unimplemented call"; }
-
-  virtual bool https_fallback() const { return false; }
+  virtual bool on_alpn_select(NextProto proto) { LOG(INFO) << "Alpn: Unexpected call"; return false; }
 
   virtual void close(asio::error_code& ec) { socket_.close(ec); }
 
@@ -104,9 +102,10 @@ class Downlink {
 
 class SSLDownlink : public Downlink {
  public:
-  SSLDownlink(asio::io_context& io_context, bool https_fallback, SSL_CTX* ssl_ctx)
+  SSLDownlink(asio::io_context& io_context, bool renego_allowed_for_http11_proto, cipher_method *local_cipher, SSL_CTX* ssl_ctx)
       : Downlink(io_context),
-        https_fallback_(https_fallback),
+        renego_allowed_for_http11_proto_(renego_allowed_for_http11_proto),
+        local_cipher_(local_cipher),
         ssl_socket_(SSLServerSocket::Create(&io_context, &socket_, ssl_ctx)) {}
 
   ~SSLDownlink() override { DCHECK(!handshake_callback_); }
@@ -119,18 +118,10 @@ class SSLDownlink : public Downlink {
       DCHECK(!handshake_callback_);
       asio::error_code ec = result == OK ? asio::error_code() : asio::error::connection_refused;
       if (!ec) {
-        auto alpn = ssl_socket_->negotiated_protocol();
-        switch (alpn) {
-          case kProtoHTTP2:
-            DCHECK(!https_fallback_) << " unexpected alpn: " << NextProtoToString(alpn);
-            break;
-          case kProtoHTTP11:
-            DCHECK(https_fallback_) << " unexpected alpn: " << NextProtoToString(alpn);
-            break;
-          default:
-            LOG(WARNING) << "Alpn unexpected: " << NextProtoToString(alpn);
-        }
-        VLOG(1) << "Alpn selected (server): " << NextProtoToString(alpn);
+        auto proto = ssl_socket_->negotiated_protocol();
+        DCHECK_EQ(selected_proto_, proto);
+        static_cast<void>(proto);
+        VLOG(1) << "Alpn selected (server): " << NextProtoToString(proto);
       }
       if (callback) {
         callback(ec);
@@ -164,19 +155,39 @@ class SSLDownlink : public Downlink {
     ssl_socket_->Shutdown([](asio::error_code ec) {}, true);
   }
 
-  void set_https_fallback(bool https_fallback) override {
-    if (!https_fallback_ && https_fallback) {
-      DLOG(FATAL) << "Alpn: force enabling https fallback without server support";
+  bool on_alpn_select(NextProto proto) override {
+    DCHECK(CIPHER_METHOD_IS_TLS(*local_cipher_));
+    switch (proto) {
+      case kProtoHTTP2:
+        if (CIPHER_METHOD_IS_HTTP2(*local_cipher_))
+          goto alpn_selected;
+        break;
+      case kProtoHTTP11:
+        if (CIPHER_METHOD_IS_HTTP2(*local_cipher_) && renego_allowed_for_http11_proto_)
+          goto alpn_selected;
+        if (CIPHER_METHOD_IS_HTTPS(*local_cipher_))
+          goto alpn_selected;
+        break;
+      default:
+        break;
     }
-    https_fallback_ = https_fallback;
-  }
+    // rejected
+    return false;
 
-  bool https_fallback() const override { return https_fallback_; }
+alpn_selected:
+    selected_proto_ = proto;
+    if (proto == kProtoHTTP11) {
+      *local_cipher_ = CRYPTO_HTTPS;
+    }
+    return true;
+  }
 
   void close(asio::error_code& ec) override { ssl_socket_->Disconnect(); }
 
  private:
-  bool https_fallback_;
+  NextProto selected_proto_ = kProtoUnknown;
+  bool renego_allowed_for_http11_proto_;
+  cipher_method* local_cipher_;
   scoped_refptr<SSLServerSocket> ssl_socket_;
 };
 
@@ -198,25 +209,27 @@ class Connection {
   /// \param remote_config the network config used for upstream
   /// \param local_config the network config used for downstream
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
-  /// \param https_fallback the data channel falls back to http1.1 (via alpn)
+  /// \param renego_allowed_for_http11_proto the data channel falls back to http1.1 (via alpn)
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   Connection(asio::io_context& io_context,
              const ClientConnectionConfig& remote_config,
              const ServerConnectionConfig& local_config,
              const SSLConfig& upstream_ssl_config,
-             bool https_fallback,
+             bool renego_allowed_for_http11_proto,
              SSL_CTX* upstream_ssl_ctx,
              SSL_CTX* ssl_ctx)
       : io_context_(&io_context),
         remote_config_(remote_config),
         local_config_(local_config),
+        remote_cipher_(remote_config.cipher),
+        local_cipher_(local_config.cipher),
         upstream_ssl_config_(upstream_ssl_config),
         upstream_ssl_ctx_(upstream_ssl_ctx),
         ssl_ctx_(ssl_ctx) {
     DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
     if (ssl_ctx_ != nullptr) {
-      downlink_ = std::make_unique<SSLDownlink>(io_context, https_fallback, ssl_ctx_);
+      downlink_ = std::make_unique<SSLDownlink>(io_context, renego_allowed_for_http11_proto, &local_cipher_, ssl_ctx_);
     } else {
       downlink_ = std::make_unique<Downlink>(io_context);
     }
@@ -230,7 +243,7 @@ class Connection {
 
   virtual ~Connection() = default;
 
-  void set_https_fallback(bool https_fallback) { downlink_->set_https_fallback(https_fallback); }
+  bool on_alpn_select(NextProto proto) { return downlink_->on_alpn_select(proto); }
 
  public:
   /// Construct the connection with socket
@@ -298,9 +311,14 @@ class Connection {
   /// the io context associated with
   asio::io_context* io_context_;
   /// the upstream network config
-  ClientConnectionConfig remote_config_;
+  const ClientConnectionConfig& remote_config_;
   /// the downstream network config
-  ServerConnectionConfig local_config_;
+  const ServerConnectionConfig& local_config_;
+
+  /// selected cipher after negotiated
+  cipher_method remote_cipher_;
+  /// selected cipher after negotiated
+  cipher_method local_cipher_;
 
   /// service's bound endpoint
   asio::ip::tcp::endpoint endpoint_;

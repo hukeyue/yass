@@ -166,14 +166,14 @@ CliConnection::CliConnection(asio::io_context& io_context,
                              const ClientConnectionConfig& remote_config,
                              const ServerConnectionConfig& local_config,
                              const SSLConfig& upstream_ssl_config,
-                             bool https_fallback,
+                             bool renego_allowed_for_http11_proto,
                              SSL_CTX* upstream_ssl_ctx,
                              SSL_CTX* ssl_ctx)
     : Connection(io_context,
                  remote_config,
                  local_config,
                  upstream_ssl_config,
-                 https_fallback,
+                 renego_allowed_for_http11_proto,
                  upstream_ssl_ctx,
                  ssl_ctx),
       state_(),
@@ -2332,7 +2332,7 @@ void CliConnection::connected() {
   bool http2 = CIPHER_METHOD_IS_HTTP2(method());
   if (channel_->negotiated_protocol() == kProtoHTTP11) {
     http2 = false;
-    remote_config_.cipher = CRYPTO_HTTPS;
+    remote_cipher_ = CRYPTO_HTTPS;
   }
 
   // Create adapters

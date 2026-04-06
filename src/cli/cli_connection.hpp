@@ -153,14 +153,14 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// \param remote_config the network config used for upstream
   /// \param local_config the network config used for downstream
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
-  /// \param https_fallback the data channel falls back to http1.1 (via alpn)
+  /// \param renego_allowed_for_http11_proto the data channel falls back to http1.1 (via alpn)
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
   /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   CliConnection(asio::io_context& io_context,
                 const ClientConnectionConfig& remote_config,
                 const ServerConnectionConfig& local_config,
                 const SSLConfig& upstream_ssl_config,
-                bool https_fallback,
+                bool renego_allowed_for_http11_proto,
                 SSL_CTX* upstream_ssl_ctx,
                 SSL_CTX* ssl_ctx);
 
@@ -513,7 +513,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// mark of in-progress writing
   bool write_inprogress_ = false;
 
-  cipher_method method() const { return remote_config_.cipher; }
+  cipher_method method() const { return remote_cipher_; }
 
   bool padding_support() const { return remote_config_.padding_support; }
 
