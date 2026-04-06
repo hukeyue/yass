@@ -55,7 +55,7 @@ jobs:
             platform: 'linux/arm64'
           - container: 'opensuse15'
             platform: 'linux/amd64'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
     steps:
@@ -118,7 +118,7 @@ jobs:
             gui_variant: gtk4
           - container: 'opensuse15'
             gui_variant: qt6
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs: docker_publish
@@ -218,7 +218,7 @@ jobs:
             build_type: MinSizeRel
             platform: 'linux/arm64'
             build_options:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     env:

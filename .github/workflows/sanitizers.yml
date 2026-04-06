@@ -66,7 +66,7 @@ jobs:
             arch: amd64
             build_type: Debug
             gtest_repeat_times: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - name: Checkout with shallow submodules

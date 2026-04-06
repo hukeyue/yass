@@ -73,7 +73,7 @@ jobs:
             extra_flags: ''
             openwrt: 'target=rockchip subtarget=armv8 abi=musl'
             qemu_suffix: aarch64
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     env:
