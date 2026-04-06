@@ -253,6 +253,13 @@ jobs:
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
           ./scripts/get-android-sys.sh ${{ matrix.arch }} "${{ matrix.SYSROOT }}"
+      - name: Disable AppArmor Restrictions (x86 and x64)
+        if: ${{ matrix.arch == 'x86' ||  matrix.arch == 'x64' }}
+        run: |
+          # see https://github.com/DevToys-app/DevToys/issues/1373#issuecomment-2985518849
+          sudo apt-get install -y apparmor-profiles apparmor-profiles-extra
+          sudo ln -s /usr/share/apparmor/extra-profiles/bwrap-userns-restrict /etc/apparmor.d/bwrap
+          sudo apparmor_parser /etc/apparmor.d/bwrap
       - name: Run tests (x86 and x64)
         if: ${{ matrix.arch == 'x86' ||  matrix.arch == 'x64' }}
         run: |
