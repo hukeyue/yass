@@ -100,6 +100,7 @@ class ContentServer {
         delegate_(delegate) {
     upstream_ssl_config_.renego_allowed_default = CIPHER_METHOD_IS_TLS(remote_cipher_);
     upstream_ssl_config_.renego_allowed_default &= T::Type == CONNECTION_FACTORY_CLIENT;
+    upstream_ssl_config_.early_data_enabled = absl::GetFlag(FLAGS_tls13_early_data);
     https_fallback_ &= T::Type == CONNECTION_FACTORY_SERVER;
     enable_upstream_tls_ &= T::Type == CONNECTION_FACTORY_CLIENT;
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
@@ -190,7 +191,7 @@ class ContentServer {
       }
     }
     if (ctx.enable_tls) {
-      setup_ssl_ctx(ec);
+      ctx.ssl_ctx = setup_ssl_ctx(ec);
       if (ec) {
         return;
       }
@@ -287,8 +288,8 @@ class ContentServer {
           tlsext_ctx_t* tlsext_ctx = nullptr;
           if (ctx.enable_tls) {
             tlsext_ctx = new tlsext_ctx_t{this, next_connection_id_, listen_ctx_num};
-            setup_ssl_ctx_alpn_cb(tlsext_ctx);
-            setup_ssl_ctx_tlsext_cb(tlsext_ctx);
+            setup_ssl_ctx_alpn_cb(ctx.ssl_ctx.get(), tlsext_ctx);
+            setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
               T::Create(io_context_, remote_host_ips_, remote_host_sni_, remote_port_,
@@ -296,8 +297,7 @@ class ContentServer {
                         remote_padding_support_,
                         upstream_ssl_config_,
                         ctx.https_fallback,
-                        enable_upstream_tls_, ctx.enable_tls,
-                        upstream_ssl_ctx_.get(), ssl_ctx_.get(),
+                        upstream_ssl_ctx_.get(), ctx.ssl_ctx.get(),
                         ctx.server_username, ctx.server_password, ctx.server_cipher,
                         ctx.server_padding_support, ctx.server_redir_mode);
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
@@ -371,13 +371,13 @@ class ContentServer {
     }
   }
 
-  void setup_ssl_ctx(asio::error_code& ec) {
-    ssl_ctx_.reset(::SSL_CTX_new(::TLS_server_method()));
-    SSL_CTX* ctx = ssl_ctx_.get();
+  bssl::UniquePtr<SSL_CTX> setup_ssl_ctx(asio::error_code& ec) {
+    bssl::UniquePtr<SSL_CTX> ssl_ctx {::SSL_CTX_new(::TLS_server_method())};
+    SSL_CTX* ctx = ssl_ctx.get();
     if (!ctx) {
       print_openssl_error();
       ec = asio::error::no_memory;
-      return;
+      return nullptr;
     }
 
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, ::SSL_CTX_get_verify_callback(ctx));
@@ -414,7 +414,7 @@ class ContentServer {
       if (!cert) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
 
       ERR_clear_error();
@@ -422,7 +422,7 @@ class ContentServer {
       if (result == 0 || ::ERR_peek_error() != 0) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
 
       VLOG(1) << "Using certificate (in-memory)";
@@ -432,7 +432,7 @@ class ContentServer {
       if (SSL_CTX_use_PrivateKey(ctx, pkey.get()) != 1) {
         print_openssl_error();
         ec = asio::error::bad_descriptor;
-        return;
+        return nullptr;
       }
       VLOG(1) << "Using privated key (in-memory)";
     }
@@ -490,10 +490,11 @@ class ContentServer {
     SSL_CTX_set0_buffer_pool(ctx, x509_util::GetBufferPool());
 
     load_ca_to_ssl_ctx(ctx);
+
+    return ssl_ctx;
   }
 
-  void setup_ssl_ctx_alpn_cb(tlsext_ctx_t* tlsext_ctx) {
-    SSL_CTX* ctx = ssl_ctx_.get();
+  void setup_ssl_ctx_alpn_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
     SSL_CTX_set_alpn_select_cb(ctx, &ContentServer::on_alpn_select, tlsext_ctx);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto https_fallback = listen_ctxs_[listen_ctx_num].https_fallback;
@@ -564,8 +565,7 @@ class ContentServer {
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
-  void setup_ssl_ctx_tlsext_cb(tlsext_ctx_t* tlsext_ctx) {
-    SSL_CTX* ctx = ssl_ctx_.get();
+  void setup_ssl_ctx_tlsext_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
     SSL_CTX_set_tlsext_servername_callback(ctx, &ContentServer::on_tlsext);
     SSL_CTX_set_tlsext_servername_arg(ctx, tlsext_ctx);
 
@@ -757,7 +757,6 @@ class ContentServer {
 
   std::string certificate_;
   std::string private_key_;
-  bssl::UniquePtr<SSL_CTX> ssl_ctx_;
 
   ContentServer::Delegate* delegate_;
 
@@ -770,6 +769,7 @@ class ContentServer {
     bool server_redir_mode;
     bool enable_tls;
     bool https_fallback;
+    bssl::UniquePtr<SSL_CTX> ssl_ctx;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;

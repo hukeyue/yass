@@ -69,7 +69,6 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
       host_and_port_(host_name, port),
       ssl_config_(ssl_config),
       ssl_client_session_cache_(ssl_client_session_cache),
-      early_data_enabled_(absl::GetFlag(FLAGS_tls13_early_data)),
       pending_read_error_(kSSLClientSocketNoPendingResult) {
   DCHECK(!ssl_);
   DCHECK(ssl_ctx);
@@ -118,7 +117,7 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
     }
   }
 
-  SSL_set_early_data_enabled(ssl_.get(), early_data_enabled_);
+  SSL_set_early_data_enabled(ssl_.get(), ssl_config_.early_data_enabled);
 
   // TODO(crbug.com/41393419): Make this option not a no-op in BoringSSL and
   // then disable it.
@@ -129,11 +128,11 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
 
   std::string command(kSSLDefaultCiphersList);
 
-#if 0
   if (ssl_config_.require_ecdhe) {
     command.append(":!kRSA");
   }
 
+#if 0
   // Remove any disabled ciphers.
   for (uint16_t id : context_->config().disabled_cipher_suites) {
     const SSL_CIPHER* cipher = SSL_get_cipher_by_value(id);
@@ -861,7 +860,7 @@ void SSLSocket::DoPeek() {
 
   DCHECK(ssl_.get());
 
-  if (early_data_enabled_ && !handled_early_data_result_) {
+  if (ssl_config_.early_data_enabled && !handled_early_data_result_) {
     // |SSL_peek| will implicitly run |SSL_do_handshake| if needed, but run it
     // manually to pick up the reject reason.
     int rv = SSL_do_handshake(ssl_.get());

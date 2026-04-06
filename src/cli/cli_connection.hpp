@@ -159,10 +159,8 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// \param remote_padding_support the padding support used with remote endpoint
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
   /// \param https_fallback the data channel falls back to https (alpn)
-  /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
-  /// \param enable_tls the underlying data channel is using tls
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
-  /// \param ssl_ctx the ssl context object for tls data transfer
+  /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   /// \param username the username used downlink
   /// \param password the password used downlink
   /// \param cipher the cipher used with downlink
@@ -178,8 +176,6 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
                 bool remote_padding_support,
                 const SSLConfig& upstream_ssl_config,
                 bool https_fallback,
-                bool enable_upstream_tls,
-                bool enable_tls,
                 SSL_CTX* upstream_ssl_ctx,
                 SSL_CTX* ssl_ctx,
                 std::string_view username,

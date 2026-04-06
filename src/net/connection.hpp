@@ -202,10 +202,8 @@ class Connection {
   /// \param remote_padding_support the padding support used with remote endpoint
   /// \param upstream_ssl_config ssl config such as alpn used for upstream
   /// \param https_fallback the data channel falls back to https (alpn)
-  /// \param enable_upstream_tls the underlying data channel (upstream) is using tls
-  /// \param enable_tls the underlying data channel is using tls
   /// \param upstream_ssl_ctx the ssl context object for tls data transfer (upstream)
-  /// \param ssl_ctx the ssl context object for tls data transfer
+  /// \param ssl_ctx the ssl context object for tls data transfer (downstream)
   /// \param username the username used downlink
   /// \param password the password used downlink
   /// \param cipher the cipher used with downlink
@@ -221,8 +219,6 @@ class Connection {
              bool remote_padding_support,
              const SSLConfig& upstream_ssl_config,
              bool https_fallback,
-             bool enable_upstream_tls,
-             bool enable_tls,
              SSL_CTX* upstream_ssl_ctx,
              SSL_CTX* ssl_ctx,
              std::string_view username,
@@ -239,20 +235,17 @@ class Connection {
         remote_cipher_(remote_cipher),
         remote_padding_support_(remote_padding_support),
         upstream_ssl_config_(upstream_ssl_config),
-        enable_upstream_tls_(enable_upstream_tls),
-        enable_tls_(enable_tls),
         upstream_ssl_ctx_(upstream_ssl_ctx),
+        ssl_ctx_(ssl_ctx),
         username_(username),
         password_(password),
         cipher_(cipher),
         padding_support_(padding_support),
         redir_mode_(redir_mode) {
     DCHECK_LE(remote_host_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
-    if (enable_tls) {
-      DCHECK(ssl_ctx);
-      downlink_ = std::make_unique<SSLDownlink>(io_context, https_fallback, ssl_ctx);
+    if (ssl_ctx_ != nullptr) {
+      downlink_ = std::make_unique<SSLDownlink>(io_context, https_fallback, ssl_ctx_);
     } else {
-      DCHECK(!ssl_ctx);
       downlink_ = std::make_unique<Downlink>(io_context);
     }
   }
@@ -260,8 +253,8 @@ class Connection {
   Connection(const Connection&) = delete;
   Connection& operator=(const Connection&) = delete;
 
-  Connection(Connection&&) = default;
-  Connection& operator=(Connection&&) = default;
+  Connection(Connection&&) = delete;
+  Connection& operator=(Connection&&) = delete;
 
   virtual ~Connection() = default;
 
@@ -361,12 +354,11 @@ class Connection {
   SSLClientSessionCache* ssl_client_session_cache_ = nullptr;
 
   /// ssl config such as alpn used for upstream
-  SSLConfig upstream_ssl_config_;
-  /// if enable ssl layer
-  bool enable_upstream_tls_;
-  bool enable_tls_;
-  std::string upstream_certificate_;
+  const SSLConfig& upstream_ssl_config_;
+  /// ssl context for upstream
   SSL_CTX* upstream_ssl_ctx_;
+  /// ssl context for downstream
+  SSL_CTX* ssl_ctx_;
 
   /// the downlink username
   std::string username_;

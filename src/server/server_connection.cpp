@@ -148,8 +148,6 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                                    bool remote_padding_support,
                                    const SSLConfig& upstream_ssl_config,
                                    bool https_fallback,
-                                   bool enable_upstream_tls,
-                                   bool enable_tls,
                                    SSL_CTX* upstream_ssl_ctx,
                                    SSL_CTX* ssl_ctx,
                                    std::string_view username,
@@ -167,8 +165,6 @@ ServerConnection::ServerConnection(asio::io_context& io_context,
                  remote_padding_support,
                  upstream_ssl_config,
                  https_fallback,
-                 enable_upstream_tls,
-                 enable_tls,
                  upstream_ssl_ctx,
                  ssl_ctx,
                  username,
@@ -214,7 +210,7 @@ void ServerConnection::close() {
   asio::error_code ec;
   closing_ = true;
   closed_ = true;
-  if (enable_tls_ && !shutdown_) {
+  if (ssl_ctx_ != nullptr && !shutdown_) {
     shutdown_ = true;
   }
   downlink_->close(ec);
@@ -1704,7 +1700,7 @@ void ServerConnection::OnConnect() {
   } else {
     host_name = request_.endpoint().address().to_string();
   }
-  if (enable_upstream_tls_) {
+  if (upstream_ssl_ctx_ != nullptr) {
     channel_ = ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_, std::string(),
                                   host_name, port, this, upstream_ssl_config_, upstream_ssl_ctx_);
 

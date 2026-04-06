@@ -127,8 +127,6 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
 
   bool first_post_handshake_write_ = true;
 
-  // True if early data enabled
-  bool early_data_enabled_ = false;
   // True if we've already handled the result of our attempt to use early data.
   bool handled_early_data_result_ = false;
 

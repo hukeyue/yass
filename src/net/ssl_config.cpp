@@ -52,4 +52,11 @@ std::vector<uint8_t> SerializeNextProtos(const NextProtoVector& next_protos) {
   return wire_protos;
 }
 
+SSLConfig::SSLConfig() = default;
+SSLConfig::SSLConfig(const SSLConfig& other) = default;
+SSLConfig::SSLConfig(SSLConfig&& other) = default;
+SSLConfig::~SSLConfig() = default;
+SSLConfig& SSLConfig::operator=(const SSLConfig&) = default;
+SSLConfig& SSLConfig::operator=(SSLConfig&&) = default;
+
 }  // namespace net
