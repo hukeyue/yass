@@ -1423,7 +1423,10 @@ cmake_dependent_option(
   USE_COMPRESS_DEBUG_SECTIONS "Build with compress debug section" OFF
   "NOT MSVC; NOT APPLE" OFF)
 
-if ((USE_COMPRESS_DEBUG_SECTIONS AND USE_LLD) OR USE_MOLD)
+# mingw's lld doesn't like it
+# lld: error: unknown argument: --compress-debug-sections=zlib
+# lld: error: unknown argument: --compress-debug-sections=zstd
+if ((USE_COMPRESS_DEBUG_SECTIONS AND USE_LLD AND NOT MINGW) OR USE_MOLD)
   add_link_options(-Wl,--compress-debug-sections=zstd)
   list(APPEND YASS_APP_FEATURES "debug compressed (zstd)")
 elseif(USE_COMPRESS_DEBUG_SECTIONS)
