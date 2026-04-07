@@ -334,6 +334,8 @@ for embedded devices and low end boxes.
 /usr/libexec/%{name}/*
 
 %changelog
+* Wed Apr 8 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.2-1
+  - miscellaneous fixes
 * Sat Apr 4 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.1-1
   - net: add --use_new_alps_codepoint_http2 option (default)
 * Sat Apr 4 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.0-1

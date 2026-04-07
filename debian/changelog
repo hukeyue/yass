@@ -1,3 +1,7 @@
+yass (1.24.2-1) UNRELEASED; urgency=medium
+
+  * miscellaneous fixes.
+ -- Chilledheart <hukeyue@vip.163.com>  Wed, 8 Apr 2026 06:44:05 +0800
 yass (1.24.1-1) UNRELEASED; urgency=medium
 
   * net: add --use_new_alps_codepoint_http2 option (default).
