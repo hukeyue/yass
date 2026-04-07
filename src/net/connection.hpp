@@ -88,6 +88,7 @@ class Downlink {
 
   virtual void shutdown(asio::error_code& ec) { socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec); }
 
+  [[nodiscard]]
   virtual bool on_alpn_select(NextProto proto) { LOG(INFO) << "Alpn: Unexpected call"; return false; }
 
   virtual void close(asio::error_code& ec) { socket_.close(ec); }
@@ -155,6 +156,7 @@ class SSLDownlink : public Downlink {
     ssl_socket_->Shutdown([](asio::error_code ec) {}, true);
   }
 
+  [[nodiscard]]
   bool on_alpn_select(NextProto proto) override {
     DCHECK(CIPHER_METHOD_IS_TLS(*local_cipher_));
     switch (proto) {
@@ -243,6 +245,7 @@ class Connection {
 
   virtual ~Connection() = default;
 
+  [[nodiscard]]
   bool on_alpn_select(NextProto proto) { return downlink_->on_alpn_select(proto); }
 
  public:
