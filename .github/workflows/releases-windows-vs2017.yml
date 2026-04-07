@@ -22,7 +22,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [master, develop, vs2017]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
@@ -42,7 +42,7 @@ env:
   GOPROXY: direct
 jobs:
   windows-xp-release:
-    runs-on: windows-2022
+    runs-on: windows-2025
     permissions:
       contents: write
     strategy:
@@ -68,6 +68,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Install WinXP support (Visual Studio 2022)
         # see https://github.com/actions/runner-images/issues/5143
+        # https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=visualstudio
         shell: pwsh
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
@@ -191,12 +192,6 @@ jobs:
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_server --version || exit /b
           build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass --version || exit /b
-      - name: Run tests
-        run: |
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_test || exit /b
-      - name: Run benchmarks
-        run: |
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_benchmark || exit /b
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
@@ -204,3 +199,45 @@ jobs:
         shell: bash
         run: |
           gh release upload ${{ github.event.release.tag_name }} *.msi *.exe *.zip
+  windows-xp-release-native-test:
+    runs-on: windows-2022
+    needs: windows-xp-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            crt-linkage: static
+            build_type: Release
+          - arch: x64
+            crt-linkage: dynamic
+            build_type: Release
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
+      - name: Run tests
+        run: |
+          yass_test || exit /b
+  windows-xp-release-native-benchmark:
+    runs-on: windows-2022
+    needs: windows-xp-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            crt-linkage: static
+            build_type: Release
+          - arch: x64
+            crt-linkage: dynamic
+            build_type: Release
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v6
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        run: |
+          yass_benchmark || exit /b

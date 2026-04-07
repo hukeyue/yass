@@ -83,7 +83,7 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 - Legacy iOS [Continue to accept TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_, and _iOS 13.0_ or above)
 - Legacy WindowsXPSP3/Windows7SP1+MinGW [download 64-bit installer][mingw_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][mingw_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3 or above_) or [download arm64 installer][mingw_arm64_installer_url] (require _windows 11_)
 - Legacy Windows10+VS2022 (MSVC) [download 64-bit installer][windows_64_installer_url] (require [vs 2022 X64 Runtime][vs2022_x64]) or [download 32-bit installer][windows_32_installer_url] (require [VC++ X86 Runtime][vs2022_x86]) or [download arm64 installer][windows_arm64_installer_url] (require [VC++ ARM64 Runtime][vs2022_arm64] on _windows 11_)
-- Legacy WindowsXPSP3/Windows7SP1+VS2022 (MSVC) [download 64-bit installer][windows_win7_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][windows_winxp_32_installer_url] (require _windows xp sp3 or above_).
+- Legacy WindowsXPSP3/Windows7SP1+VS2017 (deprecated MSVC) [download 64-bit installer][windows_win7_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][windows_winxp_32_installer_url] (require _windows xp sp3 or above_).
 - Legacy macOS [download intel dmg][macos_intel_dmg_url] or [download apple silicon dmg][macos_arm_dmg_url] (require _macOS 10.14_ or above)
 
 > New [iOS Beta Build][ios_testflight_invitation] is provided periodically (1.20.4 FOR NOW).
