@@ -1,48 +1,118 @@
 diff --git a/src/cxa_guard_impl.h b/src/cxa_guard_impl.h
-index 191a589..7a83d8c 100644
+index 191a589..2c28eaa 100644
 --- a/src/cxa_guard_impl.h
 +++ b/src/cxa_guard_impl.h
-@@ -283,6 +283,13 @@ struct LibcppCondVar;
+@@ -283,15 +283,38 @@ struct LibcppCondVar;
  #ifndef _LIBCXXABI_HAS_NO_THREADS
  struct LibcppMutex {
    LibcppMutex() = default;
 +
-+#if _LIBCPP_HAS_THREAD_API_WIN32
-+  void init() {
-+    std::__libcpp_mutex_init(&mutex);
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  static void init(void *p) {
++    auto self = reinterpret_cast<LibcppMutex*>(p);
++    std::__libcpp_mutex_init(&self->mutex);
 +  }
 +#endif
 +
    LibcppMutex(LibcppMutex const&) = delete;
    LibcppMutex& operator=(LibcppMutex const&) = delete;
  
-@@ -396,6 +403,12 @@ private:
-     LockGuard& operator=(LockGuard const&) = delete;
- 
-     explicit LockGuard(const char* calling_func) : calling_func_(calling_func) {
-+#if _LIBCPP_HAS_THREAD_API_WIN32
-+      static std::__libcpp_exec_once_flag init_mutex_flag = _LIBCPP_EXEC_ONCE_INITIALIZER;
-+      std::__libcpp_execute_once(&init_mutex_flag, []() {
-+        global_mutex.init();
-+      });
+-  bool lock() { return std::__libcpp_mutex_lock(&mutex); }
+-  bool unlock() { return std::__libcpp_mutex_unlock(&mutex); }
++  bool lock() {
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++    std::__libcpp_execute_once(&mutex_once_, this, &LibcppMutex::init);
 +#endif
-       if (global_mutex.lock())
-         ABORT_WITH_MESSAGE("%s failed to acquire mutex", calling_func_);
-     }
++    return std::__libcpp_mutex_lock(&mutex);
++  }
++
++  bool unlock() {
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++    std::__libcpp_execute_once(&mutex_once_, this, &LibcppMutex::init);
++#endif
++    return std::__libcpp_mutex_unlock(&mutex);
++  }
+ 
+ private:
+   friend struct LibcppCondVar;
+   std::__libcpp_mutex_t mutex = _LIBCPP_MUTEX_INITIALIZER;
++
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  std::__libcpp_exec_once_flag mutex_once_ = _LIBCPP_EXEC_ONCE_INITIALIZER;
++#endif
+ };
+ 
+ struct LibcppCondVar {
+@@ -299,11 +322,33 @@ struct LibcppCondVar {
+   LibcppCondVar(LibcppCondVar const&) = delete;
+   LibcppCondVar& operator=(LibcppCondVar const&) = delete;
+ 
+-  bool wait(LibcppMutex& mut) { return std::__libcpp_condvar_wait(&cond, &mut.mutex); }
+-  bool broadcast() { return std::__libcpp_condvar_broadcast(&cond); }
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  static void init(void *p) {
++    auto self = reinterpret_cast<LibcppCondVar*>(p);
++    std::__libcpp_condvar_init(&self->cond);
++  }
++#endif
++
++  bool wait(LibcppMutex& mut) {
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++    std::__libcpp_execute_once(&condvar_once_, this, &LibcppMutex::init);
++#endif
++    return std::__libcpp_condvar_wait(&cond, &mut.mutex);
++  }
++
++  bool broadcast() {
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++    std::__libcpp_execute_once(&condvar_once_, this, &LibcppMutex::init);
++#endif
++    return std::__libcpp_condvar_broadcast(&cond);
++  }
+ 
+ private:
+   std::__libcpp_condvar_t cond = _LIBCPP_CONDVAR_INITIALIZER;
++
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  std::__libcpp_exec_once_flag condvar_once_ = _LIBCPP_EXEC_ONCE_INITIALIZER;
++#endif
+ };
+ #else
+ struct LibcppMutex {};
 diff --git a/src/fallback_malloc.cpp b/src/fallback_malloc.cpp
-index 75788fe..efa0dd5 100644
+index 6a261e6..85c6d72 100644
 --- a/src/fallback_malloc.cpp
 +++ b/src/fallback_malloc.cpp
-@@ -44,6 +44,12 @@ class mutexor {
- public:
+@@ -36,6 +36,12 @@ namespace {
+ // When POSIX threads are not available, make the mutex operations a nop
  #ifndef _LIBCXXABI_HAS_NO_THREADS
-   mutexor(std::__libcpp_mutex_t* m) : mtx_(m) {
-+#if _LIBCPP_HAS_THREAD_API_WIN32
-+    static std::__libcpp_exec_once_flag init_mutex_flag = _LIBCPP_EXEC_ONCE_INITIALIZER;
-+    std::__libcpp_execute_once(&init_mutex_flag, []() {
-+      std::__libcpp_mutex_init(&heap_mutex);
-+    });
+ static _LIBCPP_CONSTINIT std::__libcpp_mutex_t heap_mutex = _LIBCPP_MUTEX_INITIALIZER;
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++static _LIBCPP_CONSTINIT std::__libcpp_exec_once_flag heap_mutex_once_ = _LIBCPP_EXEC_ONCE_INITIALIZER;
++static void static_heap_mutex_init() {
++  std::__libcpp_mutex_init(&heap_mutex);
++}
 +#endif
-     std::__libcpp_mutex_lock(mtx_);
-   }
-   ~mutexor() { std::__libcpp_mutex_unlock(mtx_); }
+ #else
+ static _LIBCPP_CONSTINIT void* heap_mutex = 0;
+ #endif
+@@ -132,6 +138,9 @@ bool is_fallback_ptr(void* ptr) {
+ void* fallback_malloc(size_t len) {
+   heap_node *p, *prev;
+   const size_t nelems = alloc_size(len);
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  std::__libcpp_execute_once(&heap_mutex_once_, static_heap_mutex_init);
++#endif
+   mutexor mtx(&heap_mutex);
+ 
+   if (NULL == freelist)
+@@ -191,6 +200,9 @@ void fallback_free(void* ptr) {
+   struct heap_node* cp = ((struct heap_node*)ptr) - 1; // retrieve the chunk
+   struct heap_node *p, *prev;
+ 
++#if _LIBCPP_HAS_THREAD_API_WIN32 && _WIN32_WINNT < 0x0600
++  std::__libcpp_execute_once(&heap_mutex_once_, static_heap_mutex_init);
++#endif
+   mutexor mtx(&heap_mutex);
+ 
+ #ifdef DEBUG_FALLBACK_MALLOC
