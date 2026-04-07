@@ -250,6 +250,8 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   bool OnMetadataForStream(StreamId stream_id, absl::string_view metadata) override;
   bool OnMetadataEndForStream(StreamId stream_id) override;
   void OnErrorDebug(absl::string_view message) override {}
+
+  [[nodiscard]]
 #ifdef HAVE_NGHTTP2
   http2::adapter::NgHttp2Adapter* adapter() { return adapter_.get(); }
 #else
@@ -272,6 +274,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   ///                        stream->WriteStream
   ///
   /// Return current state of service
+  [[nodiscard]]
   state CurrentState() const { return state_; }
   /// Set the state machine to the given state
   /// \param nextState the state the service would be set to
@@ -283,16 +286,22 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   void ReadSocks5Handshake();
 
   /// Start to read redir request
+  [[nodiscard]]
   asio::error_code OnReadRedirHandshake(GrowableIOBuffer* buf);
   /// Start to read socks5 method_select request
+  [[nodiscard]]
   asio::error_code OnReadSocks5MethodSelect(GrowableIOBuffer* buf);
   /// Start to read socks5 handshake request
+  [[nodiscard]]
   asio::error_code OnReadSocks5Handshake(GrowableIOBuffer* buf);
   /// Start to read socks4 handshake request
+  [[nodiscard]]
   asio::error_code OnReadSocks4Handshake(GrowableIOBuffer* buf);
   /// Start to read http handshake request
+  [[nodiscard]]
   asio::error_code OnReadHttpRequest(GrowableIOBuffer* buf);
   /// Start to read http handshake request (after reuse)
+  [[nodiscard]]
   asio::error_code OnReadHttpRequestAfterReuse(scoped_refptr<GrowableIOBuffer>& buf);
 
   /// Start wait error on stream
@@ -320,11 +329,13 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   void ReadUpstreamAsync(bool yield);
 
   /// Get next remaining buffer to stream
+  [[nodiscard]]
   scoped_refptr<GrowableIOBuffer> GetNextDownstreamBuf(asio::error_code& ec, size_t* bytes_transferred);
 
   /// Write remaining buffers to channel
   void WriteUpstreamInPipe();
   /// Get next remaining buffer to channel
+  [[nodiscard]]
   scoped_refptr<GrowableIOBuffer> GetNextUpstreamBuf(asio::error_code& ec,
                                                      size_t* bytes_transferred,
                                                      bool* upstream_blocked);
@@ -332,16 +343,19 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// dispatch the command to delegate
   /// \param command command type
   /// \param reply reply to given command type
+  [[nodiscard]]
   asio::error_code PerformCmdOpsV5(const socks5::request* request, socks5::reply* reply);
 
   /// dispatch the command to delegate
   /// \param command command type
   /// \param reply reply to given command type
+  [[nodiscard]]
   asio::error_code PerformCmdOpsV4(const socks4::request* request, socks4::reply* reply);
 
   /// dispatch the command to delegate
   /// \param command command type
   /// \param reply reply to given command type
+  [[nodiscard]]
   asio::error_code PerformCmdOpsHttp();
 
   /// Process the recevied data
@@ -411,6 +425,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   bool socks5_auth_handshake_ = false;
   bool socks_handshake_ = false;
 
+  [[nodiscard]]
   std::string remote_domain() const {
     std::ostringstream ss;
     if (request_.address_type() == ss::domain) {
@@ -513,10 +528,13 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   /// mark of in-progress writing
   bool write_inprogress_ = false;
 
+  [[nodiscard]]
   cipher_method method() const { return remote_cipher_; }
 
+  [[nodiscard]]
   bool padding_support() const { return remote_config_.padding_support; }
 
+  [[nodiscard]]
   bool redir_mode() const { return local_config_.redir_mode; }
 
   friend class DataFrameSource;

@@ -241,6 +241,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   bool OnMetadataEndForStream(StreamId stream_id) override;
   void OnErrorDebug(absl::string_view message) override {}
 
+  [[nodiscard]]
 #ifdef HAVE_NGHTTP2
   http2::adapter::NgHttp2Adapter* adapter() { return adapter_.get(); }
 #else
@@ -288,6 +289,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// Write remaining buffers to stream
   void WriteStreamInPipe();
   /// Get next remaining buffer to stream
+  [[nodiscard]]
   scoped_refptr<GrowableIOBuffer> GetNextDownstreamBuf(asio::error_code& ec,
                                                        size_t* bytes_transferred,
                                                        bool* downstream_blocked);
@@ -295,6 +297,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// Write remaining buffers to channel
   void WriteUpstreamInPipe();
   /// Get next remaining buffer to channel
+  [[nodiscard]]
   scoped_refptr<GrowableIOBuffer> GetNextUpstreamBuf(asio::error_code& ec, size_t* bytes_transferred);
 
   /// Process the recevied data
@@ -322,6 +325,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   int num_padding_recv_ = 0;
   scoped_refptr<GrowableIOBuffer> padding_in_middle_buf_;
 
+  [[nodiscard]]
   std::string remote_domain() const {
     std::ostringstream ss;
     if (request_.address_type() == ss::domain) {
@@ -415,10 +419,13 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   /// mark of in-progress writing
   bool write_inprogress_ = false;
 
+  [[nodiscard]]
   cipher_method method() const { return local_cipher_; }
 
+  [[nodiscard]]
   bool padding_support() const { return local_config_.padding_support; }
 
+  [[nodiscard]]
   bool redir_mode() const { return false; }
 
   friend class DataFrameSource;

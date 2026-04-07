@@ -369,6 +369,7 @@ class ContentServer {
     }
   }
 
+  [[nodiscard]]
   bssl::UniquePtr<SSL_CTX> setup_ssl_ctx(asio::error_code& ec) {
     bssl::UniquePtr<SSL_CTX> ssl_ctx {::SSL_CTX_new(::TLS_server_method())};
     SSL_CTX* ctx = ssl_ctx.get();
@@ -512,6 +513,7 @@ class ContentServer {
     VLOG(1) << "Alpn support (server) enabled for connection " << next_connection_id_ << " : " << protos;
   }
 
+  [[nodiscard]]
   static int on_alpn_select(SSL* ssl,
                             const unsigned char** out,
                             unsigned char* outlen,
@@ -560,6 +562,7 @@ class ContentServer {
             << " server_name: " << listen_ctxs_[tlsext_ctx->listen_ctx_num].server_name;
   }
 
+  [[nodiscard]]
   static int on_tlsext(SSL* ssl, int* al, void* arg) {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
@@ -583,6 +586,7 @@ class ContentServer {
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
+  [[nodiscard]]
   bool on_alpn_select(int connection_id, NextProto proto) {
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
