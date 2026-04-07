@@ -150,10 +150,10 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 
 ## Build Status
 
-[![Compiler Compatibility](https://github.com/hukeyue/yass/actions/workflows/compiler.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/compiler.yml)
 [![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
 [![Cirrus CI](https://img.shields.io/cirrus/github/hukeyue/yass/develop?logo=cirrusci&&label=FreeBSD%20and%20macOS)](https://cirrus-ci.com/github/hukeyue/yass/develop)
 
+[![MSVC+VS2022 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml)
 [![MinGW Build](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml)
 [![Linux Build](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml)
 [![macOS Build](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml)
@@ -167,8 +167,8 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [![DEB Build](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml)
 [![Flatpak Build](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml)
 
-[![MSVC Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml)
-[![Old MinGW Build](https://github.com/hukeyue/yass/actions/workflows/releases-mingw.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-mingw.yml)
+[![MSVC+XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
+[![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml)
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
 
 [Report here if you want to connect to new CI infrastructure][frs]
