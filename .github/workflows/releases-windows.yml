@@ -52,27 +52,27 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
+            winsdk_version: 10.0.26100.0
             build_options: -use-allocator=tbbmalloc -component-build
           - arch: x86
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
+            winsdk_version: 10.0.26100.0
             build_options: -use-allocator=tbbmalloc -component-build
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
+            winsdk_version: 10.0.26100.0
             build_options: -use-allocator=tbbmalloc -component-build
           - arch: x64
             crt-linkage: dynamic
             build_type: Debug
-            winsdk_version: 10.0.22621.0
+            winsdk_version: 10.0.26100.0
             build_options: -use-allocator=tbbmalloc -component-build
           - arch: arm64
             crt-linkage: dynamic
             build_type: Release
-            winsdk_version: 10.0.22621.0
+            winsdk_version: 10.0.26100.0
             build_options: -component-build
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
@@ -83,28 +83,6 @@ jobs:
           # unshallow must come first otherwise submodule may be get unshallowed
           git fetch --tags --unshallow
           git submodule update --init --depth 1
-      - name: Install Win11 22621 SDK (Visual Studio 2022)
-        # see https://github.com/actions/runner-images/issues/5143
-        # https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=visualstudio
-        shell: pwsh
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $componentsToAdd = @(
-            "Microsoft.VisualStudio.Component.Windows11SDK.22621"
-          )
-          [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0)
-          {
-              Write-Host "components have been successfully added"
-          }
-          else
-          {
-              Write-Host "components were not installed"
-              exit 1
-          }
       - name: Cache toolchain, nasm, nsis and wixtoolset 3
         id: toolchain-cache
         uses: actions/cache@v5
