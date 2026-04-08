@@ -277,7 +277,7 @@ void Worker::on_resolve_done(asio::error_code ec) {
     return;
   }
 
-  private_->cli_server = std::make_unique<CliServer>(io_context_, remote_server_ips_, remote_server_sni_,
+  private_->cli_server = std::make_unique<CliServer>(io_context_, 0x0, remote_server_ips_, remote_server_sni_,
                                                      cached_server_port_,
                                                      cached_server_username_, cached_server_password_,
                                                      cached_server_cipher_, cached_server_padding_support_);

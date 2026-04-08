@@ -87,6 +87,7 @@ static asio::ip::tcp::resolver::results_type ResolveAddress(const std::string& d
 }
 
 static asio::error_code ListenAddress(asio::io_context& io_context, std::vector<std::unique_ptr<CliServer>> *servers,
+                                      int64_t server_tag,
                                       std::string remote_host_name,
                                       std::string remote_host_sni,
                                       uint16_t remote_port,
@@ -143,24 +144,25 @@ static asio::error_code ListenAddress(asio::io_context& io_context, std::vector<
   }
 
   asio::error_code ec;
-  auto server = std::make_unique<CliServer>(io_context, remote_host_ips, remote_host_sni, remote_port,
+  auto server = std::make_unique<CliServer>(io_context, server_tag, remote_host_ips, remote_host_sni, remote_port,
                                             remote_username, remote_password, remote_cipher, remote_padding_support);
   for (auto& endpoint : endpoints) {
     server->listen(endpoint, {}, {}, {}, {}, {}, redir_mode, SOMAXCONN, ec);
     if (ec) {
-      LOG(ERROR) << "listen failed due to: " << ec;
+      LOG(ERROR) << "tag " << server_tag << " listen failed due to: " << ec;
       return ec;
     }
     endpoint = server->endpoint();
-    LOG(WARNING) << "tcp server listening at " << endpoint << " with upstream sni: " << remote_host_sni << ":"
-                 << remote_port << " (ip " << remote_host_ips << " )";
+    LOG(WARNING) << "tag " << server_tag << " tcp server listening at " << endpoint
+                 << " with upstream sni: " << remote_host_sni << ":" << remote_port
+                 << " (ip " << remote_host_ips << " )";
   }
   servers->push_back(std::move(server));
   return {};
 }
 
 static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector<std::unique_ptr<CliServer>> *servers,
-                                       std::string_view proxy_uri_str, std::string_view listen_uri_str) {
+                                       int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str) {
     std::string remote_host_name;
     std::string remote_host_sni;
     uint16_t remote_port;
@@ -225,7 +227,7 @@ static asio::error_code ListenProxyUri(asio::io_context& io_context, std::vector
       redir_mode = false;
     }
 
-    return ListenAddress(io_context, servers, remote_host_name, remote_host_sni, remote_port,
+    return ListenAddress(io_context, servers, server_tag, remote_host_name, remote_host_sni, remote_port,
                          remote_username, remote_password, remote_cipher, remote_padding_support,
                          local_host_name, local_port, redir_mode);
 }
@@ -367,7 +369,7 @@ int main(int argc, const char* argv[]) {
       return -1;
     }
     for (unsigned i = 0; i < proxy_uri_strs.size(); ++i) {
-      ec = ListenProxyUri(io_context, &servers, proxy_uri_strs[i], listen_uri_strs[i]);
+      ec = ListenProxyUri(io_context, &servers, i, proxy_uri_strs[i], listen_uri_strs[i]);
       if (ec) {
         return -1;
       }
@@ -386,7 +388,7 @@ int main(int argc, const char* argv[]) {
     uint16_t local_port = absl::GetFlag(FLAGS_local_port);
     bool redir_mode = absl::GetFlag(FLAGS_redir_mode);
 
-    ec = ListenAddress(io_context, &servers, remote_host_name, remote_host_sni, remote_port,
+    ec = ListenAddress(io_context, &servers, 0, remote_host_name, remote_host_sni, remote_port,
                        remote_username, remote_password, remote_cipher, remote_padding_support,
                        local_host_name, local_port, redir_mode);
     if (ec) {

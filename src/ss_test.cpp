@@ -677,7 +677,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
   asio::error_code StartContentProvider(asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
 
-    content_provider_server_ = std::make_unique<ContentProviderServer>(io_context_);
+    content_provider_server_ = std::make_unique<ContentProviderServer>(io_context_, 0x10000);
     content_provider_server_->listen(endpoint, {}, {}, {}, {}, {}, {}, backlog, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -700,7 +700,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
 
   asio::error_code StartServer(cipher_method server_cipher, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
-    server_server_ = std::make_unique<server::ServerServer>(io_context_, std::string_view(), std::string_view(),
+    server_server_ = std::make_unique<server::ServerServer>(io_context_, 0x100, std::string_view(), std::string_view(),
                                                             uint16_t(), std::string_view(), std::string_view(),
                                                             cipher_method(), bool(),
                                                             std::string_view(), kCertificate, kPrivateKey);
@@ -732,7 +732,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     asio::error_code ec;
 
     local_server_ =
-        std::make_unique<cli::CliServer>(io_context_, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
+        std::make_unique<cli::CliServer>(io_context_, 0x0, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
                                          "localhost"sv, remote_endpoint.port(),
                                          absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
                                          remote_cipher,
