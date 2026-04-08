@@ -1,3 +1,7 @@
+yass (1.24.3-1) UNRELEASED; urgency=medium
+
+  * net: log server tag for multiple sites configuration.
+ -- Chilledheart <hukeyue@vip.163.com>  Wed, 8 Apr 2026 15:15:11 +0800
 yass (1.24.2-1) UNRELEASED; urgency=medium
 
   * miscellaneous fixes.
