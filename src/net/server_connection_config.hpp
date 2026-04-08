@@ -39,6 +39,8 @@ struct ServerConnectionConfig {
   ServerConnectionConfig& operator=(const ServerConnectionConfig&);
   ServerConnectionConfig& operator=(ServerConnectionConfig&&);
 
+  int64_t server_tag;
+  std::string server_name;
   std::string username;
   std::string password;
   cipher_method cipher;

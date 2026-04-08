@@ -186,7 +186,7 @@ int main(int argc, const char* argv[]) {
   cipher_method server_method = absl::GetFlag(FLAGS_method).method;
   bool server_padding_support = absl::GetFlag(FLAGS_padding_support);
 
-  ServerServer server(io_context);
+  ServerServer server(io_context, 0x100);
   for (auto& endpoint : endpoints) {
     server.listen(endpoint, host_sni, server_username, server_password, server_method,
                   server_padding_support, {}, SOMAXCONN, ec);

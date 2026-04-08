@@ -71,6 +71,7 @@ class ContentServer {
 
  public:
   explicit ContentServer(asio::io_context& io_context,
+                         int64_t server_tag,
                          std::string_view remote_host_ips = {},
                          std::string_view remote_host_sni = {},
                          uint16_t remote_port = {},
@@ -85,6 +86,7 @@ class ContentServer {
       : io_context_(io_context),
         work_guard_(
             std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor())),
+        server_tag_(server_tag),
         remote_config_(),
         renego_allowed_for_http11_proto_(true),
         enable_upstream_tls_(CIPHER_METHOD_IS_TLS(remote_cipher)),
@@ -109,11 +111,11 @@ class ContentServer {
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
     DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
-    VLOG(1) << "ContentServer (" << T::Name << ") allocated memory";
+    VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " allocated memory";
   }
 
   ~ContentServer() {
-    VLOG(1) << "ContentServer (" << T::Name << ") freed memory";
+    VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " freed memory";
 
     CHECK_EQ(pending_next_listen_ctxes_.size(), 0u) << "ContentServer freed on pending listen ctx";
     CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
@@ -149,7 +151,8 @@ class ContentServer {
       return;
     }
     ListenCtx& ctx = listen_ctxs_[next_listen_ctx_];
-    ctx.server_name = server_name;
+    ctx.server_config.server_tag = server_tag_;
+    ctx.server_config.server_name = server_name;
     ctx.server_config.username = server_username;
     ctx.server_config.password = server_password;
     ctx.server_config.cipher = server_cipher;
@@ -199,7 +202,7 @@ class ContentServer {
         return;
       }
     }
-    LOG(INFO) << "Listening (" << T::Name << ") on " << ctx.endpoint;
+    LOG(INFO) << "Listening (" << T::Name << ") " << "Tag " << server_tag_ << " on " << ctx.endpoint;
     int listen_ctx_num = next_listen_ctx_++;
     asio::post(io_context_, [this, listen_ctx_num]() { accept(listen_ctx_num); });
   }
@@ -214,7 +217,7 @@ class ContentServer {
           ctx.acceptor->close(ec);
           ctx.acceptor.reset();
           if (ec) {
-            LOG(WARNING) << "Connections (" << T::Name << ")"
+            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
                          << " acceptor (" << ctx.endpoint << ") close failed: " << ec;
           }
         }
@@ -242,7 +245,7 @@ class ContentServer {
           ctx.acceptor->close(ec);
           ctx.acceptor.reset();
           if (ec) {
-            LOG(WARNING) << "Connections (" << T::Name << ")"
+            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
                          << " acceptor (" << ctx.endpoint << ") close failed: " << ec;
           }
         }
@@ -257,7 +260,7 @@ class ContentServer {
 
       opened_connections_ = 0;
       for (auto [conn_id, conn] : connection_map) {
-        VLOG(1) << "Connections (" << T::Name << ")"
+        VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
                 << " closing Connection: " << conn_id;
         conn->close();
       }
@@ -283,7 +286,7 @@ class ContentServer {
             return;
           }
           if (ec) {
-            LOG(WARNING) << "Acceptor (" << T::Name << ")"
+            LOG(WARNING) << "Acceptor (" << T::Name << ") " << "Tag " << server_tag_
                          << " failed to accept more due to: " << ec;
             work_guard_.reset();
             return;
@@ -334,13 +337,13 @@ class ContentServer {
     if (delegate_) {
       delegate_->OnConnect(connection_id);
     }
-    VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " with " << conn->peer_endpoint() << " connected";
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " with " << conn->peer_endpoint() << " connected";
     conn->start();
   }
 
   void on_disconnect(scoped_refptr<ConnectionType> conn) {
     int connection_id = conn->connection_id();
-    VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " disconnected (has ref " << std::boolalpha
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " disconnected (has ref " << std::boolalpha
             << conn->HasAtLeastOneRef() << std::noboolalpha << ")";
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
@@ -522,6 +525,7 @@ class ContentServer {
                             void* arg) {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
+    auto server_tag = server->server_tag_;
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto renego_allowed_for_http11_proto = server->listen_ctxs_[listen_ctx_num].renego_allowed_for_http11_proto;
     int connection_id = tlsext_ctx->connection_id;
@@ -532,7 +536,7 @@ class ContentServer {
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
       NextProto proto = NextProtoFromString(alpn);
       if (server->on_alpn_select(connection_id, proto)) {
-        VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) chosen: " << alpn;
+        VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " Alpn support (server) chosen: " << alpn;
 
         *out = in + 1;
         *outlen = in[0];
@@ -544,13 +548,13 @@ class ContentServer {
         return SSL_TLSEXT_ERR_OK;
       }
 
-      VLOG(2) << "Connection (" << T::Name << ") " << connection_id << " Alpn support (server) skipped: " << alpn;
+      VLOG(2) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " Alpn support (server) skipped: " << alpn;
       inlen -= 1u + in[0];
       in += 1u + in[0];
     }
 
   err:
-    LOG(WARNING) << "Connection (" << T::Name << ") " << connection_id << " fatal error due to unexpected alpn protos";
+    LOG(WARNING) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " fatal error due to unexpected alpn protos";
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
@@ -559,16 +563,17 @@ class ContentServer {
     SSL_CTX_set_tlsext_servername_arg(ctx, tlsext_ctx);
 
     VLOG(1) << "TLSEXT: Servername (server) enabled for connection " << next_connection_id_
-            << " server_name: " << listen_ctxs_[tlsext_ctx->listen_ctx_num].server_name;
+            << " server_name: " << listen_ctxs_[tlsext_ctx->listen_ctx_num].server_config.server_name;
   }
 
   [[nodiscard]]
   static int on_tlsext(SSL* ssl, int* al, void* arg) {
     auto tlsext_ctx = reinterpret_cast<tlsext_ctx_t*>(arg);
     auto server = reinterpret_cast<ContentServer*>(tlsext_ctx->server);
+    auto server_tag = server->server_tag_;
     int connection_id = tlsext_ctx->connection_id;
     int listen_ctx_num = tlsext_ctx->listen_ctx_num;
-    std::string_view expected_server_name = server->listen_ctxs_[listen_ctx_num].server_name;
+    std::string_view expected_server_name = server->listen_ctxs_[listen_ctx_num].server_config.server_name;
 
     // SNI must be accessible from the SNI callback.
     const char* server_name_ptr = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
@@ -581,7 +586,7 @@ class ContentServer {
       return SSL_TLSEXT_ERR_OK;
     }
 
-    VLOG(1) << "Connection (" << T::Name << ") " << connection_id << " TLSEXT: Servername mismatch "
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " TLSEXT: Servername mismatch "
             << "(got " << server_name << "; want " << expected_server_name << ").";
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
@@ -592,7 +597,7 @@ class ContentServer {
     if (iter != connection_map_.end()) {
       return iter->second->on_alpn_select(proto);
     } else {
-      LOG(INFO) << "Connection (" << T::Name << ") invalid connection id: " << connection_id;
+      LOG(INFO) << "Connection (" << T::Name << ") "  << "Tag " << server_tag_ << " invalid connection id: " << connection_id;
     }
     return false;
   }
@@ -730,11 +735,15 @@ class ContentServer {
   /// stopping the io_context from running out of work
   std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
 
+  /// mark of server
+  int64_t server_tag_;
+
   ClientConnectionConfig remote_config_;
 
   bool renego_allowed_for_http11_proto_;
   bool enable_upstream_tls_;
   bool enable_tls_;
+  char _reserved0_[5];
   std::string upstream_certificate_;
   bssl::UniquePtr<SSL_CTX> upstream_ssl_ctx_;
   std::unique_ptr<SSLClientSessionCache> ssl_client_session_cache_;
@@ -746,10 +755,10 @@ class ContentServer {
   ContentServer::Delegate* delegate_;
 
   struct ListenCtx {
-    std::string server_name;
     ServerConnectionConfig server_config;
     bool enable_tls;
     bool renego_allowed_for_http11_proto;
+    char _reserved0[6];
     bssl::UniquePtr<SSL_CTX> ssl_ctx;
     asio::ip::tcp::endpoint endpoint;
     asio::ip::tcp::endpoint peer_endpoint;
