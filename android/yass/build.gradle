@@ -104,6 +104,22 @@ task copyTask {
         into 'libs/arm64-v8a'
     }
     copy {
+        from '../../build-android24-x86/libasio.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libasio.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libasio.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libasio.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
         from '../../build-android24-x86/libc++.so'
         into 'libs/x86'
     }
@@ -117,6 +133,22 @@ task copyTask {
     }
     copy {
         from '../../build-android24-arm64/libc++.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libcares.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libcares.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libcares.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libcares.so'
         into 'libs/arm64-v8a'
     }
     copy {
@@ -136,19 +168,51 @@ task copyTask {
         into 'libs/arm64-v8a'
     }
     copy {
-        from '../../build-android24-x86/libssl.so'
+        from '../../build-android24-x86/libjsoncpp.so'
         into 'libs/x86'
     }
     copy {
-        from '../../build-android24-x64/libssl.so'
+        from '../../build-android24-x64/libjsoncpp.so'
         into 'libs/x86_64'
     }
     copy {
-        from '../../build-android24-arm/libssl.so'
+        from '../../build-android24-arm/libjsoncpp.so'
         into 'libs/armeabi-v7a'
     }
     copy {
-        from '../../build-android24-arm64/libssl.so'
+        from '../../build-android24-arm64/libjsoncpp.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libmbedcrypto.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libmbedcrypto.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libmbedcrypto.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libmbedcrypto.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libnghttp2.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libnghttp2.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libnghttp2.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libnghttp2.so'
         into 'libs/arm64-v8a'
     }
     copy {
@@ -165,6 +229,38 @@ task copyTask {
     }
     copy {
         from '../../build-android24-arm64/libpki.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libssl.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libssl.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libssl.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libssl.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libz.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libz.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libz.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libz.so'
         into 'libs/arm64-v8a'
     }
 }
