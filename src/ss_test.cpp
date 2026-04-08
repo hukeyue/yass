@@ -161,7 +161,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                  ssl_ctx) {}
 
   ~ContentProviderConnection() override {
-    VLOG(1) << "Connection (content-provider) " << connection_id() << " freed memory";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " freed memory";
   }
 
   ContentProviderConnection(const ContentProviderConnection&) = delete;
@@ -173,7 +173,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void start() { do_io(); }
 
   void close() {
-    VLOG(1) << "Connection (content-provider) " << connection_id() << " disconnected";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " disconnected";
     asio::error_code ec;
     downlink_->socket_.close(ec);
     on_disconnect();
@@ -188,7 +188,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_read_until(
         downlink_->socket_, recv_buff_hdr, "\r\n\r\n", [this, self](asio::error_code ec, size_t bytes_transferred) {
           if (ec) {
-            LOG(WARNING) << "Connection (content-provider) " << connection_id() << " Failed to transfer data: " << ec;
+            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Failed to transfer data: " << ec;
             shutdown();
             return;
           }
@@ -201,11 +201,11 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
           bool ok;
           int nparsed = parser.Parse(buf, &ok);
           if (nparsed) {
-            VLOG(1) << "Connection (content-provider) " << connection_id() << " http request received: "
+            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http request received: "
                     << std::string_view(reinterpret_cast<const char*>(buf.data()), nparsed);
           }
           if (!ok) {
-            LOG(WARNING) << "Connection (content-provider) " << connection_id() << " Bad http request received: "
+            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Bad http request received: "
                          << std::string_view(reinterpret_cast<const char*>(buf.data()), nparsed);
             shutdown();
             return;
@@ -217,7 +217,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
           if (recv_buff_hdr.size()) {
             memcpy(g_recv_buffer->data(), &*asio::buffers_begin(recv_buff_hdr.data()), recv_buff_hdr.size());
             g_recv_buffer->set_offset(g_recv_buffer->offset() + recv_buff_hdr.size());
-            VLOG(1) << "Connection (content-provider) " << connection_id()
+            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                     << " read http data: " << recv_buff_hdr.size() << " bytes";
           }
 
@@ -232,12 +232,12 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, asio::const_buffer(http_response_hdr1, sizeof(http_response_hdr1) - 1),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || bytes_transferred != sizeof(http_response_hdr1) - 1) {
-                          LOG(WARNING) << "Connection (content-provider) " << connection_id()
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                        << " Failed to transfer data: " << ec;
                           shutdown();
                           return;
                         }
-                        VLOG(1) << "Connection (content-provider) " << connection_id()
+                        VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                 << " write http header: " << bytes_transferred << " bytes.";
                         read_http_request_data();
                       });
@@ -249,12 +249,12 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_read(downlink_->socket_, tail_buffer(g_recv_buffer.get()),
                      [this, self](asio::error_code ec, size_t bytes_transferred) {
                        g_recv_buffer->set_offset(g_recv_buffer->offset() + bytes_transferred);
-                       VLOG(1) << "Connection (content-provider) " << connection_id()
+                       VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                << " read http data: " << bytes_transferred << " bytes";
 
                        bytes_transferred = g_recv_buffer->capacity();
                        if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                         LOG(WARNING) << "Connection (content-provider) " << connection_id()
+                         LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                       << " Failed to transfer data: " << ec;
                          shutdown();
                          return;
@@ -278,7 +278,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, asio::const_buffer(http_response_hdr2.data(), http_response_hdr2.size()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || bytes_transferred != http_response_hdr2.size()) {
-                          LOG(WARNING) << "Connection (content-provider) " << connection_id()
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                        << " Failed to transfer data: " << ec;
                           shutdown();
                           return;
@@ -293,10 +293,10 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, const_buffer(g_send_buffer.get()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                          LOG(WARNING) << "Connection (content-provider) " << connection_id()
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                        << " Failed to transfer data: " << ec;
                         } else {
-                          VLOG(1) << "Connection (content-provider) " << connection_id()
+                          VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
                                   << " written: " << bytes_transferred << " bytes";
                         }
                         shutdown();
@@ -312,10 +312,10 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void shutdown() {
     g_in_provider_mutex.unlock();
     asio::error_code ec;
-    LOG(INFO) << "Connection (content-provider) " << connection_id() << " shutting down";
+    LOG(INFO) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutting down";
     downlink_->socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec);
     if (ec) {
-      LOG(WARNING) << "Connection (content-provider) " << connection_id() << " shutdown failure: " << ec;
+      LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutdown failure: " << ec;
     }
   }
 };
