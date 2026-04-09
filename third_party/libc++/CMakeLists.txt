@@ -303,26 +303,6 @@ if (WIN32)
       PROPERTIES
       COMPILE_FLAGS "-fno-builtin")
   endif()
-
-  # Explicitly set version macros to Windows 7 to prevent libc++ from adding a
-  # hard dependency on GetSystemTimePreciseAsFileTime, which was introduced in
-  # Windows 8.
-  if (ALLOW_XP AND OS_X86)
-    set(libcxx_DEFINITIONS
-      ${libcxx_DEFINITIONS}
-      "NTDDI_VERSION=NTDDI_WINXP"
-    )
-  elseif(OS_AARCH64)
-    set(libcxx_DEFINITIONS
-      ${libcxx_DEFINITIONS}
-      "NTDDI_VERSION=NTDDI_WIN10"
-    )
-  else()
-    set(libcxx_DEFINITIONS
-      ${libcxx_DEFINITIONS}
-      "NTDDI_VERSION=NTDDI_WIN7"
-    )
-  endif()
 endif()
 
 if (ANDROID)

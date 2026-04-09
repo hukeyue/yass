@@ -4666,7 +4666,6 @@ target_include_directories(yass_cli_lib PRIVATE
 
 target_link_libraries(yass_cli_lib PUBLIC
   ${DEFAULT_MALLOC_LIB}
-  absl::time
   yass_cli_nogui_lib
   yass_net)
 
