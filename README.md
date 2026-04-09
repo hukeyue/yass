@@ -119,6 +119,18 @@ Cipher http over TLS are compatible.
 
 If you need custom Certificate Authority support in GUI or add other TLS-related features, [report here][frs].
 
+### Don't configure ALPS protocols that aren't also configured in ALPN
+After M148 Release 1, all ALPN settings including HTTP1.1 and H2 will configure its ALPS protocols. (backported from chromium application stack from M122)
+
+In previous release, SSLSocket currently configures all application_settings values in BoringSSL, however BoringSSL's API docs say not to do this: https://commondatastorage.googleapis.com/chromium-boringssl-docs/ssl.h.html#SSL_add_application_settings.
+
+See also discussion here: https://chromium-review.googlesource.com/c/chromium/src/+/5064051/comment/cfc4cb1b_cda4ca01/
+
+### New ALPS codepoint
+Old version Chrome with the existing ALPS codepoint can potentially cause network error due to an arithmetic overflow bug in Chrome ALPS decoder (We already fixed the issues starting from M100 in Chrome).
+
+After M141 Release 0, the default became to use the new codepoint, but you can pass --use_new_alps_codepoint_http2=0 to disable it. (backported from chromium application stack from M135 Release)
+
 ### Post Quantum key-agreements for TLS 1.3
 [ML-KEM Post Quantum key-agreements][mlkem] (not enabled by default) for TLS 1.3 is supported on all platforms
 in place of obsolete [Kyber768 hybrid key-agreements][kyber].
