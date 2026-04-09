@@ -119,6 +119,11 @@ Cipher http over TLS are compatible.
 
 If you need custom Certificate Authority support in GUI or add other TLS-related features, [report here][frs].
 
+### RFC9849: TLS Encrypted Client Hello aka ECH Support (investigating)
+It has become [RFC9849](https://www.rfc-editor.org/rfc/rfc9849.html) recently. Chrome/Firefox enables ECH by default from M119.
+
+Without ECH GREASE, it relies DOH configuration. See more at [curl's documentation](https://github.com/curl/curl/blob/master/docs/ECH.md)
+
 ### Don't configure ALPS protocols that aren't also configured in ALPN
 After M148 Release 1, all ALPN settings including HTTP1.1 and H2 will configure its ALPS protocols. (backported from chromium application stack from M122)
 
