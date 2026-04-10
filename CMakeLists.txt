@@ -3228,20 +3228,11 @@ endif()
 #           boringssl Library
 # *****************************************************************************************
 
-# hacks to force win32 thread usage
-if (MINGW AND USE_LIBCXX)
-  set(PREVIOUS_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-  set(PREVIOUS_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U__MINGW32__")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U__MINGW32__")
-endif()
 add_subdirectory(third_party/boringssl/src EXCLUDE_FROM_ALL)
-# restore hacks
-if (MINGW AND USE_LIBCXX)
-  set(CMAKE_C_FLAGS "${PREVIOUS_CMAKE_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${PREVIOUS_CMAKE_CXX_FLAGS}")
-endif()
-foreach(source ${BCM_ASM_SOURCES})
+foreach(source ${BCM_SOURCES_ASM})
+  set_source_files_properties(${source} PROPERTIES GENERATED true)
+endforeach()
+foreach(source ${BCM_SOURCES_NASM})
   set_source_files_properties(${source} PROPERTIES GENERATED true)
 endforeach()
 
