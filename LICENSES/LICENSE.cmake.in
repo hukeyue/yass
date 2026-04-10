@@ -1,8 +1,8 @@
-=== yass ==
+=== yass license 1/2 ==
 
-@_YASS_LICENSE@
+@_YASS_OR0_LICENSE@
 
-=== yass alternative license ==
+=== yass license 2/2 ==
 
 @_YASS_OR1_LICENSE@
 
@@ -85,3 +85,19 @@
 === tbbmalloc ==
 
 @_TBBMALLOC_LICENSE@
+
+=== nghttp2 ==
+
+@_NGHTTP2_LICENSE@
+
+=== c-ares ==
+
+@_CARES_LICENSE@
+
+=== http_parser ==
+
+@_HTTP_PARSER_LICENSE@
+
+=== llvm-libc ==
+
+@_LLVM_LIBC_LICENSE@
