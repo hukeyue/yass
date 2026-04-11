@@ -36,38 +36,65 @@
 #include <signal.h>
 #endif
 
-#include "cli/cli_server.hpp"
+#include "core/utils.hpp"
 #include "net/padding.hpp"
+#include "yass/client.h"
 
 using namespace std::string_literals;
 
-using namespace net::cli;
-
 class WorkerPrivate {
  public:
-  std::unique_ptr<CliServer> cli_server;
+  WorkerPrivate() : instance_(yass_client_instance_create()) {
+    VLOG(1) << "worker: allocated memory";
+  }
+  ~WorkerPrivate() {
+    VLOG(1) << "worker: freed memory";
+    yass_client_instance_destroy(instance_);
+  }
+
+  int Init() {
+    return yass_client_instance_init(instance_);
+  }
+
+  int Add(int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port) {
+    return yass_client_instance_add_server(instance_, server_tag, remote_host_name, remote_host_sni, remote_port, remote_username, remote_password, remote_cipher, remote_padding_support, local_host_name, local_port, redir_mode, listen_port);
+  }
+
+  int Run() {
+    return yass_client_instance_run(instance_);
+  }
+
+  int NumOfConnections() {
+    return yass_client_instance_num_of_connections(instance_);
+  }
+
+  int Stop() {
+    return yass_client_instance_cancel(instance_);
+  }
+
+  asio::error_code GetLastError() const {
+    return asio::error_code(yass_client_instance_get_last_error(instance_), asio::error::system_category);
+  }
+
+  const char* GetLastErrorStr() const {
+    return yass_client_instance_get_last_error_str(instance_);
+  }
+
+ private:
+  yass_client_instance instance_;
 };
 
 Worker::Worker()
-    : resolver_(io_context_),
-      private_(new WorkerPrivate) {
-#ifdef _WIN32
-  int iResult = 0;
-  WSADATA wsaData = {0};
-  iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-  CHECK_EQ(iResult, 0) << "WSAStartup failure";
-#endif
-
-  thread_ = std::make_unique<std::thread>([this] { WorkFunc(); });
-}
+    : private_(new WorkerPrivate) {}
 
 Worker::~Worker() {
   start_callback_ = nullptr;
   stop_callback_ = nullptr;
-  in_destroy_ = true;
 
   Stop(nullptr);
-  thread_->join();
+  if (thread_) {
+    thread_->join();
+  }
 
   delete private_;
 }
@@ -77,48 +104,11 @@ void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
 
   start_callback_ = std::move(callback);
 
-  /// listen in the worker thread
-  asio::post(io_context_, [this]() {
-    DCHECK_EQ(private_->cli_server.get(), nullptr);
-
-    // cache all fields
-    cached_server_host_ = absl::GetFlag(FLAGS_server_host);
-    cached_server_sni_ = absl::GetFlag(FLAGS_server_sni);
-    cached_server_port_ = absl::GetFlag(FLAGS_server_port);
-    cached_server_username_ = absl::GetFlag(FLAGS_username);
-    cached_server_password_ = absl::GetFlag(FLAGS_password);
-    cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
-    cached_server_padding_support_ = absl::GetFlag(FLAGS_padding_support);
-    cached_server_redir_mode_ = absl::GetFlag(FLAGS_redir_mode);
-    cached_local_host_ = absl::GetFlag(FLAGS_local_host);
-    cached_local_port_ = absl::GetFlag(FLAGS_local_port);
-
-    int ret = resolver_.Init();
-    if (ret < 0) {
-      LOG(WARNING) << "worker: resolver::Init failed";
-      on_resolve_done(asio::error::connection_refused);
-      return;
-    }
-
-    std::string host_name = cached_server_host_;
-    uint16_t port = cached_server_port_;
-    remote_server_sni_ = !cached_server_sni_.empty() ? cached_server_sni_ : cached_server_host_;
-
-    DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
-
-    asio::error_code ec;
-    auto addr = asio::ip::make_address(host_name.c_str(), ec);
-    bool host_is_ip_address = !ec;
-    if (host_is_ip_address) {
-      asio::ip::tcp::endpoint endpoint(addr, port);
-      auto results = asio::ip::tcp::resolver::results_type::create(endpoint, host_name, std::to_string(port));
-      on_resolve_remote(ec, results);
-      return;
-    }
-    resolver_.AsyncResolve(host_name, port,
-                           [this](const asio::error_code& ec, asio::ip::tcp::resolver::results_type results) {
-                             on_resolve_remote(ec, results);
-                           });
+  if (thread_) {
+    thread_->join();
+  }
+  thread_ = std::make_unique<std::thread>([this] {
+    WorkFunc();
   });
 }
 
@@ -126,20 +116,11 @@ void Worker::Stop(absl::AnyInvocable<void()>&& callback) {
   DCHECK(!stop_callback_);
   stop_callback_ = std::move(callback);
   /// stop in the worker thread
-  asio::post(io_context_, [this]() {
-    resolver_.Cancel();
-
-    if (private_->cli_server) {
-      LOG(INFO) << "worker: tcp server stops listen";
-      private_->cli_server->stop();
-    }
-
-    work_guard_.reset();
-  });
+  private_->Stop();
 }
 
 size_t Worker::currentConnections() const {
-  return private_->cli_server ? private_->cli_server->num_of_connections() : 0;
+  return private_->NumOfConnections();
 }
 
 std::vector<std::string> Worker::GetRemoteIpsV4() const {
@@ -187,118 +168,54 @@ void Worker::WorkFunc() {
   }
 #endif
 
-  while (!in_destroy_) {
-    work_guard_ =
-        std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
-    io_context_.run();
-    io_context_.restart();
-    private_->cli_server.reset();
+  // cache all fields
+  cached_server_host_ = absl::GetFlag(FLAGS_server_host);
+  cached_server_sni_ = absl::GetFlag(FLAGS_server_sni);
+  cached_server_port_ = absl::GetFlag(FLAGS_server_port);
+  cached_server_username_ = absl::GetFlag(FLAGS_username);
+  cached_server_password_ = absl::GetFlag(FLAGS_password);
+  cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
+  cached_server_padding_support_ = absl::GetFlag(FLAGS_padding_support);
+  cached_server_redir_mode_ = absl::GetFlag(FLAGS_redir_mode);
+  cached_local_host_ = absl::GetFlag(FLAGS_local_host);
+  cached_local_port_ = absl::GetFlag(FLAGS_local_port);
 
-    resolver_.Reset();
-
-    auto callback = std::move(stop_callback_);
-    DCHECK(!stop_callback_);
-    if (callback) {
-      callback();
-    }
-    LOG(INFO) << "worker: background thread finished cleanup";
+  int ret = private_->Init();
+  if (ret < 0) {
+    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
+    on_resolve_done(asio::error::connection_refused);
+    return;
   }
+
+  std::string host_name = cached_server_host_;
+  uint16_t port = cached_server_port_;
+  remote_server_sni_ = !cached_server_sni_.empty() ? cached_server_sni_ : cached_server_host_;
+  DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
+
+  local_port_ = 0;
+  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_);
+  if (ret != 0) {
+    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
+    on_resolve_done(private_->GetLastError());
+    return;
+  }
+
+  LOG(INFO) << "worker: tcp server listening at " << local_port_;
+
+  on_resolve_done({});
+
+  private_->Run();
+
+  auto callback = std::move(stop_callback_);
+  DCHECK(!stop_callback_);
+  if (callback) {
+    callback();
+  }
+
   LOG(INFO) << "worker: background thread stopped";
 }
 
-void Worker::on_resolve_remote(asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
-  if (ec) {
-    LOG(WARNING) << "worker: remote resolved host: " << cached_server_host_ << " failed due to: " << ec;
-    on_resolve_done(ec);
-    return;
-  }
-
-  std::vector<std::string> server_ips;
-  for (auto result : results) {
-    if (result.endpoint().address().is_unspecified()) {
-      LOG(WARNING) << "worker: unspecified remote address: " << cached_server_host_;
-      on_resolve_done(asio::error::connection_refused);
-      return;
-    }
-    server_ips.push_back(result.endpoint().address().to_string());
-    if (result.endpoint().address().is_v4()) {
-      remote_server_ips_v4_.push_back(result.endpoint().address().to_string());
-    } else {
-      remote_server_ips_v6_.push_back(result.endpoint().address().to_string());
-    }
-  }
-  remote_server_ips_ = absl::StrJoin(server_ips, ";");
-  LOG(INFO) << "worker: resolved server ips: " << remote_server_ips_;
-
-  std::string host_name = cached_local_host_;
-  uint16_t port = cached_local_port_;
-
-  auto addr = asio::ip::make_address(host_name.c_str(), ec);
-  bool host_is_ip_address = !ec;
-  if (host_is_ip_address) {
-    asio::ip::tcp::endpoint endpoint(addr, port);
-    auto results = asio::ip::tcp::resolver::results_type::create(endpoint, host_name, std::to_string(port));
-    on_resolve_local(ec, results);
-    return;
-  }
-  resolver_.AsyncResolve(host_name, port,
-                         [this](const asio::error_code& ec, asio::ip::tcp::resolver::results_type results) {
-                           on_resolve_local(ec, results);
-                         });
-}
-
-void Worker::on_resolve_local(asio::error_code ec, asio::ip::tcp::resolver::results_type results) {
-  if (ec) {
-    LOG(WARNING) << "worker: local resolved host: " << cached_local_host_ << " failed due to: " << ec;
-    on_resolve_done(ec);
-    return;
-  }
-  endpoints_.clear();
-  endpoints_.insert(endpoints_.end(), std::begin(results), std::end(results));
-
-  std::vector<std::string> local_ips;
-  for (auto result : results) {
-    local_ips.push_back(result.endpoint().address().to_string());
-  }
-  local_server_ips_ = absl::StrJoin(local_ips, ";");
-  LOG(INFO) << "worker: resolved local ips: " << local_server_ips_;
-
-  on_resolve_done({});
-}
-
 void Worker::on_resolve_done(asio::error_code ec) {
-  resolver_.Reset();
-
-  if (ec) {
-    if (auto callback = std::move(start_callback_)) {
-      callback(ec);
-    }
-    work_guard_.reset();
-    return;
-  }
-
-  private_->cli_server = std::make_unique<CliServer>(io_context_, 0x0, remote_server_ips_, remote_server_sni_,
-                                                     cached_server_port_,
-                                                     cached_server_username_, cached_server_password_,
-                                                     cached_server_cipher_, cached_server_padding_support_);
-
-  local_port_ = 0;
-  for (auto& endpoint : endpoints_) {
-    private_->cli_server->listen(endpoint, {}, {}, {}, {}, {}, cached_server_redir_mode_, SOMAXCONN, ec);
-    if (ec) {
-      break;
-    }
-    endpoint = private_->cli_server->endpoint();
-    local_port_ = endpoint.port();
-    LOG(INFO) << "worker: tcp server listening at " << endpoint;
-  }
-
-  if (ec) {
-    LOG(WARNING) << "worker: tcp server stops listen due to error: " << ec;
-    private_->cli_server->stop();
-    work_guard_.reset();
-  }
-
   if (auto callback = std::move(start_callback_)) {
     callback(ec);
   }

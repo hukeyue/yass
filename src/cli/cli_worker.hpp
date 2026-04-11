@@ -58,17 +58,8 @@ class Worker {
  private:
   void WorkFunc();
 
-  void on_resolve_remote(asio::error_code ec, asio::ip::tcp::resolver::results_type results);
-
-  void on_resolve_local(asio::error_code ec, asio::ip::tcp::resolver::results_type results);
-
   void on_resolve_done(asio::error_code ec);
 
-  asio::io_context io_context_;
-  /// stopping the io_context from running out of work
-  std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
-  /// used to resolve local and remote endpoint
-  net::Resolver resolver_;
   /// used to do io in another thread
   std::unique_ptr<std::thread> thread_;
 

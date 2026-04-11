@@ -470,6 +470,7 @@ foreach(output_type PDB RUNTIME LIBRARY) # ARCHIVE
   set(CMAKE_${output_type}_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
 
+option(BUILD_DYLIB "Build with YASS-C DYLIB." OFF)
 option(CLI "Build with cli." ON)
 option(SERVER "Build with server." ON)
 cmake_dependent_option(
@@ -4394,9 +4395,6 @@ add_library(yass_core STATIC
     src/core/utils_fs.hpp
     src/crypto/crypter_export.cpp
     src/crypto/crypter_export.hpp
-    src/yass/config.h
-    src/yass/crypto.h
-    src/yass/crypto.c
   )
 
 if (WIN32)
@@ -4624,6 +4622,24 @@ if (ANDROID)
   target_link_libraries(yass_net PUBLIC log)
 endif()
 
+set(yass_c_SOURCES
+  src/yass/config.h
+  src/yass/crypto.h
+  src/yass/crypto.c
+  src/yass/client.h
+  src/yass/client.cpp
+)
+add_library(yass_c_lib OBJECT ${yass_c_SOURCES})
+if (USE_LTO_CMAKE)
+  set_property(TARGET yass_c_lib
+    PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+target_include_directories(yass_c_lib PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_link_libraries(yass_c_lib PUBLIC
+  yass_net)
+
 add_library(yass_cli_nogui_lib OBJECT
   src/cli/cli_connection.cpp
   src/cli/cli_connection.hpp
@@ -4642,6 +4658,42 @@ target_link_libraries(yass_cli_nogui_lib PUBLIC
   ${DEFAULT_MALLOC_LIB}
   yass_net)
 
+if (BUILD_DYLIB)
+  add_library(YASS-C SHARED
+    $<TARGET_OBJECTS:yass_cli_nogui_lib>
+    src/yass/ptype.cpp
+    ${yass_c_SOURCES}
+  )
+
+  target_link_libraries(YASS-C PUBLIC yass_net)
+  target_compile_definitions(YASS-C
+    PRIVATE
+      YASS_BUILD_DLL
+    INTERFACE
+      YASS_CONSUME_DLL
+  )
+
+  if (WIN32)
+    set_target_properties(YASS-C PROPERTIES PREFIX "")
+  endif()
+
+  if (WIN32)
+    install(TARGETS YASS-C RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+  else()
+    install(TARGETS YASS-C LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  endif()
+
+  if (INSTALL_HEADERS)
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/include/yass/version.h
+        ${CMAKE_CURRENT_BINARY_DIR}/include/yass/feature.h
+        src/yass/config.h
+        src/yass/crypto.h
+        src/yass/client.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yass)
+  endif()
+endif()
+
 add_library(yass_cli_lib STATIC
   src/cli/cli_worker.cpp
   )
@@ -4654,6 +4706,7 @@ target_include_directories(yass_cli_lib PRIVATE
 
 target_link_libraries(yass_cli_lib PUBLIC
   ${DEFAULT_MALLOC_LIB}
+  yass_c_lib
   yass_cli_nogui_lib
   yass_net)
 
@@ -4690,6 +4743,7 @@ if (CLI)
 
   target_link_libraries(yass_cli PUBLIC
     ${DEFAULT_MALLOC_LIB}
+    yass_c_lib
     yass_cli_nogui_lib
     yass_net)
 
