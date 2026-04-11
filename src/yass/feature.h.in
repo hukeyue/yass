@@ -36,4 +36,7 @@
 /* Define to 1 if you have HAVE_QUICHE. */
 #cmakedefine HAVE_QUICHE
 
+/* Define to 1 if you have HAVE_C_ARES. */
+#cmakedefine HAVE_C_ARES
+
 #endif // YASS_FEATURE_H

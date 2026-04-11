@@ -3829,17 +3829,11 @@ endif()
 if (USE_SYSTEM_CARES AND USE_CARES)
   message(STATUS "Compiling with system cares")
   list(APPEND YASS_APP_FEATURES "system c-ares")
-  set(SUPPORT_DEFINITIONS
-    HAVE_C_ARES
-    ${SUPPORT_DEFINITIONS}
-  )
+  set(HAVE_C_ARES 1)
   set(SUPPORT_LIBS PkgConfig::CARES ${SUPPORT_LIBS})
 elseif (USE_CARES)
   message(STATUS "Compiling with bundled cares")
-  set(SUPPORT_DEFINITIONS
-    HAVE_C_ARES
-    ${SUPPORT_DEFINITIONS}
-  )
+  set(HAVE_C_ARES 1)
   set(CARES_BUILD_TOOLS OFF CACHE BOOL "")
   if (CARES_BUILD_SHARED_LIBS)
     set(CARES_SHARED ON CACHE BOOL "")

@@ -46,6 +46,7 @@
 #include "net/asio.hpp"
 #include "net/padding.hpp"
 #include "net/resolver.hpp"
+#include "yass/feature.h"
 #include "yass/version.h"
 
 namespace config {

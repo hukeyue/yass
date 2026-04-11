@@ -32,6 +32,8 @@
 
 #include <base/files/memory_mapped_file.h>
 
+#include "yass/feature.h"
+
 // returning in host byte order
 [[nodiscard]] int32_t GetIpAddress(JNIEnv* env);
 int SetJavaThreadName(const std::string& thread_name);

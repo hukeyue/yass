@@ -47,6 +47,7 @@
 #include "net/asio.hpp"
 #include "net/padding.hpp"
 #include "net/resolver.hpp"
+#include "yass/feature.h"
 #include "yass/version.h"
 
 ABSL_FLAG(std::string, user, "", "set non-privileged user for worker");

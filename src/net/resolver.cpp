@@ -30,6 +30,7 @@
 #include "core/utils.hpp"
 #include "net/doh_resolver.hpp"
 #include "net/dot_resolver.hpp"
+#include "yass/feature.h"
 
 #ifdef HAVE_C_ARES
 #include "net/c-ares.hpp"
