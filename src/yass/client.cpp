@@ -88,7 +88,7 @@ class YassClientPrivate {
   int GetLastError() const { return last_error_.value(); }
   const char* GetLastErrorStr() const {
     auto str = last_error_ss_.str();
-    strncpy(last_error_str_, str.c_str(), sizeof(last_error_str_));
+    strncpy(last_error_str_, str.c_str(), sizeof(last_error_str_)-1);
     return last_error_str_;
   }
 
@@ -102,7 +102,7 @@ class YassClientPrivate {
   std::vector<std::unique_ptr<CliServer>> servers_;
   std::mutex server_mutex_;
   asio::error_code last_error_;
-  mutable char last_error_str_[4096];
+  mutable char last_error_str_[4096] = {};
   std::stringstream last_error_ss_;
 };
 
