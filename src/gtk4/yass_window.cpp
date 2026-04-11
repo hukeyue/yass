@@ -35,9 +35,9 @@
 #include "gtk/utils.hpp"
 #include "gtk4/option_dialog.hpp"
 #include "gtk4/yass.hpp"
-#include "_yass/feature.h"
 #include "_yass/gui_variant.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 #include <gtk/gtkwindow.h>
 

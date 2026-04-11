@@ -39,9 +39,9 @@
 #include "mac/YassViewController.h"
 #include "mac/YassWindowController.h"
 #include "mac/utils.h"
-#include "_yass/feature.h"
 #include "_yass/gui_variant.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 @interface YassAppDelegate ()
 - (std::string)SaveConfig;

@@ -41,7 +41,7 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
-#include "_yass/version.h"
+#include "yass/version.h"
 
 #if defined(ARCH_CPU_X86_64)
 // This is for https://crbug.com/1300598, and more generally,

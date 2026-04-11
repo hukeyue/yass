@@ -22,6 +22,8 @@
 
 /* Copyright (c) 2023-2026 Chilledheart  */
 
+#include "yass/feature.h"
+
 #ifdef HAVE_MBEDTLS
 
 #include "crypto/mbedtls_common.hpp"

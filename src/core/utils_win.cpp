@@ -46,7 +46,8 @@ struct IUnknown;
 
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "_yass/version.h"
+#include "yass/version.h"
+#include "yass/feature.h"
 
 // use our dynamic version of GetProductInfo
 #undef GetProductInfo

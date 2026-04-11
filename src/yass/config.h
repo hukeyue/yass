@@ -20,11 +20,29 @@
  * CDDL HEADER END
  */
 
-/* Copyright (c) 2023-2026 Chilledheart  */
+/* Copyright (c) 2019-2026 Chilledheart  */
 
-#ifndef YASS_FEATURE_H
-#define YASS_FEATURE_H
+#ifndef YASS_CYRPTO_H
+#define YASS_CYRPTO_H
 
-#define YASS_APP_FEATURES "@YASS_APP_FEATURES@"
+// YASS_DLL
+//
+#if defined(_WIN32)
+#  if defined(YASS_BUILD_DLL)
+#     define YASS_DLL __declspec(dllexport)
+#  elif defined(YASS_CONSUME_DLL)
+#     define YASS_DLL __declspec(dllimport)
+#  else
+#    define YASS_DLL
+#  endif
+#else
+#  if defined(YASS_BUILD_DLL)
+#     define YASS_DLL __attribute__((visibility("default")))
+#  elif defined(YASS_CONSUME_DLL)
+#     define YASS_DLL
+#  else
+#     define YASS_DLL
+#  endif
+#endif  // defined(_MSC_VER)
 
-#endif // YASS_FEATURE_H
+#endif  // YASS_CYRPTO_H

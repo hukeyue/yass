@@ -22,24 +22,18 @@
 
 /* Copyright (c) 2023-2026 Chilledheart  */
 
-#ifndef H_CRYPTO_MEBDTLS_COMMON
-#define H_CRYPTO_MEBDTLS_COMMON
+#ifndef YASS_FEATURE_H
+#define YASS_FEATURE_H
 
-#include "yass/feature.h"
+#define YASS_APP_FEATURES "@YASS_APP_FEATURES@"
 
-#ifdef HAVE_MBEDTLS
-#include "crypto/crypter_export.hpp"
+/* Define to 1 if you have HAVE_BORINGSSL. */
+#cmakedefine HAVE_BORINGSSL
 
-#include <mbedtls/cipher.h>
-#include <mbedtls/version.h>
+/* Define to 1 if you have HAVE_MBEDTLS. */
+#cmakedefine HAVE_MBEDTLS
 
-namespace crypto {
-mbedtls_cipher_context_t* mbedtls_create_evp(enum cipher_method method);
-void mbedtls_release_evp(mbedtls_cipher_context_t* evp);
-const mbedtls_cipher_info_t* mbedtls_get_cipher(enum cipher_method method);
-uint8_t mbedtls_get_nonce_size(enum cipher_method method);
-uint8_t mbedtls_get_key_size(enum cipher_method method);
-}  // namespace crypto
+/* Define to 1 if you have HAVE_QUICHE. */
+#cmakedefine HAVE_QUICHE
 
-#endif  // HAVE_MBEDTLS
-#endif  // H_CRYPTO_MEBDTLS_COMMON
+#endif // YASS_FEATURE_H

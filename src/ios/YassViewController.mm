@@ -56,7 +56,7 @@
 
   cipher_methods_ = @[
 #define XX(num, name, string) @string,
-    CIPHER_METHOD_VALID_MAP(XX)
+    YASS_CIPHER_METHOD_VALID_MAP(XX)
 #undef XX
   ];
   self.currentCiphermethod = @(CRYPTO_DEFAULT_CSTR);

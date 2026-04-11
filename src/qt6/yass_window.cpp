@@ -46,9 +46,9 @@
 #include "config/config.hpp"
 #include "core/utils.hpp"
 #include "freedesktop/utils.hpp"
-#include "_yass/feature.h"
 #include "_yass/gui_variant.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 YASSWindow::YASSWindow(QWidget* parent) : QMainWindow(parent) {
   setWindowIcon(QIcon::fromTheme("io.github.chilledheart.yass", QIcon(":/res/images/io.github.chilledheart.yass.png")));

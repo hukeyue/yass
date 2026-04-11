@@ -98,7 +98,7 @@ class CipherTest : public ::testing::TestWithParam<size_t>, public cipher_visito
     EncodeAndDecode("", "<dummy-password>", CRYPTO_##name, GetParam()); \
   }
 
-CIPHER_METHOD_OLD_MAP(XX)
+YASS_CIPHER_METHOD_OLD_MAP(XX)
 #undef XX
 
 INSTANTIATE_TEST_SUITE_P(SizedCipherTest,

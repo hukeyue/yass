@@ -48,8 +48,8 @@
 #include "net/io_buffer.hpp"
 #include "net/padding.hpp"
 #include "server/server_server.hpp"
-#include "_yass/feature.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_BENCHMARK_DEFAULT;
@@ -266,7 +266,7 @@ void GenerateConnectRequest(std::string_view host, int port_num, GrowableIOBuffe
   struct CryptoTraits##name {                                   \
     static constexpr const cipher_method value = CRYPTO_##name; \
   };
-CIPHER_METHOD_VALID_MAP(XX)
+YASS_CIPHER_METHOD_VALID_MAP(XX)
 #undef XX
 
 // [content provider] <== [ss server] <== [ss local] <== [content consumer]
@@ -551,11 +551,11 @@ class SsEndToEndBM : public benchmark::Fixture {
   }                                                                                               \
   BENCHMARK_REGISTER_F(SsEndToEndBM, name)                                                        \
       ->Name("SsEndToEndBM_FullDuplex_" #name)                                                    \
-      ->Range(512, 32 * 1024)                                                                    \
+      ->Range(512, 32 * 1024)                                                                     \
       ->UseManualTime();
-CIPHER_METHOD_MAP_SODIUM(XX)
-CIPHER_METHOD_MAP_HTTP(XX)
-CIPHER_METHOD_MAP_HTTP2(XX)
+YASS_CIPHER_METHOD_MAP_SODIUM(XX)
+YASS_CIPHER_METHOD_MAP_HTTP(XX)
+YASS_CIPHER_METHOD_MAP_HTTP2(XX)
 #undef XX
 
 class ASIOFixture : public benchmark::Fixture {

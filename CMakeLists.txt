@@ -131,8 +131,8 @@ set(YASS_APP_COPYRIGHT "Copyright 2019-2026 Chilledheart. All rights reserved.")
 message(STATUS "Source Tag: ${YASS_APP_TAG}-${YASS_APP_SUBTAG}")
 message(STATUS "Source LastChange: ${YASS_APP_LAST_CHANGE}")
 
-set(APP_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/version.h")
-configure_file("src/version.h.in" "${APP_VERSION_HEADER}" @ONLY)
+set(APP_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/yass/version.h")
+configure_file("src/yass/version.h.in" "${APP_VERSION_HEADER}" @ONLY)
 # for version.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
@@ -3228,6 +3228,7 @@ endif()
 #           boringssl Library
 # *****************************************************************************************
 
+set(HAVE_BORINGSSL 1)
 # hacks to force win32 thread usage
 if (MINGW AND USE_LIBCXX)
   set(PREVIOUS_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -3322,11 +3323,8 @@ endif()
 
 if (USE_SYSTEM_MBEDTLS)
   message(STATUS "Compiling with system mbedtls library")
+  set(HAVE_MBEDTLS 1)
   list(APPEND YASS_APP_FEATURES "system mbedtls")
-  set(SUPPORT_DEFINITIONS
-    HAVE_MBEDTLS
-    ${SUPPORT_DEFINITIONS}
-  )
   if (MBEDCRYPTO_3_FOUND)
     set(SUPPORT_LIBS PkgConfig::MBEDCRYPTO_3 ${SUPPORT_LIBS})
   elseif (MBEDCRYPTO_FOUND)
@@ -3338,6 +3336,7 @@ if (USE_SYSTEM_MBEDTLS)
   endif()
 elseif (USE_MBEDTLS)
   message(STATUS "Compiling with bundled mbedtls library")
+  set(HAVE_MBEDTLS 1)
   if (BUILD_SHARED_LIBS)
     set(USE_SHARED_MBEDTLS_LIBRARY "ON" CACHE STRING "")
     set(USE_STATIC_MBEDTLS_LIBRARY "OFF" CACHE STRING "")
@@ -3362,10 +3361,6 @@ elseif (USE_MBEDTLS)
 
   add_subdirectory(third_party/mbedtls EXCLUDE_FROM_ALL)
 
-  set(SUPPORT_DEFINITIONS
-    HAVE_MBEDTLS
-    ${SUPPORT_DEFINITIONS}
-  )
   set(SUPPORT_LIBS mbedcrypto ${SUPPORT_LIBS})
 
   if (USE_SHARED_MBEDTLS_LIBRARY)
@@ -3970,12 +3965,9 @@ endif()
 
 set(SUPPORT_LIBS url ${SUPPORT_LIBS})
 if (USE_QUICHE)
+  set(HAVE_QUICHE 1)
   add_subdirectory(third_party/quiche EXCLUDE_FROM_ALL)
   list(APPEND YASS_APP_FEATURES "quiche")
-  set(SUPPORT_DEFINITIONS
-    HAVE_QUICHE
-    ${SUPPORT_DEFINITIONS}
-  )
   set(SUPPORT_LIBS quiche ${SUPPORT_LIBS})
 endif()
 
@@ -4408,12 +4400,15 @@ add_library(yass_core STATIC
     src/core/logging.hpp
     src/core/process_utils.hpp
     src/core/process_utils.cpp
-    src/crypto/crypter_export.cpp
-    src/crypto/crypter_export.hpp
     src/core/utils.cpp
     src/core/utils_fs.cpp
     src/core/utils.hpp
     src/core/utils_fs.hpp
+    src/crypto/crypter_export.cpp
+    src/crypto/crypter_export.hpp
+    src/yass/config.h
+    src/yass/crypto.h
+    src/yass/crypto.c
   )
 
 if (WIN32)
@@ -4455,7 +4450,7 @@ target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
   ${SUPPORT_INCLUDE_DIRS})
 
-target_include_directories(yass_core PRIVATE
+target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_compile_definitions(yass_core PUBLIC
@@ -4789,8 +4784,8 @@ if (SERVER)
   endif()
 endif()
 
-set(APP_FEATURE_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/feature.h")
-configure_file("src/feature.h.in" "${APP_FEATURE_HEADER}" @ONLY)
+set(APP_FEATURE_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/yass/feature.h")
+configure_file("src/yass/feature.h.in" "${APP_FEATURE_HEADER}")
 message(STATUS "Enabled Feature: ${YASS_APP_FEATURES}")
 
 # *****************************************************************************************

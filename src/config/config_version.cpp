@@ -33,8 +33,8 @@
 #include <iostream>
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "_yass/feature.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 #ifdef HAVE_TBBMALLOC
 #pragma clang diagnostic push
