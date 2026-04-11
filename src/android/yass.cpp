@@ -36,6 +36,7 @@
 #include "cli/cli_worker.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
+#include "yass/feature.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;

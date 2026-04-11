@@ -43,7 +43,8 @@
 #include "net/socks5_request.hpp"
 #include "net/socks5_request_parser.hpp"
 #include "net/ss_request_parser.hpp"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 ABSL_FLAG(bool, hide_via, true, "If true, the Via heaeder will not be added.");
 ABSL_FLAG(bool, hide_ip, true, "If true, the Forwarded header will not be augmented with your IP address.");

@@ -65,8 +65,8 @@ ABSL_FLAG(std::string,
 #include "net/io_buffer.hpp"
 #include "net/padding.hpp"
 #include "server/server_server.hpp"
-#include "_yass/feature.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 #include "test_util.hpp"
 
@@ -818,7 +818,7 @@ TEST_P(EndToEndTest, 256K) {
 
 static constexpr const std::tuple<cipher_method, cipher_method> kCiphersPaired[] = {
 #define XX(num, name, string) std::make_tuple(CRYPTO_##name,CRYPTO_##name),
-    CIPHER_METHOD_VALID_MAP(XX)
+    YASS_CIPHER_METHOD_VALID_MAP(XX)
 #undef XX
 };
 
@@ -833,7 +833,7 @@ INSTANTIATE_TEST_SUITE_P(Ss,
 
 static constexpr const cipher_method kCiphersHttps[] = {
 #define XX(num, name, string) CRYPTO_##name,
-    CIPHER_METHOD_MAP_HTTPS(XX)
+    YASS_CIPHER_METHOD_MAP_HTTPS(XX)
 #undef XX
 };
 

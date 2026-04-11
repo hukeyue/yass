@@ -29,7 +29,7 @@ enum cipher_method to_cipher_method(const std::string_view& method) {
   if (method == string) {     \
     return CRYPTO_##name;     \
   }
-  CIPHER_METHOD_MAP(XX)
+  YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
   return CRYPTO_INVALID;
 }
@@ -41,7 +41,7 @@ std::string_view to_cipher_method_name(enum cipher_method method) {
     constexpr std::string_view _ret = #name; \
     return _ret;                             \
   }
-    CIPHER_METHOD_MAP(XX)
+    YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
     default:
       return CRYPTO_INVALID_NAME;
@@ -55,7 +55,7 @@ std::string_view to_cipher_method_str(enum cipher_method method) {
     constexpr std::string_view _ret = string; \
     return _ret;                              \
   }
-    CIPHER_METHOD_MAP(XX)
+    YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
     default:
       return CRYPTO_INVALID_STR;
@@ -67,7 +67,7 @@ bool is_valid_cipher_method(enum cipher_method method) {
 #define XX(num, name, string) \
   case num:                   \
     return true;
-    CIPHER_METHOD_MAP(XX)
+    YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
     default:
       return false;

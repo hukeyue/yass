@@ -39,8 +39,8 @@
 #include "crypto/crypter_export.hpp"
 #include "ios/YassViewController.h"
 #include "ios/utils.h"
-#include "_yass/feature.h"
-#include "_yass/version.h"
+#include "yass/feature.h"
+#include "yass/version.h"
 
 @interface YassAppDelegate ()
 - (std::string)SaveConfig;

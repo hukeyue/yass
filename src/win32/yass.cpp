@@ -44,10 +44,10 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
-#include "_yass/version.h"
 #include "win32/resource.hpp"
 #include "win32/utils.hpp"
 #include "win32/yass_frame.hpp"
+#include "yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;

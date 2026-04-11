@@ -36,6 +36,7 @@
 #include "net/ss_request.hpp"
 #include "net/ssl_stream.hpp"
 #include "net/stream.hpp"
+#include "yass/feature.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_cat.h>

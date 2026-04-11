@@ -31,6 +31,7 @@
 #include "net/dns_message_request.hpp"
 #include "net/dns_message_response_parser.hpp"
 #include "net/io_buffer.hpp"
+#include "yass/feature.h"
 
 #include "test_util.hpp"
 

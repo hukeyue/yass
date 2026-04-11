@@ -36,6 +36,8 @@
 #include "net/padding.hpp"
 #include "net/socks4_request_parser.hpp"
 #include "net/socks5_request_parser.hpp"
+#include "yass/version.h"
+#include "yass/feature.h"
 
 #include <build/build_config.h>
 

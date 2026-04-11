@@ -58,7 +58,7 @@ static YassViewController* __weak _instance;
   [self.cipherMethod removeAllItems];
   NSString* methodStrings[] = {
 #define XX(num, name, string) @string,
-      CIPHER_METHOD_VALID_MAP(XX)
+      YASS_CIPHER_METHOD_VALID_MAP(XX)
 #undef XX
   };
   for (NSString* methodString : methodStrings) {

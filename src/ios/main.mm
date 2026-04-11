@@ -41,7 +41,7 @@
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
 #include "ios/YassAppDelegate.h"
-#include "_yass/version.h"
+#include "yass/version.h"
 
 namespace config {
 const ProgramType pType = YASS_CLIENT_GUI;

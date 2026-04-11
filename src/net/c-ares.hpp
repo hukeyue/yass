@@ -25,6 +25,8 @@
 #ifndef H_NET_C_ARES_HPP
 #define H_NET_C_ARES_HPP
 
+#include "yass/feature.h"
+
 #ifdef HAVE_C_ARES
 
 #include <ares.h>
