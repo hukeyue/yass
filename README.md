@@ -4,9 +4,9 @@
 
 ## Releases
 
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/hukeyue/yass)](https://github.com/hukeyue/yass/releases)
+[![GitHub Release (latest SemVer)](https://img.shields.io/github/v/release/hukeyue/yass)](https://github.com/hukeyue/yass/releases)
 [![Language: C++](https://img.shields.io/github/languages/top/hukeyue/yass.svg)](https://github.com/hukeyue/yass/search?l=cpp)
-[![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/hukeyue/yass/latest/total)](https://github.com/hukeyue/yass/releases/latest)
+[![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hukeyue/yass/total)](https://github.com/hukeyue/yass/releases)
 
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
