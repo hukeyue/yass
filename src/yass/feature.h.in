@@ -39,4 +39,7 @@
 /* Define to 1 if you have HAVE_C_ARES. */
 #cmakedefine HAVE_C_ARES
 
+/* Define to 1 if you have HAVE_NGHTTP2. */
+#cmakedefine HAVE_NGHTTP2
+
 #endif // YASS_FEATURE_H

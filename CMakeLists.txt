@@ -3880,13 +3880,11 @@ endif()
 if (USE_SYSTEM_NGHTTP2 AND USE_NGHTTP2)
   message(STATUS "Compiling with system libnghttp2")
   list(APPEND YASS_APP_FEATURES "system nghttp2")
-  set(SUPPORT_DEFINITIONS
-    HAVE_NGHTTP2
-    ${SUPPORT_DEFINITIONS}
-  )
+  set(HAVE_NGHTTP2 1)
   set(SUPPORT_LIBS PkgConfig::NGHTTP2 ${SUPPORT_LIBS})
 elseif (USE_NGHTTP2)
   message(STATUS "Compiling with bundled libnghttp2")
+  set(HAVE_NGHTTP2 1)
   set(ENABLE_APP OFF CACHE BOOL "")
   set(ENABLE_HPACK_TOOLS OFF CACHE BOOL "")
   set(ENABLE_EXAMPLES OFF CACHE BOOL "")
@@ -3937,10 +3935,6 @@ elseif (USE_NGHTTP2)
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nghttp2/lib/includes
     ${CMAKE_CURRENT_BINARY_DIR}/third_party/nghttp2/lib/includes
     )
-  set(SUPPORT_DEFINITIONS
-    HAVE_NGHTTP2
-    ${SUPPORT_DEFINITIONS}
-  )
   set(SUPPORT_INCLUDE_DIRS
     ${NGHTTP2_INCLUDE_DIRS}
     ${SUPPORT_INCLUDE_DIRS}
