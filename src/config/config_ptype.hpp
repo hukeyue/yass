@@ -38,6 +38,7 @@ enum ProgramType {
   YASS_CLIENT_MASK = 0x80,
   YASS_CLIENT_DEFAULT = 0x80,
   YASS_CLIENT_GUI = 0x81,
+  YASS_CLIENT_LIB = 0x82,
 };
 
 extern const ProgramType pType;

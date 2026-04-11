@@ -25,14 +25,14 @@
 #ifndef YASS_CRYPTO_H
 #define YASS_CRYPTO_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 
 #include "yass/config.h"
 #include "yass/feature.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define YASS_CIPHER_METHOD_MAP_SODIUM(XX)                  \
   XX(0x3U, AES256GCMSHA256, "aes-256-gcm")                 \

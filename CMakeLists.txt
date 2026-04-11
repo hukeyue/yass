@@ -4660,6 +4660,8 @@ target_link_libraries(yass_cli_lib PUBLIC
 if (CLI)
   add_executable(yass_cli
     src/cli/cli.cpp
+    src/yass/client.h
+    src/yass/client.cpp
   )
   minject_patch_exetuable(yass_cli)
   if (USE_LTO_CMAKE)
