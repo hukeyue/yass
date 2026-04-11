@@ -34,6 +34,7 @@
 #include <build/build_config.h>
 #include <locale.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include "third_party/googleurl/url/gurl.h"
@@ -99,6 +100,7 @@ class YassClientPrivate {
   net::Resolver resolver_;
 
   std::vector<std::unique_ptr<CliServer>> servers_;
+  std::mutex server_mutex_;
   asio::error_code last_error_;
   mutable char last_error_str_[4096];
   std::stringstream last_error_ss_;
@@ -214,6 +216,7 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
       *listen_port = endpoint.port();
     }
   }
+  std::lock_guard<std::mutex> lk(server_mutex_);
   servers_.push_back(std::move(server));
   return {};
 }
@@ -336,7 +339,10 @@ int YassClientPrivate::Init() {
 #endif
 
   work_guard_.reset();
-  servers_.clear();
+  {
+    std::lock_guard<std::mutex> lk(server_mutex_);
+    servers_.clear();
+  }
 
   if (resolver_.Init() < 0) {
     last_error_ = asio::error::operation_not_supported;
@@ -380,6 +386,7 @@ int YassClientPrivate::Run() {
   io_context_.run();
   io_context_.restart();
 
+  std::lock_guard<std::mutex> lk(server_mutex_);
   servers_.clear();
 
   return 0;
@@ -387,6 +394,7 @@ int YassClientPrivate::Run() {
 
 int YassClientPrivate::NumOfConnections() {
   int count = 0;
+  std::lock_guard<std::mutex> lk(server_mutex_);
   for (auto& server : servers_)
     count += server->num_of_connections();
   return count;
