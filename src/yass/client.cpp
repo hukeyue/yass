@@ -49,12 +49,6 @@
 #include "yass/feature.h"
 #include "yass/version.h"
 
-#if 0
-namespace config {
-const ProgramType pType = YASS_CLIENT_LIB;
-}  // namespace config
-#endif
-
 using namespace net::cli;
 
 namespace {
