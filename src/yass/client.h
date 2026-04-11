@@ -47,6 +47,8 @@ YASS_DLL int yass_client_instance_add_server_uri(yass_client_instance instance, 
 YASS_DLL int yass_client_instance_add_server(yass_client_instance instance, int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port);
 /// Run loop (block API)
 YASS_DLL int yass_client_instance_run(yass_client_instance instance);
+/// Count current number of connections
+YASS_DLL int yass_client_instance_num_of_connections(yass_client_instance instance);
 /// Gracefully shutdown (Thread-Safe)
 YASS_DLL int yass_client_instance_shutdown(yass_client_instance instance);
 /// Cancel current I/O and leave the run-loop (Thread-Safe)

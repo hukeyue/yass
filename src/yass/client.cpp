@@ -63,12 +63,24 @@ class YassClientPrivate {
   asio::error_code ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t *listen_port);
 
  public:
-  YassClientPrivate() : resolver_(resolver_io_context_) {}
+  YassClientPrivate() : resolver_(resolver_io_context_) {
+    url::AddStandardScheme("auto",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("socks",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("http2",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("naive",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+    url::AddStandardScheme("redir",
+                           url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
+  }
   ~YassClientPrivate() = default;
   int Init();
   int Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port);
   int Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port);
   int Run(); // block current thread
+  int NumOfConnections();
 
   int Shutdown(); // thread-safe
   int Stop(); // thread-safe
@@ -106,8 +118,8 @@ asio::ip::tcp::resolver::results_type YassClientPrivate::ResolveAddress(const st
     asio::ip::tcp::resolver::results_type results;
     resolver_.AsyncResolve(domain_name, port, [&](asio::error_code ec, asio::ip::tcp::resolver::results_type _results) {
       resolver_work_guard.reset();
+      last_error_ = ec;
       if (ec) {
-        last_error_ = ec;
         last_error_ss_ << "resolved domain name: " << domain_name << " failed due to: " << ec;
         return;
       }
@@ -326,17 +338,6 @@ int YassClientPrivate::Init() {
   work_guard_.reset();
   servers_.clear();
 
-  url::AddStandardScheme("auto",
-                         url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-  url::AddStandardScheme("socks",
-                         url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-  url::AddStandardScheme("http2",
-                         url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-  url::AddStandardScheme("naive",
-                         url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-  url::AddStandardScheme("redir",
-                         url::SCHEME_WITH_HOST_PORT_AND_USER_INFORMATION);
-
   if (resolver_.Init() < 0) {
     last_error_ = asio::error::operation_not_supported;
     last_error_ss_ << "Resolver: Init failure";
@@ -382,6 +383,13 @@ int YassClientPrivate::Run() {
   servers_.clear();
 
   return 0;
+}
+
+int YassClientPrivate::NumOfConnections() {
+  int count = 0;
+  for (auto& server : servers_)
+    count += server->num_of_connections();
+  return count;
 }
 
 int YassClientPrivate::Shutdown() {
@@ -445,6 +453,12 @@ int yass_client_instance_run(yass_client_instance _instance) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
   return instance->Run();
+}
+
+int yass_client_instance_num_of_connections(yass_client_instance _instance) {
+  auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
+  DCHECK(instance);
+  return instance->NumOfConnections();
 }
 
 int yass_client_instance_shutdown(yass_client_instance _instance) {
