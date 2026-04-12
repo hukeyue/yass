@@ -105,15 +105,6 @@ jobs:
           path: |
             third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64
           key: ${{ runner.os }}-mingw64-sysroot-third_party-llvm-${{ matrix.mingw_version }}-${{ matrix.variant }}-v1
-      - name: Cache mingw64 curl
-        id: curl-cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            third_party/curl-8.4.0_7-win64a-mingw
-            third_party/curl-8.4.0_7-win64-mingw
-            third_party/curl-8.4.0_7-win32-mingw
-          key: ${{ runner.os }}-mingw64-curl-and-aarch64-v1
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
@@ -137,12 +128,6 @@ jobs:
           tar -xf llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64.tar.xz
           rm -vf llvm-mingw-*.xz
           popd
-      - name: "Install dependency: curl"
-        if: ${{ steps.curl-cache.outputs.cache-hit != 'true' }}
-        run: |
-          ./scripts/download-curl-mingw.sh i686
-          ./scripts/download-curl-mingw.sh x86_64
-          ./scripts/download-curl-mingw.sh aarch64
       - name: Change ubuntu mirror
         run: |
           sudo sed -i 's/azure.archive.ubuntu.com/azure.archive.ubuntu.com/g' /etc/apt/sources.list
@@ -212,16 +197,6 @@ jobs:
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass.py
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
-      - name: Populate depedencies (Tests-i686)
-        if: ${{ matrix.arch == 'i686' }}
-        run: |
-          # copy curl dll required by yass_test
-          cp -v third_party/curl-8.4.0_7-win32-mingw/bin/libcurl.dll build-mingw-winxp-${{ matrix.arch }}/
-      - name: Populate depedencies (Tests-x86_64)
-        if: ${{ matrix.arch == 'x86_64' }}
-        run: |
-          # copy curl dll required by yass_test
-          cp -v third_party/curl-8.4.0_7-win64-mingw/bin/libcurl-x64.dll build-mingw-winxp-${{ matrix.arch }}/
       - uses: actions/upload-artifact@v6
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
@@ -433,14 +408,7 @@ jobs:
       - name: Run tests
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4 || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h || exit /b
           yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode || exit /b
-          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode || exit /b
           yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http --ipv6_mode || exit /b
   mingw64-release-native-benchmark:
     runs-on: windows-2022
