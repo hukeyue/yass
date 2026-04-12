@@ -54,6 +54,9 @@ int DoHResolver::Init(const std::string& doh_url, int timeout_ms) {
     LOG(WARNING) << "Invalid DoH URL: " << doh_url;
     return -1;
   }
+  if (url.host().size() > TLSEXT_MAXLEN_host_name) {
+    LOG(WARNING) << "Invalid DoH Host: " << url.host();
+  }
   doh_url_ = doh_url;
   doh_host_ = url.host();
   doh_port_ = url.EffectiveIntPort();

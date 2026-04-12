@@ -53,6 +53,11 @@ int DoTResolver::Init(const std::string& dot_host, int timeout_ms) {
   timeout_ms_ = timeout_ms ? timeout_ms : CURL_TIMEOUT_RESOLVE * 1000;
   dot_host_ = dot_host;
 
+  if (dot_host.size() > TLSEXT_MAXLEN_host_name) {
+    LOG(WARNING) << "Invalid DoT Host: " << dot_host;
+    return -1;
+  }
+
   asio::error_code ec;
   SetupSSLContext(ec);
   if (ec) {
