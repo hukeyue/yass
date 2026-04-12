@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0 OR CDDL-1.0
+// SPDX-License-Identifier: GPL-2.0 OR LGPL-2.1 OR CDDL-1.0
 /* Copyright (c) 2024-2025 Chilledheart  */
 
 import { CommonConstants } from '../constants/CommonConstants';
