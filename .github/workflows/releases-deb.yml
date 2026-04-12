@@ -368,7 +368,7 @@ jobs:
         if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' }}
         run: |
           sudo rm -rf /var/lib/schroot/chroots/${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}/dev
-          sudo rm -rf /var/lib/schroot/chroots/${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}/run/systemd
+          sudo rm -rf /var/lib/schroot/chroots/${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}/run/systemd/dissect-root
       - name: Fix schroot permissions (restore store permissions)
         if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' }}
         run: |
