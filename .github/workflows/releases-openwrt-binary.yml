@@ -176,16 +176,16 @@ jobs:
           sudo apt remove libc6-i386
 
           sudo dpkg -i qemu-user_*.deb
+      - name: Build Binary (CLI)
+        run: |
+          ./tools/build --variant cli --arch ${{ matrix.arch }} \
+            --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
+            -use-static-build -nc ${{ matrix.extra_flags }}
       - name: Build Binary (DYLIB)
         run: |
           ./tools/build --variant dylib --arch ${{ matrix.arch }} \
             --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
             -build-benchmark -build-test \
-            -use-static-build -nc ${{ matrix.extra_flags }}
-      - name: Build Binary (CLI)
-        run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} \
-            --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
             -use-static-build -nc ${{ matrix.extra_flags }}
       - uses: actions/upload-artifact@v6
         with:
@@ -199,18 +199,21 @@ jobs:
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_cli
             build-linux-openwrt-${{ matrix.arch }}/*.so
+            !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-test
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_test
             build-linux-openwrt-${{ matrix.arch }}/*.so
+            !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_benchmark
             build-linux-openwrt-${{ matrix.arch }}/*.so
+            !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-dbg

@@ -297,24 +297,26 @@ jobs:
       - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc -build-test -build-benchmark ${{ matrix.build_options }}
-      - name: Build Binary (DYLIB)
-        run: |
-          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -nc ${{ matrix.build_options }}
+      - name: Build Binary (DYLIB)
+        run: |
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-gui
           path: |
             build-linux-musl-${{ matrix.arch }}/yass
             build-linux-musl-${{ matrix.arch }}/*.so
+            !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-cli
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_cli
             build-linux-musl-${{ matrix.arch }}/*.so
+            !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dylib
@@ -327,12 +329,14 @@ jobs:
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_test
             build-linux-musl-${{ matrix.arch }}/*.so
+            !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_benchmark
             build-linux-musl-${{ matrix.arch }}/*.so
+            !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dbg
