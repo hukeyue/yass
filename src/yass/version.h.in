@@ -29,6 +29,7 @@
 #define YASS_APP_VERSION_MINOR @YASS_APP_VERSION_MINOR@
 #define YASS_APP_VERSION_PATCH @YASS_APP_VERSION_PATCH@
 #define YASS_APP_VERSION_TWEAK @YASS_APP_VERSION_TWEAK@
+#define YASS_APP_VERSION       "@YASS_APP_VERSION@"
 
 #define YASS_APP_COMPANY_NAME "Chilledheart"
 #define YASS_APP_FILE_DESCRIPTION "lightweight and secure http/socks4/socks5 proxy"
@@ -43,5 +44,19 @@
 #define YASS_APP_TAG "@YASS_APP_TAG@"
 #define YASS_APP_SUBTAG "@YASS_APP_SUBTAG@"
 #define YASS_APP_LNAME L"@YASS_APP_NAME@"
+
+#include "yass/config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+YASS_DLL const char* yass_app_name(void);
+YASS_DLL void yass_app_version(int *major, int *minor, int *patch, int *tweak);
+YASS_DLL const char* yass_app_version_str(void);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // YASS_VERSION_H

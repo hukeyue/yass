@@ -127,6 +127,16 @@ var androidNdkVer string
 var harmonyNdkDir string
 
 func getAppName() string {
+	if variantFlag == "dylib" {
+		if systemNameFlag == "windows" || systemNameFlag == "mingw" {
+			return APPNAME + ".dll"
+		} else if systemNameFlag == "darwin" || systemNameFlag == "ios" {
+			return "lib" + APPNAME + ".dylib"
+		} else {
+			return "lib" + APPNAME + ".so"
+		}
+	}
+
 	if systemNameFlag == "windows" {
 		return APPNAME + ".exe"
 	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" {
@@ -237,7 +247,7 @@ func InitFlag() {
 
 	flag.StringVar(&armCpuFlag, "arm-cpu", "", "Specify ARM CPU Model Name if any")
 
-	flag.StringVar(&variantFlag, "variant", "gui", "Specify variant, available: gui, cli, server")
+	flag.StringVar(&variantFlag, "variant", "gui", "Specify variant, available: gui, cli, server, dylib")
 
 	flag.StringVar(&mingwDir, "mingw-dir", "", "MinGW Dir Path")
 	flag.BoolVar(&mingwAllowXpFlag, "mingw-allow-xp", false, "Enable Windows XP Build")
@@ -267,6 +277,8 @@ func InitFlag() {
 
 	if variantFlag == "gui" {
 		APPNAME = "yass"
+	} else if variantFlag == "dylib" {
+		APPNAME = "YASS-C"
 	} else if variantFlag == "cli" {
 		APPNAME = "yass_cli"
 	} else if variantFlag == "server" {
@@ -442,7 +454,7 @@ func prebuildFindSourceDirectory() {
 					}
 				}
 				if name == getAppName() {
-					if systemNameFlag == "darwin" {
+					if systemNameFlag == "darwin" && variantFlag == "gui" {
 						name = filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
 					}
 					err = untouchFile(filepath.Join(buildDir, name))
@@ -450,6 +462,36 @@ func prebuildFindSourceDirectory() {
 						glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
 					} else {
 						glog.V(1).Infof("Untouched binary %s under build directory to force rebuild", name)
+					}
+				}
+
+				if buildTestFlag || runTestFlag {
+					exe_name := "yass_test"
+					if systemNameFlag == "windows" || systemNameFlag == "mingw" {
+						exe_name += ".exe"
+					}
+					if exe_name == name {
+						err = untouchFile(filepath.Join(buildDir, exe_name))
+						if err != nil {
+							glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
+						} else {
+							glog.V(1).Infof("Untouched binary %s under build directory to force rebuild", name)
+						}
+					}
+				}
+
+				if buildBenchmarkFlag || runBenchmarkFlag {
+					exe_name := "yass_benchmark"
+					if systemNameFlag == "windows" || systemNameFlag == "mingw" {
+						exe_name += ".exe"
+					}
+					if exe_name == name {
+						err = untouchFile(filepath.Join(buildDir, exe_name))
+						if err != nil {
+							glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
+						} else {
+							glog.V(1).Infof("Untouched binary %s under build directory to force rebuild", name)
+						}
 					}
 				}
 			}
@@ -841,7 +883,7 @@ func buildStageGenerateBuildScript() {
 	cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_ZLIB=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_JSONCPP=on")
-	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON")
+	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON", "-DBUILD_DYLIB=on")
 	if useStaticBuildFlag {
 		cmakeArgs = append(cmakeArgs, "-DCLI_STATIC_BUILD=ON", "-DSERVER_STATIC_BUILD=ON")
 	}
@@ -1681,7 +1723,7 @@ func postStateCopyDependedLibraries() {
 			glog.Infof("--- --- %s", unresolvedDep)
 		}
 		// TBD
-	} else if systemNameFlag == "darwin" {
+	} else if systemNameFlag == "darwin" && variantFlag == "gui" {
 		dllPaths := []string{}
 
 		// find dylibs to be copied
@@ -1733,7 +1775,7 @@ func postStateCopyDependedLibraries() {
 func postStateFixRPath() {
 	glog.Info("PostState -- Fix RPATH")
 	glog.Info("======================================================================")
-	if systemNameFlag == "darwin" {
+	if systemNameFlag == "darwin" && variantFlag == "gui" {
 		addRpathForDylibCmd := []string{
 			"install_name_tool", "-add_rpath", "@loader_path/../Frameworks",
 		}
@@ -1759,6 +1801,26 @@ func postStateFixRPath() {
 			}
 		}
 		execPath := filepath.Join(buildDir, getAppName(), "Contents", "MacOS", APPNAME)
+		removeRpathFinalCmd := append(removeRpathCmd, execPath)
+		cmdRun(removeRpathFinalCmd, false)
+	} else if systemNameFlag == "darwin" {
+		removeRpathCmd := []string{
+			"install_name_tool", "-delete_rpath", buildDir,
+		}
+
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if name == getAppName() {
+				continue
+			}
+			if strings.HasSuffix(iname, ".dylib") {
+				removeRpathFinalCmd := append(removeRpathCmd, filepath.Join(buildDir, name))
+				cmdRun(removeRpathFinalCmd, false)
+			}
+		}
+		execPath := filepath.Join(buildDir, getAppName())
 		removeRpathFinalCmd := append(removeRpathCmd, execPath)
 		cmdRun(removeRpathFinalCmd, false)
 	}
@@ -1833,6 +1895,9 @@ func postStateStripBinaries() {
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
+			if name == getAppName() {
+				continue
+			}
 			if strings.HasSuffix(iname, ".so") || strings.HasSuffix(iname, ".dll") {
 				gnuStripBinary(name, name+".dbg")
 			}
@@ -1857,7 +1922,7 @@ func postStateStripBinaries() {
 			}
 			gnuStripBinary(binName, binName+".dbg")
 		}
-	} else if systemNameFlag == "darwin" {
+	} else if systemNameFlag == "darwin" && variantFlag == "gui" {
 		// strip dependent dll files
 		frameworkPath := filepath.Join(getAppName(), "Contents", "Frameworks")
 		entries, _ := ioutil.ReadDir(frameworkPath)
@@ -1865,7 +1930,7 @@ func postStateStripBinaries() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
-				darwinStripBinary(filepath.Join(frameworkPath, name), name+".dSYM")
+				gnuStripBinary(filepath.Join(frameworkPath, name), name+".dbg")
 			}
 		}
 
@@ -1875,11 +1940,37 @@ func postStateStripBinaries() {
 
 		// strip test binary
 		if buildTestFlag {
-			darwinStripBinary("yass_test", "yass_test.dSYM")
+			gnuStripBinary("yass_test", "yass_test.dbg")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
-			darwinStripBinary("yass_benchmark", "yass_benchmark.dSYM")
+			gnuStripBinary("yass_benchmark", "yass_benchmark.dbg")
+		}
+	} else if systemNameFlag == "darwin" {
+		// strip dependent dll files
+		entries, _ := ioutil.ReadDir(buildDir)
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if name == getAppName() {
+				continue
+			}
+			if strings.HasSuffix(iname, ".dylib") {
+				gnuStripBinary(name, name+".dbg")
+			}
+		}
+
+		// strip main binary
+		execPath := filepath.Join(getAppName())
+		gnuStripBinary(execPath, getAppName()+".dbg")
+
+		// strip test binary
+		if buildTestFlag {
+			gnuStripBinary("yass_test", "yass_test.dbg")
+		}
+		// strip benchmark binary
+		if buildBenchmarkFlag {
+			gnuStripBinary("yass_benchmark", "yass_benchmark.dbg")
 		}
 	} else if systemNameFlag == "ios" {
 		// strip main binary
@@ -2261,7 +2352,7 @@ func signOrCopyHapFile(inFile string, outFile string) error {
 }
 
 func archiveMainFile(output string, prefix string, paths []string, dllPaths []string) {
-	if systemNameFlag == "darwin" {
+	if systemNameFlag == "darwin" && variantFlag == "gui" {
 		var eulaRtf []byte
 		eulaTemplate, err := ioutil.ReadFile("../src/mac/eula.xml")
 		if err != nil {
@@ -2590,7 +2681,7 @@ func postStateArchives() map[string][]string {
 			archive = fmt.Sprintf(archiveFormat, APPNAME, "", ".apk")
 		}
 	}
-	if systemNameFlag == "darwin" {
+	if systemNameFlag == "darwin" && variantFlag == "gui" {
 		archive = fmt.Sprintf(archiveFormat, APPNAME, "-unsigned", ".dmg")
 	}
 	if systemNameFlag == "ios" {
@@ -2622,6 +2713,9 @@ func postStateArchives() map[string][]string {
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
+			if name == getAppName() {
+				continue
+			}
 			if strings.HasSuffix(iname, ".dll") {
 				dllPaths = append(dllPaths, name)
 			}
@@ -2642,6 +2736,9 @@ func postStateArchives() map[string][]string {
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
+			if name == getAppName() {
+				continue
+			}
 			if strings.HasSuffix(iname, ".so") {
 				dllPaths = append(dllPaths, name)
 			}
@@ -2660,6 +2757,9 @@ func postStateArchives() map[string][]string {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dsym") {
+				dbgPaths = append(dbgPaths, name)
+			}
+			if strings.HasSuffix(iname, ".dbg") {
 				dbgPaths = append(dbgPaths, name)
 			}
 		}

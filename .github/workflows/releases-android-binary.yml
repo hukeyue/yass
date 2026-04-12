@@ -168,10 +168,6 @@ jobs:
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
              -build-benchmark -build-test \
             -nc
-      - name: Build Binary (SERVER)
-        run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
-            -nc
       - name: Install the Release certificate
         if: ${{ github.event_name == 'release' }}
         env:
@@ -199,6 +195,10 @@ jobs:
           if [ ! -z $SIGNING_STORE_PATH ]; then
             rm -f $SIGNING_STORE_PATH
           fi
+      - name: Build Binary (DYLIB)
+        run: |
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system android \
+            -nc
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-aab
@@ -215,7 +215,8 @@ jobs:
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-gui
           path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - name: Clean up libyass.so
         run: |
           rm -fv build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libyass.so
@@ -225,11 +226,12 @@ jobs:
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-server
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dylib
           path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass.py
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
@@ -237,12 +239,14 @@ jobs:
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dbg

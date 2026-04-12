@@ -4628,6 +4628,7 @@ set(yass_c_SOURCES
   src/yass/crypto.c
   src/yass/client.h
   src/yass/client.cpp
+  src/yass/version.c
 )
 add_library(yass_c_lib OBJECT ${yass_c_SOURCES})
 if (USE_LTO_CMAKE)
@@ -4677,13 +4678,9 @@ if (BUILD_DYLIB)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
   endif()
 
-  if (WIN32)
-    install(TARGETS YASS-C RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-  else()
+  if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS YASS-C LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  endif()
 
-  if (INSTALL_HEADERS)
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/include/yass/version.h
         ${CMAKE_CURRENT_BINARY_DIR}/include/yass/feature.h
@@ -4692,6 +4689,10 @@ if (BUILD_DYLIB)
         src/yass/client.h
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yass)
   endif()
+
+  add_custom_command(TARGET YASS-C POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/examples/yass.py" "${CMAKE_BINARY_DIR}/yass.py"
+    COMMENT "copying example file")
 endif()
 
 add_library(yass_cli_lib STATIC

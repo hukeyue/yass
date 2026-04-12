@@ -195,13 +195,13 @@ jobs:
       - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc -build-benchmark -build-test ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
-      - name: Build Binary (Server)
-        run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
+      - name: Build Binary (DYLIB)
+        run: |
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         with:
@@ -209,17 +209,19 @@ jobs:
           path: |
             build-linux-${{ matrix.arch }}/yass
             build-linux-${{ matrix.arch }}/*.so
+            !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-linux-${{ matrix.arch }}/yass_cli
             build-linux-${{ matrix.arch }}/*.so
+            !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dylib
           path: |
-            build-linux-${{ matrix.arch }}/yass_server
+            build-linux-${{ matrix.arch }}/yass.py
             build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
@@ -227,12 +229,14 @@ jobs:
           path: |
             build-linux-${{ matrix.arch }}/yass_test
             build-linux-${{ matrix.arch }}/*.so
+            !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
             build-linux-${{ matrix.arch }}/*.so
+            !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dbg
