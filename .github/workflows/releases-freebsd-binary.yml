@@ -156,6 +156,7 @@ jobs:
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-dylib
           path: |
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass.py
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:

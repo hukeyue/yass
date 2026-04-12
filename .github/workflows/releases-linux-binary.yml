@@ -219,6 +219,7 @@ jobs:
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-dylib
           path: |
+            build-linux-${{ matrix.arch }}/yass.py
             build-linux-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:

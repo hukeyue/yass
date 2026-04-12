@@ -170,6 +170,7 @@ jobs:
         with:
           name: msvc-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-dylib
           path: |
+            build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.py
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
             build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
       - uses: actions/upload-artifact@v6
@@ -195,6 +196,10 @@ jobs:
         run: |
           build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
           build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass --version || exit /b
+      - name: Run tests (python)
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          python build-msvc-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass.py --version || exit /b
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
