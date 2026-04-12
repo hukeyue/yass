@@ -3052,6 +3052,10 @@ elseif(USE_MIMALLOC)
     HAVE_MIMALLOC
     ${SUPPORT_DEFINITIONS}
   )
+  set(SUPPORT_INCLUDE_DIRS
+    third_party/mimalloc/include
+    ${SUPPORT_INCLUDE_DIRS}
+  )
 endif()
 
 set(DEFAULT_MALLOC_LIB ${MIMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
@@ -3145,6 +3149,11 @@ elseif(USE_JEMALLOC)
   set(SUPPORT_DEFINITIONS
     HAVE_JEMALLOC
     ${SUPPORT_DEFINITIONS}
+  )
+  set(SUPPORT_INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}/third_party/jemalloc/include
+    third_party/jemalloc/src/include
+    ${SUPPORT_INCLUDE_DIRS}
   )
 endif()
 
@@ -4442,13 +4451,10 @@ target_include_directories(yass_core PUBLIC
 target_compile_definitions(yass_core PUBLIC
   ${SUPPORT_DEFINITIONS})
 
-set(CORE_LIBS ${DEFAULT_MALLOC_LIB} ${CORE_LIBS})
 target_link_libraries(yass_core PUBLIC
-  ${DEFAULT_MALLOC_LIB}
   ${CORE_LIBS})
 
 set(SUPPORT_LIBS
-  ${DEFAULT_MALLOC_LIB}
   yass_core
   ${CORE_LIBS}
   ${SUPPORT_LIBS})
@@ -4615,12 +4621,29 @@ target_compile_definitions(yass_net PUBLIC
 
 target_link_directories(yass_net PUBLIC ${SUPPORT_LIB_DIRS})
 target_link_libraries(yass_net PUBLIC
-  ${DEFAULT_MALLOC_LIB}
   ${SUPPORT_LIBS})
 
 if (ANDROID)
   target_link_libraries(yass_net PUBLIC log)
 endif()
+
+add_library(yass_support STATIC
+  src/support/utils.cpp
+  src/support/utils.hpp
+)
+
+if (USE_LTO_CMAKE)
+  set_property(TARGET yass_support
+    PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+target_include_directories(yass_support PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_link_libraries(yass_support PUBLIC
+  ${DEFAULT_MALLOC_LIB}
+  yass_core
+)
 
 set(yass_c_SOURCES
   src/yass/config.h
@@ -4656,7 +4679,6 @@ target_include_directories(yass_cli_nogui_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_cli_nogui_lib PUBLIC
-  ${DEFAULT_MALLOC_LIB}
   yass_net)
 
 if (BUILD_DYLIB)
@@ -4706,7 +4728,6 @@ target_include_directories(yass_cli_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_cli_lib PUBLIC
-  ${DEFAULT_MALLOC_LIB}
   yass_c_lib
   yass_cli_nogui_lib
   yass_net)
@@ -4746,7 +4767,8 @@ if (CLI)
     ${DEFAULT_MALLOC_LIB}
     yass_c_lib
     yass_cli_nogui_lib
-    yass_net)
+    yass_net
+    yass_support)
 
   target_link_options(yass_cli PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
@@ -4776,7 +4798,6 @@ target_include_directories(yass_server_lib PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(yass_server_lib PUBLIC
-  ${DEFAULT_MALLOC_LIB}
   yass_net)
 
 if (SERVER)
@@ -4813,7 +4834,9 @@ if (SERVER)
   target_link_libraries(yass_server PUBLIC
     ${DEFAULT_MALLOC_LIB}
     yass_server_lib
-    yass_net)
+    yass_net
+    yass_support
+  )
 
   target_link_options(yass_server PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
@@ -5138,6 +5161,7 @@ if (GUI)
       ${DEFAULT_MALLOC_LIB}
       ${GUI_LIBRARIES}
       yass_core
+      yass_support
     )
 
     target_link_options(${APP_NAME} PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
@@ -5581,6 +5605,7 @@ if (BUILD_TESTS)
       yass_cli_nogui_lib
       yass_server_lib
       yass_net
+      yass_support
       yass_gtest
       )
   target_link_options(yass_test PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
@@ -5723,6 +5748,7 @@ if (BUILD_BENCHMARKS)
       yass_cli_nogui_lib
       yass_server_lib
       yass_net
+      yass_support
       benchmark::benchmark
       )
   target_link_options(yass_benchmark PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})

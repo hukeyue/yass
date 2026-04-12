@@ -114,16 +114,16 @@ static void ParseConfigFileOption(int argc, const char** argv) {
       std::cout << "TBBMALLOC: " << TBB_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_TCMALLOC
-      std::cout << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr) << std::endl;
+      std::cout << "TCMALLOC: " << TC_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_MIMALLOC
-      std::cout << "MIMALLOC: " << mi_version() << std::endl;
+      std::cout << "MIMALLOC: " << MI_MALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_JEMALLOC
       std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_ZLIB
-      std::cout << "ZLIB: " << zlibVersion() << std::endl;
+      std::cout << "ZLIB: " << ZLIB_VERSION << std::endl;
 #endif
 #ifndef NDEBUG
       std::cout << "Debug build (NDEBUG not #defined)" << std::endl;
@@ -146,16 +146,16 @@ static void ParseConfigFileOption(int argc, const char** argv) {
   std::cerr << "TBBMALLOC: " << TBB_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_TCMALLOC
-  std::cerr << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr) << std::endl;
+  std::cerr << "TCMALLOC: " << TC_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_MIMALLOC
-  std::cerr << "MIMALLOC: " << mi_version() << std::endl;
+  std::cerr << "MIMALLOC: " << MI_MALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_JEMALLOC
   std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_ZLIB
-  std::cout << "ZLIB: " << zlibVersion() << std::endl;
+  std::cout << "ZLIB: " << ZLIB_VERSION << std::endl;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   std::cerr << "Assertions build (DCHECK_ALWAYS_ON #defined)" << std::endl;
@@ -188,16 +188,16 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   LOG(WARNING) << "TBBMALLOC: " << TBB_VERSION_STRING;
 #endif
 #ifdef HAVE_TCMALLOC
-  LOG(WARNING) << "TCMALLOC: " << tc_version(nullptr, nullptr, nullptr);
+  LOG(WARNING) << "TCMALLOC: " << TC_VERSION_STRING;
 #endif
 #ifdef HAVE_MIMALLOC
-  LOG(WARNING) << "MIMALLOC: " << mi_version();
+  LOG(WARNING) << "MIMALLOC: " << MI_MALLOC_VERSION;
 #endif
 #ifdef HAVE_JEMALLOC
   LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION;
 #endif
 #ifdef HAVE_ZLIB
-  LOG(WARNING) << "ZLIB: " << zlibVersion();
+  LOG(WARNING) << "ZLIB: " << ZLIB_VERSION;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   LOG(WARNING) << "Assertions build (DCHECK_ALWAYS_ON #defined)";
