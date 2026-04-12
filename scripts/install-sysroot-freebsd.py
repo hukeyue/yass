@@ -196,7 +196,7 @@ def main(args):
   deps = resolve_deps(pkg_db, ['gtk3'])
   for dep in deps:
     pkg = pkg_db[dep]
-    extract_pkg(base_url + '/' + pkg['path'], pkg['sum'], sysroot, True)
+    extract_pkg(base_url + '/' + pkg['path'], pkg['sum'], sysroot, is_zstd)
 
   # remove tmp files
   shutil.rmtree(tmproot)
