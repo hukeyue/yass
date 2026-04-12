@@ -4678,13 +4678,9 @@ if (BUILD_DYLIB)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
   endif()
 
-  if (WIN32)
-    install(TARGETS YASS-C RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-  else()
+  if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
     install(TARGETS YASS-C LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  endif()
 
-  if (INSTALL_HEADERS)
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/include/yass/version.h
         ${CMAKE_CURRENT_BINARY_DIR}/include/yass/feature.h
