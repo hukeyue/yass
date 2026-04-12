@@ -334,12 +334,12 @@ jobs:
         if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
-            apt-get -o DPkg::Options::="--force-confnew" install -y libglib2.0-dev:${{ matrix.arch }} libgtk-3-dev:${{ matrix.arch }}
+            apt-get -o DPkg::Options::="--force-confnew" -o Dpkg::Options::="--force-overwrite" install -y libglib2.0-dev:${{ matrix.arch }} libgtk-3-dev:${{ matrix.arch }}
       - name: Populate dependencie (curl, for test purpose, exclude armel/mipsel/mips64el)
         if: ${{ steps.schroot-cache.outputs.cache-hit != 'true' && matrix.arch != 'armel' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
-            apt-get install -y libcurl4-openssl-dev:${{ matrix.arch }}
+            apt-get -o DPkg::Options::="--force-confnew" -o Dpkg::Options::="--force-overwrite" install -y libcurl4-openssl-dev:${{ matrix.arch }}
       - name: Populate dependencie (list upgradable packages)
         run: |
           sudo schroot --chroot "source:${{ matrix.distro }}-${{ env.BUILD_ARCH }}-${{ matrix.arch }}" --user root -- \
