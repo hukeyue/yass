@@ -43,8 +43,8 @@ Description: lightweight and secure http/socks4/socks5 proxy
  for embedded devices and low end boxes.
 
 Package: yass-dbg
-Section: debug
 Architecture: any
+Section: debug
 Build-Profiles: <gtk3> <gtk4> <qt5> <qt6>
 Depends:
     yass (= ${binary:Version}),
@@ -67,8 +67,8 @@ Description: lightweight and secure http/socks4/socks5 proxy
  for embedded devices and low end boxes.
 
 Package: yass-server-dbg
-Section: debug
 Architecture: any
+Section: debug
 Depends:
     yass-server (= ${binary:Version}),
     ${misc:Depends},
@@ -90,8 +90,8 @@ Description: lightweight and secure http/socks4/socks5 proxy
  for embedded devices and low end boxes.
 
 Package: yass-client-dbg
-Section: debug
 Architecture: any
+Section: debug
 Depends:
     yass-client (= ${binary:Version}),
     ${misc:Depends},
@@ -100,20 +100,32 @@ Description: Debugging symbols for the yass-client package.
 
 Package: yass-common
 Architecture: any
+Section: libs
 Pre-Depends: ${misc:Pre-Depends}
 Depends:
- lsb-base (>= 3.0-6),
- ${misc:Depends},
- ${shlibs:Depends}
+    lsb-base (>= 3.0-6),
+    ${misc:Depends},
+    ${shlibs:Depends},
 Description: lightweight and secure http/socks4/socks5 proxy
  yass is a lightweight and secure http/socks proxy
  for embedded devices and low end boxes.
 
 Package: yass-common-dbg
-Section: debug
 Architecture: any
+Section: debug
 Depends:
     yass-common (= ${binary:Version}),
     ${misc:Depends},
 Description: Debugging symbols for the yass-common package.
  This package contains the debugging symbols for the yass-common package.
+
+Package: yass-dev
+Architecture: any
+Section: libdevel
+Depends:
+    lsb-base (>= 3.0-6),
+    yass-common (= ${binary:Version}),
+    ${misc:Depends},
+Description: development files of lightweight and secure http/socks4/socks5 proxy
+ yass is a lightweight and secure http/socks proxy
+ for embedded devices and low end boxes.

@@ -1,0 +1,5 @@
+usr/include/yass/version.h
+usr/include/yass/feature.h
+usr/include/yass/config.h
+usr/include/yass/crypto.h
+usr/include/yass/client.h

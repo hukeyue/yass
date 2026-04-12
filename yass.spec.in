@@ -212,7 +212,7 @@ cd build
    -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on \
    -DUSE_QT6="%enable_use_qt6_opt" -DUSE_QT5="%enable_use_qt5_opt" \
    -DUSE_GTK4="%enable_use_gtk4_opt" -DGUI=on \
-   -DCLI=on -DSERVER=on \
+   -DCLI=on -DSERVER=on -DBUILD_DYLIB=on \
    -DUSE_OLD_SYSTEMD_SERVICE="%use_old_systemd_service" \
    -DUSE_TCMALLOC=on -DUSE_SYSTEM_TCMALLOC="%enable_system_gperftools_opt" \
    -DUSE_ZLIB=on -DUSE_SYSTEM_ZLIB=on \
@@ -332,6 +332,20 @@ for embedded devices and low end boxes.
 %license build/LICENSE
 %dir /usr/libexec/%{name}
 /usr/libexec/%{name}/*
+%dir /usr/lib64
+/usr/lib64/libYASS-C.so
+
+%package devel
+Summary: Lightweight and Secure http/socks4/socks5 Proxy (Header Files)
+
+%description devel
+yass is a lightweight and secure http/socks proxy
+for embedded devices and low end boxes.
+
+%files devel
+%defattr(-,root,root)
+%dir /usr/include/%{name}
+/usr/include/%{name}/*.h
 
 %changelog
 * Wed Apr 8 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.3-1

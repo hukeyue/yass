@@ -104,6 +104,7 @@ cp -vf "$HOME/rpmbuild/RPMS/${ARCH}/yass-client-${RPM_VERSION}-${RPM_SUBVERSION}
 cp -vf "$HOME/rpmbuild/RPMS/${ARCH}/yass-client-debuginfo-${RPM_VERSION}-${RPM_SUBVERSION}${SUFFIX}.${ARCH}.rpm" "yass-client-debuginfo${REAL_SUFFIX}.${ARCH}.${RPM_VERSION}${RPM_SUBVERSION_SUFFIX}.rpm" || true
 cp -vf "$HOME/rpmbuild/RPMS/${ARCH}/yass-common-${RPM_VERSION}-${RPM_SUBVERSION}${SUFFIX}.${ARCH}.rpm" "yass-common${REAL_SUFFIX}.${ARCH}.${RPM_VERSION}${RPM_SUBVERSION_SUFFIX}.rpm"
 cp -vf "$HOME/rpmbuild/RPMS/${ARCH}/yass-common-debuginfo-${RPM_VERSION}-${RPM_SUBVERSION}${SUFFIX}.${ARCH}.rpm" "yass-common-debuginfo${REAL_SUFFIX}.${ARCH}.${RPM_VERSION}${RPM_SUBVERSION_SUFFIX}.rpm" || true
+cp -vf "$HOME/rpmbuild/RPMS/${ARCH}/yass-devel-${RPM_VERSION}-${RPM_SUBVERSION}${SUFFIX}.${ARCH}.rpm" "yass-devel${REAL_SUFFIX}.${ARCH}.${RPM_VERSION}${RPM_SUBVERSION_SUFFIX}.rpm"
 
 echo "Generated rpms: "
 for rpm in *.rpm; do

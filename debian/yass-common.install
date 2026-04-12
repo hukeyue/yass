@@ -8,4 +8,5 @@ usr/libexec/yass/libnghttp2.so
 usr/libexec/yass/libpki.so
 usr/libexec/yass/libssl.so
 usr/libexec/yass/libtcmalloc_minimal.so
+usr/lib/*/libYASS-C.so
 usr/share/doc/yass/LICENSE
