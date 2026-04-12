@@ -297,9 +297,9 @@ jobs:
       - name: Build Binary (CLI)
         run: |
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc -build-test -build-benchmark ${{ matrix.build_options }}
-      - name: Build Binary (SERVER)
+      - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -use-static-build -nc ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         run: |
           ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --subsystem musl --sysroot "${{ env.SDK_ROOT }}" -nc ${{ matrix.build_options }}
@@ -317,9 +317,8 @@ jobs:
             build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
-          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-server
+          name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dylib
           path: |
-            build-linux-musl-${{ matrix.arch }}/yass_server
             build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:

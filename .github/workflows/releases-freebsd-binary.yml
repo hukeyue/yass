@@ -130,9 +130,9 @@ jobs:
           ./tools/build --variant cli --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
             -nc -build-benchmark -build-test
-      - name: Build Binary (SERVER)
+      - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant server --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
+          ./tools/build --variant dylib --system freebsd --arch ${{ matrix.arch }} --freebsd-abi ${{ matrix.abi }} \
             --sysroot $PWD/freebsd-${{ matrix.abi }}-${{ matrix.arch }}-toolchain \
             -nc
       - name: Build Binary (GUI)
@@ -154,9 +154,8 @@ jobs:
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
-          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-server
+          name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-dylib
           path: |
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_server
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:

@@ -170,9 +170,9 @@ jobs:
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             -build-test -build-benchmark \
             ${{ matrix.build_options }}
-      - name: Build Binary (Server)
+      - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system mingw \
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system mingw \
             -mingw-dir $PWD/third_party/llvm-mingw-${{ matrix.mingw_version }}-${{ matrix.variant }}-ubuntu-22.04-x86_64 -nc \
             ${{ matrix.build_options }}
       - name: Build Binary (GUI)
@@ -205,9 +205,8 @@ jobs:
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dylib
           path: |
-            build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/yass_server.exe
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/*.dll
             build-mingw${{ matrix.suffix }}-${{ matrix.arch }}/LICENSE
       - name: Populate depedencies (Tests-i686)
@@ -366,7 +365,7 @@ jobs:
       - name: Download built executables
         uses: actions/download-artifact@v6
         with:
-          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-server
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-dylib
       - name: Download built executables
         uses: actions/download-artifact@v6
         with:
@@ -379,7 +378,6 @@ jobs:
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |
           wine yass_cli.exe --version
-          wine yass_server.exe --version
           wine yass_test.exe
       - name: Run benchmarks
         if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}

@@ -176,9 +176,9 @@ jobs:
           sudo apt remove libc6-i386
 
           sudo dpkg -i qemu-user_*.deb
-      - name: Build Binary (SERVER)
+      - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} \
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} \
             --system linux --subsystem openwrt --sysroot ${{ env.SDK_ROOT }} \
             -build-benchmark -build-test \
             -use-static-build -nc ${{ matrix.extra_flags }}
@@ -189,9 +189,8 @@ jobs:
             -use-static-build -nc ${{ matrix.extra_flags }}
       - uses: actions/upload-artifact@v6
         with:
-          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-server
+          name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-dylib
           path: |
-            build-linux-openwrt-${{ matrix.arch }}/yass_server
             build-linux-openwrt-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:

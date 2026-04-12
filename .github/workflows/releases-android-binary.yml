@@ -168,9 +168,9 @@ jobs:
           ./tools/build --variant cli --arch ${{ matrix.arch }} --system android \
              -build-benchmark -build-test \
             -nc
-      - name: Build Binary (SERVER)
+      - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant server --arch ${{ matrix.arch }} --system android \
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system android \
             -nc
       - name: Install the Release certificate
         if: ${{ github.event_name == 'release' }}
@@ -227,9 +227,8 @@ jobs:
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
-          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-server
+          name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-dylib
           path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_server
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
         with:
