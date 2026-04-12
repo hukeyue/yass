@@ -27,6 +27,14 @@ class YassClient:
     print('run')
     signal.signal(signal.SIGINT, lambda sig, frame: self.stop())
     signal.signal(signal.SIGTERM, lambda sig, frame: self.stop())
+    # On Windows, pressing Ctrl+C triggers a new thread from the OS
+    # that eventually tries to notify Python's main thread.
+    # However, if the main thread is stuck in a synchronous join() or I/O operation,
+    # it cannot process that notification until the blocking call returns.
+    # This differs from Unix-like systems, where the signal interrupts the system call directly.
+    if sys.platform == 'win32':
+      signal.signal(signal.SIGINT, signal.SIG_DFL)
+      signal.signal(signal.SIGTERM, signal.SIG_DFL)
     self.bg_thread = threading.Thread(target=lambda: self._run())
     self.bg_thread.start()
     self.bg_thread.join()
