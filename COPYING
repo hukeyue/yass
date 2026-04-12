@@ -1,6 +1,7 @@
 COMPLETE SET OF yet another shadow socket HAS BEEN PROVIDED UNDER:
 
 	SPDX-License-Identifier: GPL-2.0
+	SPDX-License-Identifier: LGPL-2.1
 	SPDX-License-Identifier: CDDL-1.0
 
 being under the terms of the GNU general public license version 2 or
@@ -9,6 +10,7 @@ the terms of the common development and distribution license version 1
 according with the MIXTURE OF:
 
 	LICENSES/GPL-2.0
+	LICENSES/LGPL-2.1
 	LICENSES/CDDL-1.0
 
 any contribution to the YETANOTHERSHADOWSOCKET is subject to this COPYing file.
