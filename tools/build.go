@@ -1930,7 +1930,7 @@ func postStateStripBinaries() {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dylib") {
-				darwinStripBinary(filepath.Join(frameworkPath, name), name+".dSYM")
+				gnuStripBinary(filepath.Join(frameworkPath, name), name+".dbg")
 			}
 		}
 
@@ -1940,11 +1940,11 @@ func postStateStripBinaries() {
 
 		// strip test binary
 		if buildTestFlag {
-			darwinStripBinary("yass_test", "yass_test.dSYM")
+			gnuStripBinary("yass_test", "yass_test.dbg")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
-			darwinStripBinary("yass_benchmark", "yass_benchmark.dSYM")
+			gnuStripBinary("yass_benchmark", "yass_benchmark.dbg")
 		}
 	} else if systemNameFlag == "darwin" {
 		// strip dependent dll files
@@ -1956,21 +1956,21 @@ func postStateStripBinaries() {
 				continue
 			}
 			if strings.HasSuffix(iname, ".dylib") {
-				darwinStripBinary(name, name+".dSYM")
+				gnuStripBinary(name, name+".dbg")
 			}
 		}
 
 		// strip main binary
 		execPath := filepath.Join(getAppName())
-		darwinStripBinary(execPath, getAppName()+".dSYM")
+		gnuStripBinary(execPath, getAppName()+".dbg")
 
 		// strip test binary
 		if buildTestFlag {
-			darwinStripBinary("yass_test", "yass_test.dSYM")
+			gnuStripBinary("yass_test", "yass_test.dbg")
 		}
 		// strip benchmark binary
 		if buildBenchmarkFlag {
-			darwinStripBinary("yass_benchmark", "yass_benchmark.dSYM")
+			gnuStripBinary("yass_benchmark", "yass_benchmark.dbg")
 		}
 	} else if systemNameFlag == "ios" {
 		// strip main binary
@@ -2757,6 +2757,9 @@ func postStateArchives() map[string][]string {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".dsym") {
+				dbgPaths = append(dbgPaths, name)
+			}
+			if strings.HasSuffix(iname, ".dbg") {
 				dbgPaths = append(dbgPaths, name)
 			}
 		}
