@@ -31,10 +31,10 @@
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
+#include <absl/synchronization/mutex.h>
 #include <build/build_config.h>
 #include <locale.h>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 #include "third_party/googleurl/url/gurl.h"
@@ -93,8 +93,14 @@ class YassClientPrivate {
   asio::io_context resolver_io_context_;
   net::Resolver resolver_;
 
-  std::vector<std::unique_ptr<CliServer>> servers_;
-  std::mutex server_mutex_;
+  std::vector<std::unique_ptr<CliServer>> servers_ ABSL_GUARDED_BY(server_mutex_);
+  mutable absl::Mutex server_mutex_;
+
+  void _Add(std::unique_ptr<CliServer> server) ABSL_EXCLUSIVE_LOCKS_REQUIRED(server_mutex_);
+  void _Clear() ABSL_EXCLUSIVE_LOCKS_REQUIRED(server_mutex_);
+  void _Shutdown() ABSL_SHARED_LOCKS_REQUIRED(server_mutex_);
+  void _Stop() ABSL_SHARED_LOCKS_REQUIRED(server_mutex_);
+
   asio::error_code last_error_;
   mutable char last_error_str_[4096] = {};
   std::stringstream last_error_ss_;
@@ -256,9 +262,13 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
       *listen_port = endpoint.port();
     }
   }
-  std::lock_guard<std::mutex> lk(server_mutex_);
-  servers_.push_back(std::move(server));
+  absl::MutexLock lk(server_mutex_);
+  _Add(std::move(server));
   return {};
+}
+
+void YassClientPrivate::_Add(std::unique_ptr<CliServer> server) {
+  servers_.emplace_back(std::move(server));
 }
 
 asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t* listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
@@ -381,8 +391,8 @@ int YassClientPrivate::Init() {
 
   work_guard_.reset();
   {
-    std::lock_guard<std::mutex> lk(server_mutex_);
-    servers_.clear();
+    absl::MutexLock lk(server_mutex_);
+    _Clear();
   }
 
   last_error_ = resolver_.Init();
@@ -391,6 +401,10 @@ int YassClientPrivate::Init() {
     return -1;
   }
   return 0;
+}
+
+void YassClientPrivate::_Clear() {
+  servers_.clear();
 }
 
 int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
@@ -427,7 +441,7 @@ int YassClientPrivate::Run() {
   io_context_.run();
   io_context_.restart();
 
-  std::lock_guard<std::mutex> lk(server_mutex_);
+  absl::MutexLock lk(server_mutex_);
   servers_.clear();
 
   return 0;
@@ -435,7 +449,7 @@ int YassClientPrivate::Run() {
 
 int YassClientPrivate::NumOfConnections() {
   int count = 0;
-  std::lock_guard<std::mutex> lk(server_mutex_);
+  absl::MutexLock lk(server_mutex_);
   for (auto& server : servers_)
     count += server->num_of_connections();
   return count;
@@ -444,27 +458,37 @@ int YassClientPrivate::NumOfConnections() {
 int YassClientPrivate::Shutdown() {
   /// shutdown in the worker thread
   asio::post(io_context_, [this]() {
-    LOG(WARNING) << "Application shuting down";
-
-    for (auto& server : servers_)
-      server->shutdown();
-
+    {
+      absl::ReaderMutexLock lk(server_mutex_);
+      _Shutdown();
+    }
     work_guard_.reset();
   });
   return 0;
 }
 
+void YassClientPrivate::_Shutdown() {
+  LOG(WARNING) << "Application shuting down";
+  for (auto& server : servers_)
+    server->shutdown();
+}
+
 int YassClientPrivate::Stop() {
   /// stop in the worker thread
   asio::post(io_context_, [this]() {
-    LOG(WARNING) << "Application stopping";
-
-    for (auto& server : servers_)
-      server->stop();
-
+    {
+      absl::ReaderMutexLock lk(server_mutex_);
+      _Stop();
+    }
     work_guard_.reset();
   });
   return 0;
+}
+
+void YassClientPrivate::_Stop() {
+  LOG(WARNING) << "Application stopping";
+  for (auto& server : servers_)
+    server->stop();
 }
 
 } // anonymous namespace

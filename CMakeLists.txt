@@ -4705,6 +4705,10 @@ if (BUILD_DYLIB)
       YASS_CONSUME_DLL
   )
 
+  if (COMPILER_CLANG)
+    target_compile_options(YASS-C PRIVATE -Wthread-safety)
+  endif()
+
   if (WIN32)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
   endif()
