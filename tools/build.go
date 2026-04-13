@@ -1005,7 +1005,13 @@ func buildStageGenerateBuildScript() {
 			glog.Fatalf("%v", err)
 		}
 
-		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "ON"))
+		if msvcAllowXpFlag {
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "ON"))
+			// FIXME tail-merge issue occurs in runtime with non-system allocators
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCARES_BUILD_SHARED_LIBS=%s", "OFF"))
+		} else {
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "OFF"))
+		}
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DMSVC_CRT_LINKAGE=%s", msvcCrtLinkageFlag))
 		if msvcAllowXpFlag {
 			cmakeArgs = append(cmakeArgs, "-DALLOW_XP=ON")
@@ -1066,7 +1072,13 @@ func buildStageGenerateBuildScript() {
 			glog.Fatalf("%v", err)
 		}
 
-		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "ON"))
+		if mingwAllowXpFlag {
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "ON"))
+			// FIXME tail-merge issue occurs in runtime with non-system allocators
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCARES_BUILD_SHARED_LIBS=%s", "OFF"))
+		} else {
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "OFF"))
+		}
 
 		targetTriple, targetAbi := getMinGWTargetAndAppAbi(archFlag)
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DHOST_OS=%s", runtime.GOOS))
