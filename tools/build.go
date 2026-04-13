@@ -457,6 +457,10 @@ func prebuildFindSourceDirectory() {
 					if systemNameFlag == "darwin" && variantFlag == "gui" {
 						name = filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
 					}
+					_, err = os.Stat(name)
+					if err != nil {
+						continue
+					}
 					err = untouchFile(filepath.Join(buildDir, name))
 					if err != nil {
 						glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
@@ -1824,6 +1828,33 @@ func postStateFixRPath() {
 		removeRpathFinalCmd := append(removeRpathCmd, execPath)
 		cmdRun(removeRpathFinalCmd, false)
 	}
+	if variantFlag == "dylib" {
+		glog.Warningf("Removing directory %s", "devel")
+		os.RemoveAll("devel")
+		err := os.Mkdir("devel", 0755)
+		if err != nil {
+			glog.Fatalf("Failed in making directory %v", err)
+		}
+		// there are two parts of header, gather all of them
+		//
+		// 1. copy the generated headers
+		err = copyDir(filepath.Join(buildDir, "include", "yass"), filepath.Join(buildDir, "devel", "yass"))
+		if err != nil {
+			glog.Fatalf("Failed in copying directory %v", err)
+		}
+		// 2. copy the rest of headers
+		entries, _ := ioutil.ReadDir(filepath.Join(projectDir, "src", "yass"))
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".h") {
+				err = copyFile(filepath.Join(projectDir, "src", "yass", name), filepath.Join(buildDir, "devel", "yass", name))
+				if err != nil {
+					glog.Fatalf("Failed in copying file %v", err)
+				}
+			}
+		}
+	}
 }
 
 func gnuStripBinary(binName string, dbgName string) {
@@ -2694,12 +2725,14 @@ func postStateArchives() map[string][]string {
 	msiArchive := fmt.Sprintf(archiveFormat, APPNAME, "", ".msi")
 	nsisArchive := fmt.Sprintf(archiveFormat, APPNAME, "-user-installer", ".exe")
 	debugArchive := fmt.Sprintf(archiveFormat, APPNAME, "-debuginfo", ext)
+	develArchive := fmt.Sprintf(archiveFormat, APPNAME, "-devel", ext)
 	nsisSystemArchive := fmt.Sprintf(archiveFormat, APPNAME, "-system-installer", ".exe")
 
 	archive = filepath.Join("..", archive)
 	msiArchive = filepath.Join("..", msiArchive)
 	nsisArchive = filepath.Join("..", nsisArchive)
 	debugArchive = filepath.Join("..", debugArchive)
+	develArchive = filepath.Join("..", develArchive)
 	nsisSystemArchive = filepath.Join("..", nsisSystemArchive)
 
 	archives := map[string][]string{}
@@ -2707,6 +2740,7 @@ func postStateArchives() map[string][]string {
 	paths := []string{getAppName()}
 	var dllPaths []string
 	var dbgPaths []string
+	var devPaths []string
 
 	if systemNameFlag == "windows" || systemNameFlag == "mingw" {
 		entries, _ := ioutil.ReadDir(buildDir)
@@ -2765,6 +2799,14 @@ func postStateArchives() map[string][]string {
 		}
 	}
 
+	if variantFlag == "dylib" {
+		entries, _ := ioutil.ReadDir(filepath.Join(buildDir, "devel", "yass"))
+		for _, entry := range entries {
+			name := entry.Name()
+			devPaths = append(devPaths, filepath.Join("devel", "yass", name))
+		}
+	}
+
 	// copying manpages if any
 	if (variantFlag == "cli" || variantFlag == "server") && (systemNameFlag == "linux" || systemNameFlag == "freebsd") {
 		paths = append(paths, fmt.Sprintf("../doc/%s.1", APPNAME))
@@ -2815,6 +2857,10 @@ func postStateArchives() map[string][]string {
 	}
 	if len(dbgPaths) > 0 {
 		archives[debugArchive] = dbgPaths
+	}
+	if variantFlag == "dylib" {
+		archiveFiles(develArchive, archivePrefix, devPaths)
+		archives[develArchive] = devPaths
 	}
 
 	// Create openwrt Makefile
