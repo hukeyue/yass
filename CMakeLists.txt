@@ -5606,8 +5606,9 @@ if (BUILD_TESTS)
     add_executable(yass_test ${yass_test_SOURCE})
     minject_patch_exetuable(yass_test)
   endif()
-  # FIXME
-  target_compile_options(yass_test PRIVATE -Wno-thread-safety)
+  if (COMPILER_CLANG)
+    target_compile_options(yass_test PRIVATE -Wthread-safety)
+  endif()
   target_include_directories(yass_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src
       ${CMAKE_CURRENT_SOURCE_DIR}/src/cli

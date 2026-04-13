@@ -37,6 +37,8 @@
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rand_util.h>
+#include <condition_variable>
+#include <mutex>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _MSC_VER
@@ -83,6 +85,7 @@ namespace {
 
 scoped_refptr<GrowableIOBuffer> g_send_buffer;
 std::mutex g_in_provider_mutex;
+std::condition_variable g_in_provider_cv;
 scoped_refptr<GrowableIOBuffer> g_recv_buffer;
 constexpr const std::string_view kConnectResponse = "HTTP/1.1 200 Connection established\r\n\r\n";
 
@@ -305,12 +308,14 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
   void do_io() {
     scoped_refptr<ContentProviderConnection> self(this);
-    g_in_provider_mutex.lock();
     read_http_request();
   }
 
   void shutdown() {
-    g_in_provider_mutex.unlock();
+    {
+      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.notify_one();
+    }
     asio::error_code ec;
     LOG(INFO) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutting down";
     downlink_->socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec);
@@ -667,7 +672,8 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     ASSERT_EQ(::testing::Bytes(resp_buffer->everything()), ::testing::Bytes(g_send_buffer->everything()));
 
     {
-      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
+      std::unique_lock<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.wait(lk, []{ return true; });
       ASSERT_EQ(g_recv_buffer->capacity(), g_send_buffer->capacity());
       ASSERT_EQ(::testing::Bytes(g_recv_buffer->everything()), ::testing::Bytes(g_send_buffer->everything()));
     }
