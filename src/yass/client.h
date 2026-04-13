@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-#define YASS_CLIENT_ABI_VERSION 0
+#define YASS_CLIENT_ABI_VERSION 1
 #define YASS_CLIENT_ABI_STABLE  0
 
 typedef void* yass_client_instance;
@@ -67,6 +67,12 @@ YASS_DLL int yass_client_instance_init(yass_client_instance instance);
  */
 YASS_DLL int yass_client_instance_add_server_uri(yass_client_instance instance, int64_t server_tag, const char* proxy_uri,
                                                  const char* listen_uri, uint16_t* listen_port);
+
+YASS_DLL int yass_client_instance_add_server_uri_v1(yass_client_instance instance, int64_t server_tag, const char* proxy_uri,
+                                                    const char* listen_uri, uint16_t* listen_port,
+                                                    char* remote_server_ips_cstr, size_t* remote_server_ips_cstr_len,
+                                                    char* remote_server_ips_v4_cstr, size_t* remote_server_ips_v4_cstr_len,
+                                                    char* remote_server_ips_v6_cstr, size_t* remote_server_ips_v6_cstr_len);
 /*!
  *  \brief Add server configuration to specified instance of YassClient (variant 2).
  *
@@ -90,6 +96,14 @@ YASS_DLL int yass_client_instance_add_server(yass_client_instance instance, int6
                                              const char* remote_host_sni, uint16_t remote_port, const char* remote_username,
                                              const char* remote_password, int remote_cipher, bool remote_padding_support,
                                              const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port);
+
+YASS_DLL int yass_client_instance_add_server_v1(yass_client_instance instance, int64_t server_tag, const char* remote_host_name,
+                                                const char* remote_host_sni, uint16_t remote_port, const char* remote_username,
+                                                const char* remote_password, int remote_cipher, bool remote_padding_support,
+                                                const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port,
+                                                char* remote_server_ips_cstr, size_t* remote_server_ips_cstr_len,
+                                                char* remote_server_ips_v4_cstr, size_t* remote_server_ips_v4_cstr_len,
+                                                char* remote_server_ips_v6_cstr, size_t* remote_server_ips_v6_cstr_len);
 /*!
  *  \brief Run the internal loop to poll the request
  *

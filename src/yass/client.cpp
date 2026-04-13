@@ -54,8 +54,8 @@ using namespace net::cli;
 namespace {
 class YassClientPrivate {
   asio::ip::tcp::resolver::results_type ResolveAddress(const std::string& domain_name, int port, asio::error_code &ec);
-  asio::error_code ListenAddress(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port);
-  asio::error_code ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t *listen_port);
+  asio::error_code ListenAddress(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str);
+  asio::error_code ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str);
 
  public:
   YassClientPrivate() : resolver_(resolver_io_context_) {
@@ -72,8 +72,8 @@ class YassClientPrivate {
   }
   ~YassClientPrivate() = default;
   int Init();
-  int Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port);
-  int Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port);
+  int Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str);
+  int Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str);
   int Run(); // block current thread
   int NumOfConnections();
 
@@ -139,7 +139,10 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
                                                   bool remote_padding_support,
                                                   std::string local_host_name,
                                                   uint16_t local_port,
-                                                  bool redir_mode, uint16_t *listen_port) {
+                                                  bool redir_mode, uint16_t *listen_port,
+                                                  std::string *remote_server_ips_str,
+                                                  std::string *remote_server_ips_v4_str,
+                                                  std::string *remote_server_ips_v6_str) {
   if (remote_host_sni.empty()) {
     remote_host_sni = remote_host_name;
   }
@@ -148,7 +151,6 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
     last_error_ = asio::error::invalid_argument;
     return last_error_;
   }
-  std::string remote_host_ips;
   if (remote_port == 0u) {
     last_error_ss_ << "Invalid server port: " << remote_port;
     last_error_ = asio::error::invalid_argument;
@@ -196,19 +198,28 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
     return ec;
   } else if (results.empty()) {
     return asio::error::host_not_found;
-  } else {
-    std::vector<std::string> remote_ips;
-    for (auto result : results) {
-      if (result.endpoint().address().is_unspecified()) {
-        last_error_ss_ << "Unspecified remote address: " << remote_host_name;
-        last_error_ = asio::error::invalid_argument;
-        return last_error_;
-      }
-      remote_ips.push_back(result.endpoint().address().to_string());
-    }
-    remote_host_ips = absl::StrJoin(remote_ips, ";");
-    LOG(INFO) << "resolved server ips: " << remote_host_ips << " from " << remote_host_name;
   }
+
+  std::string remote_host_ips;
+  std::vector<std::string> remote_ips;
+  std::vector<std::string> remote_server_ips_v4, remote_server_ips_v6;
+  for (auto result : results) {
+    if (result.endpoint().address().is_unspecified()) {
+      last_error_ss_ << "Unspecified remote address: " << remote_host_name;
+      last_error_ = asio::error::invalid_argument;
+      return last_error_;
+    }
+    remote_ips.push_back(result.endpoint().address().to_string());
+    if (result.endpoint().address().is_v4()) {
+      remote_server_ips_v4.push_back(result.endpoint().address().to_string());
+    } else {
+      remote_server_ips_v6.push_back(result.endpoint().address().to_string());
+    }
+  }
+  remote_host_ips = *remote_server_ips_str = absl::StrJoin(remote_ips, ";");
+  *remote_server_ips_v4_str = absl::StrJoin(remote_server_ips_v4, ";");
+  *remote_server_ips_v6_str = absl::StrJoin(remote_server_ips_v6, ";");
+  LOG(INFO) << "resolved server ips: " << remote_host_ips << " from " << remote_host_name;
 
   std::vector<asio::ip::tcp::endpoint> endpoints;
 
@@ -250,7 +261,7 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
   return {};
 }
 
-asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t* listen_port) {
+asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::string_view proxy_uri_str, std::string_view listen_uri_str, uint16_t* listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
   std::string remote_host_name;
   std::string remote_host_sni;
   uint16_t remote_port;
@@ -321,7 +332,8 @@ asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::stri
 
   return ListenAddress(server_tag, remote_host_name, remote_host_sni, remote_port,
                        remote_username, remote_password, remote_cipher, remote_padding_support,
-                       local_host_name, local_port, redir_mode, listen_port);
+                       local_host_name, local_port, redir_mode, listen_port,
+                       remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str);
 }
 
 int YassClientPrivate::Init() {
@@ -381,11 +393,11 @@ int YassClientPrivate::Init() {
   return 0;
 }
 
-int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port) {
+int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
   DCHECK(!work_guard_);
   asio::error_code ec;
 
-  ec = ListenProxyUri(server_tag, proxy_uri_str, listen_uri_str, listen_port);
+  ec = ListenProxyUri(server_tag, proxy_uri_str, listen_uri_str, listen_port, remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str);
   if (ec) {
     return -1;
   }
@@ -393,13 +405,13 @@ int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str,
   return 0;
 }
 
-int YassClientPrivate::Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port) {
+int YassClientPrivate::Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
   DCHECK(!work_guard_);
   asio::error_code ec;
 
   ec = ListenAddress(server_tag, remote_host_name, remote_host_sni, remote_port,
                      remote_username, remote_password, remote_cipher, remote_padding_support,
-                     local_host_name, local_port, redir_mode, listen_port);
+                     local_host_name, local_port, redir_mode, listen_port, remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str);
   if (ec) {
     return -1;
   }
@@ -471,19 +483,69 @@ int yass_client_instance_init(yass_client_instance _instance) {
 int yass_client_instance_add_server_uri(yass_client_instance _instance, int64_t server_tag, const char* proxy_uri, const char* listen_uri, uint16_t* listen_port) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
-  return instance->Add(server_tag, proxy_uri ? proxy_uri : std::string(), listen_uri ? listen_uri : std::string(), listen_port);
+  std::string remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str;
+  return instance->Add(server_tag, proxy_uri ? proxy_uri : std::string(), listen_uri ? listen_uri : std::string(), listen_port, &remote_server_ips_str, &remote_server_ips_v4_str, &remote_server_ips_v6_str);
+}
+
+int yass_client_instance_add_server_uri_v1(yass_client_instance _instance, int64_t server_tag, const char* proxy_uri, const char* listen_uri, uint16_t* listen_port, char* remote_server_ips_cstr, size_t* remote_server_ips_cstr_len, char* remote_server_ips_v4_cstr, size_t* remote_server_ips_v4_cstr_len, char* remote_server_ips_v6_cstr, size_t* remote_server_ips_v6_cstr_len) {
+  auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
+  DCHECK(instance);
+  std::string remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str;
+  int ret = instance->Add(server_tag, proxy_uri ? proxy_uri : std::string(), listen_uri ? listen_uri : std::string(), listen_port, &remote_server_ips_str, &remote_server_ips_v4_str, &remote_server_ips_v6_str);
+  if (remote_server_ips_cstr && remote_server_ips_cstr_len) {
+    *remote_server_ips_cstr_len = std::min(*remote_server_ips_cstr_len, remote_server_ips_str.size());
+    strncpy(remote_server_ips_cstr, remote_server_ips_str.c_str(), *remote_server_ips_cstr_len);
+  }
+  if (remote_server_ips_v4_cstr && remote_server_ips_v4_cstr_len) {
+    *remote_server_ips_v4_cstr_len = std::min(*remote_server_ips_v4_cstr_len, remote_server_ips_v4_str.size());
+    strncpy(remote_server_ips_v4_cstr, remote_server_ips_v4_str.c_str(), *remote_server_ips_v4_cstr_len);
+  }
+  if (remote_server_ips_v6_cstr && remote_server_ips_v6_cstr_len) {
+    *remote_server_ips_v6_cstr_len = std::min(*remote_server_ips_v6_cstr_len, remote_server_ips_v6_str.size());
+    strncpy(remote_server_ips_v6_cstr, remote_server_ips_v6_str.c_str(), *remote_server_ips_v6_cstr_len);
+  }
+  return ret;
 }
 
 int yass_client_instance_add_server(yass_client_instance _instance, int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
+  std::string remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str;
   return instance->Add(server_tag, remote_host_name ? remote_host_name : std::string(),
                        remote_host_sni ? remote_host_sni : std::string(), remote_port,
                        remote_username ? remote_username : std::string(),
                        remote_password ? remote_password : std::string(), (cipher_method)remote_cipher,
                        remote_padding_support,
                        local_host_name ? local_host_name : std::string(), local_port,
-                       redir_mode, listen_port);
+                       redir_mode, listen_port,
+                       &remote_server_ips_str, &remote_server_ips_v4_str, &remote_server_ips_v6_str);
+}
+
+int yass_client_instance_add_server_v1(yass_client_instance _instance, int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port, char* remote_server_ips_cstr, size_t* remote_server_ips_cstr_len, char* remote_server_ips_v4_cstr, size_t* remote_server_ips_v4_cstr_len, char* remote_server_ips_v6_cstr, size_t* remote_server_ips_v6_cstr_len) {
+  auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
+  DCHECK(instance);
+  std::string remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str;
+  int ret =  instance->Add(server_tag, remote_host_name ? remote_host_name : std::string(),
+                           remote_host_sni ? remote_host_sni : std::string(), remote_port,
+                           remote_username ? remote_username : std::string(),
+                           remote_password ? remote_password : std::string(), (cipher_method)remote_cipher,
+                           remote_padding_support,
+                           local_host_name ? local_host_name : std::string(), local_port,
+                           redir_mode, listen_port,
+                           &remote_server_ips_str, &remote_server_ips_v4_str, &remote_server_ips_v6_str);
+  if (remote_server_ips_cstr && remote_server_ips_cstr_len) {
+    *remote_server_ips_cstr_len = std::min(*remote_server_ips_cstr_len, remote_server_ips_str.size());
+    strncpy(remote_server_ips_cstr, remote_server_ips_str.c_str(), *remote_server_ips_cstr_len);
+  }
+  if (remote_server_ips_v4_cstr && remote_server_ips_v4_cstr_len) {
+    *remote_server_ips_v4_cstr_len = std::min(*remote_server_ips_v4_cstr_len, remote_server_ips_v4_str.size());
+    strncpy(remote_server_ips_v4_cstr, remote_server_ips_v4_str.c_str(), *remote_server_ips_v4_cstr_len);
+  }
+  if (remote_server_ips_v6_cstr && remote_server_ips_v6_cstr_len) {
+    *remote_server_ips_v6_cstr_len = std::min(*remote_server_ips_v6_cstr_len, remote_server_ips_v6_str.size());
+    strncpy(remote_server_ips_v6_cstr, remote_server_ips_v6_str.c_str(), *remote_server_ips_v6_cstr_len);
+  }
+  return ret;
 }
 
 int yass_client_instance_run(yass_client_instance _instance) {

@@ -80,8 +80,8 @@ class Worker {
 
   WorkerPrivate* private_;
   std::string remote_server_ips_;
-  std::vector<std::string> remote_server_ips_v4_;
-  std::vector<std::string> remote_server_ips_v6_;
+  std::string remote_server_ips_v4_;
+  std::string remote_server_ips_v6_;
   std::string remote_server_sni_;
   std::string local_server_ips_;
   uint16_t local_port_ = 0;
