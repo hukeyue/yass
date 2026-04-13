@@ -254,6 +254,7 @@ uint64_t GetMonotonicTime() {
 #endif
 
 static const wchar_t* kDllWhiteList[] = {
+    L"YASS-C.dll",
 
 #ifdef HAVE_TBBMALLOC
 #define DLL_NAME "tbbmalloc" _DLL_SUFFIX _APP_SUFFIX
