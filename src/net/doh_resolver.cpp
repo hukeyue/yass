@@ -47,15 +47,16 @@ DoHResolver::~DoHResolver() {
   VLOG(1) << "DoH Resolver freed memory";
 }
 
-int DoHResolver::Init(const std::string& doh_url, int timeout_ms) {
+asio::error_code DoHResolver::Init(const std::string& doh_url, int timeout_ms) {
   timeout_ms_ = timeout_ms ? timeout_ms : CURL_TIMEOUT_RESOLVE * 1000;
   GURL url(doh_url);
   if (!url.is_valid() || !url.has_host() || !url.has_scheme() || url.scheme() != "https") {
     LOG(WARNING) << "Invalid DoH URL: " << doh_url;
-    return -1;
+    return asio::error::invalid_argument;
   }
   if (url.host().size() > TLSEXT_MAXLEN_host_name) {
     LOG(WARNING) << "Invalid DoH Host: " << url.host();
+    return asio::error::invalid_argument;
   }
   doh_url_ = doh_url;
   doh_host_ = url.host();
@@ -66,12 +67,12 @@ int DoHResolver::Init(const std::string& doh_url, int timeout_ms) {
   SetupSSLContext(ec);
   if (ec) {
     LOG(WARNING) << "Init OpenSSL Context Failure: " << ec;
-    return -1;
+    return ec;
   }
 
   init_ = true;
 
-  return 0;
+  return {};
 }
 
 void DoHResolver::SetupSSLContext(asio::error_code& ec) {

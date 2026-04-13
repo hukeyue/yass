@@ -43,7 +43,7 @@ class DoTResolver : public gurl_base::RefCountedThreadSafe<DoTResolver> {
   }
   ~DoTResolver();
 
-  int Init(const std::string& dot_host, int timeout_ms);
+  asio::error_code Init(const std::string& dot_host, int timeout_ms);
 
   void SetupSSLContext(asio::error_code& ec);
 

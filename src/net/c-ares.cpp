@@ -178,7 +178,7 @@ CAresResolver::~CAresResolver() {
   VLOG(1) << "C-Ares resolver freed memory";
 }
 
-int CAresResolver::Init(int timeout_ms) {
+asio::error_code CAresResolver::Init(int timeout_ms) {
   timeout_ms_ = timeout_ms ? timeout_ms : CURL_TIMEOUT_RESOLVE * 1000;
   ares_opts_.lookups = lookups_;
   ares_opts_.sock_state_cb_data = this;
@@ -186,10 +186,11 @@ int CAresResolver::Init(int timeout_ms) {
   int ret = ::ares_init_options(&channel_, &ares_opts_, ARES_OPT_LOOKUPS | ARES_OPT_SOCK_STATE_CB);
   if (ret) {
     LOG(WARNING) << "ares_init_options failure: " << ares_strerror(ret);
+    return asio::error::operation_not_supported;
   } else {
     init_ = true;
   }
-  return ret;
+  return {};
 }
 
 void CAresResolver::Cancel() {

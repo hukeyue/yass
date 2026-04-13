@@ -57,8 +57,8 @@ TEST(DNS_CARES_TEST, LocalfileBasic) {
   asio::error_code ec;
   asio::io_context io_context;
   auto resolver = CAresResolver::Create(io_context);
-  int ret = resolver->Init(10);
-  ASSERT_EQ(ret, 0);
+  auto ret = resolver->Init(10);
+  ASSERT_EQ(ret, asio::error_code());
   auto work_guard =
       std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
@@ -91,8 +91,8 @@ TEST(DNS_CARES_TEST, RemoteNotFound) {
   asio::io_context io_context;
 
   auto resolver = CAresResolver::Create(io_context);
-  int ret = resolver->Init(10);
-  ASSERT_EQ(ret, 0);
+  auto ret = resolver->Init(10);
+  ASSERT_EQ(ret, asio::error_code());
 
   auto work_guard =
       std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
@@ -139,8 +139,8 @@ TEST(DNS_CARES_TEST, RemoteBasic) {
   asio::io_context io_context;
 
   auto resolver = CAresResolver::Create(io_context);
-  int ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
-  ASSERT_EQ(ret, 0);
+  auto ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
+  ASSERT_EQ(ret, asio::error_code());
 
   for (int i = 0; i < absl::GetFlag(FLAGS_use_repeated_dns_tests); ++i) {
     io_context.restart();
@@ -161,8 +161,8 @@ TEST(DNS_CARES_TEST, RemoteConcurrent) {
   std::vector<scoped_refptr<CAresResolver>> resolvers;
   for (int i = 0; i < absl::GetFlag(FLAGS_use_concurrent_dns_tests); ++i) {
     auto resolver = CAresResolver::Create(io_context);
-    int ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
-    ASSERT_EQ(ret, 0);
+    auto ret = resolver->Init(absl::GetFlag(FLAGS_use_timeout_dns_tests));
+    ASSERT_EQ(ret, asio::error_code());
     resolvers.push_back(resolver);
   }
 

@@ -373,8 +373,8 @@ int YassClientPrivate::Init() {
     servers_.clear();
   }
 
-  if (resolver_.Init() < 0) {
-    last_error_ = asio::error::operation_not_supported;
+  last_error_ = resolver_.Init();
+  if (last_error_) {
     last_error_ss_ << "Resolver: Init failure";
     return -1;
   }

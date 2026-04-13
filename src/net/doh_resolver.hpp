@@ -43,7 +43,7 @@ class DoHResolver : public gurl_base::RefCountedThreadSafe<DoHResolver> {
   }
   ~DoHResolver();
 
-  int Init(const std::string& doh_url, int timeout_ms);
+  asio::error_code Init(const std::string& doh_url, int timeout_ms);
 
   void SetupSSLContext(asio::error_code& ec);
 
