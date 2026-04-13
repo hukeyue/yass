@@ -457,6 +457,10 @@ func prebuildFindSourceDirectory() {
 					if systemNameFlag == "darwin" && variantFlag == "gui" {
 						name = filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
 					}
+					_, err = os.Stat(name)
+					if err != nil {
+						continue
+					}
 					err = untouchFile(filepath.Join(buildDir, name))
 					if err != nil {
 						glog.Fatalf("Failed to untouch existing binary %s: %v", name, err)
