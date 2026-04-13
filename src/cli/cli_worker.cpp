@@ -27,6 +27,7 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/str_split.h>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _WIN32
@@ -56,8 +57,21 @@ class WorkerPrivate {
     return yass_client_instance_init(instance_);
   }
 
-  int Add(int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port) {
-    return yass_client_instance_add_server(instance_, server_tag, remote_host_name, remote_host_sni, remote_port, remote_username, remote_password, remote_cipher, remote_padding_support, local_host_name, local_port, redir_mode, listen_port);
+  int Add(int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port, std::string *remote_server_ips, std::string *remote_server_ips_v4, std::string *remote_server_ips_v6) {
+    char remote_server_ips_cstr[512];
+    char remote_server_ips_v4_cstr[512];
+    char remote_server_ips_v6_cstr[512];
+    size_t remote_server_ips_cstr_len = sizeof(remote_server_ips_cstr) - 1;
+    size_t remote_server_ips_v4_cstr_len = sizeof(remote_server_ips_v4_cstr) - 1;
+    size_t remote_server_ips_v6_cstr_len = sizeof(remote_server_ips_v6_cstr) - 1;
+    remote_server_ips_cstr[remote_server_ips_cstr_len] = '\0';
+    remote_server_ips_v4_cstr[remote_server_ips_v4_cstr_len] = '\0';
+    remote_server_ips_v6_cstr[remote_server_ips_v6_cstr_len] = '\0';
+    int ret = yass_client_instance_add_server_v1(instance_, server_tag, remote_host_name, remote_host_sni, remote_port, remote_username, remote_password, remote_cipher, remote_padding_support, local_host_name, local_port, redir_mode, listen_port, remote_server_ips_cstr, &remote_server_ips_cstr_len, remote_server_ips_v4_cstr, &remote_server_ips_v4_cstr_len, remote_server_ips_v6_cstr, &remote_server_ips_v6_cstr_len);
+    *remote_server_ips = std::string(remote_server_ips_cstr, remote_server_ips_cstr_len);
+    *remote_server_ips_v4 = std::string(remote_server_ips_v4_cstr, remote_server_ips_v4_cstr_len);
+    *remote_server_ips_v6 = std::string(remote_server_ips_v6_cstr, remote_server_ips_v6_cstr_len);
+    return ret;
   }
 
   int Run() {
@@ -124,11 +138,11 @@ size_t Worker::currentConnections() const {
 }
 
 std::vector<std::string> Worker::GetRemoteIpsV4() const {
-  return remote_server_ips_v4_;
+  return absl::StrSplit(remote_server_ips_v4_, ';');
 }
 
 std::vector<std::string> Worker::GetRemoteIpsV6() const {
-  return remote_server_ips_v6_;
+  return absl::StrSplit(remote_server_ips_v6_, ';');
 }
 
 std::string Worker::GetDomain() const {
@@ -193,7 +207,7 @@ void Worker::WorkFunc() {
   DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
   local_port_ = 0;
-  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_);
+  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_, &remote_server_ips_, &remote_server_ips_v4_, &remote_server_ips_v6_);
   if (ret != 0) {
     LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
     on_resolve_done(private_->GetLastError());
