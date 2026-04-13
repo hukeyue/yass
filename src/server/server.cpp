@@ -157,7 +157,8 @@ int main(int argc, const char* argv[]) {
     auto work_guard =
         std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
     net::Resolver resolver(io_context);
-    if (resolver.Init() < 0) {
+    ec = resolver.Init();
+    if (ec) {
       LOG(WARNING) << "Resolver: Init failure";
       return -1;
     }

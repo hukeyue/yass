@@ -59,7 +59,7 @@ class Resolver::ResolverImpl {
 
   ~ResolverImpl() { Reset(); }
 
-  int Init() {
+  asio::error_code Init() {
     doh_url_ = absl::GetFlag(FLAGS_doh_url);
     if (!doh_url_.empty()) {
       doh_resolver_ = DoHResolver::Create(io_context_);
@@ -76,7 +76,7 @@ class Resolver::ResolverImpl {
       return resolver_->Init(5000);
     }
 #endif
-    return 0;
+    return {};
   }
 
   void Cancel() {
@@ -157,7 +157,7 @@ Resolver::~Resolver() {
   delete impl_;
 }
 
-int Resolver::Init() {
+asio::error_code Resolver::Init() {
   return impl_->Init();
 }
 

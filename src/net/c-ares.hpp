@@ -56,7 +56,7 @@ class CAresResolver : public gurl_base::RefCountedThreadSafe<CAresResolver> {
   }
   ~CAresResolver();
 
-  int Init(int timeout_ms);
+  asio::error_code Init(int timeout_ms);
 
   void Cancel();
   void Destroy();

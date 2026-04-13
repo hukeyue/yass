@@ -231,11 +231,11 @@ std::string ValidateConfig() {
 
   // TODO validate other configurations as well
 
-  if (server_host.empty() || server_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_host.empty() || server_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_host;
   }
 
-  if (server_sni.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_sni.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_sni;
   }
 
@@ -265,7 +265,7 @@ std::string ValidateConfig() {
     }
   }
 
-  if (local_host.empty() || local_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (local_host.empty() || local_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Local Host: " << local_host;
   }
 
@@ -274,13 +274,16 @@ std::string ValidateConfig() {
     if (!url.is_valid() || !url.has_host() || !url.has_scheme() || url.scheme() != "https") {
       err_msg << ",Invalid DoH URL: " << doh_url;
     }
+    if (url.host().size() > TLSEXT_MAXLEN_host_name) {
+      err_msg << ",Invalid DoH Host: " << url.host();
+    }
     if (!dot_host.empty()) {
       err_msg << ",Conflicting DoT Host: " << dot_host;
     }
   }
 
   if (!dot_host.empty()) {
-    if (dot_host.size() >= TLSEXT_MAXLEN_host_name) {
+    if (dot_host.size() > TLSEXT_MAXLEN_host_name) {
       err_msg << ",Invalid DoT Host: " << dot_host;
     }
   }
@@ -312,11 +315,11 @@ std::string ReadConfigFromArgument(std::string_view server_host,
   std::string err;
   std::ostringstream err_msg;
 
-  if (server_host.empty() || server_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_host.empty() || server_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_host;
   }
 
-  if (server_sni.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_sni.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_sni;
   }
 
@@ -347,7 +350,7 @@ std::string ReadConfigFromArgument(std::string_view server_host,
     }
   }
 
-  if (local_host.empty() || local_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (local_host.empty() || local_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Local Host: " << local_host;
   }
 
@@ -361,13 +364,16 @@ std::string ReadConfigFromArgument(std::string_view server_host,
     if (!url.is_valid() || !url.has_host() || !url.has_scheme() || url.scheme() != "https") {
       err_msg << ",Invalid DoH URL: " << doh_url;
     }
+    if (url.host().size() > TLSEXT_MAXLEN_host_name) {
+      err_msg << ",Invalid DoH Host: " << url.host();
+    }
     if (!dot_host.empty()) {
       err_msg << ",Conflicting DoT Host: " << dot_host;
     }
   }
 
   if (!dot_host.empty()) {
-    if (dot_host.size() >= TLSEXT_MAXLEN_host_name) {
+    if (dot_host.size() > TLSEXT_MAXLEN_host_name) {
       err_msg << ",Invalid DoT Host: " << dot_host;
     }
   }
@@ -417,11 +423,11 @@ std::string ReadConfigFromArgument(std::string_view server_host,
   std::string err;
   std::ostringstream err_msg;
 
-  if (server_host.empty() || server_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_host.empty() || server_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_host;
   }
 
-  if (server_sni.size() >= TLSEXT_MAXLEN_host_name) {
+  if (server_sni.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Server Host: " << server_sni;
   }
 
@@ -453,7 +459,7 @@ std::string ReadConfigFromArgument(std::string_view server_host,
     }
   }
 
-  if (local_host.empty() || local_host.size() >= TLSEXT_MAXLEN_host_name) {
+  if (local_host.empty() || local_host.size() > TLSEXT_MAXLEN_host_name) {
     err_msg << ",Invalid Local Host: " << local_host;
   }
 
@@ -467,13 +473,16 @@ std::string ReadConfigFromArgument(std::string_view server_host,
     if (!url.is_valid() || !url.has_host() || !url.has_scheme() || url.scheme() != "https") {
       err_msg << ",Invalid DoH URL: " << doh_url;
     }
+    if (url.host().size() > TLSEXT_MAXLEN_host_name) {
+      err_msg << ",Invalid DoH Host: " << url.host();
+    }
     if (!dot_host.empty()) {
       err_msg << ",Conflicting DoT Host: " << dot_host;
     }
   }
 
   if (!dot_host.empty()) {
-    if (dot_host.size() >= TLSEXT_MAXLEN_host_name) {
+    if (dot_host.size() > TLSEXT_MAXLEN_host_name) {
       err_msg << ",Invalid DoT Host: " << dot_host;
     }
   }

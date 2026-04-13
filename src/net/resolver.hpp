@@ -42,7 +42,7 @@ class Resolver {
   Resolver(asio::io_context& io_context);
   ~Resolver();
 
-  int Init();
+  asio::error_code Init();
   void Cancel();
   void Reset();
 

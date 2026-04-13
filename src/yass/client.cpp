@@ -143,7 +143,7 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
   if (remote_host_sni.empty()) {
     remote_host_sni = remote_host_name;
   }
-  if (remote_host_sni.size() > TLSEXT_MAXLEN_host_name) {
+  if (remote_host_sni.empty() || remote_host_sni.size() > TLSEXT_MAXLEN_host_name) {
     last_error_ss_ << "Invalid server name or SNI: " << remote_host_sni;
     last_error_ = asio::error::invalid_argument;
     return last_error_;
@@ -151,6 +151,41 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
   std::string remote_host_ips;
   if (remote_port == 0u) {
     last_error_ss_ << "Invalid server port: " << remote_port;
+    last_error_ = asio::error::invalid_argument;
+    return last_error_;
+  }
+
+  if (!is_valid_cipher_method(remote_cipher)) {
+    last_error_ss_ << "Invalid Cipher: " << to_cipher_method_str(remote_cipher);
+    last_error_ = asio::error::invalid_argument;
+    return last_error_;
+  }
+
+  if (remote_cipher == CRYPTO_SOCKS4 || remote_cipher == CRYPTO_SOCKS4A) {
+    if (!remote_username.empty() || !remote_password.empty()) {
+      last_error_ss_ <<  "SOCKS4/SOCKSA doesn't support username and passsword";
+      last_error_ = asio::error::invalid_argument;
+      return last_error_;
+    }
+  }
+
+  if (remote_cipher == CRYPTO_SOCKS5 || remote_cipher == CRYPTO_SOCKS5H) {
+    if (remote_username.empty() ^ remote_password.empty()) {
+      last_error_ss_ <<  "SOCKS5/SOCKS5H requires both of username and passsword";
+      last_error_ = asio::error::invalid_argument;
+      return last_error_;
+    }
+  }
+
+  if (CIPHER_METHOD_IS_HTTP(remote_cipher)) {
+    if (remote_username.empty() ^ remote_password.empty()) {
+      last_error_ss_ << "HTTP requires both of username and passsword";
+      last_error_ = asio::error::invalid_argument;
+      return last_error_;
+    }
+  }
+  if (local_host_name.empty() || local_host_name.size() > TLSEXT_MAXLEN_host_name) {
+    last_error_ss_ << "Invalid Local Host: " << local_host_name;
     last_error_ = asio::error::invalid_argument;
     return last_error_;
   }
@@ -338,8 +373,8 @@ int YassClientPrivate::Init() {
     servers_.clear();
   }
 
-  if (resolver_.Init() < 0) {
-    last_error_ = asio::error::operation_not_supported;
+  last_error_ = resolver_.Init();
+  if (last_error_) {
     last_error_ss_ << "Resolver: Init failure";
     return -1;
   }
@@ -436,19 +471,19 @@ int yass_client_instance_init(yass_client_instance _instance) {
 int yass_client_instance_add_server_uri(yass_client_instance _instance, int64_t server_tag, const char* proxy_uri, const char* listen_uri, uint16_t* listen_port) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
-  if (!proxy_uri || !listen_uri) {
-    return -1;
-  }
-  return instance->Add(server_tag, proxy_uri, listen_uri, listen_port);
+  return instance->Add(server_tag, proxy_uri ? proxy_uri : std::string(), listen_uri ? listen_uri : std::string(), listen_port);
 }
 
 int yass_client_instance_add_server(yass_client_instance _instance, int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
-  if (!remote_host_name || !remote_host_sni || !remote_username || !remote_password || ! local_host_name) {
-    return -1;
-  }
-  return instance->Add(server_tag, remote_host_name, remote_host_sni, remote_port, remote_username, remote_password, (cipher_method)remote_cipher, remote_padding_support, local_host_name, local_port, redir_mode, listen_port);
+  return instance->Add(server_tag, remote_host_name ? remote_host_name : std::string(),
+                       remote_host_sni ? remote_host_sni : std::string(), remote_port,
+                       remote_username ? remote_username : std::string(),
+                       remote_password ? remote_password : std::string(), (cipher_method)remote_cipher,
+                       remote_padding_support,
+                       local_host_name ? local_host_name : std::string(), local_port,
+                       redir_mode, listen_port);
 }
 
 int yass_client_instance_run(yass_client_instance _instance) {

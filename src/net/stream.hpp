@@ -184,11 +184,11 @@ class stream : public gurl_base::RefCountedThreadSafe<stream> {
       return;
     }
 
-    int ret = resolver_.Init();
-    if (ret < 0) {
+    ec = resolver_.Init();
+    if (ec) {
       LOG(WARNING) << "resolver initialize failure";
       closed_ = true;
-      on_async_connect_callback(asio::error::host_not_found);
+      on_async_connect_callback(ec);
       return;
     }
 

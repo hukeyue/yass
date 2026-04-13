@@ -4688,6 +4688,11 @@ if (BUILD_DYLIB)
     ${yass_c_SOURCES}
   )
 
+  if (USE_LTO_CMAKE)
+    set_property(TARGET YASS-C
+      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif()
+
   target_link_libraries(YASS-C PUBLIC yass_net)
   target_compile_definitions(YASS-C
     PRIVATE
