@@ -168,6 +168,7 @@ jobs:
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-dylib
           path: |
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/devel
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.py
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
             build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE

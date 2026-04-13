@@ -321,6 +321,7 @@ jobs:
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-dylib
           path: |
+            build-linux-musl-${{ matrix.arch }}/devel
             build-linux-musl-${{ matrix.arch }}/yass.py
             build-linux-musl-${{ matrix.arch }}/*.so
       - uses: actions/upload-artifact@v6
