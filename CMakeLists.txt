@@ -5745,8 +5745,9 @@ if (BUILD_BENCHMARKS)
     minject_patch_exetuable(yass_benchmark)
   endif()
 
-  # FIXME
-  target_compile_options(yass_benchmark PRIVATE -Wno-thread-safety)
+  if (COMPILER_CLANG)
+    target_compile_options(yass_test PRIVATE -Wthread-safety)
+  endif()
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
                  PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

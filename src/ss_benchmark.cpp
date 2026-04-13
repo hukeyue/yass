@@ -32,6 +32,8 @@
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rand_util.h>
+#include <condition_variable>
+#include <mutex>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _MSC_VER
@@ -64,7 +66,7 @@ namespace {
 
 scoped_refptr<GrowableIOBuffer> g_send_buffer;
 std::mutex g_in_provider_mutex;
-std::mutex g_in_consumer_mutex;
+std::condition_variable g_in_provider_cv;
 scoped_refptr<GrowableIOBuffer> g_recv_buffer;
 constexpr const std::string_view kConnectResponse = "HTTP/1.1 200 Connection established\r\n\r\n";
 const int kIOLoopCount = 1;
@@ -165,7 +167,11 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
     VLOG(1) << "Connection (content-provider) start to do IO";
     scoped_refptr<ContentProviderConnection> self(this);
-    g_in_provider_mutex.lock();
+
+    {
+      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.notify_one();
+    }
 
     asio::async_write(downlink_->socket_, const_buffer(g_send_buffer.get()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
@@ -220,7 +226,10 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
       return;
     }
     end_ = std::chrono::high_resolution_clock::now();
-    g_in_provider_mutex.unlock();
+    {
+      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.notify_one();
+    }
 
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end_ - start_);
 
@@ -233,14 +242,9 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   }
 
   void shutdown_impl() {
-    if (!g_in_consumer_mutex.try_lock()) {
-      scoped_refptr<ContentProviderConnection> self(this);
-      asio::post(*io_context_, [this, self]() { shutdown_impl(); });
-      return;
-    }
-    // consumer locked
+    CHECK_EQ(0, g_recv_buffer->size()) << "Partial read";
+    g_recv_buffer->set_offset(0);
     do_io();
-    g_in_consumer_mutex.unlock();
   }
 
   std::chrono::time_point<std::chrono::high_resolution_clock> start_, end_;
@@ -378,19 +382,16 @@ class SsEndToEndBM : public benchmark::Fixture {
   void SendRequestAndCheckResponse(asio::ip::tcp::socket& s, asio::io_context& io_context, benchmark::State& state) {
     asio::error_code ec;
 
-    while (true) {
-      std::lock_guard<std::mutex> lk(g_in_consumer_mutex);
-      if (!g_in_provider_mutex.try_lock()) {
-        break;
-      }
-      g_in_provider_mutex.unlock();
-    }
-    std::lock_guard<std::mutex> done_lk(g_in_consumer_mutex);
     auto work_guard =
         std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
 
     auto resp_buffer = gurl_base::MakeRefCounted<GrowableIOBuffer>();
     resp_buffer->SetCapacity(g_send_buffer->capacity());
+
+    {
+      std::unique_lock<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.wait(lk, []{ return true; });
+    }
 
     //
     // START
@@ -418,9 +419,8 @@ class SsEndToEndBM : public benchmark::Fixture {
     CHECK_EQ(0, resp_buffer->size()) << "Partial read";
 
     {
-      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
-      CHECK_EQ(0, g_recv_buffer->size()) << "Partial read";
-      g_recv_buffer->set_offset(0);
+      std::unique_lock<std::mutex> lk(g_in_provider_mutex);
+      g_in_provider_cv.wait(lk, []{ return true; });
     }
 
     //
