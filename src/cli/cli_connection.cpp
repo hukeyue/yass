@@ -2135,11 +2135,14 @@ void CliConnection::OnCmdConnect(const std::string& domain_name, uint16_t port) 
   if (CIPHER_METHOD_IS_SOCKS_NON_DOMAIN_NAME(method())) {
     VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " resolving domain name " << domain_name << " locally";
     scoped_refptr<CliConnection> self(this);
-    auto __ec = resolver_.Init();
-    if (__ec) {
-      LOG(WARNING) << "resolver initialize failure";
-      OnDisconnect(__ec);
-      return;
+    if (!resolver_inited_) {
+      auto __ec = resolver_.Init();
+      if (__ec) {
+        LOG(WARNING) << "resolver initialize failure";
+        OnDisconnect(__ec);
+        return;
+      }
+      resolver_inited_ = true;
     }
     resolver_.AsyncResolve(
         domain_name, port,

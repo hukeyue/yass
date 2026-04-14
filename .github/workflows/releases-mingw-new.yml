@@ -22,7 +22,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [master, develop, mingw]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
@@ -48,13 +48,13 @@ jobs:
         include:
           - arch: i686
             build_type: Debug
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -use-allocator=tcmalloc
             mingw_version: 20250709
           - arch: i686
             build_type: Release
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -use-allocator=tcmalloc
             mingw_version: 20250709
@@ -235,12 +235,12 @@ jobs:
         include:
           - arch: i686
             build_type: Debug
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp
           - arch: i686
             build_type: Release
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp
           - arch: x86_64
@@ -313,11 +313,11 @@ jobs:
         include:
           - arch: i686
             build_type: Debug
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
           - arch: i686
             build_type: Release
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
           - arch: x86_64
             build_type: Debug
@@ -369,12 +369,12 @@ jobs:
         include:
           - arch: i686
             build_type: Release
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             gtest_repeat_times: 10
           - arch: i686
             build_type: Debug
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
             gtest_repeat_times: 2
           - arch: x86_64
@@ -416,7 +416,7 @@ jobs:
         include:
           - arch: i686
             build_type: Release
-            variant: msvcrt
+            variant: ucrt
             suffix: -winxp
           - arch: x86_64
             build_type: Release

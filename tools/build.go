@@ -899,10 +899,16 @@ func buildStageGenerateBuildScript() {
 	if useAllocatorFlag == "tbbmalloc" {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=on")
 	} else if useAllocatorFlag == "tcmalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=on")
 	} else if useAllocatorFlag == "mimalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=on")
 	} else if useAllocatorFlag == "jemalloc" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=on")
 	} else if useAllocatorFlag == "system" {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
@@ -1090,10 +1096,6 @@ func buildStageGenerateBuildScript() {
 
 		if mingwAllowXpFlag {
 			cmakeArgs = append(cmakeArgs, "-DALLOW_XP=ON")
-			// we need msvcrt runtime for windows xp build
-			if targetAbi == "i686" {
-				cmakeArgs = append(cmakeArgs, "-DMINGW_MSVCRT100=ON")
-			}
 			llvm_version := getClangVersion(clangPath)
 			clang_rt_suffix := targetAbi
 			if targetAbi == "i686" {
