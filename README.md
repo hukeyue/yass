@@ -87,7 +87,7 @@ See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Pac
 
 - Legacy Android [download 64-bit apk][android_64_apk_url] or [download 32-bit apk][android_32_apk_url] (require _Android 7.0_ or above)
 - Legacy iOS [Continue to accept TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_, and _iOS 13.0_ or above)
-- Legacy WindowsXPSP3/Windows7SP1+MinGW [download 64-bit installer][mingw_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][mingw_32_installer_url] (require [vc 2010 runtime][vs2010_x86] on _windows xp sp3 or above_) or [download arm64 installer][mingw_arm64_installer_url] (require _windows 11_)
+- Legacy WindowsXPSP3/Windows7SP1+MinGW [download 64-bit installer][mingw_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][mingw_32_installer_url] (require [last vc 2019 runtime supporting xp sp3][vs2019_xp_x86] on _windows xp sp3 or above_) or [download arm64 installer][mingw_arm64_installer_url] (require _windows 11_)
 - Legacy Windows10+VS2022 (MSVC) [download 64-bit installer][windows_64_installer_url] (require [vs 2022 X64 Runtime][vs2022_x64]) or [download 32-bit installer][windows_32_installer_url] (require [VC++ X86 Runtime][vs2022_x86]) or [download arm64 installer][windows_arm64_installer_url] (require [VC++ ARM64 Runtime][vs2022_arm64] on _windows 11_)
 - Legacy WindowsXPSP3/Windows7SP1+VS2017 (deprecated MSVC) [download 64-bit installer][windows_win7_64_installer_url] (require [KB2999226] on _windows 7 sp1 or above_) or [download 32-bit installer][windows_winxp_32_installer_url] (require _windows xp sp3 or above_).
 - Legacy macOS [download intel dmg][macos_intel_dmg_url] or [download apple silicon dmg][macos_arm_dmg_url] (require _macOS 10.14_ or above)
@@ -202,6 +202,8 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [ios_testflight_appstore_url]: https://apps.apple.com/us/app/testflight/id899247664
 [KB2999226]: https://support.microsoft.com/en-us/topic/update-for-universal-c-runtime-in-windows-c0514201-7fe6-95a3-b0a5-287930f3560c
 [vs2010_x86]: https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
+[vs2019_xp_x86]: https://download.visualstudio.microsoft.com/download/pr/56f631e5-4252-4f28-8ecc-257c7bf412b8/D305BAA965C9CD1B44EBCD53635EE9ECC6D85B54210E2764C8836F4E9DEFA345/VC_redist.x86.exe
+[vs2019_xp_x64]: https://download.visualstudio.microsoft.com/download/pr/722d59e4-0671-477e-b9b1-b8da7d4bd60b/591CBE3A269AFBCC025681B968A29CD191DF3C6204712CBDC9BA1CB632BA6068/VC_redist.x64.exe
 [transifex]: https://app.transifex.com/yetanothershadowsocket/yetanothershadowsocket
 [vs2022_x64]: https://aka.ms/vs/17/release/vc_redist.x64.exe
 [vs2022_x86]: https://aka.ms/vs/17/release/vc_redist.x86.exe

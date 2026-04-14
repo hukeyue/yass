@@ -2776,7 +2776,6 @@ elseif (USE_TBBMALLOC)
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
-  target_compile_definitions(tbbmalloc PRIVATE MALLOCENV_COLLECT_STATISTICS=YASS_TBBMALLOC)
   # in tbb build, there is a semaphore.cpp, force newer build use srwlock
   if (TARGET tbb AND WIN32 AND NOT (ALLOW_XP AND OS_X86))
     target_compile_definitions(tbb PRIVATE __TBB_USE_SRWLOCK=1)
@@ -2810,7 +2809,6 @@ elseif (USE_TBBMALLOC)
 
   set(SUPPORT_DEFINITIONS
     HAVE_TBBMALLOC
-    HAVE_TBBMALLOC_STATS
     ${SUPPORT_DEFINITIONS}
   )
   set(SUPPORT_INCLUDE_DIRS
