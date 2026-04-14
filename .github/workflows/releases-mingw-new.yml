@@ -50,25 +50,25 @@ jobs:
             build_type: Debug
             variant: ucrt
             suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
+            build_options: -mingw-allow-xp -use-allocator=tbbmalloc
             mingw_version: 20250709
           - arch: i686
             build_type: Release
             variant: ucrt
             suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
+            build_options: -mingw-allow-xp -use-allocator=tbbmalloc
             mingw_version: 20250709
           - arch: x86_64
             build_type: Debug
             variant: ucrt
             suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
+            build_options: -mingw-allow-xp -use-allocator=tbbmalloc
             mingw_version: 20250709
           - arch: x86_64
             build_type: Release
             variant: ucrt
             suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
+            build_options: -mingw-allow-xp -use-allocator=tbbmalloc
             mingw_version: 20250709
           - arch: aarch64
             build_type: Debug
