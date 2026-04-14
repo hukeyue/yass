@@ -39,7 +39,7 @@
 #ifdef HAVE_TBBMALLOC
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wextra-semi"
-#include <tbb/tbb.h>
+#include <tbb/version.h>
 #pragma clang diagnostic pop
 #endif
 
