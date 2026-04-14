@@ -440,6 +440,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
  private:
   /// used to resolve local and remote endpoint
   net::Resolver resolver_;
+  bool resolver_inited_ = false;
 
  private:
   /// perform cmd connect request
