@@ -4160,6 +4160,8 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
   if (COMPILER_CLANG AND NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     add_compile_options(-Wthread-safety)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    add_compile_options(-Wno-thread-safety)
   endif()
 
   # Warns if a method is used whose availability is newer than the
@@ -4704,14 +4706,6 @@ if (BUILD_DYLIB)
     INTERFACE
       YASS_CONSUME_DLL
   )
-
-  if (COMPILER_CLANG)
-    target_compile_options(YASS-C PRIVATE -Wthread-safety)
-  endif()
-  # FIXME fix asio source code
-  if (COMPILER_CLANG AND FREEBSD)
-    target_compile_options(YASS-C PRIVATE -Wno-thread-safety)
-  endif()
 
   if (WIN32)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
@@ -5610,9 +5604,6 @@ if (BUILD_TESTS)
     add_executable(yass_test ${yass_test_SOURCE})
     minject_patch_exetuable(yass_test)
   endif()
-  if (COMPILER_CLANG)
-    target_compile_options(yass_test PRIVATE -Wthread-safety)
-  endif()
   target_include_directories(yass_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src
       ${CMAKE_CURRENT_SOURCE_DIR}/src/cli
@@ -5749,13 +5740,6 @@ if (BUILD_BENCHMARKS)
     minject_patch_exetuable(yass_benchmark)
   endif()
 
-  if (COMPILER_CLANG)
-    target_compile_options(yass_test PRIVATE -Wthread-safety)
-  endif()
-  # FIXME fix gtest source code
-  if (COMPILER_CLANG AND FREEBSD)
-    target_compile_options(yass_test PRIVATE -Wno-thread-safety)
-  endif()
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
                  PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
