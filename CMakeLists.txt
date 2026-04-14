@@ -4705,6 +4705,14 @@ if (BUILD_DYLIB)
       YASS_CONSUME_DLL
   )
 
+  if (COMPILER_CLANG)
+    target_compile_options(YASS-C PRIVATE -Wthread-safety)
+  endif()
+  # FIXME fix asio source code
+  if (COMPILER_CLANG AND FREEBSD)
+    target_compile_options(YASS-C PRIVATE -Wno-thread-safety)
+  endif()
+
   if (WIN32)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
   endif()
@@ -5602,8 +5610,9 @@ if (BUILD_TESTS)
     add_executable(yass_test ${yass_test_SOURCE})
     minject_patch_exetuable(yass_test)
   endif()
-  # FIXME
-  target_compile_options(yass_test PRIVATE -Wno-thread-safety)
+  if (COMPILER_CLANG)
+    target_compile_options(yass_test PRIVATE -Wthread-safety)
+  endif()
   target_include_directories(yass_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src
       ${CMAKE_CURRENT_SOURCE_DIR}/src/cli
@@ -5740,8 +5749,13 @@ if (BUILD_BENCHMARKS)
     minject_patch_exetuable(yass_benchmark)
   endif()
 
-  # FIXME
-  target_compile_options(yass_benchmark PRIVATE -Wno-thread-safety)
+  if (COMPILER_CLANG)
+    target_compile_options(yass_test PRIVATE -Wthread-safety)
+  endif()
+  # FIXME fix gtest source code
+  if (COMPILER_CLANG AND FREEBSD)
+    target_compile_options(yass_test PRIVATE -Wno-thread-safety)
+  endif()
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
                  PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
