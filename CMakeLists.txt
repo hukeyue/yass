@@ -1984,6 +1984,13 @@ if (WIN32)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zc:threadSafeInit->)
   endif()
 
+  # increase the stack size to 4MB
+  if (MSVC)
+    add_link_options(/STACK:4194304)
+  else()
+    add_link_options(-Wl,--stack,4194304)
+  endif()
+
   # set linker for subsystem
   # https://learn.microsoft.com/en-us/cpp/build/reference/subsystem-specify-subsystem?view=msvc-170
   if (MSVC OR (MINGW AND USE_LLD))
