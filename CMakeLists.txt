@@ -4708,6 +4708,10 @@ if (BUILD_DYLIB)
   if (COMPILER_CLANG)
     target_compile_options(YASS-C PRIVATE -Wthread-safety)
   endif()
+  # FIXME fix asio source code
+  if (COMPILER_CLANG AND FREEBSD)
+    target_compile_options(YASS-C PRIVATE -Wno-thread-safety)
+  endif()
 
   if (WIN32)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
@@ -5747,6 +5751,10 @@ if (BUILD_BENCHMARKS)
 
   if (COMPILER_CLANG)
     target_compile_options(yass_test PRIVATE -Wthread-safety)
+  endif()
+  # FIXME fix gtest source code
+  if (COMPILER_CLANG AND FREEBSD)
+    target_compile_options(yass_test PRIVATE -Wno-thread-safety)
   endif()
   if (USE_LTO_CMAKE)
     set_property(TARGET yass_benchmark
