@@ -50,9 +50,9 @@ jobs:
       matrix:
         include:
           - arch: x86
-            crt-linkage: static
+            crt-linkage: dynamic
             build_type: Release
-            build_options:
+            build_options: -use-allocator=tbbmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
@@ -215,7 +215,7 @@ jobs:
       matrix:
         include:
           - arch: x86
-            crt-linkage: static
+            crt-linkage: dynamic
             build_type: Release
           - arch: x64
             crt-linkage: dynamic
@@ -236,7 +236,7 @@ jobs:
       matrix:
         include:
           - arch: x86
-            crt-linkage: static
+            crt-linkage: dynamic
             build_type: Release
           - arch: x64
             crt-linkage: dynamic
