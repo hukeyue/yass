@@ -174,7 +174,6 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 ## Build Status
 
 [![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
-[![Cirrus CI](https://img.shields.io/cirrus/github/hukeyue/yass/develop?logo=cirrusci&&label=FreeBSD%20and%20macOS)](https://cirrus-ci.com/github/hukeyue/yass/develop)
 
 [![MSVC+VS2022 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml)
 [![MinGW Build](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml)
