@@ -34,11 +34,10 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/synchronization/mutex.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rand_util.h>
-#include <condition_variable>
-#include <mutex>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _MSC_VER
@@ -84,8 +83,9 @@ using namespace std::string_view_literals;
 namespace {
 
 scoped_refptr<GrowableIOBuffer> g_send_buffer;
-std::mutex g_in_provider_mutex;
-std::condition_variable g_in_provider_cv;
+absl::Mutex g_in_provider_mutex;
+absl::CondVar g_in_provider_cv;
+constinit bool g_in_provider_shutdown ABSL_GUARDED_BY(g_in_provider_mutex) = false;
 scoped_refptr<GrowableIOBuffer> g_recv_buffer;
 constexpr const std::string_view kConnectResponse = "HTTP/1.1 200 Connection established\r\n\r\n";
 
@@ -312,10 +312,10 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   }
 
   void shutdown() {
-    {
-      std::lock_guard<std::mutex> lk(g_in_provider_mutex);
-      g_in_provider_cv.notify_one();
-    }
+    g_in_provider_mutex.lock();
+    g_in_provider_shutdown = true;
+    g_in_provider_cv.Signal();
+    g_in_provider_mutex.unlock();
     asio::error_code ec;
     LOG(INFO) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutting down";
     downlink_->socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec);
@@ -671,12 +671,14 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     ASSERT_EQ(resp_buffer->capacity(), g_send_buffer->capacity());
     ASSERT_EQ(::testing::Bytes(resp_buffer->everything()), ::testing::Bytes(g_send_buffer->everything()));
 
-    {
-      std::unique_lock<std::mutex> lk(g_in_provider_mutex);
-      g_in_provider_cv.wait(lk, []{ return true; });
-      ASSERT_EQ(g_recv_buffer->capacity(), g_send_buffer->capacity());
-      ASSERT_EQ(::testing::Bytes(g_recv_buffer->everything()), ::testing::Bytes(g_send_buffer->everything()));
+    g_in_provider_mutex.lock();
+    while (!g_in_provider_shutdown) {
+      g_in_provider_cv.Wait(&g_in_provider_mutex);
     }
+    g_in_provider_shutdown = false;
+    g_in_provider_mutex.unlock();
+    ASSERT_EQ(g_recv_buffer->capacity(), g_send_buffer->capacity());
+    ASSERT_EQ(::testing::Bytes(g_recv_buffer->everything()), ::testing::Bytes(g_send_buffer->everything()));
   }
 
  private:
