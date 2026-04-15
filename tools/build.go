@@ -1834,7 +1834,7 @@ func postStateFixRPath() {
 	}
 	if variantFlag == "dylib" {
 		glog.Warningf("Removing directory %s", "devel")
-		os.RemoveAll("devel")
+		os.RemoveAll("./devel")
 		err := os.Mkdir("devel", 0755)
 		if err != nil {
 			glog.Fatalf("Failed in making directory %v", err)
@@ -1853,6 +1853,18 @@ func postStateFixRPath() {
 			iname := strings.ToLower(name)
 			if strings.HasSuffix(iname, ".h") {
 				err = copyFile(filepath.Join(projectDir, "src", "yass", name), filepath.Join(buildDir, "devel", "yass", name))
+				if err != nil {
+					glog.Fatalf("Failed in copying file %v", err)
+				}
+			}
+		}
+		// 3. copy python examples under examples directory
+		entries, _ = ioutil.ReadDir(filepath.Join(projectDir, "examples"))
+		for _, entry := range entries {
+			name := entry.Name()
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".py") {
+				err = copyFile(filepath.Join(projectDir, "examples", name), filepath.Join(buildDir, "devel", name))
 				if err != nil {
 					glog.Fatalf("Failed in copying file %v", err)
 				}
@@ -2804,10 +2816,14 @@ func postStateArchives() map[string][]string {
 	}
 
 	if variantFlag == "dylib" {
-		entries, _ := ioutil.ReadDir(filepath.Join(buildDir, "devel", "yass"))
+		devPaths = append(devPaths, filepath.Join("devel", "yass"))
+		entries, _ := ioutil.ReadDir("devel")
 		for _, entry := range entries {
 			name := entry.Name()
-			devPaths = append(devPaths, filepath.Join("devel", "yass", name))
+			iname := strings.ToLower(name)
+			if strings.HasSuffix(iname, ".py") {
+				devPaths = append(devPaths, filepath.Join("devel", name))
+			}
 		}
 	}
 
