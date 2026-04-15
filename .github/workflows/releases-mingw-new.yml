@@ -47,19 +47,7 @@ jobs:
       matrix:
         include:
           - arch: i686
-            build_type: Debug
-            variant: ucrt
-            suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
-            mingw_version: 20250709
-          - arch: i686
             build_type: Release
-            variant: ucrt
-            suffix: -winxp
-            build_options: -mingw-allow-xp -use-allocator=tcmalloc
-            mingw_version: 20250709
-          - arch: x86_64
-            build_type: Debug
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -use-allocator=tcmalloc
@@ -69,12 +57,6 @@ jobs:
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp -use-allocator=tcmalloc
-            mingw_version: 20250709
-          - arch: aarch64
-            build_type: Debug
-            variant: ucrt
-            suffix:
-            build_options:
             mingw_version: 20250709
           - arch: aarch64
             build_type: Release
@@ -234,17 +216,7 @@ jobs:
       matrix:
         include:
           - arch: i686
-            build_type: Debug
-            variant: ucrt
-            suffix: -winxp
-            build_options: -mingw-allow-xp
-          - arch: i686
             build_type: Release
-            variant: ucrt
-            suffix: -winxp
-            build_options: -mingw-allow-xp
-          - arch: x86_64
-            build_type: Debug
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp
@@ -253,11 +225,6 @@ jobs:
             variant: ucrt
             suffix: -winxp
             build_options: -mingw-allow-xp
-          - arch: aarch64
-            build_type: Debug
-            variant: ucrt
-            suffix:
-            build_options:
           - arch: aarch64
             build_type: Release
             variant: ucrt
@@ -312,15 +279,7 @@ jobs:
       matrix:
         include:
           - arch: i686
-            build_type: Debug
-            variant: ucrt
-            suffix: -winxp
-          - arch: i686
             build_type: Release
-            variant: ucrt
-            suffix: -winxp
-          - arch: x86_64
-            build_type: Debug
             variant: ucrt
             suffix: -winxp
           - arch: x86_64
@@ -372,21 +331,11 @@ jobs:
             variant: ucrt
             suffix: -winxp
             gtest_repeat_times: 10
-          - arch: i686
-            build_type: Debug
-            variant: ucrt
-            suffix: -winxp
-            gtest_repeat_times: 2
           - arch: x86_64
             build_type: Release
             variant: ucrt
             suffix: -winxp
             gtest_repeat_times: 10
-          - arch: x86_64
-            build_type: Debug
-            variant: ucrt
-            suffix: -winxp
-            gtest_repeat_times: 2
     defaults:
       run:
         shell: cmd

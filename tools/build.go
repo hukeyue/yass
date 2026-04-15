@@ -883,6 +883,8 @@ func buildStageGenerateBuildScript() {
 	}
 	if cmakeBuildTypeFlag == "Release" || cmakeBuildTypeFlag == "MinSizeRel" {
 		cmakeArgs = append(cmakeArgs, "-DOFFICIAL_BUILD=on")
+	} else {
+		cmakeArgs = append(cmakeArgs, "-DOFFICIAL_BUILD=off")
 	}
 	cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_ZLIB=on")
