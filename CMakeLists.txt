@@ -2789,8 +2789,8 @@ elseif (USE_TBBMALLOC)
   endif()
 
   #an unwanted dependency on libstdc++.so
-  if (LINUX AND NOT USE_LIBCXX)
-    target_link_libraries(tbbmalloc PRIVATE stdc++)
+  if (LINUX AND ENABLE_ASSERTIONS AND NOT USE_LIBCXX)
+    target_compile_options(tbbmalloc PRIVATE -U_GLIBCXX_ASSERTIONS)
   endif()
 
   list(APPEND YASS_APP_FEATURES "tbbmalloc (dll)")
