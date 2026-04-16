@@ -219,4 +219,15 @@ bool SetSystemProxy(bool enable, const std::string& server_addr, int32_t server_
 
 void SetDockIconStyle(bool hidden);
 
+// Mac OS X specific implementation of file string comparisons.
+//
+// from base/files/file_path.cc
+//
+int FilePath_HFSFastUnicodeCompare(std::string_view string1,
+                                   std::string_view string2);
+
+std::string FilePath_GetHFSDecomposedForm(std::string_view string);
+std::string FilePath_GetHFSDecomposedForm(CFStringRef cfstring);
+int FilePath_CompareIgnoreCase(std::string_view string1, std::string_view string2);
+
 #endif  // YASS_MAC_UTILS
