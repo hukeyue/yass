@@ -273,9 +273,7 @@ static const wchar_t* kDllWhiteList[] = {
 #endif  //  HAVE_TCMALLOC
 
 #ifdef HAVE_MIMALLOC
-#define DLL_NAME "mimalloc-override" _APP_SUFFIX
-    _W(DLL_NAME),
-#undef DLL_NAME
+    L"mimalloc.dll",
 #if defined(_M_X64)
     L"mimalloc-redirect.dll",
 #elif defined(_M_ARM64)
