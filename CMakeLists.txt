@@ -3626,7 +3626,7 @@ endif()
 if (USE_SYSTEM_JSONCPP)
   message(STATUS "Compiling with system jsoncpp")
   list(APPEND YASS_APP_FEATURES "system jsoncpp")
-  set(CORE_LIBS PkgConfig::JSONCPP ${CORE_LIBS})
+  set(DEFAULT_JSON_LIB PkgConfig::JSONCPP)
 elseif (USE_JSONCPP)
   message(STATUS "Compiling with bundled jsoncpp library")
 
@@ -3684,7 +3684,7 @@ elseif (USE_JSONCPP)
     set_target_properties(jsoncpp PROPERTIES OUTPUT_NAME "jsoncpp")
   endif()
 
-  set(CORE_LIBS jsoncpp ${CORE_LIBS})
+  set(DEFAULT_JSON_LIB jsoncpp)
 else()
   message(FATAL_ERROR "Compiling without jsoncpp support is no longer supported")
 endif()
@@ -4405,24 +4405,17 @@ endif()
 # *****************************************************************************************
 
 add_library(yass_core STATIC
-    src/config/config.cpp
     src/config/config_cli.cpp
     src/config/config_core.cpp
     src/config/config_network.cpp
     src/config/config_ptype.cpp
     src/config/config_tls.cpp
-    src/config/config_impl.cpp
-    src/config/config_version.cpp
-    src/config/config.hpp
     src/config/config_cli.hpp
     src/config/config_core.hpp
     src/config/config_export.hpp
     src/config/config_network.hpp
     src/config/config_ptype.hpp
     src/config/config_tls.hpp
-    src/config/config_impl.hpp
-    src/config/config_impl_local.hpp
-    src/config/config_impl_windows.hpp
     src/core/logging.hpp
     src/core/process_utils.hpp
     src/core/process_utils.cpp
@@ -4437,8 +4430,6 @@ add_library(yass_core STATIC
 if (WIN32)
   target_sources(yass_core PRIVATE src/core/utils_win.cpp)
 elseif (APPLE)
-  target_sources(yass_core PRIVATE src/config/config_impl_apple.hpp)
-  target_sources(yass_core PRIVATE src/config/config_impl_apple.mm)
   target_sources(yass_core PRIVATE src/core/utils_mac.mm)
 else()
   target_sources(yass_core PRIVATE src/core/utils_linux.cpp)
@@ -4462,11 +4453,6 @@ target_link_libraries(yass_core PUBLIC url
   ${ABSL_FLAGS_LIBS}
   asio_core
   )
-
-if (APPLE)
-  target_link_libraries(yass_core PUBLIC -Wl,-framework,Foundation)
-  target_link_libraries(yass_core PUBLIC -Wl,-framework,SystemConfiguration)
-endif()
 
 target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
@@ -4656,9 +4642,21 @@ if (ANDROID)
 endif()
 
 add_library(yass_support STATIC
+  src/config/config.cpp
+  src/config/config_impl.cpp
+  src/config/config_version.cpp
+  src/config/config.hpp
+  src/config/config_impl.hpp
+  src/config/config_impl_local.hpp
+  src/config/config_impl_windows.hpp
   src/support/utils.cpp
   src/support/utils.hpp
 )
+
+if (APPLE)
+  target_sources(yass_support PRIVATE src/config/config_impl_apple.hpp)
+  target_sources(yass_support PRIVATE src/config/config_impl_apple.mm)
+endif()
 
 if (USE_LTO_CMAKE)
   set_property(TARGET yass_support
@@ -4670,8 +4668,14 @@ target_include_directories(yass_support PRIVATE
 
 target_link_libraries(yass_support PUBLIC
   ${DEFAULT_MALLOC_LIB}
+  ${DEFAULT_JSON_LIB}
   yass_core
 )
+
+if (APPLE)
+  target_link_libraries(yass_support PUBLIC -Wl,-framework,Foundation)
+  target_link_libraries(yass_support PUBLIC -Wl,-framework,SystemConfiguration)
+endif()
 
 set(yass_c_SOURCES
   src/yass/config.h
@@ -5505,7 +5509,7 @@ if (GUI)
         target_link_directories(network-extension PRIVATE ${TUN2PROXY_LIB_DIR})
         target_link_libraries(network-extension PRIVATE -Wl,-hidden-ltun2proxy)
         target_link_libraries(network-extension PRIVATE ${Security_LIBRARY})
-        target_link_libraries(network-extension PRIVATE yass_cli_lib)
+        target_link_libraries(network-extension PRIVATE yass_cli_lib yass_support)
 
         target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,NetworkExtension)
     endif()
