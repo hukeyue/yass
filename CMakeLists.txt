@@ -104,6 +104,7 @@ set(_YASS_VERSION_TWEAK     ${YASS_APP_SUBTAG})
 
 set(PACKAGE_NAME            "yass")
 set(PACKAGE_FULL_NAME       "Yet Another Shadow Socket")
+set(PACKAGE_COMPACT_NAME    "YetAnotherShadowSocket")
 set(PACKAGE_VERSION_MAJOR ${_YASS_VERSION_MAJOR})
 set(PACKAGE_VERSION_MINOR ${_YASS_VERSION_MINOR})
 set(PACKAGE_VERSION_PATCH ${_YASS_VERSION_PATCH})
@@ -118,6 +119,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # Set variables used in configure_file
 set(YASS_APP_NAME ${PACKAGE_NAME})
 set(YASS_APP_FULL_NAME ${PACKAGE_FULL_NAME})
+set(YASS_APP_COMPACT_NAME ${PACKAGE_COMPACT_NAME})
 set(YASS_APP_INTERNAL_NAME ${PACKAGE_NAME}_gui)
 set(YASS_APP_WEBSITE "https://github.com/hukeyue/yass")
 set(YASS_APP_VERSION ${PACKAGE_VERSION})
@@ -127,6 +129,7 @@ set(YASS_APP_VERSION_PATCH ${PACKAGE_VERSION_PATCH})
 set(YASS_APP_VERSION_TWEAK ${PACKAGE_VERSION_TWEAK})
 set(YASS_APP_FULL_VERSION ${PACKAGE_VERSION}.${PACKAGE_VERSION_TWEAK})
 set(YASS_APP_COPYRIGHT "Copyright 2019-2026 Chilledheart. All rights reserved.")
+string(TOUPPER ${YASS_APP_NAME} YASS_APP_NAME_UPPERCASE)
 
 message(STATUS "Source Tag: ${YASS_APP_TAG}-${YASS_APP_SUBTAG}")
 message(STATUS "Source LastChange: ${YASS_APP_LAST_CHANGE}")
@@ -4735,6 +4738,27 @@ if (BUILD_DYLIB)
 
   if (WIN32)
     set_target_properties(YASS-C PROPERTIES PREFIX "")
+
+    set(DYLIB_MSVC_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/yass_dylib.manifest")
+    configure_file("src/core/win32.manifest" "${DYLIB_MSVC_MANIFEST}" @ONLY)
+
+    if (MINGW)
+      set(DYLIB_MINGW_MANIFEST_RC "${CMAKE_CURRENT_BINARY_DIR}/yass_dylib_manifest.rc")
+      file(WRITE "${DYLIB_MINGW_MANIFEST_RC}"
+        "#include <winuser.h>\n"
+        "1 RT_MANIFEST yass_dylib.manifest\n"
+      )
+    endif()
+
+    target_sources(YASS-C PRIVATE
+      ${DYLIB_MSVC_MANIFEST}
+      ${DYLIB_MINGW_MANIFEST_RC}
+    )
+
+    set(DYLIB_MSVC_VERSION_RC "${CMAKE_CURRENT_BINARY_DIR}/yass/version.rc")
+    configure_file("src/yass/version.rc.in" "${DYLIB_MSVC_VERSION_RC}" @ONLY)
+
+    target_sources(YASS-C PRIVATE ${DYLIB_MSVC_VERSION_RC})
   endif()
 
   if (NOT CMAKE_SKIP_INSTALL_RULES AND NOT WIN32 AND NOT IOS)
@@ -4795,6 +4819,11 @@ if (CLI)
       )
       target_sources(yass_cli PRIVATE ${CLI_MINGW_MANIFEST_RC})
     endif()
+
+    set(CLI_MSVC_VERSION_RC "${CMAKE_CURRENT_BINARY_DIR}/cli/version.rc")
+    configure_file("src/cli/version.rc.in" "${CLI_MSVC_VERSION_RC}" @ONLY)
+
+    target_sources(yass_cli PRIVATE ${CLI_MSVC_VERSION_RC})
   endif()
 
   target_include_directories(yass_cli PRIVATE
@@ -4863,6 +4892,11 @@ if (SERVER)
       )
       target_sources(yass_server PRIVATE ${SERVER_MINGW_MANIFEST_RC})
     endif()
+
+    set(SERVER_MSVC_VERSION_RC "${CMAKE_CURRENT_BINARY_DIR}/server/version.rc")
+    configure_file("src/server/version.rc.in" "${SERVER_MSVC_VERSION_RC}" @ONLY)
+
+    target_sources(yass_server PRIVATE ${SERVER_MSVC_VERSION_RC})
   endif()
 
   target_include_directories(yass_server PRIVATE
