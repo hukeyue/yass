@@ -32,6 +32,7 @@
 #include "config/config_network.hpp"
 #include "config/config_ptype.hpp"
 #include "config/config_tls.hpp"
+#include "config/config_version.hpp"
 
 namespace config {
 
@@ -39,7 +40,6 @@ bool ReadConfig();
 bool SaveConfig();
 
 extern bool testOnlyMode;
-void ReadConfigFileAndArguments(int argc, const char** argv);
 
 std::string ValidateConfig();
 
