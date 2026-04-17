@@ -33,7 +33,7 @@
 #endif
 
 #ifndef RC_FILE_DESCRIPTION
-#define RC_FILE_DESCRIPTION "@YASS_APP_COMPACT_NAME@ GUI client"
+#define RC_FILE_DESCRIPTION "@YASS_APP_COMPACT_NAME@ Server tool"
 #endif
 
 #ifndef RC_FILE_VERSION
@@ -41,11 +41,11 @@
 #endif
 
 #ifndef RC_INTERNAL_NAME
-#define RC_INTERNAL_NAME "@YASS_APP_INTERNAL_NAME@"
+#define RC_INTERNAL_NAME "@YASS_APP_NAME@_server"
 #endif
 
 #ifndef RC_ORIGINAL_FILENAME
-#define RC_ORIGINAL_FILENAME "@YASS_APP_NAME@.exe"
+#define RC_ORIGINAL_FILENAME "yass_server.exe"
 #endif
 
 #ifndef RC_PRODUCT_NAME
