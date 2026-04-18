@@ -1,16 +1,16 @@
 .section .rodata
-.hidden _binary_ca_bundle_crt_start
-.global _binary_ca_bundle_crt_start
-.type   _binary_ca_bundle_crt_start, %object
-.hidden _binary_ca_bundle_crt_end
-.global _binary_ca_bundle_crt_end
-.type   _binary_ca_bundle_crt_end, %object
+.hidden _z_binary_ca_bundle_crt_start
+.global _z_binary_ca_bundle_crt_start
+.type   _z_binary_ca_bundle_crt_start, %object
+.hidden _z_binary_ca_bundle_crt_end
+.global _z_binary_ca_bundle_crt_end
+.type   _z_binary_ca_bundle_crt_end, %object
 .align  4
 
-_binary_ca_bundle_crt_start:
-.incbin "ca-bundle.crt"
+_z_binary_ca_bundle_crt_start:
+.incbin "ca-bundle.crt.zlib"
 
-_binary_ca_bundle_crt_end:
+_z_binary_ca_bundle_crt_end:
 .previous
 
 #ifdef USE_CET

@@ -29,11 +29,8 @@
 
 #include <string_view>
 
-extern "C" const char _binary_ca_bundle_crt_start[];
-extern "C" const char _binary_ca_bundle_crt_end[];
-
-extern "C" const char _binary_supplementary_ca_bundle_crt_start[];
-extern "C" const char _binary_supplementary_ca_bundle_crt_end[];
+int get_binary_ca_bundle(std::string* output);
+int get_binary_supplementary_ca_bundle(std::string* output);
 
 int load_ca_to_ssl_ctx_from_mem(SSL_CTX* ssl_ctx, std::string_view cadata);
 int load_ca_to_ssl_ctx_from_system(SSL_CTX* ssl_ctx);

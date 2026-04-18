@@ -61,6 +61,10 @@
 #define DIR_HASH_SEPARATOR ':'
 #endif
 
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
 ABSL_FLAG(bool, ca_native, false, "Load CA certs from the OS.");
 
 void print_openssl_error() {
@@ -941,8 +945,8 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
 
   load_ca_to_ssl_ctx_from_system_extra(ssl_ctx);
   {
-    std::string_view ca_bundle_content(_binary_ca_bundle_crt_start,
-                                       _binary_ca_bundle_crt_end - _binary_ca_bundle_crt_start);
+    std::string ca_bundle_content;
+    CHECK_EQ(0, get_binary_ca_bundle(&ca_bundle_content));
     int result = load_ca_to_ssl_ctx_from_mem(ssl_ctx, ca_bundle_content);
     LOG(INFO) << "Loaded builtin ca bundle with: " << result << " ceritificates";
   }
@@ -962,9 +966,83 @@ done:
     if (!found_gts_root_r4) {
       LOG(INFO) << "Missing GTS Root R4 CA";
     }
-    std::string_view ca_content(_binary_supplementary_ca_bundle_crt_start,
-                                _binary_supplementary_ca_bundle_crt_end - _binary_supplementary_ca_bundle_crt_start);
+
+    std::string ca_content;
+    CHECK_EQ(0, get_binary_supplementary_ca_bundle(&ca_content));
     int result = load_ca_to_ssl_ctx_from_mem(ssl_ctx, ca_content);
     LOG(INFO) << "Loaded supplementary ca bundle with " << result << " certificates";
   }
+}
+
+static int get_zlib_compressed_data(std::string* output,
+                                    const unsigned char* begin,
+                                    const unsigned char* end) {
+  output->clear();
+  output->reserve((end - begin) * 2);
+  /* taken from https://zlib.net/zlib_how.html */
+#define CHUNK 16384u
+  int ret;
+  unsigned have;
+  z_stream strm;
+  unsigned char in[CHUNK];
+  unsigned char out[CHUNK];
+
+  /* allocate inflate state */
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  strm.avail_in = 0;
+  strm.next_in = Z_NULL;
+  ret = inflateInit(&strm);
+  if (ret != Z_OK)
+    return ret;
+
+  /* decompress until deflate stream ends or end of file */
+  do {
+    strm.avail_in = std::min<size_t>(CHUNK, end - begin);
+    if (strm.avail_in == 0)
+      break;
+    memcpy(in, begin, strm.avail_in);
+    begin += strm.avail_in;
+
+    strm.next_in = in;
+    /* run inflate() on input until output buffer not full */
+    do {
+      strm.avail_out = CHUNK;
+      strm.next_out = out;
+
+      ret = inflate(&strm, Z_NO_FLUSH);
+      DCHECK_NE(Z_STREAM_ERROR, ret);  /* state not clobbered */
+      switch (ret) {
+        case Z_NEED_DICT:
+          ret = Z_DATA_ERROR;     /* and fall through */
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+          (void)inflateEnd(&strm);
+          return ret;
+      }
+      have = CHUNK - strm.avail_out;
+      auto previous_end = output->size();
+      output->resize(output->size() + have);
+      memcpy(&(*output)[previous_end], out, have);
+    } while (strm.avail_out == 0);
+    /* done when inflate() says it's done */
+  } while (ret != Z_STREAM_END);
+  /* clean up and return */
+  (void)inflateEnd(&strm);
+  return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
+}
+
+extern "C" const unsigned char _z_binary_ca_bundle_crt_start[];
+extern "C" const unsigned char _z_binary_ca_bundle_crt_end[];
+
+int get_binary_ca_bundle(std::string* output) {
+  return get_zlib_compressed_data(output, _z_binary_ca_bundle_crt_start, _z_binary_ca_bundle_crt_end);
+}
+
+extern "C" const unsigned char _z_binary_supplementary_ca_bundle_crt_start[];
+extern "C" const unsigned char _z_binary_supplementary_ca_bundle_crt_end[];
+
+int get_binary_supplementary_ca_bundle(std::string* output) {
+  return get_zlib_compressed_data(output, _z_binary_supplementary_ca_bundle_crt_start, _z_binary_supplementary_ca_bundle_crt_end);
 }
