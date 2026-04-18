@@ -1,9 +1,9 @@
 .section .rdata
-.global _binary_supplementary_ca_bundle_crt_start
-.global _binary_supplementary_ca_bundle_crt_end
+.global _z_binary_supplementary_ca_bundle_crt_start
+.global _z_binary_supplementary_ca_bundle_crt_end
 .align  4
 
-_binary_supplementary_ca_bundle_crt_start:
-.incbin "supplementary-ca-bundle.crt"
+_z_binary_supplementary_ca_bundle_crt_start:
+.incbin "supplementary-ca-bundle.crt.zlib"
 
-_binary_supplementary_ca_bundle_crt_end:
+_z_binary_supplementary_ca_bundle_crt_end:

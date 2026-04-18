@@ -123,7 +123,7 @@ static void ParseConfigFileOption(int argc, const char** argv) {
       std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_ZLIB
-      std::cout << "ZLIB: " << ZLIB_VERSION << std::endl;
+      std::cout << "ZLIB: " << zlibVersion() << std::endl;
 #endif
 #ifndef NDEBUG
       std::cout << "Debug build (NDEBUG not #defined)" << std::endl;
@@ -155,7 +155,7 @@ static void ParseConfigFileOption(int argc, const char** argv) {
   std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
 #endif
 #ifdef HAVE_ZLIB
-  std::cout << "ZLIB: " << ZLIB_VERSION << std::endl;
+  std::cout << "ZLIB: " << zlibVersion() << std::endl;
 #endif
 #ifdef DCHECK_ALWAYS_ON
   std::cerr << "Assertions build (DCHECK_ALWAYS_ON #defined)" << std::endl;
@@ -197,7 +197,7 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION;
 #endif
 #ifdef HAVE_ZLIB
-  LOG(WARNING) << "ZLIB: " << ZLIB_VERSION;
+  LOG(WARNING) << "ZLIB: " << zlibVersion();
 #endif
 #ifdef DCHECK_ALWAYS_ON
   LOG(WARNING) << "Assertions build (DCHECK_ALWAYS_ON #defined)";
