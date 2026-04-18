@@ -46,31 +46,31 @@ jobs:
           - arch: i386
             build_type: Release
             qemu_suffix: i386
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: i386
             build_type: Debug
             qemu_suffix: i386
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: amd64
             build_type: Release
             qemu_suffix: amd64
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: amd64
             build_type: Debug
             qemu_suffix: amd64
-            build_options: -use-allocator=tbbmalloc
+            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: armhf
             build_type: Release
             qemu_suffix: armhf
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tcmalloc -use-mold -enable-lto=false
           - arch: armel
             build_type: Release
             qemu_suffix: armel
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tcmalloc -use-mold -enable-lto=false
           - arch: arm64
             build_type: Release
             qemu_suffix: aarch64
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tcmalloc -use-mold -enable-lto=false
           - arch: mipsel
             build_type: Release
             qemu_suffix: mipsel
@@ -86,7 +86,7 @@ jobs:
           - arch: riscv64
             build_type: Release
             qemu_suffix: riscv64
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tcmalloc -use-mold -enable-lto=false
           - arch: riscv32
             build_type: Release
             qemu_suffix: riscv32
@@ -141,10 +141,6 @@ jobs:
         uses: rui314/setup-mold@v1
         with:
           make-default: false
-      - name: Setup build flags for mold
-        if: ${{ matrix.arch != 'riscv32' && matrix.arch != 'mipsel' && matrix.arch != 'mips64el' }}
-        run: |
-          echo "EXTRA_BUILD_FLAGS=-use-mold -enable-lto=false" >> $GITHUB_ENV
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
@@ -194,14 +190,14 @@ jobs:
           sudo dpkg -i qemu-user_*.deb
       - name: Build Binary (CLI)
         run: |
-          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc -build-benchmark -build-test ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
+          ./tools/build --variant cli --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc -build-benchmark -build-test ${{ matrix.build_options }}
       - name: Build Binary (GUI)
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         run: |
-          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
+          ./tools/build --variant gui --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ matrix.build_options }}
       - name: Build Binary (DYLIB)
         run: |
-          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ env.EXTRA_BUILD_FLAGS }} ${{ matrix.build_options }}
+          ./tools/build --variant dylib --arch ${{ matrix.arch }} --system linux --sysroot ${{ env.SDK_ROOT }} -nc ${{ matrix.build_options }}
       - uses: actions/upload-artifact@v6
         if: ${{ matrix.arch != 'riscv64' && matrix.arch != 'riscv32' }}
         with:
