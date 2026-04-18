@@ -251,6 +251,17 @@ set(quiche_SRCS
   src/quiche/oblivious_http/oblivious_http_client.h
   src/quiche/oblivious_http/oblivious_http_gateway.cc
   src/quiche/oblivious_http/oblivious_http_gateway.h
+
+  src/quiche/quic/core/quic_error_codes.cc
+  src/quiche/quic/core/quic_error_codes.h
+  src/quiche/quic/core/quic_packet_number.cc
+  src/quiche/quic/core/quic_packet_number.h
+  src/quiche/quic/core/quic_tag.cc
+  src/quiche/quic/core/quic_tag.h
+  src/quiche/quic/core/quic_versions.cc
+  src/quiche/quic/core/quic_versions.h
+  src/quiche/quic/core/frames/quic_ack_frame.cc
+  src/quiche/quic/core/frames/quic_ack_frame.h
   )
 
 set(quiche_quic_SOURCES
@@ -391,8 +402,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/crypto/web_transport_fingerprint_proof_verifier.h
   src/quiche/quic/core/deterministic_connection_id_generator.cc
   src/quiche/quic/core/deterministic_connection_id_generator.h
-  src/quiche/quic/core/frames/quic_ack_frame.cc
-  src/quiche/quic/core/frames/quic_ack_frame.h
   src/quiche/quic/core/frames/quic_ack_frequency_frame.cc
   src/quiche/quic/core/frames/quic_ack_frequency_frame.h
   src/quiche/quic/core/frames/quic_blocked_frame.cc
@@ -600,8 +609,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_dispatcher.h
   src/quiche/quic/core/quic_dispatcher_stats.cc
   src/quiche/quic/core/quic_dispatcher_stats.h
-  src/quiche/quic/core/quic_error_codes.cc
-  src/quiche/quic/core/quic_error_codes.h
   src/quiche/quic/core/quic_flow_controller.cc
   src/quiche/quic/core/quic_flow_controller.h
   src/quiche/quic/core/quic_force_blockable_packet_writer.cc
@@ -623,8 +630,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_one_block_arena.h
   src/quiche/quic/core/quic_packet_creator.cc
   src/quiche/quic/core/quic_packet_creator.h
-  src/quiche/quic/core/quic_packet_number.cc
-  src/quiche/quic/core/quic_packet_number.h
   src/quiche/quic/core/quic_packet_writer.h
   src/quiche/quic/core/quic_packets.cc
   src/quiche/quic/core/quic_packets.h
@@ -661,8 +666,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_stream_sequencer_buffer.h
   src/quiche/quic/core/quic_sustained_bandwidth_recorder.cc
   src/quiche/quic/core/quic_sustained_bandwidth_recorder.h
-  src/quiche/quic/core/quic_tag.cc
-  src/quiche/quic/core/quic_tag.h
   src/quiche/quic/core/quic_time.cc
   src/quiche/quic/core/quic_time.h
   src/quiche/quic/core/quic_time_accumulator.h
@@ -678,8 +681,6 @@ set(quiche_quic_SOURCES
   src/quiche/quic/core/quic_utils.h
   src/quiche/quic/core/quic_version_manager.cc
   src/quiche/quic/core/quic_version_manager.h
-  src/quiche/quic/core/quic_versions.cc
-  src/quiche/quic/core/quic_versions.h
   src/quiche/quic/core/quic_write_blocked_list.cc
   src/quiche/quic/core/quic_write_blocked_list.h
   src/quiche/quic/core/session_notifier_interface.h
@@ -752,10 +753,27 @@ set(quiche_protos
 set(PROTOBUF_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 protobuf_generate_cpp(quiche_protos_SRCS quiche_protos_HDRS ${quiche_protos})
 
-add_library(quiche STATIC
-  ${quiche_SRCS}
-  ${quiche_nghttp2_SOURCES}
+cmake_dependent_option(
+  QUICHE_BUILD_SHARED_LIBS "Build with quiche (dll)" ON
+  "BUILD_SHARED_LIBS; NOT MSVC" OFF)
+
+if (QUICHE_BUILD_SHARED_LIBS)
+  add_library(quiche SHARED
+    ${quiche_SRCS}
+    ${quiche_nghttp2_SOURCES}
   )
+  target_compile_definitions(quiche
+    PRIVATE
+      QUICHE_BUILD_DLL
+    INTERFACE
+      QUICHE_CONSUME_DLL
+  )
+else()
+  add_library(quiche STATIC
+    ${quiche_SRCS}
+    ${quiche_nghttp2_SOURCES}
+  )
+endif()
 
 if (USE_LTO_CMAKE)
   set_property(TARGET quiche
@@ -811,7 +829,7 @@ elseif (COMPILER_MSVC)
 endif()
 
 if (USE_BALSA_HTTP_PARSER)
-  add_library(balsa STATIC
+  set(balsa_SOURCES
     src/quiche/balsa/balsa_enums.h
     src/quiche/balsa/balsa_frame.h
     src/quiche/balsa/balsa_headers.h
@@ -833,12 +851,25 @@ if (USE_BALSA_HTTP_PARSER)
     src/quiche/balsa/standard_header_map.cc
     )
 
+  if (QUICHE_BUILD_SHARED_LIBS)
+    add_library(balsa SHARED ${balsa_SOURCES})
+    target_compile_definitions(balsa
+      PRIVATE
+        QUICHE_BUILD_DLL
+      INTERFACE
+        QUICHE_CONSUME_DLL
+    )
+  else()
+    add_library(balsa STATIC ${balsa_SOURCES})
+  endif()
+
   if (USE_LTO_CMAKE)
     set_property(TARGET balsa
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
   target_include_directories(balsa PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/overrides
     src
     )
 
