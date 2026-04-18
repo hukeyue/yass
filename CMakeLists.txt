@@ -3987,7 +3987,7 @@ elseif (USE_NGHTTP2)
     ${SUPPORT_LIBS}
   )
 else()
-  list(APPEND YASS_APP_FEATURES "oghttp2")
+  list(APPEND YASS_APP_FEATURES "oghttp2 (builtin)")
 endif()
 
 # *****************************************************************************************
@@ -3998,7 +3998,14 @@ set(SUPPORT_LIBS url ${SUPPORT_LIBS})
 if (USE_QUICHE)
   set(HAVE_QUICHE 1)
   add_subdirectory(third_party/quiche EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "quiche")
+  if (QUICHE_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "quiche (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "quiche")
+  endif()
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS quiche)
+  endif()
   set(SUPPORT_LIBS quiche ${SUPPORT_LIBS})
 endif()
 
@@ -4036,11 +4043,19 @@ endif()
 
 if (USE_BALSA_HTTP_PARSER)
   message(STATUS "Compiling with balsa http parser")
-  list(APPEND YASS_APP_FEATURES "balsa http parser")
+
+  if (QUICHE_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "balsa http parser (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "balsa http parser")
+  endif()
   set(SUPPORT_DEFINITIONS
     HAVE_BALSA_HTTP_PARSER
     ${SUPPORT_DEFINITIONS}
   )
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS balsa)
+  endif()
   set(SUPPORT_LIBS balsa ${SUPPORT_LIBS})
 endif()
 
