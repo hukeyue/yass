@@ -31,6 +31,7 @@
 #include <vector>
 
 #include <absl/functional/any_invocable.h>
+#include <absl/synchronization/mutex.h>
 
 #include "config/config.hpp"
 #include "core/logging.hpp"
@@ -63,8 +64,9 @@ class Worker {
   /// used to do io in another thread
   std::unique_ptr<std::thread> thread_;
 
-  absl::AnyInvocable<void(asio::error_code)> start_callback_;
-  absl::AnyInvocable<void()> stop_callback_;
+  absl::AnyInvocable<void(asio::error_code)> start_callback_ ABSL_GUARDED_BY(callback_mutex_);
+  absl::AnyInvocable<void()> stop_callback_ ABSL_GUARDED_BY(callback_mutex_);
+  absl::Mutex callback_mutex_;
 
   // cached entry
   std::string cached_server_host_;

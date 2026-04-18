@@ -102,8 +102,10 @@ Worker::Worker()
     : private_(new WorkerPrivate) {}
 
 Worker::~Worker() {
+  callback_mutex_.lock();
   start_callback_ = nullptr;
   stop_callback_ = nullptr;
+  callback_mutex_.unlock();
 
   Stop(nullptr);
   if (thread_) {
@@ -114,21 +116,24 @@ Worker::~Worker() {
 }
 
 void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
-  DCHECK(!start_callback_);
-
-  start_callback_ = std::move(callback);
-
   if (thread_) {
     thread_->join();
   }
+
+  callback_mutex_.lock();
+  DCHECK(!start_callback_);
+  start_callback_ = std::move(callback);
+  callback_mutex_.unlock();
   thread_ = std::make_unique<std::thread>([this] {
     WorkFunc();
   });
 }
 
 void Worker::Stop(absl::AnyInvocable<void()>&& callback) {
+  callback_mutex_.lock();
   DCHECK(!stop_callback_);
   stop_callback_ = std::move(callback);
+  callback_mutex_.unlock();
   /// stop in the worker thread
   private_->Stop();
 }
@@ -197,7 +202,7 @@ void Worker::WorkFunc() {
   int ret = private_->Init();
   if (ret < 0) {
     LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
-    on_resolve_done(asio::error::connection_refused);
+    on_resolve_done(private_->GetLastError());
     return;
   }
 
@@ -220,8 +225,10 @@ void Worker::WorkFunc() {
 
   private_->Run();
 
+  callback_mutex_.lock();
   auto callback = std::move(stop_callback_);
   DCHECK(!stop_callback_);
+  callback_mutex_.unlock();
   if (callback) {
     callback();
   }
@@ -230,7 +237,11 @@ void Worker::WorkFunc() {
 }
 
 void Worker::on_resolve_done(asio::error_code ec) {
-  if (auto callback = std::move(start_callback_)) {
+  callback_mutex_.lock();
+  auto callback = std::move(start_callback_);
+  DCHECK(!start_callback_);
+  callback_mutex_.unlock();
+  if (callback) {
     callback(ec);
   }
 }
