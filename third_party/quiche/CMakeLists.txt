@@ -755,7 +755,7 @@ protobuf_generate_cpp(quiche_protos_SRCS quiche_protos_HDRS ${quiche_protos})
 
 cmake_dependent_option(
   QUICHE_BUILD_SHARED_LIBS "Build with quiche (dll)" ON
-  "BUILD_SHARED_LIBS; NOT MSVC" OFF)
+  "BUILD_SHARED_LIBS" OFF)
 
 if (QUICHE_BUILD_SHARED_LIBS)
   add_library(quiche SHARED

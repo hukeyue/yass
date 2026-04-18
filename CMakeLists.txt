@@ -1246,7 +1246,7 @@ else()
   # Do not export inline member functions. This makes component builds
   # faster. This is similar to -fvisibility-inlines-hidden.
   if (COMPILER_CLANG AND BUILD_SHARED_LIBS)
-    add_compile_options($<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:C,CXX>>:/Zc:dllexportInlines->)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zc:dllexportInlines->)
   endif()
 
   if (USE_LLD AND NOT LTO)
