@@ -768,6 +768,9 @@ if (QUICHE_BUILD_SHARED_LIBS)
     INTERFACE
       QUICHE_CONSUME_DLL
   )
+  if (WIN32)
+    set_target_properties(quiche PROPERTIES PREFIX "")
+  endif()
 else()
   add_library(quiche STATIC
     ${quiche_SRCS}
@@ -859,6 +862,9 @@ if (USE_BALSA_HTTP_PARSER)
       INTERFACE
         QUICHE_CONSUME_DLL
     )
+    if (WIN32)
+      set_target_properties(balsa PROPERTIES PREFIX "")
+    endif()
   else()
     add_library(balsa STATIC ${balsa_SOURCES})
   endif()
