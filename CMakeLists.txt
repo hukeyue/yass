@@ -3457,6 +3457,10 @@ target_include_directories(asio_core PUBLIC
   third_party/asio/include
   third_party/googleurl/polyfills
 )
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  target_compile_definitions(asio_core PUBLIC GOOGLEURL_CONSUME_DLL)
+endif()
+
 target_compile_definitions(asio_core PUBLIC ASIO_STANDALONE)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_TYPEID)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_EXCEPTIONS)
@@ -4488,6 +4492,10 @@ target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
   ${SUPPORT_INCLUDE_DIRS})
+
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  target_compile_definitions(yass_core PUBLIC GOOGLEURL_CONSUME_DLL)
+endif()
 
 target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src)

@@ -117,6 +117,7 @@ void SetExecutablePath(const std::string& exe_path) {
   std::string new_exe_path;
   GetExecutablePath(&new_exe_path);
   absl::flags_internal::SetProgramInvocationName(new_exe_path);
+  absl::SetFlag(&FLAGS_log_program_name, absl::flags_internal::ShortProgramInvocationName());
 }
 
 std::string DescriptionFromOSStatus(OSStatus err) {
