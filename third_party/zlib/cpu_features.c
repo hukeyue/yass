@@ -38,7 +38,7 @@ int ZLIB_INTERNAL riscv_cpu_enable_vclmul = 0;
 
 #ifndef CPU_NO_SIMD
 
-#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || \
+#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_FREEBSD) || \
     defined(ARMV8_OS_FUCHSIA) || defined(ARMV8_OS_IOS)
 #include <pthread.h>
 #endif
@@ -48,6 +48,9 @@ int ZLIB_INTERNAL riscv_cpu_enable_vclmul = 0;
 #elif defined(ARMV8_OS_LINUX)
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
+#elif defined(ARMV8_OS_FREEBSD)
+#include <sys/auxv.h>
+#include <sys/types.h>
 #elif defined(ARMV8_OS_FUCHSIA)
 #include <zircon/features.h>
 #include <zircon/syscalls.h>
@@ -66,7 +69,7 @@ int ZLIB_INTERNAL riscv_cpu_enable_vclmul = 0;
 static void _cpu_check_features(void);
 #endif
 
-#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || \
+#if defined(ARMV8_OS_ANDROID) || defined(ARMV8_OS_LINUX) || defined(ARMV8_OS_FREEBSD) || \
     defined(ARMV8_OS_MACOS) || defined(ARMV8_OS_FUCHSIA) || \
     defined(X86_NOT_WINDOWS) || defined(ARMV8_OS_IOS) || \
     defined(RISCV_RVV)
@@ -188,6 +191,16 @@ static void _cpu_check_features(void)
     unsigned long features = getauxval(AT_HWCAP2);
     arm_cpu_enable_crc32 = !!(features & HWCAP2_CRC32);
     arm_cpu_enable_pmull = !!(features & HWCAP2_PMULL);
+#elif defined(ARMV8_OS_FREEBSD) && defined(__aarch64__)
+    unsigned long hwcap = 0, hwcap2 = 0;
+
+    // |elf_aux_info| may fail, in which case |hwcap| and |hwcap2| will be
+    // left at zero. The rest of this function will then gracefully report
+    // the features are absent.
+    elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
+    elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2));
+    arm_cpu_enable_crc32 = !!(hwcap & HWCAP_CRC32);
+    arm_cpu_enable_pmull = !!(hwcap & HWCAP_PMULL);
 #elif defined(ARMV8_OS_FUCHSIA)
     uint32_t features;
     zx_status_t rc = zx_system_get_features(ZX_FEATURE_KIND_CPU, &features);
