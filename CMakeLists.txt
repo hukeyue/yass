@@ -562,7 +562,7 @@ option(USE_OLD_SYSTEMD_SERVICE "Install with old systemd service files" OFF)
 cmake_dependent_option(
   USE_IOURING "Build with io uring support" OFF
   LINUX OFF)
-option(USE_ZLIB "Build with zlib (required by quic)" OFF)
+option(USE_ZLIB "Build with zlib (required by quic)" ON)
 cmake_dependent_option(
   USE_SYSTEM_ZLIB "Build with system or vendored zlib" OFF
   USE_ZLIB OFF)
@@ -3844,8 +3844,12 @@ elseif(USE_ZLIB)
     HAVE_ZLIB
     ${SUPPORT_DEFINITIONS}
   )
+else()
+  message(FATAL_ERROR "Compiling without zlib support is no longer supported")
 endif()
 set(CORE_LIBS ${ZLIB_LIBRARIES} ${CORE_LIBS})
+target_compile_definitions(asio_ssl PRIVATE HAVE_ZLIB)
+target_link_libraries(asio_ssl PRIVATE ${ZLIB_LIBRARIES})
 
 # *****************************************************************************************
 #           c-ares Library
