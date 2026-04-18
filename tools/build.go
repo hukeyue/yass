@@ -888,9 +888,6 @@ func buildStageGenerateBuildScript() {
 	}
 	cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_ZLIB=on")
-	if systemNameFlag == "freebsd" {
-		cmakeArgs = append(cmakeArgs, "-DUSE_SYSTEM_ZLIB=on")
-	}
 	cmakeArgs = append(cmakeArgs, "-DUSE_JSONCPP=on")
 	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON", "-DBUILD_DYLIB=on")
 	if useStaticBuildFlag {
