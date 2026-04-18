@@ -3,6 +3,7 @@ usr/libexec/yass/libc++.so
 usr/libexec/yass/libbalsa.so
 usr/libexec/yass/libcares.so
 usr/libexec/yass/libcrypto.so
+usr/libexec/yass/libgoogleurl.so
 usr/libexec/yass/libjsoncpp.so
 usr/libexec/yass/libmbedcrypto.so
 usr/libexec/yass/libnghttp2.so

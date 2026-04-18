@@ -56,7 +56,7 @@ add_library(re2::re2 ALIAS re2)
 #           googleurl Library
 # *****************************************************************************************
 
-add_library(url STATIC
+set(googleurl_SOURCES
   # polyfills
   googleurl/polyfills/base/allocator/buildflags.h
   googleurl/polyfills/base/base_export.h
@@ -190,16 +190,35 @@ add_library(url STATIC
   googleurl/polyfills/base/debug/debugger.cc
   )
 
+cmake_dependent_option(
+  GOOGLEURL_BUILD_SHARED_LIBS "Build with googleurl (dll)" ON
+  "BUILD_SHARED_LIBS" OFF)
+
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  add_library(googleurl SHARED ${googleurl_SOURCES})
+  target_compile_definitions(googleurl
+    PRIVATE
+      GOOGLEURL_BUILD_DLL
+    INTERFACE
+      GOOGLEURL_CONSUME_DLL
+  )
+  if (WIN32)
+    set_target_properties(googleurl PROPERTIES PREFIX "")
+  endif()
+else()
+  add_library(googleurl STATIC ${googleurl_SOURCES})
+endif()
+
 if (WIN32)
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/strings/sys_string_conversions_win.cc)
 
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/files/file_util_win.cc
     googleurl/base/strings/string_util_win.h
     googleurl/base/strings/string_util_win.cc)
 elseif(APPLE)
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/apple/scoped_cftyperef.h
     googleurl/base/apple/scoped_typeref.h
     googleurl/base/apple/foundation_util.mm
@@ -210,19 +229,19 @@ elseif(APPLE)
   )
   # missing apple part
 else()
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/files/file_util_posix.cc
     googleurl/base/strings/sys_string_conversions_posix.cc)
 endif()
 
 if (WIN32)
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/polyfills/base/debug/debugger_win.cc
     googleurl/base/process/process_handle_win.cc
     googleurl/base/scoped_clear_last_error_win.cc
     googleurl/base/rand_util_win.cc)
 else()
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/polyfills/base/debug/debugger_posix.cc
     googleurl/base/process/process_handle_posix.cc
     googleurl/base/posix/safe_strerror.cc
@@ -231,15 +250,15 @@ else()
 endif()
 
 if (USE_ICU)
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/url/url_idna_icu.cc
     googleurl/url/url_canon_icu.h
   )
-  target_link_libraries(url PRIVATE
+  target_link_libraries(googleurl PRIVATE
     icuuc
   )
 else()
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/url/url_idna_ascii_only.cc
   )
 endif()
@@ -278,29 +297,29 @@ target_include_directories(double_conversion PRIVATE
 
 target_compile_options(double_conversion PRIVATE -Wno-unused-const-variable -Wno-unused-function)
 
-target_link_libraries(url PUBLIC double_conversion)
+target_link_libraries(googleurl PUBLIC double_conversion)
 
 if (USE_LTO_CMAKE)
-  set_property(TARGET url
+  set_property(TARGET googleurl
     PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-target_include_directories(url PUBLIC
+target_include_directories(googleurl PUBLIC
   googleurl/polyfills
   googleurl
   ${CMAKE_CURRENT_SOURCE_DIR}/..
   )
 
-target_link_libraries(url PUBLIC absl::optional absl::str_format)
+target_link_libraries(googleurl PUBLIC ${ABSL_LIBS} ${ABSL_FLAGS_LIBS})
 
-target_sources(url PRIVATE
+target_sources(googleurl PRIVATE
   googleurl/base/files/memory_mapped_file.h
   googleurl/base/files/memory_mapped_file.cc
   googleurl/base/location.h
   googleurl/base/location.cc
 )
 if (WIN32)
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/win/pe_image.cc
     googleurl/base/win/pe_image.h
     googleurl/base/win/scoped_handle.cc
@@ -309,9 +328,9 @@ if (WIN32)
     googleurl/base/win/win_handle_types.h
     googleurl/base/files/memory_mapped_file_win.cc
   )
-  target_link_libraries(url PRIVATE delayimp)
+  target_link_libraries(googleurl PRIVATE delayimp)
 else()
-  target_sources(url PRIVATE
+  target_sources(googleurl PRIVATE
     googleurl/base/files/memory_mapped_file_posix.cc
   )
 endif()

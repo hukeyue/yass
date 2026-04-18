@@ -797,7 +797,7 @@ target_include_directories(quiche PUBLIC
 target_link_libraries(quiche PUBLIC
   crypto
   ssl
-  url
+  googleurl
   asio_core
   ${ABSL_LIBS}
   ${ABSL_FLAGS_LIBS}

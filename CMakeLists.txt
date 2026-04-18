@@ -3201,7 +3201,14 @@ set(SUPPORT_LIBS re2 ${SUPPORT_LIBS})
 # *****************************************************************************************
 
 message(STATUS "Compiling with bundled googleurl library")
-set(SUPPORT_LIBS url ${SUPPORT_LIBS})
+set(SUPPORT_LIBS googleurl ${SUPPORT_LIBS})
+
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "googleurl (dll)")
+  list(APPEND YASS_SHARED_LIBS googleurl)
+else()
+  list(APPEND YASS_APP_FEATURES "googleurl")
+endif()
 
 # *****************************************************************************************
 #           tun2proxy Library
@@ -3476,7 +3483,7 @@ endif()
 target_link_libraries(asio_core PUBLIC
   ${ABSL_LIBS}
   ${ABSL_FLAGS_LIBS}
-  url
+  googleurl
   )
 
 if (WIN32)
@@ -3994,7 +4001,7 @@ endif()
 #           QUICHE Library
 # *****************************************************************************************
 
-set(SUPPORT_LIBS url ${SUPPORT_LIBS})
+set(SUPPORT_LIBS googleurl ${SUPPORT_LIBS})
 if (USE_QUICHE)
   set(HAVE_QUICHE 1)
   add_subdirectory(third_party/quiche EXCLUDE_FROM_ALL)
@@ -4419,6 +4426,7 @@ if (WIN32)
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
     ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(delayload_hook PRIVATE delayimp)
   link_libraries(delayload_hook)
 endif()
 
@@ -4471,7 +4479,7 @@ if (OHOS)
   target_link_libraries(yass_core PUBLIC libhilog_ndk.z.so)
 endif()
 
-target_link_libraries(yass_core PUBLIC url
+target_link_libraries(yass_core PUBLIC googleurl
   ${ABSL_FLAGS_LIBS}
   asio_core
   )

@@ -352,6 +352,11 @@ static const wchar_t* kDllWhiteList[] = {
     _W(DLL_NAME),
 #undef DLL_NAME
 
+// googleurl
+#define DLL_NAME "googleurl" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
 // quiche
 #define DLL_NAME "quiche" _APP_SUFFIX
     _W(DLL_NAME),
