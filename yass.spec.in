@@ -350,6 +350,11 @@ for embedded devices and low end boxes.
 /usr/include/%{name}/*.h
 
 %changelog
+* Sun Apr 19 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.6-1
+  - make quiche and googleurl componently buildable
+  - update nghttp2 to 1.68.1
+  - update tcmalloc to 2.18.1
+  - miscellaneous fixes
 * Wed Apr 15 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.5-1
   - miscellaneous fixes
 * Mon Apr 13 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.4-1
