@@ -84,6 +84,9 @@ ifneq ($(filter cet,$(DEB_BUILD_PROFILES)),)
 override_dh_auto_configure: CMAKE_OPTIONS += -DUSE_CET=on
 endif
 
+# conflicts with bundled nghttp2.so
+override_dh_auto_configure: CMAKE_OPTIONS += -DUSE_CURL=off
+
 override_dh_auto_configure:
 	dh_auto_configure ${DEB_BUILD_SYSTEM_OPTIONS} -- -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on $(CMAKE_OPTIONS) -DCLI=on -DSERVER=on -DBUILD_DYLIB=on -DUSE_TCMALLOC=on -DBUILD_SHARED_LIBS=on
 
