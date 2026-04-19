@@ -19,27 +19,6 @@
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
-_NEW ROLLING BUILDS:_
-- M154's Release (1.30.x) will become Stable Release _from Sep 22, 2026_.
-- M153's Release (1.29.x) will become Stable Release _from Sep 8, 2026_.
-
-_PLANNED BUILDS:_
-- M152's Release (1.28.x) will become Stable Release _from Aug 25, 2026_ (Extended Support).
-- M151's Release (1.27.x) will become Stable Release _from Jul 28, 2026_.
-- M150's Release (1.26.x) will become Stable Release _from Jun 30, 2026_ (Extended Support).
-- M149's Release (1.25.x) will become Stable Release _from Jun 2, 2026_.
-
-_LANDED BUILDS_(signed against new certificates)_:_
-- [M148's Release (1.24.x)](https://github.com/hukeyue/yass/releases/tag/1.24.6) will become Stable Release _from May 5, 2026_ (Extended Support).
-- M147's Release (1.23.x) will become Stable Release _from Apr 7, 2026_.
-- [M146's Release (1.22.x)](https://github.com/hukeyue/yass/releases/tag/1.22.11) has become Stable Release _from Mar 10, 2026_ (Extended Support).
-- M145's Release (1.21.x) has become Stable Release _from Feb 10, 2025_.
-- [M144's Release (1.20.x)](https://github.com/hukeyue/yass/releases/tag/1.20.5) has become Stable Release _from Jan 13, 2026_ (Extended Support).
-- M143's Release (1.19.x) has become Stable Release _from Dec 16, 2025_.
-- M142's Release (1.18.x) has become Stable Release _from Oct 28, 2025_ (Extended Support).
-- [M141's Release (1.17.x)](https://github.com/hukeyue/yass/releases/tag/1.17.5) has become Stable Release _from Sep 30, 2025_.
-- [REFRESHED M132's Release (1.16.x)](https://github.com/hukeyue/yass/releases/tag/1.16.4) has become Stable Release _since Jan 14, 2025_ (Extended Support).
-
 ### Some Notes on System Requirement including runtime
 
 - Android: Require 7.0 or above
@@ -68,8 +47,6 @@ Take a look at [build instructions](BUILDING.md) and [packaging instructions](PA
 
 ### TLS-Compatible Protocol Support
 Cipher http over TLS are compatible.
-
-If you need custom Certificate Authority support in GUI or add other TLS-related features, [report here][frs].
 
 ### RFC9849: TLS Encrypted Client Hello aka ECH Support (investigating)
 It has become [RFC9849](https://www.rfc-editor.org/rfc/rfc9849.html) recently. Chrome/Firefox enables ECH by default from M119.
@@ -145,8 +122,6 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml)
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
 
-[Report here if you want to connect to new CI infrastructure][frs]
-
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
 [flatpak_setup_url]: https://flatpak.org/setup/
@@ -160,9 +135,6 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [vs2022_x64]: https://aka.ms/vs/17/release/vc_redist.x64.exe
 [vs2022_x86]: https://aka.ms/vs/17/release/vc_redist.x86.exe
 [vs2022_arm64]: https://aka.ms/vs/17/release/vc_redist.arm64.exe
-
-[bugs]: https://github.com/hukeyue/yass/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=
-[frs]: https://github.com/hukeyue/yass/issues/new?assignees=&labels=feature&projects=&template=feature_request.md&title=
 
 [mlkem]: https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/
 [kyber]: https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/
