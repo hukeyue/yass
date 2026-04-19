@@ -82,7 +82,7 @@ jobs:
           - arch: loongarch64
             build_type: Release
             qemu_suffix: loongarch64
-            build_options: -use-allocator=tcmalloc
+            build_options: -use-allocator=tcmalloc -use-mold -enable-lto=false
           - arch: riscv64
             build_type: Release
             qemu_suffix: riscv64
