@@ -5,11 +5,12 @@
 .hidden _z_binary_supplementary_ca_bundle_crt_end
 .global _z_binary_supplementary_ca_bundle_crt_end
 .type   _z_binary_supplementary_ca_bundle_crt_end, %object
-.align  4
 
+.align  4
 _z_binary_supplementary_ca_bundle_crt_start:
 .incbin "supplementary-ca-bundle.crt.zlib"
 
+.align  4
 _z_binary_supplementary_ca_bundle_crt_end:
 .previous
 
