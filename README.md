@@ -2,8 +2,6 @@
 
 [YASS] is an efficient forward proxy client supporting http/socks4/socks4a/socks5/socks5h protocol running on PC and mobile devices.
 
-## Releases
-
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/hukeyue/yass)](https://github.com/hukeyue/yass/releases)
 [![Language: C++](https://img.shields.io/github/languages/top/hukeyue/yass.svg)](https://github.com/hukeyue/yass/search?l=cpp)
 [![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/hukeyue/yass/latest/total)](https://github.com/hukeyue/yass/releases/latest)
@@ -16,30 +14,23 @@
 [![Flathub Version](https://img.shields.io/flathub/v/io.github.chilledheart.yass)][flathub_url]
 [![Flathub Downloads](https://img.shields.io/flathub/downloads/io.github.chilledheart.yass)][flathub_url]
 
-Because we are reusing chromium's network stack directly,
-we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
-
 ## Build Status
-
-[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
 
 [![MSVC+VS2022 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml)
 [![MinGW Build](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml)
 [![Linux Build](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml)
 [![macOS Build](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml)
-
 [![Android Build](https://github.com/hukeyue/yass/actions/workflows/releases-android-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-android-binary.yml)
 [![iOS Build](https://github.com/hukeyue/yass/actions/workflows/releases-ios.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-ios.yml)
-
 [![OpenWRT Build](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml)
 [![FreeBSD Build](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml)
 [![RPM Build](https://github.com/hukeyue/yass/actions/workflows/releases-rpm.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-rpm.yml)
 [![DEB Build](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml)
 [![Flatpak Build](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml)
-
 [![MSVC+XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
 [![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml)
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
+[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
 
 ## Build from Source
 Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
@@ -57,7 +48,7 @@ Steps:
 ## Debug Guide
 Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 
-## Some Notes on Other Systems' Requirement
+## Notes on Other Systems' Requirement
 
 - Android: Require 7.0 or above
 - iOS: NO IPK release. Require 13.0 or above. You should accept [TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_)
