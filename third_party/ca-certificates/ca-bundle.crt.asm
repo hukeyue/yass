@@ -8,6 +8,7 @@ __z_binary_ca_bundle_crt_start:
 ALIGN 4
 incbin "ca-bundle.crt.zlib"
 __z_binary_ca_bundle_crt_end:
+ALIGN 4
 %else
 global _z_binary_ca_bundle_crt_start
 global _z_binary_ca_bundle_crt_end
@@ -17,4 +18,5 @@ _z_binary_ca_bundle_crt_start:
 ALIGN 4
 incbin "ca-bundle.crt.zlib"
 _z_binary_ca_bundle_crt_end:
+ALIGN 4
 %endif
