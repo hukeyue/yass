@@ -19,87 +19,6 @@
 Because we are reusing chromium's network stack directly,
 we are following [chromium's release schedule](https://chromiumdash.appspot.com/schedule) and delivering new versions based on its beta branch.
 
-### Some Notes on System Requirement including runtime
-
-- Android: Require 7.0 or above
-- iOS: NO IPK release. Require 13.0 or above. You should accept [TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_)
-- Windows 10 or above: for x64 install [vs 2022 x64 runtime][vs2022_x64], for x86 install [vs 2022 x86 runtime][vs2022_x86], and for arm64 [vs 2022 arm64 runtime][vs2022_arm64]
-- Legacy Windows: for x64 install [KB2999226] on _windows 7 sp1 or above_, and for x86 install [last vc 2019 runtime supporting xp sp3][vs2019_xp_x86] on _windows xp sp3 or above_
-- macOS: Require 10.14 or above
-
-See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Package-Store) for more.
-See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
-
-### Contribute your translation (i18n)
-
-Please submit translations via [Transifex][transifex]
-
-Steps:
-
-1. Create a free account on [Transifex][transifex] (https://www.transifex.com/).
-2. Send a request to join the language translation.
-3. After accepted by the project maintainer, then you can translate online.
-
-### Build from Source
-Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
-
-## Highlight Features
-
-### TLS-Compatible Protocol Support
-Cipher http over TLS are compatible.
-
-### RFC9849: TLS Encrypted Client Hello aka ECH Support (investigating)
-It has become [RFC9849](https://www.rfc-editor.org/rfc/rfc9849.html) recently. Chrome/Firefox enables ECH by default from M119.
-
-Without ECH GREASE, it relies DOH configuration. See more at [curl's documentation](https://github.com/curl/curl/blob/master/docs/ECH.md)
-
-### Don't configure ALPS protocols that aren't also configured in ALPN
-After M148 Release 1, all ALPN settings including HTTP1.1 and H2 will configure its ALPS protocols. (backported from chromium application stack from M122)
-
-In previous release, SSLSocket currently configures all application_settings values in BoringSSL, however BoringSSL's API docs say not to do this: https://commondatastorage.googleapis.com/chromium-boringssl-docs/ssl.h.html#SSL_add_application_settings.
-
-See also discussion here: https://chromium-review.googlesource.com/c/chromium/src/+/5064051/comment/cfc4cb1b_cda4ca01/
-
-### New ALPS codepoint
-Old version Chrome with the existing ALPS codepoint can potentially cause network error due to an arithmetic overflow bug in Chrome ALPS decoder (We already fixed the issues starting from M100 in Chrome).
-
-After M141 Release 0, the default became to use the new codepoint, but you can pass --use_new_alps_codepoint_http2=0 to disable it. (backported from chromium application stack from M135 Release)
-
-### Post Quantum key-agreements for TLS 1.3
-[ML-KEM Post Quantum key-agreements][mlkem] (not enabled by default) for TLS 1.3 is supported on all platforms
-in place of obsolete [Kyber768 hybrid key-agreements][kyber].
-
-See [Protecting Chrome Traffic with Hybrid Kyber KEM](https://blog.chromium.org/2023/08/protecting-chrome-traffic-with-hybrid.html) for more.
-
-### Socks-Compatible Protocol Support
-Cipher socks4 and socks5 are compatible.
-
-### Shadowsocket-Compatible Protocol Support
-Ciphers released ahead of 2022 are compatible.
-
-### NaïveProxy-Compatible Protocol Support
-Cipher http2 and https are compatible.
-
-See [NaïveProxy](https://github.com/klzgrad/naiveproxy)'s project homepage for support.
-
-## Usages
-
-### Standard Usages
-Visit wiki's [Usages](https://github.com/hukeyue/yass/wiki/Usage).
-
-### Server side support (mostly outside this project)
-
-See [Setup forwardproxy caddy service](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#setup-forwardproxy-caddy-service) for more.
-
-See [Window sizes for large bandwidth](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#window-sizes-for-large-bandwidth) for more.
-
-See [Use BBR Congestion Control](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#use-bbr-congestion-control) for more.
-
-See [ChatGPT capable caddy Server](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#chatgpt-capable-caddy-server) for more.
-
-### Debug Guide
-Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
-
 ## Build Status
 
 [![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
@@ -121,6 +40,46 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 [![MSVC+XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
 [![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml)
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
+
+## Build from Source
+Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
+
+## Contribute your translation (i18n)
+
+Please submit translations via [Transifex][transifex]
+
+Steps:
+
+1. Create a free account on [Transifex][transifex] (https://www.transifex.com/).
+2. Send a request to join the language translation.
+3. After accepted by the project maintainer, then you can translate online.
+
+## Debug Guide
+Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
+
+## Some Notes on Other Systems' Requirement
+
+- Android: Require 7.0 or above
+- iOS: NO IPK release. Require 13.0 or above. You should accept [TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_)
+- Windows 10 or above: for x64 install [vs 2022 x64 runtime][vs2022_x64], for x86 install [vs 2022 x86 runtime][vs2022_x86], and for arm64 [vs 2022 arm64 runtime][vs2022_arm64]
+- Legacy Windows: for x64 install [KB2999226] on _windows 7 sp1 or above_, and for x86 install [last vc 2019 runtime supporting xp sp3][vs2019_xp_x86] on _windows xp sp3 or above_
+- macOS: Require 10.14 or above
+
+See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Package-Store) for more.
+See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
+
+## Standard Usages
+Visit wiki's [Usages](https://github.com/hukeyue/yass/wiki/Usage).
+
+## Server side support (mostly outside this project)
+
+See [Setup forwardproxy caddy service](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#setup-forwardproxy-caddy-service) for more.
+
+See [Window sizes for large bandwidth](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#window-sizes-for-large-bandwidth) for more.
+
+See [Use BBR Congestion Control](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#use-bbr-congestion-control) for more.
+
+See [ChatGPT capable caddy Server](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#chatgpt-capable-caddy-server) for more.
 
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
