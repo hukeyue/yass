@@ -6,6 +6,7 @@ usr/libexec/yass/libcrypto.so
 usr/libexec/yass/libgoogleurl.so
 usr/libexec/yass/libjsoncpp.so
 usr/libexec/yass/libmbedcrypto.so
+usr/libexec/yass/libnghttp2.so
 usr/libexec/yass/libpki.so
 usr/libexec/yass/libquiche.so
 usr/libexec/yass/libssl.so

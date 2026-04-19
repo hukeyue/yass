@@ -208,6 +208,7 @@ for embedded devices and low end boxes.
 mkdir build
 cd build
 # old c-ares doesn't contain ares_getaddrinfo api
+# libcurl's nghttp2 dependency conflicts with our nghttp2.so
 %cmake_alias -G Ninja -DOFFICIAL_BUILD=on -DCMAKE_BUILD_TYPE=Release \
    -DBUILD_BENCHMARKS=on -DBUILD_TESTS=on \
    -DUSE_QT6="%enable_use_qt6_opt" -DUSE_QT5="%enable_use_qt5_opt" \
@@ -224,6 +225,7 @@ cd build
    -DUSE_CET="%enable_cet_opt" \
    -DUSE_DEBUG_FISSION=OFF -DUSE_COMPRESS_DEBUG_SECTIONS=off \
    -DBUILD_SHARED_LIBS=on \
+   -DUSE_CURL=off \
    -DENABLE_LTO=on -DENABLE_LLD="%enable_lld_opt" ..
 ninja
 cd ..
