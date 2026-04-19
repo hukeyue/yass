@@ -1,10 +1,18 @@
 # Yet Another Shadow Socket
 
-[YASS] is an efficient forward proxy client supporting http/socks4/socks4a/socks5/socks5h protocol running on PC and mobile devices.
-
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/hukeyue/yass)](https://github.com/hukeyue/yass/releases)
 [![Language: C++](https://img.shields.io/github/languages/top/hukeyue/yass.svg)](https://github.com/hukeyue/yass/search?l=cpp)
 [![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/hukeyue/yass/latest/total)](https://github.com/hukeyue/yass/releases/latest)
+
+## Contribute your translation (i18n)
+
+Please submit translations via [Transifex][transifex]
+
+Steps:
+
+1. Create a free account on [Transifex][transifex] (https://www.transifex.com/).
+2. Send a request to join the language translation.
+3. After accepted by the project maintainer, then you can translate online.
 
 [![aur yass-proxy-gtk3](https://img.shields.io/aur/version/yass-proxy-gtk3)](https://aur.archlinux.org/packages/yass-proxy-gtk3)
 [![aur yass-proxy-qt5](https://img.shields.io/aur/version/yass-proxy-qt5)](https://aur.archlinux.org/packages/yass-proxy-qt5)
@@ -34,16 +42,6 @@
 
 ## Build from Source
 Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
-
-## Contribute your translation (i18n)
-
-Please submit translations via [Transifex][transifex]
-
-Steps:
-
-1. Create a free account on [Transifex][transifex] (https://www.transifex.com/).
-2. Send a request to join the language translation.
-3. After accepted by the project maintainer, then you can translate online.
 
 ## Debug Guide
 Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
