@@ -1246,7 +1246,7 @@ else()
   # Do not export inline member functions. This makes component builds
   # faster. This is similar to -fvisibility-inlines-hidden.
   if (COMPILER_CLANG AND BUILD_SHARED_LIBS)
-    add_compile_options($<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:C,CXX>>:/Zc:dllexportInlines->)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zc:dllexportInlines->)
   endif()
 
   if (USE_LLD AND NOT LTO)
@@ -3201,7 +3201,14 @@ set(SUPPORT_LIBS re2 ${SUPPORT_LIBS})
 # *****************************************************************************************
 
 message(STATUS "Compiling with bundled googleurl library")
-set(SUPPORT_LIBS url ${SUPPORT_LIBS})
+set(SUPPORT_LIBS googleurl ${SUPPORT_LIBS})
+
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  list(APPEND YASS_APP_FEATURES "googleurl (dll)")
+  list(APPEND YASS_SHARED_LIBS googleurl)
+else()
+  list(APPEND YASS_APP_FEATURES "googleurl")
+endif()
 
 # *****************************************************************************************
 #           tun2proxy Library
@@ -3450,6 +3457,10 @@ target_include_directories(asio_core PUBLIC
   third_party/asio/include
   third_party/googleurl/polyfills
 )
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  target_compile_definitions(asio_core PUBLIC GOOGLEURL_CONSUME_DLL)
+endif()
+
 target_compile_definitions(asio_core PUBLIC ASIO_STANDALONE)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_TYPEID)
 target_compile_definitions(asio_core PUBLIC ASIO_NO_EXCEPTIONS)
@@ -3476,7 +3487,7 @@ endif()
 target_link_libraries(asio_core PUBLIC
   ${ABSL_LIBS}
   ${ABSL_FLAGS_LIBS}
-  url
+  googleurl
   )
 
 if (WIN32)
@@ -3933,7 +3944,7 @@ elseif (USE_NGHTTP2)
   set(ENABLE_EXAMPLES OFF CACHE BOOL "")
   set(ENABLE_LIB_ONLY ON CACHE BOOL "")
   set(ENABLE_WERROR OFF CACHE BOOL "")
-  if (BUILD_SHARED_LIBS)
+  if (BUILD_SHARED_LIBS AND WIN32)
     set(NGHTTP2_BUILD_SHARED_LIBS ON CACHE BOOL "")
     set(NGHTTP2_BUILD_STATIC_LIBS OFF CACHE BOOL "")
   else()
@@ -3987,18 +3998,25 @@ elseif (USE_NGHTTP2)
     ${SUPPORT_LIBS}
   )
 else()
-  list(APPEND YASS_APP_FEATURES "oghttp2")
+  list(APPEND YASS_APP_FEATURES "oghttp2 (builtin)")
 endif()
 
 # *****************************************************************************************
 #           QUICHE Library
 # *****************************************************************************************
 
-set(SUPPORT_LIBS url ${SUPPORT_LIBS})
+set(SUPPORT_LIBS googleurl ${SUPPORT_LIBS})
 if (USE_QUICHE)
   set(HAVE_QUICHE 1)
   add_subdirectory(third_party/quiche EXCLUDE_FROM_ALL)
-  list(APPEND YASS_APP_FEATURES "quiche")
+  if (QUICHE_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "quiche (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "quiche")
+  endif()
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS quiche)
+  endif()
   set(SUPPORT_LIBS quiche ${SUPPORT_LIBS})
 endif()
 
@@ -4036,11 +4054,19 @@ endif()
 
 if (USE_BALSA_HTTP_PARSER)
   message(STATUS "Compiling with balsa http parser")
-  list(APPEND YASS_APP_FEATURES "balsa http parser")
+
+  if (QUICHE_BUILD_SHARED_LIBS)
+    list(APPEND YASS_APP_FEATURES "balsa http parser (dll)")
+  else()
+    list(APPEND YASS_APP_FEATURES "balsa http parser")
+  endif()
   set(SUPPORT_DEFINITIONS
     HAVE_BALSA_HTTP_PARSER
     ${SUPPORT_DEFINITIONS}
   )
+  if (BUILD_SHARED_LIBS)
+    list(APPEND YASS_SHARED_LIBS balsa)
+  endif()
   set(SUPPORT_LIBS balsa ${SUPPORT_LIBS})
 endif()
 
@@ -4404,6 +4430,7 @@ if (WIN32)
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
     ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(delayload_hook PRIVATE delayimp)
   link_libraries(delayload_hook)
 endif()
 
@@ -4456,7 +4483,7 @@ if (OHOS)
   target_link_libraries(yass_core PUBLIC libhilog_ndk.z.so)
 endif()
 
-target_link_libraries(yass_core PUBLIC url
+target_link_libraries(yass_core PUBLIC googleurl
   ${ABSL_FLAGS_LIBS}
   asio_core
   )
@@ -4465,6 +4492,10 @@ target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl/polyfills
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleurl
   ${SUPPORT_INCLUDE_DIRS})
+
+if (GOOGLEURL_BUILD_SHARED_LIBS)
+  target_compile_definitions(yass_core PUBLIC GOOGLEURL_CONSUME_DLL)
+endif()
 
 target_include_directories(yass_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src)

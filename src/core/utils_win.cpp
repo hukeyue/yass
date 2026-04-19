@@ -352,6 +352,23 @@ static const wchar_t* kDllWhiteList[] = {
     _W(DLL_NAME),
 #undef DLL_NAME
 
+// googleurl
+#define DLL_NAME "googleurl" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+// quiche
+#define DLL_NAME "quiche" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+
+#ifdef HAVE_BALSA_HTTP_PARSER
+// balsa
+#define DLL_NAME "balsa" _APP_SUFFIX
+    _W(DLL_NAME),
+#undef DLL_NAME
+#endif // HAVE_BALSA_HTTP_PARSER
+
 #if defined(_MSC_VER) && defined(_MSC_DYNAMIC_CRT) && defined(_DEBUG)
     // msvc debug runtime, still searched current directory
     // under dll search security mode
@@ -628,6 +645,7 @@ void SetExecutablePath(const std::string& exe_path) {
   std::string new_exe_path;
   GetExecutablePath(&new_exe_path);
   absl::flags_internal::SetProgramInvocationName(new_exe_path);
+  absl::SetFlag(&FLAGS_log_program_name, absl::flags_internal::ShortProgramInvocationName());
 }
 
 void SetExecutablePath(const std::wstring& exe_path) {
@@ -636,6 +654,7 @@ void SetExecutablePath(const std::wstring& exe_path) {
   std::string new_exe_path;
   GetExecutablePath(&new_exe_path);
   absl::flags_internal::SetProgramInvocationName(new_exe_path);
+  absl::SetFlag(&FLAGS_log_program_name, absl::flags_internal::ShortProgramInvocationName());
 }
 
 ssize_t ReadFileToBuffer(const std::string& path, span<uint8_t> buffer) {
