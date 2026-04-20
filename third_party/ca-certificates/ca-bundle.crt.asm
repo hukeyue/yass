@@ -7,8 +7,8 @@ section .rdata
 __z_binary_ca_bundle_crt_start:
 ALIGN 4
 incbin "ca-bundle.crt.zlib"
-__z_binary_ca_bundle_crt_end:
 ALIGN 4
+__z_binary_ca_bundle_crt_end:
 %else
 global _z_binary_ca_bundle_crt_start
 global _z_binary_ca_bundle_crt_end
@@ -17,6 +17,6 @@ section .rdata
 _z_binary_ca_bundle_crt_start:
 ALIGN 4
 incbin "ca-bundle.crt.zlib"
-_z_binary_ca_bundle_crt_end:
 ALIGN 4
+_z_binary_ca_bundle_crt_end:
 %endif
