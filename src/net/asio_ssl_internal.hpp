@@ -29,6 +29,9 @@
 
 #include <string_view>
 
+constexpr const size_t kMaxBinaryCaBundleBuffer = 384 * 1024;
+constexpr const size_t kMaxSupplementaryBinaryCaBundleBuffer = 16 * 1024;
+
 int get_binary_ca_bundle(std::string* output);
 int get_binary_supplementary_ca_bundle(std::string* output);
 

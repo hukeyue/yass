@@ -946,6 +946,7 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   load_ca_to_ssl_ctx_from_system_extra(ssl_ctx);
   {
     std::string ca_bundle_content;
+    ca_bundle_content.reserve(kMaxBinaryCaBundleBuffer);
     CHECK_EQ(0, get_binary_ca_bundle(&ca_bundle_content));
     int result = load_ca_to_ssl_ctx_from_mem(ssl_ctx, ca_bundle_content);
     LOG(INFO) << "Loaded builtin ca bundle with: " << result << " ceritificates";
@@ -968,6 +969,7 @@ done:
     }
 
     std::string ca_content;
+    ca_content.reserve(kMaxSupplementaryBinaryCaBundleBuffer);
     CHECK_EQ(0, get_binary_supplementary_ca_bundle(&ca_content));
     int result = load_ca_to_ssl_ctx_from_mem(ssl_ctx, ca_content);
     LOG(INFO) << "Loaded supplementary ca bundle with " << result << " certificates";
