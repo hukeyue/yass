@@ -2959,14 +2959,6 @@ set(DEFAULT_MALLOC_LIB ${TCMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
 #           mimalloc Library
 # *****************************************************************************************
 
-# FIXME limitation of mimalloc-redirect library
-if (USE_MIMALLOC AND NOT USE_SYSTEM_MIMALLOC)
-  if (WIN32 AND ALLOW_XP AND OS_X86)
-    message(WARNING "mimalloc: windows xp is not supported, disabling...")
-    set(USE_MIMALLOC OFF)
-  endif()
-endif()
-
 if (USE_SYSTEM_MIMALLOC)
   find_package(PkgConfig)
   if (PKG_CONFIG_FOUND)
@@ -3030,6 +3022,9 @@ elseif(USE_MIMALLOC)
       set_property(TARGET mimalloc
         PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
+    if (MINGW OR (WIN32 AND ALLOW_XP))
+      set(MI_WIN_INIT_USE_TLS_DLLMAIN ON CACHE INTERNAL "")
+    endif()
     # FIXME it is untested on Windows
     if (WIN32)
       set_target_properties(mimalloc PROPERTIES PREFIX "")
@@ -3052,7 +3047,7 @@ elseif(USE_MIMALLOC)
       endif()
     endif()
 
-    if (WIN32)
+    if (WIN32 AND MI_WIN_REDIRECT)
       set(USE_MIMALLOC_MINJECT ON)
     endif()
 
@@ -3071,7 +3066,7 @@ elseif(USE_MIMALLOC)
     else()
       set(MIMALLOC_REDIRECT_SUFFIX "")
     endif()
-    if (WIN32)
+    if (WIN32 AND MI_WIN_REDIRECT)
       install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/mimalloc-redirect${MIMALLOC_REDIRECT_SUFFIX}.dll"
       DESTINATION "${CMAKE_INSTALL_BINDIR}")
     endif()
