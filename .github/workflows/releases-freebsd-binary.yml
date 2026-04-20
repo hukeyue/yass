@@ -52,21 +52,6 @@ jobs:
           - abi: 13
             arch: aarch64
             build_type: Release
-          - abi: 14
-            arch: amd64
-            build_type: Release
-          - abi: 14
-            arch: i386
-            build_type: Release
-          - abi: 14
-            arch: aarch64
-            build_type: Release
-          - abi: 15
-            arch: amd64
-            build_type: Release
-          - abi: 15
-            arch: aarch64
-            build_type: Release
     runs-on: ubuntu-24.04
     permissions:
       contents: write
