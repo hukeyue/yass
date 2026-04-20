@@ -76,6 +76,7 @@ class YassClientPrivate {
   int Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str);
   int Run(); // block current thread
   int NumOfConnections();
+  int PostTask(yass_client_task_func_t func, void* arg);
 
   int Shutdown(); // thread-safe
   int Stop(); // thread-safe
@@ -347,7 +348,6 @@ asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::stri
 }
 
 int YassClientPrivate::Init() {
-  DCHECK(!work_guard_);
 #ifndef _WIN32
   // setup signal handler
   signal(SIGPIPE, SIG_IGN);
@@ -389,7 +389,6 @@ int YassClientPrivate::Init() {
   }
 #endif
 
-  work_guard_.reset();
   {
     absl::MutexLock lk(server_mutex_);
     _Clear();
@@ -408,7 +407,6 @@ void YassClientPrivate::_Clear() {
 }
 
 int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str, const std::string& listen_uri_str, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
-  DCHECK(!work_guard_);
   asio::error_code ec;
 
   ec = ListenProxyUri(server_tag, proxy_uri_str, listen_uri_str, listen_port, remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str);
@@ -420,7 +418,6 @@ int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str,
 }
 
 int YassClientPrivate::Add(int64_t server_tag, std::string remote_host_name, std::string remote_host_sni, uint16_t remote_port, std::string remote_username, std::string remote_password, cipher_method remote_cipher, bool remote_padding_support, std::string local_host_name, uint16_t local_port, bool redir_mode, uint16_t *listen_port, std::string *remote_server_ips_str, std::string *remote_server_ips_v4_str, std::string *remote_server_ips_v6_str) {
-  DCHECK(!work_guard_);
   asio::error_code ec;
 
   ec = ListenAddress(server_tag, remote_host_name, remote_host_sni, remote_port,
@@ -441,8 +438,10 @@ int YassClientPrivate::Run() {
   io_context_.run();
   io_context_.restart();
 
-  absl::MutexLock lk(server_mutex_);
-  servers_.clear();
+  {
+    absl::MutexLock lk(server_mutex_);
+    _Clear();
+  }
 
   return 0;
 }
@@ -453,6 +452,13 @@ int YassClientPrivate::NumOfConnections() {
   for (auto& server : servers_)
     count += server->num_of_connections();
   return count;
+}
+
+int YassClientPrivate::PostTask(yass_client_task_func_t func, void* arg) {
+  asio::post(io_context_, [=]() {
+    func(arg);
+  });
+  return 0;
 }
 
 int YassClientPrivate::Shutdown() {
@@ -468,7 +474,7 @@ int YassClientPrivate::Shutdown() {
 }
 
 void YassClientPrivate::_Shutdown() {
-  LOG(WARNING) << "Application shuting down";
+  LOG(WARNING) << "Client shuting down";
   for (auto& server : servers_)
     server->shutdown();
 }
@@ -486,7 +492,7 @@ int YassClientPrivate::Stop() {
 }
 
 void YassClientPrivate::_Stop() {
-  LOG(WARNING) << "Application stopping";
+  LOG(WARNING) << "Client stopping";
   for (auto& server : servers_)
     server->stop();
 }
@@ -614,4 +620,10 @@ const char* yass_client_instance_get_last_error_str(yass_client_instance _instan
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
   return instance->GetLastErrorStr();
+}
+
+int yass_client_instance_post_task(yass_client_instance _instance, yass_client_task_func_t func, void* arg) {
+  auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
+  DCHECK(instance);
+  return instance->PostTask(func, arg);
 }
