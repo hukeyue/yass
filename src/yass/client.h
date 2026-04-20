@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-#define YASS_CLIENT_ABI_VERSION 1
+#define YASS_CLIENT_ABI_VERSION 2
 #define YASS_CLIENT_ABI_STABLE  0
 
 typedef void* yass_client_instance;
@@ -160,6 +160,19 @@ YASS_DLL int yass_client_instance_get_last_error(yass_client_instance instance);
  *  not thread-safe
  */
 YASS_DLL const char* yass_client_instance_get_last_error_str(yass_client_instance instance);
+/*!
+ *  \brief Run a task/callback inside the internal loop
+ *
+ *  \param instance specified instance of YassClient.
+ *  \param func     specified function pointer of callback
+ *  \param arg      specified function argument of callback (opaque)
+ *
+ *  thread safe, only useful when client is running aka yass_client_instance_run is blocking
+ *
+ *  callback's life-cycle and memory management is not guarenteed.
+ */
+typedef void (*yass_client_task_func_t)(void*);
+YASS_DLL int yass_client_instance_post_task(yass_client_instance instance, yass_client_task_func_t func, void* arg);
 
 #ifdef __cplusplus
 } // extern "C"

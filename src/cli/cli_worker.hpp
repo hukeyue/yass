@@ -57,6 +57,8 @@ class Worker {
   size_t currentConnections() const;
 
  private:
+  static void _StartStaticMethod(void* ptr);
+  void _Start();
   void WorkFunc();
 
   void on_resolve_done(asio::error_code ec);

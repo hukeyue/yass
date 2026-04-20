@@ -82,6 +82,10 @@ class WorkerPrivate {
     return yass_client_instance_num_of_connections(instance_);
   }
 
+  int PostTask(yass_client_task_func_t func, void* arg) {
+    return yass_client_instance_post_task(instance_, func, arg);
+  }
+
   int Stop() {
     return yass_client_instance_cancel(instance_);
   }
@@ -99,7 +103,9 @@ class WorkerPrivate {
 };
 
 Worker::Worker()
-    : private_(new WorkerPrivate) {}
+    : private_(new WorkerPrivate) {
+  thread_ = std::make_unique<std::thread>([this] { WorkFunc(); });
+}
 
 Worker::~Worker() {
   callback_mutex_.lock();
@@ -107,26 +113,64 @@ Worker::~Worker() {
   stop_callback_ = nullptr;
   callback_mutex_.unlock();
 
+  in_destroy_ = true;
+
   Stop(nullptr);
-  if (thread_) {
-    thread_->join();
-  }
+  thread_->join();
 
   delete private_;
 }
 
 void Worker::Start(absl::AnyInvocable<void(asio::error_code)>&& callback) {
-  if (thread_) {
-    thread_->join();
-  }
-
   callback_mutex_.lock();
   DCHECK(!start_callback_);
   start_callback_ = std::move(callback);
   callback_mutex_.unlock();
-  thread_ = std::make_unique<std::thread>([this] {
-    WorkFunc();
-  });
+
+  private_->PostTask(&Worker::_StartStaticMethod, this);
+}
+
+void Worker::_StartStaticMethod(void *ptr) {
+  Worker* thiz = reinterpret_cast<Worker*>(ptr);
+  thiz->_Start();
+}
+
+void Worker::_Start() {
+  // cache all fields
+  cached_server_host_ = absl::GetFlag(FLAGS_server_host);
+  cached_server_sni_ = absl::GetFlag(FLAGS_server_sni);
+  cached_server_port_ = absl::GetFlag(FLAGS_server_port);
+  cached_server_username_ = absl::GetFlag(FLAGS_username);
+  cached_server_password_ = absl::GetFlag(FLAGS_password);
+  cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
+  cached_server_padding_support_ = absl::GetFlag(FLAGS_padding_support);
+  cached_server_redir_mode_ = absl::GetFlag(FLAGS_redir_mode);
+  cached_local_host_ = absl::GetFlag(FLAGS_local_host);
+  cached_local_port_ = absl::GetFlag(FLAGS_local_port);
+
+  int ret = private_->Init();
+  if (ret < 0) {
+    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
+    on_resolve_done(private_->GetLastError());
+    return;
+  }
+
+  std::string host_name = cached_server_host_;
+  uint16_t port = cached_server_port_;
+  remote_server_sni_ = !cached_server_sni_.empty() ? cached_server_sni_ : cached_server_host_;
+  DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
+
+  local_port_ = 0;
+  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_, &remote_server_ips_, &remote_server_ips_v4_, &remote_server_ips_v6_);
+  if (ret != 0) {
+    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
+    on_resolve_done(private_->GetLastError());
+    return;
+  }
+
+  LOG(INFO) << "worker: tcp server listening at " << local_port_;
+
+  on_resolve_done({});
 }
 
 void Worker::Stop(absl::AnyInvocable<void()>&& callback) {
@@ -187,52 +231,19 @@ void Worker::WorkFunc() {
   }
 #endif
 
-  // cache all fields
-  cached_server_host_ = absl::GetFlag(FLAGS_server_host);
-  cached_server_sni_ = absl::GetFlag(FLAGS_server_sni);
-  cached_server_port_ = absl::GetFlag(FLAGS_server_port);
-  cached_server_username_ = absl::GetFlag(FLAGS_username);
-  cached_server_password_ = absl::GetFlag(FLAGS_password);
-  cached_server_cipher_ = absl::GetFlag(FLAGS_method).method;
-  cached_server_padding_support_ = absl::GetFlag(FLAGS_padding_support);
-  cached_server_redir_mode_ = absl::GetFlag(FLAGS_redir_mode);
-  cached_local_host_ = absl::GetFlag(FLAGS_local_host);
-  cached_local_port_ = absl::GetFlag(FLAGS_local_port);
+  while (!in_destroy_) {
+    private_->Run();
 
-  int ret = private_->Init();
-  if (ret < 0) {
-    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
-    on_resolve_done(private_->GetLastError());
-    return;
+    callback_mutex_.lock();
+    auto callback = std::move(stop_callback_);
+    DCHECK(!stop_callback_);
+    callback_mutex_.unlock();
+    if (callback) {
+      callback();
+    }
+
+    LOG(INFO) << "worker: background thread finished cleanup";
   }
-
-  std::string host_name = cached_server_host_;
-  uint16_t port = cached_server_port_;
-  remote_server_sni_ = !cached_server_sni_.empty() ? cached_server_sni_ : cached_server_host_;
-  DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
-
-  local_port_ = 0;
-  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_, &remote_server_ips_, &remote_server_ips_v4_, &remote_server_ips_v6_);
-  if (ret != 0) {
-    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
-    on_resolve_done(private_->GetLastError());
-    return;
-  }
-
-  LOG(INFO) << "worker: tcp server listening at " << local_port_;
-
-  on_resolve_done({});
-
-  private_->Run();
-
-  callback_mutex_.lock();
-  auto callback = std::move(stop_callback_);
-  DCHECK(!stop_callback_);
-  callback_mutex_.unlock();
-  if (callback) {
-    callback();
-  }
-
   LOG(INFO) << "worker: background thread stopped";
 }
 
@@ -241,6 +252,9 @@ void Worker::on_resolve_done(asio::error_code ec) {
   auto callback = std::move(start_callback_);
   DCHECK(!start_callback_);
   callback_mutex_.unlock();
+  if (ec) {
+    private_->Stop();
+  }
   if (callback) {
     callback(ec);
   }
