@@ -1001,7 +1001,7 @@ static int get_zlib_compressed_data(std::string* output,
 
   /* decompress until deflate stream ends or end of file */
   do {
-    strm.avail_in = std::min<size_t>(CHUNK, end - begin);
+    strm.avail_in = std::min<uInt>(CHUNK, end - begin);
     if (strm.avail_in == 0)
       break;
     memcpy(in, begin, strm.avail_in);

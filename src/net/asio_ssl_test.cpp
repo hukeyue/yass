@@ -27,10 +27,14 @@
 
 #include "core/utils.hpp"
 #include "net/asio_ssl_internal.hpp"
+#include "net/x509_util.hpp"
 
 TEST(SSL_TEST, LoadBuiltinCaBundle) {
   bssl::UniquePtr<SSL_CTX> ssl_ctx;
   ssl_ctx.reset(::SSL_CTX_new(::TLS_client_method()));
+  // Deduplicate all certificates minted from the SSL_CTX in memory.
+  SSL_CTX_set0_buffer_pool(ssl_ctx.get(), net::x509_util::GetBufferPool());
+
   std::string ca_bundle_content;
   ca_bundle_content.reserve(kMaxBinaryCaBundleBuffer);
   ASSERT_EQ(0, get_binary_ca_bundle(&ca_bundle_content));
@@ -43,6 +47,9 @@ TEST(SSL_TEST, LoadBuiltinCaBundle) {
 TEST(SSL_TEST, LoadSupplementaryCaBundle) {
   bssl::UniquePtr<SSL_CTX> ssl_ctx;
   ssl_ctx.reset(::SSL_CTX_new(::TLS_client_method()));
+  // Deduplicate all certificates minted from the SSL_CTX in memory.
+  SSL_CTX_set0_buffer_pool(ssl_ctx.get(), net::x509_util::GetBufferPool());
+
   std::string ca_content;
   ca_content.reserve(kMaxSupplementaryBinaryCaBundleBuffer);
   ASSERT_EQ(0, get_binary_supplementary_ca_bundle(&ca_content));
@@ -55,6 +62,9 @@ TEST(SSL_TEST, LoadSupplementaryCaBundle) {
 TEST(SSL_TEST, LoadSystemCa) {
   bssl::UniquePtr<SSL_CTX> ssl_ctx;
   ssl_ctx.reset(::SSL_CTX_new(::TLS_client_method()));
+  // Deduplicate all certificates minted from the SSL_CTX in memory.
+  SSL_CTX_set0_buffer_pool(ssl_ctx.get(), net::x509_util::GetBufferPool());
+
   int result = load_ca_to_ssl_ctx_from_system(ssl_ctx.get());
 #if BUILDFLAG(IS_IOS)
   // we don't test on iOS
