@@ -252,7 +252,7 @@ jobs:
           cd tools
           go build
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: build-mingw${{ matrix.suffix }}-${{ matrix.arch }}
@@ -299,15 +299,15 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y wine wine64
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-cli
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
       - name: Run tests
@@ -348,7 +348,7 @@ jobs:
           vcredist_x86.exe /install /quiet /norestart
           del vcredist_x86.exe
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
       - name: Run tests
@@ -383,7 +383,7 @@ jobs:
           vcredist_x86.exe /install /quiet /norestart
           del vcredist_x86.exe
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks

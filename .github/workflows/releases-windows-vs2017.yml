@@ -226,7 +226,7 @@ jobs:
             use_allocator: tbbmalloc
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
       - name: Run tests
@@ -249,7 +249,7 @@ jobs:
             use_allocator: tbbmalloc
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks

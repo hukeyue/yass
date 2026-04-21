@@ -187,7 +187,7 @@ jobs:
             gtest_repeat_times: 2
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
       - name: Run tests
@@ -218,7 +218,7 @@ jobs:
             gtest_repeat_times: 2
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
       - name: Run tests
@@ -246,7 +246,7 @@ jobs:
             benchmark_min_time: 1000x
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks
@@ -266,7 +266,7 @@ jobs:
             benchmark_min_time: 250x
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks

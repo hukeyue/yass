@@ -222,7 +222,7 @@ jobs:
             gtest_repeat_times: 10
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
       - name: Run tests
@@ -258,7 +258,7 @@ jobs:
             use_allocator: tcmalloc
     steps:
       - name: Download built executables
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks
