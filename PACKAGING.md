@@ -111,9 +111,21 @@ See [android's README.md](android/README.md)
 See [harmonyOS's README.md](harmony/README.md)
 
 ## iOS/Packaging
-Make sure you have [Xcode] installed on your system.
+Make sure you have latest [Xcode] installed on your system.
 
-TBD
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+./scripts/setup-ios-rust.sh
+WITH_CPU=arm64 WITH_OS=ios-sim ./scripts/build-tun2proxy.sh
+WITH_CPU=arm64 WITH_OS=ios ./scripts/build-tun2proxy.sh
+
+./tools/build --system ios --subsystem simulator --arch arm64 -run-test -nc
+
+export IOS_CODESIGN_IDENTITY="Apple Development"
+export DEVELOPMENT_TEAM="PLACEHOLDER_FOR_TEAM_ID"
+./tools/build --system ios --arch arm64 -nc
+```
+if it failed, open _yass.xcodeproj_ under _build-ios-arm64_ directory and assign the proper team in [Xcode]
 
 ## Flatpak/Packaging
 
