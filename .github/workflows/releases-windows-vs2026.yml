@@ -39,18 +39,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x86
+          - arch: x64
             crt-linkage: dynamic
             build_type: Release
             winsdk_version: 10.0.26100.0
             build_options: -component-build
-            use_allocator: tbbmalloc
-          - arch: x86
-            crt-linkage: dynamic
-            build_type: Release
-            winsdk_version: 10.0.26100.0
-            build_options: -component-build
-            use_allocator: tcmalloc
+            use_allocator: mimalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
@@ -211,15 +205,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x86
+          - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            use_allocator: tbbmalloc
-            gtest_repeat_times: 10
-          - arch: x86
-            crt-linkage: dynamic
-            build_type: Release
-            use_allocator: tcmalloc
+            use_allocator: mimalloc
             gtest_repeat_times: 10
           - arch: x64
             crt-linkage: dynamic
@@ -255,14 +244,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x86
+          - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            use_allocator: tbbmalloc
-          - arch: x86
-            crt-linkage: dynamic
-            build_type: Release
-            use_allocator: tcmalloc
+            use_allocator: mimalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
