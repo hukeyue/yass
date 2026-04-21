@@ -3017,7 +3017,6 @@ elseif(USE_MIMALLOC)
 
     set(MIMALLOC_LIB mimalloc-obj)
   else()
-    target_compile_definitions(mimalloc PRIVATE MI_USE_ENVIRON=0)
     if (USE_LTO_CMAKE)
       set_property(TARGET mimalloc
         PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
