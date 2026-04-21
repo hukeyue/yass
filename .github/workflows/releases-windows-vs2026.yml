@@ -47,10 +47,10 @@ jobs:
             use_allocator: tbbmalloc
           - arch: x86
             crt-linkage: dynamic
-            build_type: Debug
+            build_type: Release
             winsdk_version: 10.0.26100.0
             build_options: -component-build
-            use_allocator: tbbmalloc
+            use_allocator: tcmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
@@ -59,10 +59,10 @@ jobs:
             use_allocator: tbbmalloc
           - arch: x64
             crt-linkage: dynamic
-            build_type: Debug
+            build_type: Release
             winsdk_version: 10.0.26100.0
             build_options: -component-build
-            use_allocator: tbbmalloc
+            use_allocator: tcmalloc
           - arch: arm64
             crt-linkage: dynamic
             build_type: Release
@@ -218,9 +218,9 @@ jobs:
             gtest_repeat_times: 10
           - arch: x86
             crt-linkage: dynamic
-            build_type: Debug
-            use_allocator: tbbmalloc
-            gtest_repeat_times: 2
+            build_type: Release
+            use_allocator: tcmalloc
+            gtest_repeat_times: 10
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
@@ -228,9 +228,9 @@ jobs:
             gtest_repeat_times: 10
           - arch: x64
             crt-linkage: dynamic
-            build_type: Debug
-            use_allocator: tbbmalloc
-            gtest_repeat_times: 2
+            build_type: Release
+            use_allocator: tcmalloc
+            gtest_repeat_times: 10
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
@@ -259,10 +259,18 @@ jobs:
             crt-linkage: dynamic
             build_type: Release
             use_allocator: tbbmalloc
+          - arch: x86
+            crt-linkage: dynamic
+            build_type: Release
+            use_allocator: tcmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
             use_allocator: tbbmalloc
+          - arch: x64
+            crt-linkage: dynamic
+            build_type: Release
+            use_allocator: tcmalloc
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
