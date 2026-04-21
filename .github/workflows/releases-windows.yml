@@ -72,7 +72,7 @@ jobs:
             build_type: Release
             winsdk_version: 10.0.26100.0
             build_options: -component-build
-            use_allocator: system
+            use_allocator: mimalloc
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
