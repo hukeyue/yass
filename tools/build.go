@@ -401,7 +401,7 @@ func prebuildFindSourceDirectory() {
 		if msvcAllowXpFlag {
 			osSuffix = "-winxp"
 		}
-		buildDir = fmt.Sprintf("build-msvc%s-%s-%s", osSuffix, msvcTargetArchFlag, msvcCrtLinkageFlag)
+		buildDir = fmt.Sprintf("build-msvc%s-%s-%s-%s", osSuffix, msvcTargetArchFlag, msvcCrtLinkageFlag, useAllocatorFlag)
 	} else if systemNameFlag == "mingw" {
 		osSuffix := ""
 		if mingwAllowXpFlag {
@@ -512,6 +512,22 @@ func prebuildFindSourceDirectory() {
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
+}
+
+func getUseAllocatorSuffix() string {
+	if useAllocatorFlag == "tbbmalloc" {
+		return "-tbbmalloc"
+	} else if useAllocatorFlag == "tcmalloc" {
+		return "-tcmalloc"
+	} else if useAllocatorFlag == "mimalloc" {
+		return "-mimalloc"
+	} else if useAllocatorFlag == "jemalloc" {
+		return "-jemalloc"
+	} else if useAllocatorFlag == "system" {
+		return ""
+	}
+	glog.Fatalf("Unsupported allocator %s specified.", useAllocatorFlag)
+	return ""
 }
 
 func getLLVMTargetTripleMSVC(msvcTargetArch string) string {
@@ -2681,7 +2697,7 @@ func postStateArchives() map[string][]string {
 				osName = "win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseAllocatorSuffix(), tag)
 	} else if systemNameFlag == "mingw" {
 		osName := "mingw"
 		if mingwAllowXpFlag {
@@ -2904,7 +2920,7 @@ func postStateArchivesBuildMsi() map[string][]string {
 				osName = "win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseAllocatorSuffix(), tag)
 	} else if systemNameFlag == "mingw" {
 		osName := "mingw"
 		if mingwAllowXpFlag {

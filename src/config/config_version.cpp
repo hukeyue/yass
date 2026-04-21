@@ -117,7 +117,7 @@ static void ParseConfigFileOption(int argc, const char** argv) {
       std::cout << "TCMALLOC: " << TC_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_MIMALLOC
-      std::cout << "MIMALLOC: " << MI_MALLOC_VERSION << std::endl;
+      std::cout << "MIMALLOC: " << mi_version() << std::endl;
 #endif
 #ifdef HAVE_JEMALLOC
       std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
@@ -149,7 +149,7 @@ static void ParseConfigFileOption(int argc, const char** argv) {
   std::cerr << "TCMALLOC: " << TC_VERSION_STRING << std::endl;
 #endif
 #ifdef HAVE_MIMALLOC
-  std::cerr << "MIMALLOC: " << MI_MALLOC_VERSION << std::endl;
+  std::cerr << "MIMALLOC: " << mi_version() << std::endl;
 #endif
 #ifdef HAVE_JEMALLOC
   std::cout << "JEMALLOC: " << JEMALLOC_VERSION << std::endl;
@@ -191,7 +191,7 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   LOG(WARNING) << "TCMALLOC: " << TC_VERSION_STRING;
 #endif
 #ifdef HAVE_MIMALLOC
-  LOG(WARNING) << "MIMALLOC: " << MI_MALLOC_VERSION;
+  LOG(WARNING) << "MIMALLOC: " << mi_version();
 #endif
 #ifdef HAVE_JEMALLOC
   LOG(WARNING) << "JEMALLOC: " << JEMALLOC_VERSION;

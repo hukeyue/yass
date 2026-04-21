@@ -52,11 +52,13 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
-            build_options: -use-allocator=tbbmalloc
+            build_options: -msvc-allow-xp
+            use_allocator: tbbmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
-            build_options: -use-allocator=tbbmalloc
+            build_options: -msvc-allow-xp
+            use_allocator: tbbmalloc
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
     steps:
@@ -131,75 +133,75 @@ jobs:
 
           call "scripts\callxp-%Platform%.cmd"
 
-          tools\build --variant cli -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -msvc-allow-xp -nc -build-test -build-benchmark ${{ matrix.build_options }} || exit /b
-          tools\build --variant gui -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -msvc-allow-xp -nc ${{ matrix.build_options }} || exit /b
-          tools\build --variant dylib -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -msvc-allow-xp -nc ${{ matrix.build_options }} || exit /b
+          tools\build --variant cli -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -use-allocator=${{ matrix.use_allocator }} -nc -build-benchmark -build-test ${{ matrix.build_options }} || exit /b
+          tools\build --variant gui -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -use-allocator=${{ matrix.use_allocator }} -nc ${{ matrix.build_options }} || exit /b
+          tools\build --variant dylib -msvc-tgt-arch=${{ matrix.arch }} -msvc-crt-linkage=${{ matrix.crt-linkage }} -use-allocator=${{ matrix.use_allocator }} -nc ${{ matrix.build_options }} || exit /b
 
           goto :eof
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-gui
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-gui
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.exe
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
-            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/YASS-C.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/yass.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/LICENSE
+            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/YASS-C.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-nsis-installer
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-nsis-installer
           path: |
             *.exe
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-msi-installer
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-msi-installer
           path: |
             *.msi
           compression-level: 0 # no compression
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-cli
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-cli
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_cli.exe
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
-            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/YASS-C.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/yass_cli.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/LICENSE
+            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/YASS-C.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-dylib
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-dylib
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/devel
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass.py
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/LICENSE
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/devel
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/yass.py
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/LICENSE
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_test.exe
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/YASS-C.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/yass_test.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.dll
+            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/YASS-C.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/yass_benchmark.exe
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.dll
-            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/YASS-C.dll
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/yass_benchmark.exe
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.dll
+            !build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/YASS-C.dll
       - uses: actions/upload-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-pdb
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-pdb
           path: |
-            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}/*.pdb
+            build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}/*.pdb
           compression-level: 9 # maximum compression
       - name: Run tests (dummy)
         run: |
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass_cli --version || exit /b
-          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass --version || exit /b
+          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}\yass_cli --version || exit /b
+          build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}\yass --version || exit /b
       - name: Run tests (python)
         if: ${{ matrix.arch == 'x64' }}
         run: |
-          python build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}\yass.py --version || exit /b
+          python build-msvc-winxp-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}\yass.py --version || exit /b
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
@@ -217,14 +219,16 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
+            use_allocator: tbbmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
+            use_allocator: tbbmalloc
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-test
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
       - name: Run tests
         run: |
           yass_test || exit /b
@@ -238,14 +242,16 @@ jobs:
           - arch: x86
             crt-linkage: dynamic
             build_type: Release
+            use_allocator: tbbmalloc
           - arch: x64
             crt-linkage: dynamic
             build_type: Release
+            use_allocator: tbbmalloc
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v6
         with:
-          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ github.run_id }}-benchmark
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks
         run: |
           yass_benchmark || exit /b
