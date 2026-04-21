@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-#define YASS_CLIENT_ABI_VERSION 2
+#define YASS_CLIENT_ABI_VERSION 3
 #define YASS_CLIENT_ABI_STABLE  0
 
 typedef void* yass_client_instance;
@@ -149,7 +149,7 @@ YASS_DLL void yass_client_instance_destroy(yass_client_instance instance);
  *
  *  \param instance specified instance of YassClient.
  *
- *  not thread-safe
+ *  thread-safe
  */
 YASS_DLL int yass_client_instance_get_last_error(yass_client_instance instance);
 /*!
@@ -161,13 +161,23 @@ YASS_DLL int yass_client_instance_get_last_error(yass_client_instance instance);
  */
 YASS_DLL const char* yass_client_instance_get_last_error_str(yass_client_instance instance);
 /*!
- *  \brief Run a task/callback inside the internal run loop
+ *  \brief Get Last Error (Number And String) from the given instance of YassClient
  *
  *  \param instance specified instance of YassClient.
- *  \param func     specified function pointer of callback
- *  \param arg      specified function argument of callback (opaque)
+ *  \param strerrbuf the buffer pointer used to render the error message
+ *  \param buf_len the maximum buffer length to render the error message
  *
- *  thread-safe, only valid when client internal run loop is running, aka yass_client_instance_run is called and blocking without quiting.
+ *  thread-safe
+ */
+YASS_DLL int yass_client_instance_get_last_error_xsi_r(yass_client_instance instance, char* strerrbuf, size_t buflen);
+/*!
+ *  \brief Run a lightweight task inside the internal run loop
+ *
+ *  \param instance specified instance of YassClient.
+ *  \param func     specified function pointer of task
+ *  \param arg      specified function argument of task (opaque)
+ *
+ *  thread-safe, only valid when client internal run loop is running, aka yass_client_instance_run is called without quiting.
  *
  *  Please note it is not guarenteed that the task will be fired at last because the run loop might
  *  stop before the task. And the user must make sure the func including argument stay valid in

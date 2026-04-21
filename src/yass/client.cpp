@@ -80,14 +80,46 @@ class YassClientPrivate {
 
   int Shutdown(); // thread-safe
   int Stop(); // thread-safe
-  int GetLastError() const { return last_error_.value(); }
-  const char* GetLastErrorStr() const {
+  int GetLastError() const {
+    absl::ReaderMutexLock lk(last_error_mutex_);
+    return _GetLastError().value();
+  }
+  const char* GetLastErrorStrUnsafe() const {
+    absl::ReaderMutexLock lk(last_error_mutex_);
+    return _GetLastErrorStr();
+  }
+  int GetLastErrorXSI(char* strerrbuf, size_t buflen) const {
+    absl::ReaderMutexLock lk(last_error_mutex_);
+    return _GetLastErrorXSI(strerrbuf, buflen).value();
+  }
+
+ private:
+  asio::error_code _GetLastError() const ABSL_SHARED_LOCKS_REQUIRED(last_error_mutex_) {
+    return last_error_;
+  }
+
+  const char* _GetLastErrorStr() const ABSL_SHARED_LOCKS_REQUIRED(last_error_mutex_) {
     auto str = last_error_ss_.str();
     strncpy(last_error_str_, str.c_str(), sizeof(last_error_str_)-1);
     return last_error_str_;
   }
 
- private:
+  asio::error_code _GetLastErrorXSI(char* strerrbuf, size_t buflen) const ABSL_SHARED_LOCKS_REQUIRED(last_error_mutex_) {
+    auto str = last_error_ss_.str();
+    strncpy(strerrbuf, str.c_str(), buflen);
+    return last_error_;
+  }
+
+  std::ostream& _SetLastError(asio::error_code ec) ABSL_EXCLUSIVE_LOCKS_REQUIRED(last_error_mutex_) {
+    last_error_ = ec;
+    last_error_ss_.str("");
+    last_error_ss_.clear();
+    if (ec) {
+      return last_error_ss_ << "Error: " << ec << " ";
+    }
+    return last_error_ss_;
+  }
+
   asio::io_context io_context_;
   std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
 
@@ -102,9 +134,11 @@ class YassClientPrivate {
   void _Shutdown() ABSL_SHARED_LOCKS_REQUIRED(server_mutex_);
   void _Stop() ABSL_SHARED_LOCKS_REQUIRED(server_mutex_);
 
-  asio::error_code last_error_;
-  mutable char last_error_str_[4096] = {};
-  std::stringstream last_error_ss_;
+  mutable absl::Mutex last_error_mutex_;
+  asio::error_code last_error_ ABSL_GUARDED_BY(last_error_mutex_);
+  std::stringstream last_error_ss_ ABSL_GUARDED_BY(last_error_mutex_);
+
+  mutable char last_error_str_[256] = {};
 };
 
 asio::ip::tcp::resolver::results_type YassClientPrivate::ResolveAddress(const std::string& domain_name, int port, asio::error_code &ec) {
@@ -119,18 +153,18 @@ asio::ip::tcp::resolver::results_type YassClientPrivate::ResolveAddress(const st
     auto resolver_work_guard =
         std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(resolver_io_context_.get_executor());
     asio::ip::tcp::resolver::results_type results;
-    resolver_.AsyncResolve(domain_name, port, [&](asio::error_code ec, asio::ip::tcp::resolver::results_type _results) {
+    resolver_.AsyncResolve(domain_name, port, [&](asio::error_code _ec, asio::ip::tcp::resolver::results_type _results) {
       resolver_work_guard.reset();
-      last_error_ = ec;
+      ec = _ec;
       if (ec) {
-        last_error_ss_ << "resolved domain name: " << domain_name << " failed due to: " << ec;
+        absl::WriterMutexLock lk(last_error_mutex_);
+        _SetLastError(ec) << "failed to resolved domain name: " << domain_name;
         return;
       }
       results = std::move(_results);
     });
     resolver_io_context_.run();
     resolver_io_context_.restart();
-    ec = last_error_;
 
     return results;
   }
@@ -154,49 +188,49 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
     remote_host_sni = remote_host_name;
   }
   if (remote_host_sni.empty() || remote_host_sni.size() > TLSEXT_MAXLEN_host_name) {
-    last_error_ss_ << "Invalid server name or SNI: " << remote_host_sni;
-    last_error_ = asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid server name or SNI: " << remote_host_sni;
+    return _GetLastError();
   }
   if (remote_port == 0u) {
-    last_error_ss_ << "Invalid server port: " << remote_port;
-    last_error_ = asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid server port: " << remote_port;
+    return _GetLastError();
   }
 
   if (!is_valid_cipher_method(remote_cipher)) {
-    last_error_ss_ << "Invalid Cipher: " << to_cipher_method_str(remote_cipher);
-    last_error_ = asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid Cipher: " << to_cipher_method_str(remote_cipher);
+    return _GetLastError();
   }
 
   if (remote_cipher == CRYPTO_SOCKS4 || remote_cipher == CRYPTO_SOCKS4A) {
     if (!remote_username.empty() || !remote_password.empty()) {
-      last_error_ss_ <<  "SOCKS4/SOCKSA doesn't support username and passsword";
-      last_error_ = asio::error::invalid_argument;
-      return last_error_;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(asio::error::invalid_argument) << "SOCKS4/SOCKSA doesn't support username and passsword";
+      return _GetLastError();
     }
   }
 
   if (remote_cipher == CRYPTO_SOCKS5 || remote_cipher == CRYPTO_SOCKS5H) {
     if (remote_username.empty() ^ remote_password.empty()) {
-      last_error_ss_ <<  "SOCKS5/SOCKS5H requires both of username and passsword";
-      last_error_ = asio::error::invalid_argument;
-      return last_error_;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(asio::error::invalid_argument) << "SOCKS5/SOCKS5H requires both of username and passsword";
+      return _GetLastError();
     }
   }
 
   if (CIPHER_METHOD_IS_HTTP(remote_cipher)) {
     if (remote_username.empty() ^ remote_password.empty()) {
-      last_error_ss_ << "HTTP requires both of username and passsword";
-      last_error_ = asio::error::invalid_argument;
-      return last_error_;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(asio::error::invalid_argument) << "HTTP requires both of username and passsword";
+      return _GetLastError();
     }
   }
   if (local_host_name.empty() || local_host_name.size() > TLSEXT_MAXLEN_host_name) {
-    last_error_ss_ << "Invalid Local Host: " << local_host_name;
-    last_error_ = asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid Local Host: " << local_host_name;
+    return _GetLastError();
   }
 
   asio::error_code ec;
@@ -212,9 +246,9 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
   std::vector<std::string> remote_server_ips_v4, remote_server_ips_v6;
   for (auto result : results) {
     if (result.endpoint().address().is_unspecified()) {
-      last_error_ss_ << "Unspecified remote address: " << remote_host_name;
-      last_error_ = asio::error::invalid_argument;
-      return last_error_;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(asio::error::invalid_argument) << "Unspecified remote address: " << remote_host_name;
+      return _GetLastError();
     }
     remote_ips.push_back(result.endpoint().address().to_string());
     if (result.endpoint().address().is_v4()) {
@@ -251,9 +285,9 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
   for (auto& endpoint : endpoints) {
     server->listen(endpoint, {}, {}, {}, {}, {}, redir_mode, SOMAXCONN, ec);
     if (ec) {
-      last_error_ss_ << "tag " << server_tag << " listen failed due to: " << ec;
-      last_error_ = ec;
-      return ec;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(ec) << "failed to tag " << server_tag << " listen";
+      return _GetLastError();
     }
     endpoint = server->endpoint();
     LOG(WARNING) << "tag " << server_tag << " tcp server listening at " << endpoint
@@ -263,7 +297,7 @@ asio::error_code YassClientPrivate::ListenAddress(int64_t server_tag,
       *listen_port = endpoint.port();
     }
   }
-  absl::MutexLock lk(server_mutex_);
+  absl::WriterMutexLock lk(server_mutex_);
   _Add(std::move(server));
   return {};
 }
@@ -286,9 +320,9 @@ asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::stri
 
   GURL proxy_uri(proxy_uri_str);
   if (!proxy_uri.is_valid() || !proxy_uri.has_host() || !proxy_uri.has_scheme()) {
-    last_error_ss_ << "Invalid Proxy URL: " << proxy_uri_str;
-    last_error_ =  asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid Proxy URL: " << proxy_uri_str;
+    return _GetLastError();
   }
   remote_host_name = proxy_uri.host();
   remote_port = proxy_uri.EffectiveIntPort();
@@ -311,21 +345,21 @@ asio::error_code YassClientPrivate::ListenProxyUri(int64_t server_tag, std::stri
   } else if (proxy_uri.scheme() == "socks") {
     remote_cipher = CRYPTO_SOCKS5H;
     if (!proxy_uri.has_port()) {
-      last_error_ss_ << "Invalid Proxy URL: " << proxy_uri_str << " Port is required for socks";
-      last_error_ =  asio::error::invalid_argument;
-      return last_error_;
+      absl::WriterMutexLock lk(last_error_mutex_);
+      _SetLastError(asio::error::invalid_argument) << "Invalid Proxy URL: " << proxy_uri_str << " Port is required for socks";
+      return _GetLastError();
     }
   } else {
-    last_error_ss_ << "Invalid Proxy Scheme: " << proxy_uri.scheme();
-    last_error_ =  asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid Proxy Scheme: " << proxy_uri.scheme();
+    return _GetLastError();
   }
 
   GURL listen_uri(listen_uri_str);
   if (!listen_uri.is_valid() || !listen_uri.has_host() || !listen_uri.has_scheme()) {
-    last_error_ss_ << "Invalid Listen URL: " << listen_uri_str;
-    last_error_ =  asio::error::invalid_argument;
-    return last_error_;
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "Invalid Listen URL: " << listen_uri_str;
+    return _GetLastError();
   }
   if (listen_uri.scheme() != "auto" && listen_uri.scheme() != "redir") {
     LOG(WARNING) << "Following listen uri's scheme is ignored due to automatical detection: " << listen_uri.scheme();
@@ -359,8 +393,8 @@ int YassClientPrivate::Init() {
   sigaddset(&sigpipe_mask, SIGPIPE);
   sigset_t saved_mask;
   if (pthread_sigmask(SIG_BLOCK, &sigpipe_mask, &saved_mask) == -1) {
-    last_error_ = asio::error_code(errno, asio::error::get_system_category());
-    last_error_ss_ << "pthread_sigmask failed";
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error_code(errno, asio::error::get_system_category())) << "pthread_sigmask failed";
     return -1;
   }
 #endif
@@ -383,21 +417,26 @@ int YassClientPrivate::Init() {
   WSADATA wsaData = {0};
   iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
   if (iResult != 0) {
-    last_error_ = asio::error::operation_not_supported;
-    last_error_ss_ << "WSAStartup failure";
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::operation_not_supported) << "WSAStartup failure";
     return -1;
   }
 #endif
 
   {
-    absl::MutexLock lk(server_mutex_);
+    absl::WriterMutexLock lk(server_mutex_);
     _Clear();
   }
 
-  last_error_ = resolver_.Init();
-  if (last_error_) {
-    last_error_ss_ << "Resolver: Init failure";
+  auto ec = resolver_.Init();
+  if (ec) {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(ec) << "Resolver: Init failure";
     return -1;
+  }
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
   }
   return 0;
 }
@@ -414,6 +453,11 @@ int YassClientPrivate::Add(int64_t server_tag, const std::string& proxy_uri_str,
     return -1;
   }
 
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
+  }
+
   return 0;
 }
 
@@ -425,6 +469,11 @@ int YassClientPrivate::Add(int64_t server_tag, std::string remote_host_name, std
                      local_host_name, local_port, redir_mode, listen_port, remote_server_ips_str, remote_server_ips_v4_str, remote_server_ips_v6_str);
   if (ec) {
     return -1;
+  }
+
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
   }
 
   return 0;
@@ -439,8 +488,13 @@ int YassClientPrivate::Run() {
   io_context_.restart();
 
   {
-    absl::MutexLock lk(server_mutex_);
+    absl::WriterMutexLock lk(server_mutex_);
     _Clear();
+  }
+
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
   }
 
   return 0;
@@ -448,16 +502,31 @@ int YassClientPrivate::Run() {
 
 int YassClientPrivate::NumOfConnections() {
   int count = 0;
-  absl::MutexLock lk(server_mutex_);
-  for (auto& server : servers_)
-    count += server->num_of_connections();
+  {
+    absl::ReaderMutexLock lk(server_mutex_);
+    for (auto& server : servers_)
+      count += server->num_of_connections();
+  }
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
+  }
   return count;
 }
 
 int YassClientPrivate::PostTask(yass_client_task_func_t func, void* arg) {
+  if (func == nullptr) {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError(asio::error::invalid_argument) << "function pointer cannout be NULL";
+    return -1;
+  }
   asio::post(io_context_, [=]() {
     func(arg);
   });
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
+  }
   return 0;
 }
 
@@ -470,6 +539,10 @@ int YassClientPrivate::Shutdown() {
     }
     work_guard_.reset();
   });
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
+  }
   return 0;
 }
 
@@ -488,6 +561,10 @@ int YassClientPrivate::Stop() {
     }
     work_guard_.reset();
   });
+  {
+    absl::WriterMutexLock lk(last_error_mutex_);
+    _SetLastError({});
+  }
   return 0;
 }
 
@@ -619,7 +696,13 @@ int yass_client_instance_get_last_error(yass_client_instance _instance) {
 const char* yass_client_instance_get_last_error_str(yass_client_instance _instance) {
   auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
   DCHECK(instance);
-  return instance->GetLastErrorStr();
+  return instance->GetLastErrorStrUnsafe();
+}
+
+int yass_client_instance_get_last_error_xsi_r(yass_client_instance _instance, char* strerrbuf, size_t buflen) {
+  auto instance = reinterpret_cast<YassClientPrivate*>(_instance);
+  DCHECK(instance);
+  return instance->GetLastErrorXSI(strerrbuf, buflen);
 }
 
 int yass_client_instance_post_task(yass_client_instance _instance, yass_client_task_func_t func, void* arg) {

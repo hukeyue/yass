@@ -57,7 +57,10 @@ class WorkerPrivate {
     return yass_client_instance_init(instance_);
   }
 
-  int Add(int64_t server_tag, const char* remote_host_name, const char* remote_host_sni, uint16_t remote_port, const char* remote_username, const char* remote_password, int remote_cipher, bool remote_padding_support, const char* local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port, std::string *remote_server_ips, std::string *remote_server_ips_v4, std::string *remote_server_ips_v6) {
+  int Add(int64_t server_tag, const std::string& remote_host_name, const std::string& remote_host_sni, uint16_t remote_port,
+          const std::string& remote_username, const std::string& remote_password, int remote_cipher, bool remote_padding_support,
+          const std::string& local_host_name, uint16_t local_port, bool redir_mode, uint16_t* listen_port,
+          std::string *remote_server_ips, std::string *remote_server_ips_v4, std::string *remote_server_ips_v6) {
     char remote_server_ips_cstr[512];
     char remote_server_ips_v4_cstr[512];
     char remote_server_ips_v6_cstr[512];
@@ -67,7 +70,12 @@ class WorkerPrivate {
     remote_server_ips_cstr[remote_server_ips_cstr_len] = '\0';
     remote_server_ips_v4_cstr[remote_server_ips_v4_cstr_len] = '\0';
     remote_server_ips_v6_cstr[remote_server_ips_v6_cstr_len] = '\0';
-    int ret = yass_client_instance_add_server_v1(instance_, server_tag, remote_host_name, remote_host_sni, remote_port, remote_username, remote_password, remote_cipher, remote_padding_support, local_host_name, local_port, redir_mode, listen_port, remote_server_ips_cstr, &remote_server_ips_cstr_len, remote_server_ips_v4_cstr, &remote_server_ips_v4_cstr_len, remote_server_ips_v6_cstr, &remote_server_ips_v6_cstr_len);
+    int ret = yass_client_instance_add_server_v1(instance_, server_tag, remote_host_name.c_str(), remote_host_sni.c_str(), remote_port,
+                                                 remote_username.c_str(), remote_password.c_str(), remote_cipher, remote_padding_support,
+                                                 local_host_name.c_str(), local_port, redir_mode, listen_port,
+                                                 remote_server_ips_cstr, &remote_server_ips_cstr_len,
+                                                 remote_server_ips_v4_cstr, &remote_server_ips_v4_cstr_len,
+                                                 remote_server_ips_v6_cstr, &remote_server_ips_v6_cstr_len);
     *remote_server_ips = std::string(remote_server_ips_cstr, remote_server_ips_cstr_len);
     *remote_server_ips_v4 = std::string(remote_server_ips_v4_cstr, remote_server_ips_v4_cstr_len);
     *remote_server_ips_v6 = std::string(remote_server_ips_v6_cstr, remote_server_ips_v6_cstr_len);
@@ -94,8 +102,16 @@ class WorkerPrivate {
     return asio::error_code(yass_client_instance_get_last_error(instance_), asio::error::system_category);
   }
 
-  const char* GetLastErrorStr() const {
+  std::string GetLastErrorStr() const {
     return yass_client_instance_get_last_error_str(instance_);
+  }
+
+  asio::error_code GetLastErrorXSI(std::string* errstr) const {
+    char buf[256];
+    buf[sizeof(buf)-1] = '\0';
+    int err = yass_client_instance_get_last_error_xsi_r(instance_, buf, sizeof(buf)-1);
+    *errstr = buf;
+    return asio::error_code(err, asio::error::system_category);
   }
 
  private:
@@ -150,8 +166,10 @@ void Worker::_Start() {
 
   int ret = private_->Init();
   if (ret < 0) {
-    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
-    on_resolve_done(private_->GetLastError());
+    std::string errstr;
+    auto ec = private_->GetLastErrorXSI(&errstr);
+    LOG(WARNING) << "worker: resolver error: " << errstr;
+    on_resolve_done(ec);
     return;
   }
 
@@ -161,10 +179,15 @@ void Worker::_Start() {
   DCHECK_LE(remote_server_sni_.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
   local_port_ = 0;
-  ret = private_->Add(0, host_name.c_str(), remote_server_sni_.c_str(), port, cached_server_username_.c_str(), cached_server_password_.c_str(), cached_server_cipher_, cached_server_padding_support_, cached_local_host_.c_str(), cached_local_port_, cached_server_redir_mode_, &local_port_, &remote_server_ips_, &remote_server_ips_v4_, &remote_server_ips_v6_);
+  ret = private_->Add(0, host_name, remote_server_sni_, port,
+                      cached_server_username_, cached_server_password_, cached_server_cipher_, cached_server_padding_support_,
+                      cached_local_host_, cached_local_port_, cached_server_redir_mode_, &local_port_,
+                      &remote_server_ips_, &remote_server_ips_v4_, &remote_server_ips_v6_);
   if (ret != 0) {
-    LOG(WARNING) << "worker: resolver error: " << private_->GetLastErrorStr();
-    on_resolve_done(private_->GetLastError());
+    std::string errstr;
+    auto ec = private_->GetLastErrorXSI(&errstr);
+    LOG(WARNING) << "worker: resolver error: " << errstr;
+    on_resolve_done(ec);
     return;
   }
 
