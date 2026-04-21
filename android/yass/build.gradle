@@ -263,6 +263,54 @@ task copyTask {
         from '../../build-android24-arm64/libz.so'
         into 'libs/arm64-v8a'
     }
+    copy {
+        from '../../build-android24-x86/libbalsa.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libbalsa.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libbalsa.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libbalsa.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libquiche.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libquiche.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libquiche.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libquiche.so'
+        into 'libs/arm64-v8a'
+    }
+    copy {
+        from '../../build-android24-x86/libgoogleurl.so'
+        into 'libs/x86'
+    }
+    copy {
+        from '../../build-android24-x64/libgoogleurl.so'
+        into 'libs/x86_64'
+    }
+    copy {
+        from '../../build-android24-arm/libgoogleurl.so'
+        into 'libs/armeabi-v7a'
+    }
+    copy {
+        from '../../build-android24-arm64/libgoogleurl.so'
+        into 'libs/arm64-v8a'
+    }
 }
 
 dependencies {
