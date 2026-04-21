@@ -3091,7 +3091,8 @@ function(minject_patch_exetuable target_name)
   if(OS_X86)
     set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject32.exe")
   elseif(OS_AARCH64)
-    set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject-arm64.exe")
+    # compatible to run x64 or aarch64 host
+    set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject.exe")
   else()
     set(MINJECT_EXETUABLE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mimalloc/bin/minject.exe")
   endif()
@@ -3102,7 +3103,7 @@ function(minject_patch_exetuable target_name)
     set(WINE_PREFIX wine)
   endif()
   add_custom_command(TARGET ${target_name} POST_BUILD
-    COMMAND ${WINE_PREFIX} "${MINJECT_EXETUABLE}" --force --inplace $<TARGET_FILE:${target_name}>
+    COMMAND ${WINE_PREFIX} "${MINJECT_EXETUABLE}" --force --inplace --verbose $<TARGET_FILE:${target_name}>
     COMMENT "minject ${target_name}")
 endfunction()
 # *****************************************************************************************
