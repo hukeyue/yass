@@ -161,15 +161,19 @@ YASS_DLL int yass_client_instance_get_last_error(yass_client_instance instance);
  */
 YASS_DLL const char* yass_client_instance_get_last_error_str(yass_client_instance instance);
 /*!
- *  \brief Run a task/callback inside the internal loop
+ *  \brief Run a task/callback inside the internal run loop
  *
  *  \param instance specified instance of YassClient.
  *  \param func     specified function pointer of callback
  *  \param arg      specified function argument of callback (opaque)
  *
- *  thread safe, only useful when client is running aka yass_client_instance_run is blocking
+ *  thread-safe, only valid when client internal run loop is running, aka yass_client_instance_run is called and blocking without quiting.
  *
- *  callback's life-cycle and memory management is not guarenteed.
+ *  Please note it is not guarenteed that the task will be fired at last because the run loop might
+ *  stop before the task. And the user must make sure the func including argument stay valid in
+ *  the life-cycle of the run loop. Due to the above reasons, memory management of the task itself is
+ *  not gurenteed. We might create a new api to post self-managed task or so-called closure in future,
+ *  but that's a different story.
  */
 typedef void (*yass_client_task_func_t)(void*);
 YASS_DLL int yass_client_instance_post_task(yass_client_instance instance, yass_client_task_func_t func, void* arg);
