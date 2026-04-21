@@ -50,9 +50,9 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 
 - Android: Require 7.0 or above
 - iOS: NO IPK release. Require 13.0 or above. You should accept [TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_)
-- Windows 10 or above: for x64 install [vs 2022 x64 runtime][vs2022_x64], for x86 install [vs 2022 x86 runtime][vs2022_x86], and for arm64 [vs 2022 arm64 runtime][vs2022_arm64]
-- Legacy Windows: for x64 install [KB2999226] on _windows 7 sp1 or above_, and for x86 install [last vc 2019 runtime supporting xp sp3][vs2019_xp_x86] on _windows xp sp3 or above_
+- Legacy Windows (missing ucrtbase.dll): for Windows 7 install [KB3118401] or [KB2999226] first, and for Windows XP SP3 try [last vs 2019 runtime supporting xp sp3][vs2019_xp_x86] (VS 2019 version 14.28.29213.0 is the last version compatible with Windows XP SP3).
 - macOS: Require 10.14 or above
+- Windows (missing VCRUNTIME140.DLL and etc): for x64 install [vs 2022 x64 runtime][vs2022_x64], for x86 install [vs 2022 x86 runtime][vs2022_x86], and for arm64 [vs 2022 arm64 runtime][vs2022_arm64] (VS 2022 will be the last v14 for Windows 7/8/8.1 and their Windows Server equivalents).
 
 See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Package-Store) for more.
 See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
@@ -75,6 +75,7 @@ See [ChatGPT capable caddy Server](https://github.com/hukeyue/yass/wiki/Usage:-s
 [flatpak_setup_url]: https://flatpak.org/setup/
 [ios_testflight_invitation]: https://testflight.apple.com/join/6AkiEq09
 [ios_testflight_appstore_url]: https://apps.apple.com/us/app/testflight/id899247664
+[KB3118401]: https://www.catalog.update.microsoft.com/Search.aspx?q=kb3118401
 [KB2999226]: https://support.microsoft.com/en-us/topic/update-for-universal-c-runtime-in-windows-c0514201-7fe6-95a3-b0a5-287930f3560c
 [vs2010_x86]: https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
 [vs2019_xp_x86]: https://download.visualstudio.microsoft.com/download/pr/56f631e5-4252-4f28-8ecc-257c7bf412b8/D305BAA965C9CD1B44EBCD53635EE9ECC6D85B54210E2764C8836F4E9DEFA345/VC_redist.x86.exe
