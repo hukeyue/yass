@@ -1,0 +1,4 @@
+{
+    "listen": ["auto://127.0.0.1:1080", "auto://127.0.0.1:1081"],
+    "proxy": ["naive://username:password@http2.github.io", "https://username:password@http2.github.io"],
+}
