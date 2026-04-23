@@ -49,7 +49,7 @@ YASS_DLL yass_client_instance yass_client_instance_create();
 /*!
  *  \brief Initialize specified instance of YassClient.
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  return non-zero if error occurs
  */
@@ -57,7 +57,7 @@ YASS_DLL int yass_client_instance_init(yass_client_instance instance);
 /*!
  *  \brief Add server configuration to specified instance of YassClient (variant 1).
  *
- *  \param instance    specified instance.
+ *  \param instance    specified instance (cannot be NULL).
  *  \param server_tag  the number to distinguish the server configuration
  *  \param proxy_uri   the URI format of upstream including username and password where server proxies network traffic to
  *  \param listen_uri  the URI format of downstream where server listens at locally
@@ -76,7 +76,7 @@ YASS_DLL int yass_client_instance_add_server_uri_v1(yass_client_instance instanc
 /*!
  *  \brief Add server configuration to specified instance of YassClient (variant 2).
  *
- *  \param instance                specified instance.
+ *  \param instance                specified instance (cannot be NULL).
  *  \param server_tag              the number to distinguish the server configuration
  *  \param remote_host_name        the hostname of upstream where server proxies network traffic to, cannot be NULL
  *  \param remote_host_sni         the SNI to override hostname of upstream where server proxies network traffic to, can be NULL
@@ -107,73 +107,87 @@ YASS_DLL int yass_client_instance_add_server_v1(yass_client_instance instance, i
 /*!
  *  \brief Run the internal loop to poll the request
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  block current thread, all configuration will be dropped after this call
+ *
+ *  return non-zero if error occurs
  */
 YASS_DLL int yass_client_instance_run(yass_client_instance instance);
 /*!
- *  \brief Count current number of connections
+ *  \brief Count the number of current connections
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  thread-safe
+ *
+ *  return the number of current connections
  */
 YASS_DLL int yass_client_instance_num_of_connections(yass_client_instance instance);
 /*!
- *  \brief Shutdown Instance of YASS Client Gracefully
+ *  \brief Shutdown Instance of YassClient Gracefully
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  thread-safe, all pending I/O will be handled
+ *
+ *  return non-zero if error occurs
  */
 YASS_DLL int yass_client_instance_shutdown(yass_client_instance instance);
 /*!
- *  \brief Stop Instance of YASS Client Immediately
+ *  \brief Stop Instance of YassClient Immediately
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
- *  thread-safe, all pending I/O will be cancelled
+ *  thread-safe, all pending I/O will be cancelled and discarded
+ *
+ *  return non-zero if error occurs
  */
 YASS_DLL int yass_client_instance_cancel(yass_client_instance instance);
 /*!
- *  \brief Destroy Instance of YASS Client
+ *  \brief Destroy Instance of YassClient
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
- *  not thread-safe
+ *  not thread-safe, the YassClient instance will be invalidated after this call.
  */
 YASS_DLL void yass_client_instance_destroy(yass_client_instance instance);
 /*!
  *  \brief Get Last Error (Number) from the given instance of YassClient
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  thread-safe
+ *
+ *  return the error number when the error occurs last time
  */
 YASS_DLL int yass_client_instance_get_last_error(yass_client_instance instance);
 /*!
  *  \brief Get Last Error (String) from the given instance of YassClient
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *
  *  not thread-safe
+ *
+ *  return the pointer to internal buffer which renders the error message when the error occurs last time
  */
 YASS_DLL const char* yass_client_instance_get_last_error_str(yass_client_instance instance);
 /*!
  *  \brief Get Last Error (Number And String) from the given instance of YassClient
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *  \param strerrbuf the buffer pointer used to render the error message
  *  \param buf_len the maximum buffer length to render the error message
  *
  *  thread-safe
+ *
+ *  return the error number when the error occurs last time
  */
 YASS_DLL int yass_client_instance_get_last_error_xsi_r(yass_client_instance instance, char* strerrbuf, size_t buflen);
 /*!
  *  \brief Run a lightweight task inside the internal run loop
  *
- *  \param instance specified instance of YassClient.
+ *  \param instance specified instance of YassClient (cannot be NULL).
  *  \param func     specified function pointer of task
  *  \param arg      specified function argument of task (opaque)
  *
@@ -184,6 +198,8 @@ YASS_DLL int yass_client_instance_get_last_error_xsi_r(yass_client_instance inst
  *  the life-cycle of the run loop. Due to the above reasons, memory management of the task itself is
  *  not gurenteed. We might create a new api to post self-managed task or so-called closure in future,
  *  but that's a different story.
+ *
+ *  return non-zero if error occurs
  */
 typedef void (*yass_client_task_func_t)(void*);
 YASS_DLL int yass_client_instance_post_task(yass_client_instance instance, yass_client_task_func_t func, void* arg);
