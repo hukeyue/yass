@@ -27,9 +27,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <atomic>
+#include <format>
 #include <thread>
 
-#include <absl/strings/str_format.h>
 
 #include "cli/cli_connection_stats.hpp"
 #include "cli/cli_worker.hpp"
@@ -183,7 +183,7 @@ static constexpr const uint32_t kYieldConcurrencyOfConnections = 12u;
     return FALSE;
   }
 
-  std::string proxy_url = absl::StrFormat("socks5://%s:%d", SysNSStringToUTF8(local_host), local_port);
+  std::string proxy_url = std::format("socks5://{}:{}", SysNSStringToUTF8(local_host), local_port);
 
   context_ = Tun2Proxy_Init(self.packetFlow, proxy_url, DEFAULT_MTU, 0, true);
   if (!context_) {

@@ -32,11 +32,11 @@
 #include <windows.h>
 #endif
 
-#include <absl/strings/str_format.h>
 #include <base/files/file_util.h>
 #include <base/process/process_handle.h>
 #include <base/rand_util.h>
 #include <filesystem>
+#include <format>
 #include <string_view>
 
 using namespace yass;
@@ -114,9 +114,9 @@ TEST(UtilsTest, ReadFileAndWrite4K) {
   std::string buf, buf2;
   buf.resize(4096);
   gurl_base::RandBytes(buf.data(), buf.size());
-  int tmp_suffix;
+  unsigned int tmp_suffix;
   gurl_base::RandBytes(&tmp_suffix, sizeof(tmp_suffix));
-  auto tmp_name = absl::StrFormat("read_write_file-%u-%d", gurl_base::GetCurrentProcId(), tmp_suffix);
+  auto tmp_name = std::format("read_write_file-{}-{}", gurl_base::GetCurrentProcId(), tmp_suffix);
   auto tmp_dir = std::filesystem::path(::testing::TempDir());
 #ifdef _WIN32
   std::string tmp = SysWideToUTF8(tmp_dir / tmp_name);

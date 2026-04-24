@@ -27,6 +27,7 @@
 #include <absl/strings/str_cat.h>
 #include <base/rand_util.h>
 #include <base/strings/string_util.h>
+#include <format>
 
 #include "config/config.hpp"
 #include "core/utils.hpp"
@@ -2462,21 +2463,21 @@ void CliConnection::connected() {
 
     bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
 
-    std::string hdr = absl::StrFormat(
-        "CONNECT %s HTTP/1.1\r\n"
-        "Host: %s\r\n"
-        "Proxy-Authorization: %s\r\n"
+    std::string hdr = std::format(
+        "CONNECT {} HTTP/1.1\r\n"
+        "Host: {}\r\n"
+        "Proxy-Authorization: {}\r\n"
         "Proxy-Connection: Close\r\n"
         "\r\n",
-        hostname_and_port.c_str(), hostname_and_port.c_str(),
+        hostname_and_port, hostname_and_port,
         absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_config_.username, remote_config_.password)));
     if (!auth_required) {
-      hdr = absl::StrFormat(
-          "CONNECT %s HTTP/1.1\r\n"
-          "Host: %s\r\n"
+      hdr = std::format(
+          "CONNECT {} HTTP/1.1\r\n"
+          "Host: {}\r\n"
           "Proxy-Connection: Close\r\n"
           "\r\n",
-          hostname_and_port.c_str(), hostname_and_port.c_str());
+          hostname_and_port, hostname_and_port);
     }
     // write variable address directly as https header
     upstream_.push_back(hdr.data(), hdr.size());

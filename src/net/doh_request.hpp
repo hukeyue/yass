@@ -25,7 +25,6 @@
 #ifndef H_NET_DOH_REQUEST_HPP
 #define H_NET_DOH_REQUEST_HPP
 
-#include <absl/strings/str_format.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 

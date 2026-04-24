@@ -33,9 +33,9 @@
 #include <absl/debugging/symbolize.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
-#include <absl/strings/str_format.h>
 #include <base/debug/debugger.h>
 #include <base/strings/string_util.h>
+#include <format>
 #include <locale.h>
 #include <iostream>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
@@ -348,7 +348,7 @@ static std::string SystemErrorCodeToString(DWORD dwError) {
   if (len) {
     std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
     // Messages returned by system end with line breaks.
-    return gurl_base::CollapseWhitespaceASCII(msg, true) + absl::StrFormat(" (0x%lX)", dwError);
+    return gurl_base::CollapseWhitespaceASCII(msg, true) + std::format(" (0x{:X})", dwError);
   }
   // Is it a network-related error?
   static HMODULE hDll = LoadLibraryExW(L"netmsg.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -359,10 +359,10 @@ static std::string SystemErrorCodeToString(DWORD dwError) {
     if (len) {
       std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
       // Messages returned by system end with line breaks.
-      return gurl_base::CollapseWhitespaceASCII(msg, true) + absl::StrFormat(" (0x%lX)", dwError);
+      return gurl_base::CollapseWhitespaceASCII(msg, true) + std::format(" (0x{:X})", dwError);
     }
   }
-  return absl::StrFormat("Error (0x%lX) while retrieving error. (0x%lX)", GetLastError(), dwError);
+  return std::format("Error (0x{:X}) while retrieving error. (0x{:X})", GetLastError(), dwError);
 }
 
 void CYassApp::OnStart(bool quiet) {
