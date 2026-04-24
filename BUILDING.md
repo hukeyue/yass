@@ -24,7 +24,7 @@ choco install golang
 3. Open `Git Bash` from Start Menu and run
 
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 ./scripts/build-mingw.sh
@@ -58,7 +58,7 @@ export GOPATH=/clang64
 
 Run `MSYS2 CLANG64` in Start Menu:
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 mkdir build
@@ -94,7 +94,7 @@ Notes: please make sure you have [LLVM][llvm-win64] (20.0 or above).
 
 Run `x64 Native Tools Command Prompt for VS 2019 (or 2022)` in Start Menu:
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 mkdir build
@@ -130,7 +130,7 @@ sudo port install ninja cmake go p7zip
 
 3. Compile the program with _Release_ configuration.
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 mkdir build
@@ -165,7 +165,7 @@ You might want to give these APT/PPA sites a look if the requirements are not me
 
 Run in `Console`:
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 mkdir build
@@ -215,7 +215,7 @@ subscription-manager repos --enable rhel-*-optional-rpms \
 
 Run in `Console`:
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 mkdir build
@@ -246,7 +246,7 @@ pkg install -y git cmake ninja pkgconf perl5 gettext gtk3 go
 
 Run in `Console`:
 ```
-git clone https://gitee.com/keeyou/yass
+git clone https://github.com/hukeyue/yass
 cd yass
 git submodule update --init
 export PATH="/usr/local/llvm20/bin:$PATH"
