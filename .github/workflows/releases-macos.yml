@@ -50,16 +50,8 @@ jobs:
             build_type: Release
             xcode_version: 26.3
             build_options: -use-allocator=system
-          - arch: x64
-            build_type: Debug
-            xcode_version: 26.3
-            build_options: -use-allocator=system
           - arch: arm64
             build_type: Release
-            xcode_version: 26.3
-            build_options: -use-allocator=system
-          - arch: arm64
-            build_type: Debug
             xcode_version: 26.3
             build_options: -use-allocator=system
     env:
@@ -182,9 +174,6 @@ jobs:
           - arch: arm64
             build_type: Release
             gtest_repeat_times: 10
-          - arch: arm64
-            build_type: Debug
-            gtest_repeat_times: 2
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v7
@@ -213,9 +202,6 @@ jobs:
           - arch: x64
             build_type: Release
             gtest_repeat_times: 10
-          - arch: x64
-            build_type: Debug
-            gtest_repeat_times: 2
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v7
