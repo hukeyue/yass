@@ -32,10 +32,10 @@
 #include "net/asio.hpp"
 
 #include <absl/strings/str_cat.h>
-#include <absl/strings/str_format.h>
 #include <base/posix/eintr_wrapper.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <format>
 #include <string_view>
 
 using namespace std::string_literals;
@@ -65,7 +65,7 @@ static constexpr const std::string_view kAutoStartFileContent =
     "Comment=Yet Another Shadow Socket is a lightweight and secure http/socks4/socks5 proxy for embedded devices and "
     "low end boxes.\n"
     "Icon=io.github.chilledheart.yass\n"
-    "Exec=\"%s\" --background\n"
+    "Exec=\"{}\" --background\n"
     "Terminal=false\n"
     "Categories=Network;GTK;Utility\n";
 #endif
@@ -202,7 +202,7 @@ void Utils::EnableAutoStart(bool on) {
 #else
     std::string executable_path = "yass"s;
     GetExecutablePath(&executable_path);
-    std::string desktop_entry = absl::StrFormat(kAutoStartFileContent, executable_path);
+    std::string desktop_entry = std::format(kAutoStartFileContent, executable_path);
 #endif
     if (!WriteFileWithBuffer(autostart_desktop_path, desktop_entry)) {
       PLOG(WARNING) << "Internal error: unable to create autostart file";

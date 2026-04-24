@@ -32,12 +32,12 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/strings/str_cat.h>
-#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <absl/synchronization/mutex.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rand_util.h>
+#include <format>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _MSC_VER
@@ -271,13 +271,13 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void write_http_response_hdr2() {
     scoped_refptr<ContentProviderConnection> self(this);
     // Write HTTP Response Header, Part 2
-    http_response_hdr2 = absl::StrFormat(
+    http_response_hdr2 = std::format(
         "HTTP/1.1 200 OK\r\n"
         "Server: YASS/cp\r\n"
         "Content-Type: application/octet-stream\r\n"
-        "Content-Length: %llu\r\n"
+        "Content-Length: {}\r\n"
         "Connection: close\r\n\r\n",
-        static_cast<unsigned long long>(g_send_buffer->size()));
+        static_cast<unsigned int>(g_send_buffer->size()));
     asio::async_write(downlink_->socket_, asio::const_buffer(http_response_hdr2.data(), http_response_hdr2.size()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || bytes_transferred != http_response_hdr2.size()) {
@@ -330,8 +330,8 @@ using ContentProviderServer = ContentServer<ContentProviderConnectionFactory>;
 
 #ifndef HAVE_CURL
 void GenerateConnectRequest(std::string_view host, int port_num, GrowableIOBuffer* buf) {
-  std::string req_header = absl::StrFormat(
-      "CONNECT %s:%d HTTP/1.1\r\n"
+  std::string req_header = std::format(
+      "CONNECT {}:{} HTTP/1.1\r\n"
       "Host: packages.endpointdev.com:443\r\n"
       "User-Agent: curl/7.77.0\r\n"
       "Proxy-Connection: Close\r\n"
@@ -568,13 +568,13 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
               ::testing::Bytes(kConnectResponse.data(), kConnectResponseLength));
 
     // Write HTTP Request Header
-    std::string http_request_hdr = absl::StrFormat(
+    std::string http_request_hdr = std::format(
         "PUT / HTTP/1.1\r\n"
         "Host: localhost\r\n"
         "Accept: */*\r\n"
-        "Content-Length: %llu\r\n"
+        "Content-Length: {}\r\n"
         "Expect: 100-continue\r\n\r\n",
-        static_cast<unsigned long long>(g_send_buffer->size()));
+        static_cast<unsigned int>(g_send_buffer->size()));
 
     written = asio::write(s, asio::const_buffer(http_request_hdr.c_str(), http_request_hdr.size()), ec);
     VLOG(1) << "Connection (content-consumer) written hdr: " << http_request_hdr;

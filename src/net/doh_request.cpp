@@ -24,6 +24,8 @@
 
 #include "net/doh_request.hpp"
 
+#include <format>
+
 #include "net/dns_addrinfo_helper.hpp"
 #include "net/dns_message_request.hpp"
 #include "net/dns_message_response_parser.hpp"
@@ -82,12 +84,12 @@ void DoHRequest::DoRequest(dns_message::DNStype dns_type, const std::string& hos
   }
 
   {
-    std::string request_header = absl::StrFormat(
-        "POST %s HTTP/1.1\r\n"
-        "Host: %s:%d\r\n"
+    std::string request_header = std::format(
+        "POST {} HTTP/1.1\r\n"
+        "Host: {}:{}\r\n"
         "Accept: */*\r\n"
         "Content-Type: application/dns-message\r\n"
-        "Content-Length: %d\r\n"
+        "Content-Length: {}\r\n"
         "\r\n",
         doh_path_, doh_host_, doh_port_, payload_size);
     buf->appendBytesAtEnd(request_header.c_str(), request_header.size());

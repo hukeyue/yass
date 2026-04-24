@@ -28,11 +28,11 @@
 #include <absl/debugging/symbolize.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
-#include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <base/memory/ref_counted.h>
 #include <base/memory/scoped_refptr.h>
 #include <base/rand_util.h>
+#include <format>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #ifdef _MSC_VER
@@ -257,8 +257,8 @@ using ContentProviderConnectionFactory = ConnectionFactory<ContentProviderConnec
 using ContentProviderServer = ContentServer<ContentProviderConnectionFactory>;
 
 void GenerateConnectRequest(std::string_view host, int port_num, GrowableIOBuffer* buf) {
-  std::string req_header = absl::StrFormat(
-      "CONNECT %s:%d HTTP/1.1\r\n"
+  std::string req_header = std::format(
+      "CONNECT {}:{} HTTP/1.1\r\n"
       "Host: packages.endpointdev.com:443\r\n"
       "User-Agent: curl/7.77.0\r\n"
       "Proxy-Connection: Close\r\n"
