@@ -10,6 +10,7 @@ Accepting licenses is required.
 
 Next Steps:
 ```
+sdkmanager --install 'build-tools;android-36.1.0'
 sdkmanager --install 'system-images;android-34;google_apis;x86_64'
 sdkmanager --install 'ndk;27.3.13750724'
 ```
