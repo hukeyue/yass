@@ -48,11 +48,11 @@ jobs:
         include:
           - arch: x64
             build_type: Release
-            xcode_version: 26.3
+            xcode_version: 26.4.1
             build_options: -use-allocator=system
           - arch: arm64
             build_type: Release
-            xcode_version: 26.3
+            xcode_version: 26.4.1
             build_options: -use-allocator=system
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
@@ -230,26 +230,6 @@ jobs:
           - arch: arm64
             build_type: Release
             benchmark_min_time: 1000x
-    steps:
-      - name: Download built executables
-        uses: actions/download-artifact@v7
-        with:
-          name: darwin-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
-      - name: Run benchmarks
-        run: |
-          xattr -d com.apple.quarantine yass_benchmark || :
-          chmod 755 yass_benchmark
-          ./yass_benchmark --benchmark_min_time=${{ matrix.benchmark_min_time }}
-  mac-release-native-intel-benchmark:
-    runs-on: macos-26-intel
-    needs: mac-release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            build_type: Release
-            benchmark_min_time: 250x
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v7
