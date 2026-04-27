@@ -47,7 +47,7 @@ Take a look at [build instructions](BUILDING.md) and [packaging instructions](PA
 ## Debug Guide
 Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 
-## Notes on Other Systems' Requirement
+## Notes on System Requirement
 
 - Android: Require 7.0 or above
 - iOS: NO IPK release. Require 13.0 or above. You should accept [TestFlight invitation][ios_testflight_invitation] (require [TestFlight][ios_testflight_appstore_url] from _AppStore_)
@@ -58,8 +58,8 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Package-Store) for more.
 See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
 
-## Standard Usages
-Visit wiki's [Usages](https://github.com/hukeyue/yass/wiki/Usage).
+## Usage
+Visit wiki's [Usage](https://github.com/hukeyue/yass/wiki/Usage).
 
 ## Server side support (mostly outside this project)
 
