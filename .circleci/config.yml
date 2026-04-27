@@ -10,15 +10,6 @@ commands:
           command: |
             git submodule update --init --depth 1
 
-  download-toolchain-gclang:
-    steps:
-      - run:
-          command: |
-            sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y build-essential libstdc++-14-dev
-            ./scripts/download-clang-prebuilt-binaries.py
-            rm -f third_party/llvm-build/Release+Asserts/*.tgz
-
   download-toolchain-clang:
     steps:
       - run:
@@ -88,7 +79,7 @@ commands:
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f
             rm -vf *.deb
 
-  configure:
+  configure-clang:
     steps:
       - run:
           command: |
@@ -96,9 +87,9 @@ commands:
             export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
-            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
 
-  configure-qt6:
+  configure-clang-debug:
     steps:
       - run:
           command: |
@@ -106,7 +97,7 @@ commands:
             export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
-            cmake -G Ninja -DGUI=on -DUSE_QT6=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Debug -DUSE_LIBCXX=on ..
 
   configure-gcc:
     steps:
@@ -116,7 +107,27 @@ commands:
             export "CXX=g++"
             mkdir build
             cd build
-            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off ..
+
+  configure-gcc-debug:
+    steps:
+      - run:
+          command: |
+            export "CC=gcc"
+            export "CXX=g++"
+            mkdir build
+            cd build
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Debug -DUSE_LIBCXX=off ..
+
+  configure-qt6:
+    steps:
+      - run:
+          command: |
+            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
+            mkdir build
+            cd build
+            cmake -G Ninja -DGUI=on -DUSE_QT6=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
 
   configure-without-libcxx:
     steps:
@@ -126,7 +137,7 @@ commands:
             export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
-            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on -DUSE_TCMALLOC=on ..
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off ..
 
   configure-arm:
     steps:
@@ -136,7 +147,7 @@ commands:
             export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-ARM64/bin/clang++"
             mkdir build
             cd build
-            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on -DUSE_ZLIB=on -DUSE_JSONCPP=on -DUSE_CARES=on ..
+            cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
 
   build:
     steps:
@@ -177,7 +188,7 @@ executors:
       image: ubuntu-2404:2025.09.1
 
 jobs:
-  basic:
+  basic-clang:
     executor: ubuntu
     steps:
       - checkout
@@ -185,19 +196,19 @@ jobs:
       - install-deps-gtk3
       - install-deps-golang
       - download-toolchain-clang
-      - configure
+      - configure-clang
       - build
       - test
 
-  basic-qt6:
+  basic-clang-debug:
     executor: ubuntu
     steps:
       - checkout
       - update-submodule
-      - install-deps-qt6
+      - install-deps-gtk3
       - install-deps-golang
       - download-toolchain-clang
-      - configure-qt6
+      - configure-clang-debug
       - build
       - test
 
@@ -210,6 +221,30 @@ jobs:
       - install-deps-golang
       - download-toolchain-gcc
       - configure-gcc
+      - build
+      - test
+
+  basic-gcc-debug:
+    executor: ubuntu
+    steps:
+      - checkout
+      - update-submodule
+      - install-deps-gtk3
+      - install-deps-golang
+      - download-toolchain-gcc
+      - configure-gcc-debug
+      - build
+      - test
+
+  basic-qt6:
+    executor: ubuntu
+    steps:
+      - checkout
+      - update-submodule
+      - install-deps-qt6
+      - install-deps-golang
+      - download-toolchain-clang
+      - configure-qt6
       - build
       - test
 
@@ -240,17 +275,25 @@ jobs:
       - test
 
 workflows:
-  x64-basic:
+  x64-basic-clang:
     jobs:
-      - basic
+      - basic-clang
 
-  x64-basic-qt6:
+  x64-basic-clang-debug:
     jobs:
-      - basic-qt6
+      - basic-clang-debug
 
   x64-basic-gcc:
     jobs:
       - basic-gcc
+
+  x64-basic-gcc-debug:
+    jobs:
+      - basic-gcc-debug
+
+  x64-basic-qt6:
+    jobs:
+      - basic-qt6
 
   x64-basic-without-libcxx:
     jobs:

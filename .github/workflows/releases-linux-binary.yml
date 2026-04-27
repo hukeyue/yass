@@ -47,16 +47,8 @@ jobs:
             build_type: Release
             qemu_suffix: i386
             build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
-          - arch: i386
-            build_type: Debug
-            qemu_suffix: i386
-            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: amd64
             build_type: Release
-            qemu_suffix: amd64
-            build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
-          - arch: amd64
-            build_type: Debug
             qemu_suffix: amd64
             build_options: -use-allocator=tbbmalloc -use-mold -enable-lto=false
           - arch: armhf
@@ -286,18 +278,10 @@ jobs:
             build_type: Release
             qemu_suffix: i386
             gtest_repeat_times: 10
-          - arch: i386
-            build_type: Debug
-            qemu_suffix: i386
-            gtest_repeat_times: 2
           - arch: amd64
             build_type: Release
             qemu_suffix: amd64
             gtest_repeat_times: 10
-          - arch: amd64
-            build_type: Debug
-            qemu_suffix: amd64
-            gtest_repeat_times: 2
     steps:
       - name: Change ubuntu mirror
         if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
