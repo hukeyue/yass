@@ -27,18 +27,18 @@
 
 #include <stdint.h>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
-#include "core/span.hpp"
 
 namespace net {
 
 // Encodes the input binary data in base64.
-std::string Base64Encode(span<const uint8_t> input);
+std::string Base64Encode(std::span<const std::byte> input);
 
 // Encodes the input binary data in base64 and appends it to the output.
-void Base64EncodeAppend(span<const uint8_t> input, std::string* output);
+void Base64EncodeAppend(std::span<const std::byte> input, std::string* output);
 
 // Decodes the base64 input string.  Returns true if successful and false
 // otherwise. The output string is only modified if successful. The decoding can

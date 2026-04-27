@@ -84,7 +84,7 @@ bool ReadTLSConfigFile() {
         return false;
       }
       private_key.resize(kBufferSize);
-      ret = ReadFileToBuffer(private_key_path, as_writable_bytes(make_span(private_key)));
+      ret = ReadFileToBuffer(private_key_path, std::as_writable_bytes(std::span(private_key)));
       if (ret <= 0) {
         std::cerr << "private key " << private_key_path << " failed to read" << std::endl;
         return false;
@@ -100,7 +100,7 @@ bool ReadTLSConfigFile() {
     }
     if (!certificate_chain_path.empty()) {
       certificate_chain.resize(kBufferSize);
-      ret = ReadFileToBuffer(certificate_chain_path, as_writable_bytes(make_span(certificate_chain)));
+      ret = ReadFileToBuffer(certificate_chain_path, std::as_writable_bytes(std::span(certificate_chain)));
       if (ret <= 0) {
         std::cerr << "certificate file " << certificate_chain_path << " failed to read" << std::endl;
         return false;

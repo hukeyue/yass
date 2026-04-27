@@ -66,7 +66,7 @@ class ConfigImplLocal : public ConfigImpl {
     do {
       char buffer[kReadBufferSize];
 
-      ssize_t ret = ReadFileToBuffer(path_, as_writable_bytes(make_span(buffer)));
+      ssize_t ret = ReadFileToBuffer(path_, std::as_writable_bytes(std::span(buffer)));
       if (ret <= 0) {
         std::cerr << "configure file failed to read: " << path_ << std::endl;
         break;

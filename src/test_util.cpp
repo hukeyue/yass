@@ -68,13 +68,13 @@ bool DecodeHex(std::vector<uint8_t>* out, const std::string& in) {
   return true;
 }
 
-std::string EncodeHex(span<const uint8_t> in) {
+std::string EncodeHex(std::span<const std::byte> in) {
   static const char kHexDigits[] = "0123456789abcdef";
   std::string ret;
   ret.reserve(in.size() * 2);
-  for (uint8_t b : in) {
-    ret += kHexDigits[b >> 4];
-    ret += kHexDigits[b & 0xf];
+  for (auto b : in) {
+    ret += kHexDigits[static_cast<uint8_t>(b) >> 4];
+    ret += kHexDigits[static_cast<uint8_t>(b) & 0xf];
   }
   return ret;
 }

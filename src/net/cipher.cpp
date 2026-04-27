@@ -110,7 +110,7 @@ class cipher_impl {
   /// a non-secret nonce, a message, and produces ciphertext and authentication
   /// tag. Nonce (NoncePrefix + packet_number, or vice versa) must be unique for
   /// a given key in each invocation.
-  int EncryptPacket(uint64_t packet_number, uint8_t* c, size_t* clen, const uint8_t* m, size_t mlen) {
+  int EncryptPacket(uint64_t packet_number, std::byte* c, size_t* clen, const std::byte* m, size_t mlen) {
     int err = 0;
 
     if (!encrypter->EncryptPacket(packet_number, nullptr, 0U, reinterpret_cast<const char*>(m), mlen,
@@ -124,7 +124,7 @@ class cipher_impl {
   /// DecryptPacket is a function that takes a secret key,
   /// non-secret nonce, ciphertext, authentication tag, and produces original
   /// message. If any of the input is tampered with, decryption will fail.
-  int DecryptPacket(uint64_t packet_number, uint8_t* p, size_t* plen, const uint8_t* m, size_t mlen) {
+  int DecryptPacket(uint64_t packet_number, std::byte* p, size_t* plen, const std::byte* m, size_t mlen) {
     int err = 0;
 
     if (!decrypter->DecryptPacket(packet_number, nullptr, 0U, reinterpret_cast<const char*>(m), mlen,
@@ -272,7 +272,7 @@ void cipher::process_bytes(GrowableIOBuffer* ciphertext) {
   }
 }
 
-void cipher::encrypt(const uint8_t* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext) {
+void cipher::encrypt(const std::byte* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext) {
   DCHECK(ciphertext);
 
   if (!init_) {
@@ -386,7 +386,7 @@ int cipher::chunk_decrypt_frame_aead(uint64_t* counter,
 
   plen = sizeof(len.cover);
 
-  err = impl_->DecryptPacket(*counter, len.buf, &plen, ciphertext->bytes(), clen);
+  err = impl_->DecryptPacket(*counter, reinterpret_cast<std::byte*>(len.buf), &plen, ciphertext->bytes(), clen);
 
   if (err) {
     return -EBADMSG;
@@ -452,7 +452,7 @@ int cipher::chunk_decrypt_frame_stream(uint64_t* counter,
 }
 
 int cipher::chunk_encrypt_frame(uint64_t* counter,
-                                const uint8_t* plaintext_data,
+                                const std::byte* plaintext_data,
                                 size_t plaintext_size,
                                 GrowableIOBuffer* ciphertext) const {
 #ifdef HAVE_MBEDTLS
@@ -467,7 +467,7 @@ int cipher::chunk_encrypt_frame(uint64_t* counter,
 }
 
 int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
-                                     const uint8_t* plaintext_data,
+                                     const std::byte* plaintext_data,
                                      size_t plaintext_size,
                                      GrowableIOBuffer* ciphertext) const {
   const int tlen = tag_len_;
@@ -494,7 +494,7 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 
   DCHECK_GE(c_total_len, static_cast<int>(clen));
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, len.buf, CHUNK_SIZE_LEN);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<std::byte*>(len.buf), CHUNK_SIZE_LEN);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
@@ -513,7 +513,7 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
   // FIXME it is a bug with crypto layer
   memset(ciphertext->bytes() + headroom, 0, clen);
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, plaintext_data, plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
@@ -530,7 +530,7 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 }
 
 int cipher::chunk_encrypt_frame_stream(uint64_t* counter,
-                                       const uint8_t* plaintext_data,
+                                       const std::byte* plaintext_data,
                                        size_t plaintext_size,
                                        GrowableIOBuffer* ciphertext) const {
   int err;
@@ -542,7 +542,7 @@ int cipher::chunk_encrypt_frame_stream(uint64_t* counter,
 
   VLOG(4) << "encrypt: stream chunk: origin: " << plaintext_size << " actual: " << clen;
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, plaintext_data, plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;

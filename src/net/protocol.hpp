@@ -106,8 +106,12 @@ done:
   ::gurl_base::logging::LogMessage(file, line, -4).stream() << hex_buffer;
 }
 
+inline void DumpHex_Impl(const char* file, int line, const char* prefix, const std::byte* data, uint32_t length) {
+  DumpHex_Impl(file, line, prefix, reinterpret_cast<const uint8_t*>(data), length);
+}
+
 inline void DumpHex_Impl(const char* file, int line, const char* prefix, const net::IOBuffer* buf) {
-  const uint8_t* data = buf->bytes();
+  const std::byte* data = buf->bytes();
   uint32_t length = buf->size();
   DumpHex_Impl(file, line, prefix, data, length);
 }

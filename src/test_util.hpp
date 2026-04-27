@@ -22,13 +22,15 @@
 
 /* Copyright (c) 2022-2026 Chilledheart  */
 
-#include "core/span.hpp"
-
 #ifndef _TEST_UTIL_H
 #define _TEST_UTIL_H
 
 #include <cstring>
+#include <cstdint>
 #include <iosfwd>
+#include <span>
+#include <vector>
+#include <string>
 
 namespace testing {
 
@@ -39,17 +41,18 @@ void hexdump(FILE* fp, const char* msg, const void* in, size_t len);
 // Bytes is a wrapper over a byte slice which may be compared for equality. This
 // allows it to be used in EXPECT_EQ macros.
 struct Bytes {
-  Bytes(const uint8_t* data_arg, size_t len_arg) : span_(data_arg, len_arg) {}
-  Bytes(const char* data_arg, size_t len_arg) : span_(reinterpret_cast<const uint8_t*>(data_arg), len_arg) {}
+  Bytes(const uint8_t* data_arg, size_t len_arg) : span_(reinterpret_cast<const std::byte*>(data_arg), len_arg) {}
+  Bytes(const char* data_arg, size_t len_arg) : span_(reinterpret_cast<const std::byte*>(data_arg), len_arg) {}
+  Bytes(const std::byte* data_arg, size_t len_arg) : span_(data_arg, len_arg) {}
 
   Bytes(const Bytes&) = default;
   Bytes& operator=(const Bytes&) = default;
 
-  explicit Bytes(const char* str) : span_(reinterpret_cast<const uint8_t*>(str), strlen(str)) {}
-  explicit Bytes(const std::string& str) : span_(reinterpret_cast<const uint8_t*>(str.data()), str.size()) {}
-  explicit Bytes(span<const uint8_t> span) : span_(span) {}
+  explicit Bytes(const char* str) : span_(reinterpret_cast<const std::byte*>(str), strlen(str)) {}
+  explicit Bytes(const std::string& str) : span_(reinterpret_cast<const std::byte*>(str.data()), str.size()) {}
+  explicit Bytes(std::span<const std::byte> span) : span_(span) {}
 
-  span<const uint8_t> span_;
+  std::span<const std::byte> span_;
 };
 
 // DecodeHex decodes |in| from hexadecimal and writes the output to |out|. It
@@ -58,7 +61,7 @@ struct Bytes {
 bool DecodeHex(std::vector<uint8_t>* out, const std::string& in);
 
 // EncodeHex returns |in| encoded in hexadecimal.
-std::string EncodeHex(span<const uint8_t> in);
+std::string EncodeHex(std::span<const std::byte> in);
 
 inline bool operator==(const ::testing::Bytes& a, const ::testing::Bytes& b) {
   return a.span_.size_bytes() == b.span_.size_bytes() &&

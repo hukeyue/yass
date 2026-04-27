@@ -29,9 +29,9 @@
 #include <stdint.h>
 
 #include <memory>
+#include <span>
 #include <string>
 
-#include "base/containers/span.h"
 #include "base/memory/free_deleter.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
@@ -105,11 +105,11 @@ class IOBuffer : public gurl_base::RefCountedThreadSafe<IOBuffer> {
   char* data() { return data_; }
   const char* data() const { return data_; }
 
-  uint8_t* bytes() { return reinterpret_cast<uint8_t*>(data()); }
-  const uint8_t* bytes() const { return reinterpret_cast<const uint8_t*>(data()); }
+  std::byte* bytes() { return reinterpret_cast<std::byte*>(data()); }
+  const std::byte* bytes() const { return reinterpret_cast<const std::byte*>(data()); }
 
-  gurl_base::span<uint8_t> span() { return gurl_base::make_span(bytes(), static_cast<size_t>(size_)); }
-  gurl_base::span<const uint8_t> span() const { return gurl_base::make_span(bytes(), static_cast<size_t>(size_)); }
+  std::span<std::byte> span() { return std::span(bytes(), static_cast<size_t>(size_)); }
+  std::span<const std::byte> span() const { return std::span(bytes(), static_cast<size_t>(size_)); }
 
   // added
   static scoped_refptr<IOBuffer> copyBuffer(const void* data, int size);
@@ -121,8 +121,9 @@ class IOBuffer : public gurl_base::RefCountedThreadSafe<IOBuffer> {
 
   IOBuffer();
   IOBuffer(char* data, size_t size);
-  explicit IOBuffer(gurl_base::span<char> data);
-  explicit IOBuffer(gurl_base::span<uint8_t> data);
+  explicit IOBuffer(std::span<char> data);
+  explicit IOBuffer(std::span<uint8_t> data);
+  explicit IOBuffer(std::span<std::byte> data);
 
   virtual ~IOBuffer();
 
@@ -231,12 +232,12 @@ class GrowableIOBuffer : public IOBuffer {
   //
   // The `span()` method in the base class only gives the part of the buffer
   // after `offset()`.
-  gurl_base::span<uint8_t> everything();
-  gurl_base::span<const uint8_t> everything() const;
+  std::span<std::byte> everything();
+  std::span<const std::byte> everything() const;
 
   // Return a span before the `offset()`.
-  gurl_base::span<uint8_t> span_before_offset();
-  gurl_base::span<const uint8_t> span_before_offset() const;
+  std::span<std::byte> span_before_offset();
+  std::span<const std::byte> span_before_offset() const;
 
   // added
   static scoped_refptr<GrowableIOBuffer> copyBuffer(const void* data, int size);
@@ -279,8 +280,9 @@ class PickledIOBuffer : public IOBuffer {
 class WrappedIOBuffer : public IOBuffer {
  public:
   WrappedIOBuffer(const char* data, size_t size);
-  explicit WrappedIOBuffer(gurl_base::span<const char> data);
-  explicit WrappedIOBuffer(gurl_base::span<const uint8_t> data);
+  explicit WrappedIOBuffer(std::span<const char> data);
+  explicit WrappedIOBuffer(std::span<const uint8_t> data);
+  explicit WrappedIOBuffer(std::span<const std::byte> data);
 
  protected:
   ~WrappedIOBuffer() override;

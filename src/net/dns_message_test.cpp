@@ -27,7 +27,6 @@
 
 #include <gmock/gmock.h>
 
-#include "core/span.hpp"
 #include "net/dns_message_request.hpp"
 #include "net/dns_message_response_parser.hpp"
 #include "net/io_buffer.hpp"
@@ -44,7 +43,7 @@ using namespace net;
 using namespace net::dns_message;
 
 #ifdef HAVE_C_ARES
-static span<const uint8_t> CreateRequery(const char* name, int dnsclass, int type) {
+static std::span<const std::byte> CreateRequery(const char* name, int dnsclass, int type) {
   uint8_t* buf = nullptr;
   int buflen = 0;
 #if defined(__clang__) || defined(__GNUC__)
@@ -60,7 +59,7 @@ static span<const uint8_t> CreateRequery(const char* name, int dnsclass, int typ
   }
   memcpy(poolbuf, buf, buflen);
   ares_free_string(buf);
-  return span<const uint8_t>(poolbuf, static_cast<size_t>(buflen));
+  return std::span<const std::byte>(reinterpret_cast<const std::byte*>(poolbuf), static_cast<size_t>(buflen));
 }
 #endif
 

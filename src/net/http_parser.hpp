@@ -27,8 +27,6 @@
 
 #include <absl/container/flat_hash_map.h>
 
-#include "core/span.hpp"
-
 #ifdef HAVE_BALSA_HTTP_PARSER
 #if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -63,7 +61,7 @@ class HttpRequestParser : public quiche::BalsaVisitorInterface {
  public:
   HttpRequestParser(bool is_request = true);
 
-  int Parse(span<const uint8_t> buf, bool* ok);
+  int Parse(std::span<const std::byte> buf, bool* ok);
 
   const std::string& host() const { return http_host_; }
   uint16_t port() const { return http_port_; }
@@ -149,7 +147,7 @@ class HttpRequestParser {
   HttpRequestParser(bool is_request = true);
   virtual ~HttpRequestParser();
 
-  int Parse(span<const uint8_t> buf, bool* ok);
+  int Parse(std::span<const std::byte> buf, bool* ok);
 
   void ReforgeHttpRequest(std::string* header,
                           const absl::flat_hash_map<std::string, std::string>* additional_headers = nullptr);

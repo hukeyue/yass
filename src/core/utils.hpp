@@ -39,8 +39,6 @@
 #include <base/strings/string_number_conversions.h>
 #include <base/strings/sys_string_conversions.h>
 
-#include "core/span.hpp"
-
 #ifdef __ANDROID__
 typedef int (*OpenApkAssetType)(const std::string&, gurl_base::MemoryMappedFile::Region*);
 extern OpenApkAssetType a_open_apk_asset;
@@ -210,7 +208,7 @@ bool Net_ipv6works();
 using ssize_t = ptrdiff_t;
 #endif
 
-ssize_t ReadFileToBuffer(const std::string& path, span<uint8_t> buffer);
+ssize_t ReadFileToBuffer(const std::string& path, std::span<std::byte> buffer);
 ssize_t WriteFileWithBuffer(const std::string& path, std::string_view buf);
 PlatformFile OpenReadFile(const std::string& path);
 #ifdef _WIN32

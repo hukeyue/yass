@@ -42,7 +42,6 @@
 #include "config/config_network.hpp"
 #include "core/compiler_specific.hpp"
 #include "core/logging.hpp"
-#include "core/span.hpp"
 #include "core/utils.hpp"
 
 namespace net {
@@ -72,7 +71,7 @@ std::vector<std::string> GetTCPAvailableCongestionAlgorithms() {
 #if BUILDFLAG(IS_LINUX)
   char buf[4096] = {};
   const std::string procfs = "/proc/sys/net/ipv4/tcp_available_congestion_control";
-  ssize_t bytes = ReadFileToBuffer(procfs, as_writable_bytes(make_span(buf)));
+  ssize_t bytes = ReadFileToBuffer(procfs, std::as_writable_bytes(std::span(buf)));
   if (bytes > 0) {
     std::string_view sbuf = std::string_view(buf, bytes);
     LOG(INFO) << "tcp congestion: available algorithms: " << sbuf;

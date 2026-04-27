@@ -198,7 +198,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
           std::string recv_buff_hdr_str(asio::buffers_begin(recv_buff_hdr.data()),
                                         asio::buffers_begin(recv_buff_hdr.data()) + bytes_transferred);
-          span<const uint8_t> buf = as_bytes(make_span(recv_buff_hdr_str));
+          auto buf = std::as_bytes(std::span(recv_buff_hdr_str));
 
           HttpRequestParser parser;
           bool ok;
@@ -617,7 +617,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
 
     std::string response_hdr2_str(asio::buffers_begin(response_hdr2.data()),
                                   asio::buffers_begin(response_hdr2.data()) + read);
-    span<const uint8_t> buf = as_bytes(make_span(response_hdr2_str));
+    auto buf = std::as_bytes(std::span(response_hdr2_str));
 
     HttpResponseParser parser;
     bool ok;

@@ -657,7 +657,7 @@ void SetExecutablePath(const std::wstring& exe_path) {
   absl::SetFlag(&FLAGS_log_program_name, absl::flags_internal::ShortProgramInvocationName());
 }
 
-ssize_t ReadFileToBuffer(const std::string& path, span<uint8_t> buffer) {
+ssize_t ReadFileToBuffer(const std::string& path, std::span<std::byte> buffer) {
   DCHECK_LE(buffer.size(), std::numeric_limits<DWORD>::max());
   HANDLE hFile =
       ::CreateFileW(SysUTF8ToWide(path).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);

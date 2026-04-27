@@ -100,7 +100,7 @@ class cipher {
 
   void process_bytes(GrowableIOBuffer* ciphertext);
 
-  void encrypt(const uint8_t* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext);
+  void encrypt(const std::byte* plaintext_data, size_t plaintext_size, GrowableIOBuffer* ciphertext);
 
  private:
   void decrypt_salt(GrowableIOBuffer* chunk);
@@ -114,17 +114,17 @@ class cipher {
   int chunk_decrypt_frame(uint64_t* counter, GrowableIOBuffer* plaintext, GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame_aead(uint64_t* counter,
-                               const uint8_t* plaintext_data,
+                               const std::byte* plaintext_data,
                                size_t plaintext_size,
                                GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame_stream(uint64_t* counter,
-                                 const uint8_t* plaintext_data,
+                                 const std::byte* plaintext_data,
                                  size_t plaintext_size,
                                  GrowableIOBuffer* ciphertext) const;
 
   int chunk_encrypt_frame(uint64_t* counter,
-                          const uint8_t* plaintext_data,
+                          const std::byte* plaintext_data,
                           size_t plaintext_size,
                           GrowableIOBuffer* ciphertext) const;
 

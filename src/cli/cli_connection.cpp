@@ -73,7 +73,7 @@ static std::vector<http2::adapter::Header> GenerateHeaders(std::vector<std::pair
 
 static std::string GetProxyAuthorizationIdentity(std::string_view username, std::string_view password) {
   auto user_pass = absl::StrCat(username, ":", password);
-  return Base64Encode(as_bytes(make_span(user_pass)));
+  return Base64Encode(std::as_bytes(std::span(user_pass)));
 }
 
 static bool g_nonindex_codes_initialized;
@@ -1533,20 +1533,20 @@ void CliConnection::WriteUpstreamSocks5Request() {
 
   buf->appendBytesAtEnd(&header, sizeof(header));
 
-  span<const uint8_t> address;
+  std::span<const std::byte> address;
   std::string domain_name;
 
   uint8_t address_type = socks5::ipv4;
   if (request_.address_type() == ss::domain) {
     address_type = socks5::domain;
     domain_name = request_.domain_name();
-    address = as_bytes(make_span(domain_name));
+    address = std::as_bytes(std::span(domain_name));
   } else if (request_.address_type() == ss::ipv6) {
     address_type = socks5::ipv6;
-    address = as_bytes(make_span(request_.address6()));
+    address = std::as_bytes(std::span(request_.address6()));
   } else {
     address_type = socks5::ipv4;
-    address = as_bytes(make_span(request_.address4()));
+    address = std::as_bytes(std::span(request_.address4()));
   }
 
   buf->appendBytesAtEnd(&address_type, sizeof(address_type));

@@ -241,7 +241,7 @@ HttpRequestParser::HttpRequestParser(bool is_request) {
   framer_.set_is_request(is_request);
 }
 
-int HttpRequestParser::Parse(span<const uint8_t> buf, bool* ok) {
+int HttpRequestParser::Parse(std::span<const std::byte> buf, bool* ok) {
   int processed = framer_.ProcessInput(reinterpret_cast<const char*>(buf.data()), buf.size());
   *ok = status_ == ParserStatus::Ok;
   return processed;
@@ -454,7 +454,7 @@ HttpRequestParser::~HttpRequestParser() {
   delete parser_;
 }
 
-int HttpRequestParser::Parse(span<const uint8_t> buf, bool* ok) {
+int HttpRequestParser::Parse(std::span<const std::byte> buf, bool* ok) {
   struct http_parser_settings settings_connect = {//.on_message_begin
                                                   nullptr,
                                                   //.on_url
