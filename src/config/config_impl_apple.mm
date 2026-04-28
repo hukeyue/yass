@@ -254,12 +254,13 @@ bool ConfigImplApple::WriteImpl(const std::string& key, const std::vector<std::s
   strs.reserve(value.size());
   for (const auto& v : value) {
     ScopedCFTypeRef<CFStringRef> str_obj(CFStringCreateWithBytes(
-      kCFAllocatorDefault, reinterpret_cast<const UInt8*>(v.data()), v.size(), kCFStringEncodingUTF8, FALSE));
+        kCFAllocatorDefault, reinterpret_cast<const UInt8*>(v.data()), v.size(), kCFStringEncodingUTF8, FALSE));
     strs.push_back(str_obj);
     str_objs.push_back(str_obj.get());
   }
 
-  ScopedCFTypeRef<CFArrayRef> obj(CFArrayCreate(kCFAllocatorDefault, &str_objs[0], str_objs.size(), &kCFTypeArrayCallBacks));
+  ScopedCFTypeRef<CFArrayRef> obj(
+      CFArrayCreate(kCFAllocatorDefault, &str_objs[0], str_objs.size(), &kCFTypeArrayCallBacks));
   CFDictionarySetValue(write_root_, SysUTF8ToCFStringRef(key).get(), obj);
   return true;
 }

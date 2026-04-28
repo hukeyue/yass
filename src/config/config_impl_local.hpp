@@ -132,7 +132,7 @@ class ConfigImplLocal : public ConfigImpl {
 
   bool HasKeyStringArrayImpl(const std::string& key) override {
     if (root_.isMember(key) && root_[key].isArray()) {
-      for (const auto &member : root_[key]) {
+      for (const auto& member : root_[key]) {
         if (!member.isString()) {
           return false;
         }
@@ -164,7 +164,7 @@ class ConfigImplLocal : public ConfigImpl {
   bool ReadImpl(const std::string& key, std::vector<std::string>* value) override {
     value->clear();
     if (root_.isMember(key) && root_[key].isArray()) {
-      for (const auto &member : root_[key]) {
+      for (const auto& member : root_[key]) {
         if (!member.isString()) {
           std::cerr << "bad field: " << key << std::endl;
           return false;
@@ -228,7 +228,7 @@ class ConfigImplLocal : public ConfigImpl {
   }
 
   bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override {
-    auto &arr = root_[key];
+    auto& arr = root_[key];
     for (const auto& v : value)
       arr.append(v);
     return true;

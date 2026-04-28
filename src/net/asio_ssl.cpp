@@ -976,9 +976,7 @@ done:
   }
 }
 
-static int get_zlib_compressed_data(std::string* output,
-                                    const unsigned char* begin,
-                                    const unsigned char* end) {
+static int get_zlib_compressed_data(std::string* output, const unsigned char* begin, const unsigned char* end) {
   output->clear();
   output->reserve((end - begin) * 2);
   /* taken from https://zlib.net/zlib_how.html */
@@ -1014,10 +1012,10 @@ static int get_zlib_compressed_data(std::string* output,
       strm.next_out = out;
 
       ret = inflate(&strm, Z_NO_FLUSH);
-      DCHECK_NE(Z_STREAM_ERROR, ret);  /* state not clobbered */
+      DCHECK_NE(Z_STREAM_ERROR, ret); /* state not clobbered */
       switch (ret) {
         case Z_NEED_DICT:
-          ret = Z_DATA_ERROR;     /* and fall through */
+          ret = Z_DATA_ERROR; /* and fall through */
         case Z_DATA_ERROR:
         case Z_MEM_ERROR:
           (void)inflateEnd(&strm);
@@ -1046,5 +1044,6 @@ extern "C" const unsigned char _z_binary_supplementary_ca_bundle_crt_start[];
 extern "C" const unsigned char _z_binary_supplementary_ca_bundle_crt_end[];
 
 int get_binary_supplementary_ca_bundle(std::string* output) {
-  return get_zlib_compressed_data(output, _z_binary_supplementary_ca_bundle_crt_start, _z_binary_supplementary_ca_bundle_crt_end);
+  return get_zlib_compressed_data(output, _z_binary_supplementary_ca_bundle_crt_start,
+                                  _z_binary_supplementary_ca_bundle_crt_end);
 }

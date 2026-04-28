@@ -27,9 +27,9 @@
 #include <string.h>
 
 yass_cipher_method yass_to_cipher_method(const char* method) {
-#define XX(num, name, string)                \
-  if (0 == strncmp(method, string, 80)) {    \
-    return YASS_CRYPTO_##name;               \
+#define XX(num, name, string)             \
+  if (0 == strncmp(method, string, 80)) { \
+    return YASS_CRYPTO_##name;            \
   }
   YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
@@ -38,9 +38,9 @@ yass_cipher_method yass_to_cipher_method(const char* method) {
 
 const char* yass_to_cipher_method_name(yass_cipher_method method) {
   switch (method) {
-#define XX(num, name, string)                \
-  case num: {                                \
-    return #name;                            \
+#define XX(num, name, string) \
+  case num: {                 \
+    return #name;             \
   }
     YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
@@ -51,9 +51,9 @@ const char* yass_to_cipher_method_name(yass_cipher_method method) {
 
 const char* yass_to_cipher_method_str(yass_cipher_method method) {
   switch (method) {
-#define XX(num, name, string)                \
-  case num: {                                \
-    return string;                           \
+#define XX(num, name, string) \
+  case num: {                 \
+    return string;            \
   }
     YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
@@ -82,7 +82,7 @@ YASS_CIPHER_METHOD_MAP(XX)
 YASS_CIPHER_METHOD_MAP(XX)
 #undef XX
 
-#define XX(num, name, string) (yass_cipher_method)num,
+#define XX(num, name, string) (yass_cipher_method) num,
 const yass_cipher_method kYassCipherMethods[] = {YASS_CIPHER_METHOD_VALID_MAP(XX)};
 #undef XX
 

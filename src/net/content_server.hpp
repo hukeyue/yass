@@ -43,10 +43,10 @@
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
 #include "net/asio.hpp"
+#include "net/client_connection_config.hpp"
 #include "net/connection.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
-#include "net/client_connection_config.hpp"
 #include "net/server_connection_config.hpp"
 #include "net/ssl_client_session_cache.hpp"
 #include "net/ssl_socket.hpp"
@@ -217,8 +217,8 @@ class ContentServer {
           ctx.acceptor->close(ec);
           ctx.acceptor.reset();
           if (ec) {
-            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
-                         << " acceptor (" << ctx.endpoint << ") close failed: " << ec;
+            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " acceptor (" << ctx.endpoint
+                         << ") close failed: " << ec;
           }
         }
       }
@@ -245,8 +245,8 @@ class ContentServer {
           ctx.acceptor->close(ec);
           ctx.acceptor.reset();
           if (ec) {
-            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
-                         << " acceptor (" << ctx.endpoint << ") close failed: " << ec;
+            LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " acceptor (" << ctx.endpoint
+                         << ") close failed: " << ec;
           }
         }
       }
@@ -260,8 +260,7 @@ class ContentServer {
 
       opened_connections_ = 0;
       for (auto [conn_id, conn] : connection_map) {
-        VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_
-                << " closing Connection: " << conn_id;
+        VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
         conn->close();
       }
 
@@ -298,9 +297,8 @@ class ContentServer {
             setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx);
           }
           scoped_refptr<ConnectionType> conn =
-              T::Create(io_context_, remote_config_, ctx.server_config,
-                        upstream_ssl_config_, ctx.renego_allowed_for_http11_proto,
-                        upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
+              T::Create(io_context_, remote_config_, ctx.server_config, upstream_ssl_config_,
+                        ctx.renego_allowed_for_http11_proto, upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
           on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
           if (in_shutdown_) {
             return;
@@ -337,14 +335,15 @@ class ContentServer {
     if (delegate_) {
       delegate_->OnConnect(connection_id);
     }
-    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " with " << conn->peer_endpoint() << " connected";
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " with "
+            << conn->peer_endpoint() << " connected";
     conn->start();
   }
 
   void on_disconnect(scoped_refptr<ConnectionType> conn) {
     int connection_id = conn->connection_id();
-    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " disconnected (has ref " << std::boolalpha
-            << conn->HasAtLeastOneRef() << std::noboolalpha << ")";
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id
+            << " disconnected (has ref " << std::boolalpha << conn->HasAtLeastOneRef() << std::noboolalpha << ")";
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
       connection_map_.erase(iter);
@@ -374,7 +373,7 @@ class ContentServer {
 
   [[nodiscard]]
   bssl::UniquePtr<SSL_CTX> setup_ssl_ctx(asio::error_code& ec) {
-    bssl::UniquePtr<SSL_CTX> ssl_ctx {::SSL_CTX_new(::TLS_server_method())};
+    bssl::UniquePtr<SSL_CTX> ssl_ctx{::SSL_CTX_new(::TLS_server_method())};
     SSL_CTX* ctx = ssl_ctx.get();
     if (!ctx) {
       print_openssl_error();
@@ -504,7 +503,7 @@ class ContentServer {
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(cipher)) {
       if (renego_allowed_for_http11_proto) {
-        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
+        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " ", NextProtoToString(kProtoHTTP11));
       } else {
         protos = NextProtoToString(kProtoHTTP2);
       }
@@ -536,7 +535,8 @@ class ContentServer {
       auto alpn = std::string_view(reinterpret_cast<const char*>(in + 1), in[0]);
       NextProto proto = NextProtoFromString(alpn);
       if (server->on_alpn_select(connection_id, proto)) {
-        VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " Alpn support (server) chosen: " << alpn;
+        VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id
+                << " Alpn support (server) chosen: " << alpn;
 
         *out = in + 1;
         *outlen = in[0];
@@ -548,13 +548,15 @@ class ContentServer {
         return SSL_TLSEXT_ERR_OK;
       }
 
-      VLOG(2) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " Alpn support (server) skipped: " << alpn;
+      VLOG(2) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id
+              << " Alpn support (server) skipped: " << alpn;
       inlen -= 1u + in[0];
       in += 1u + in[0];
     }
 
   err:
-    LOG(WARNING) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " fatal error due to unexpected alpn protos";
+    LOG(WARNING) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id
+                 << " fatal error due to unexpected alpn protos";
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
@@ -586,7 +588,8 @@ class ContentServer {
       return SSL_TLSEXT_ERR_OK;
     }
 
-    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id << " TLSEXT: Servername mismatch "
+    VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag << " Id " << connection_id
+            << " TLSEXT: Servername mismatch "
             << "(got " << server_name << "; want " << expected_server_name << ").";
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
@@ -597,7 +600,8 @@ class ContentServer {
     if (iter != connection_map_.end()) {
       return iter->second->on_alpn_select(proto);
     } else {
-      LOG(INFO) << "Connection (" << T::Name << ") "  << "Tag " << server_tag_ << " invalid connection id: " << connection_id;
+      LOG(INFO) << "Connection (" << T::Name << ") " << "Tag " << server_tag_
+                << " invalid connection id: " << connection_id;
     }
     return false;
   }
@@ -639,7 +643,7 @@ class ContentServer {
     std::string protos;
     if (CIPHER_METHOD_IS_HTTP2(remote_config_.cipher)) {
       if (upstream_ssl_config_.renego_allowed_default) {
-        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " " ,NextProtoToString(kProtoHTTP11));
+        protos = absl::StrCat(NextProtoToString(kProtoHTTP2), " ", NextProtoToString(kProtoHTTP11));
         alpn_protos = {kProtoHTTP2, kProtoHTTP11};
         upstream_ssl_config_.renego_allowed_for_protos = {kProtoHTTP11};
       } else {
@@ -692,7 +696,7 @@ class ContentServer {
       VLOG(1) << "Using upstream certificate (in-memory)";
     }
 
-    std::call_once(boringssl_data_index_init_flag_, [&]{
+    std::call_once(boringssl_data_index_init_flag_, [&] {
       ssl_ctx_data_index_ = SSL_CTX_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
       ssl_socket_data_index_ = SSL_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
     });

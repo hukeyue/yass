@@ -63,9 +63,7 @@ struct RateFlag {
 struct StringArrayFlag {
   explicit StringArrayFlag(std::vector<std::string> arr = {}) : str_array(arr) {}
 
-  operator std::string() const {
-    return absl::StrJoin(str_array, ",");
-  }
+  operator std::string() const { return absl::StrJoin(str_array, ","); }
   operator const std::vector<std::string>&() const { return str_array; }
   std::vector<std::string> str_array;
 };

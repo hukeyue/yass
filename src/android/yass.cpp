@@ -200,19 +200,19 @@ JNIEXPORT void JNICALL Java_it_gui_yass_MainActivity_nativeStart(JNIEnv* env, jo
     if (ec) {
       int status = 0;
       // translate asio netdb and addrinfo categories back to WSA Error Codes
-      if (ec == asio::error::host_not_found) // netdb_category
+      if (ec == asio::error::host_not_found)  // netdb_category
         status = EAI_NONAME;
-      else if (ec == asio::error::host_not_found_try_again) // netdb_category
+      else if (ec == asio::error::host_not_found_try_again)  // netdb_category
         status = EAI_AGAIN;
-      else if (ec == asio::error::no_recovery) // netdb_category
+      else if (ec == asio::error::no_recovery)  // netdb_category
         status = EAI_FAIL;
-      else if (ec == asio::error::service_not_found) // addrinfo_category
+      else if (ec == asio::error::service_not_found)  // addrinfo_category
         status = EAI_SERVICE;
-      else if (ec == asio::error::socket_type_not_supported) // addrinfo_category
+      else if (ec == asio::error::socket_type_not_supported)  // addrinfo_category
         status = EAI_SOCKTYPE;
       if (status != 0) {
         ss << gai_strerror(status);
-      } else  {
+      } else {
         ss << ec;
       }
     }

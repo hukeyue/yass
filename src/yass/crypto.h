@@ -34,6 +34,8 @@
 extern "C" {
 #endif
 
+/* clang-format off */
+
 #define YASS_CIPHER_METHOD_MAP_SODIUM(XX)                  \
   XX(0x3U, AES256GCMSHA256, "aes-256-gcm")                 \
   XX(0x4U, CHACHA20POLY1305IETF, "chacha20-ietf-poly1305") \
@@ -129,8 +131,10 @@ YASS_DLL extern const yass_cipher_method kYassCipherMethods[];
 YASS_DLL extern const char* const kYassCipherMethodCStrs[];
 YASS_DLL extern const wchar_t* const kYassCipherMethodLCStrs[];
 
+/* clang-format on */
+
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // YASS_CRYPTO_H

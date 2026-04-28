@@ -26,8 +26,8 @@
 
 #ifdef HAVE_MBEDTLS
 
-#include "crypto/mbedtls_common.hpp"
 #include "core/logging.hpp"
+#include "crypto/mbedtls_common.hpp"
 
 namespace crypto {
 

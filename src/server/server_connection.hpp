@@ -244,9 +244,13 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
 
   [[nodiscard]]
 #ifdef HAVE_NGHTTP2
-  http2::adapter::NgHttp2Adapter* adapter() { return adapter_.get(); }
+  http2::adapter::NgHttp2Adapter* adapter() {
+    return adapter_.get();
+  }
 #else
-  http2::adapter::OgHttp2Adapter* adapter() { return adapter_.get(); }
+  http2::adapter::OgHttp2Adapter* adapter() {
+    return adapter_.get();
+  }
 #endif
 #endif
 
@@ -421,13 +425,19 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
   bool write_inprogress_ = false;
 
   [[nodiscard]]
-  cipher_method method() const { return local_cipher_; }
+  cipher_method method() const {
+    return local_cipher_;
+  }
 
   [[nodiscard]]
-  bool padding_support() const { return local_config_.padding_support; }
+  bool padding_support() const {
+    return local_config_.padding_support;
+  }
 
   [[nodiscard]]
-  bool redir_mode() const { return false; }
+  bool redir_mode() const {
+    return false;
+  }
 
   friend class DataFrameSource;
 };

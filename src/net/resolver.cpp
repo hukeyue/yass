@@ -53,8 +53,7 @@ class Resolver::ResolverImpl {
 #ifdef HAVE_C_ARES
         resolver_(nullptr),
 #endif
-        resolver_libc_(io_context)
-  {
+        resolver_libc_(io_context) {
   }
 
   ~ResolverImpl() { Reset(); }
@@ -133,8 +132,8 @@ class Resolver::ResolverImpl {
       return;
     }
 #endif
-    resolver_libc_.async_resolve(Net_ipv6works() ? asio::ip::tcp::unspec() : asio::ip::tcp::v4(),
-                                 host_name, std::to_string(port), cb);
+    resolver_libc_.async_resolve(Net_ipv6works() ? asio::ip::tcp::unspec() : asio::ip::tcp::v4(), host_name,
+                                 std::to_string(port), cb);
   }
 
  private:

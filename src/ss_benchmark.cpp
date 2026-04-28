@@ -134,13 +134,13 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             bool renego_allowed_for_http11_proto,
                             SSL_CTX* upstream_ssl_ctx,
                             SSL_CTX* ssl_ctx)
-    : Connection(io_context,
-                 remote_config,
-                 local_config,
-                 upstream_ssl_config,
-                 renego_allowed_for_http11_proto,
-                 upstream_ssl_ctx,
-                 ssl_ctx) {}
+      : Connection(io_context,
+                   remote_config,
+                   local_config,
+                   upstream_ssl_config,
+                   renego_allowed_for_http11_proto,
+                   upstream_ssl_ctx,
+                   ssl_ctx) {}
 
   ~ContentProviderConnection() override { VLOG(1) << "Connection (content-provider) freed memory"; }
 
@@ -470,16 +470,12 @@ class SsEndToEndBM : public benchmark::Fixture {
 
   asio::error_code StartServer(asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
-    server_server_ = std::make_unique<server::ServerServer>(io_context_, 0x100, std::string_view(), std::string_view(),
-                                                            uint16_t(), std::string_view(), std::string_view(),
-                                                            cipher_method(), bool(),
-                                                            std::string_view(), kCertificate, kPrivateKey);
-    server_server_->listen(endpoint, "localhost"sv,
-                           absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                           absl::GetFlag(FLAGS_method).method,
-                           absl::GetFlag(FLAGS_padding_support),
-                           false,
-                           backlog, ec);
+    server_server_ = std::make_unique<server::ServerServer>(
+        io_context_, 0x100, std::string_view(), std::string_view(), uint16_t(), std::string_view(), std::string_view(),
+        cipher_method(), bool(), std::string_view(), kCertificate, kPrivateKey);
+    server_server_->listen(endpoint, "localhost"sv, absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                           absl::GetFlag(FLAGS_method).method, absl::GetFlag(FLAGS_padding_support), false, backlog,
+                           ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -501,12 +497,10 @@ class SsEndToEndBM : public benchmark::Fixture {
   asio::error_code StartLocal(asio::ip::tcp::endpoint remote_endpoint, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
 
-    local_server_ =
-        std::make_unique<cli::CliServer>(io_context_, 0x0, std::string_view(), "localhost"sv, remote_endpoint.port(),
-                                         absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                                         absl::GetFlag(FLAGS_method).method,
-                                         absl::GetFlag(FLAGS_padding_support),
-                                         kCertificate);
+    local_server_ = std::make_unique<cli::CliServer>(io_context_, 0x0, std::string_view(), "localhost"sv,
+                                                     remote_endpoint.port(), absl::GetFlag(FLAGS_username),
+                                                     absl::GetFlag(FLAGS_password), absl::GetFlag(FLAGS_method).method,
+                                                     absl::GetFlag(FLAGS_padding_support), kCertificate);
     local_server_->listen(endpoint, {}, {}, {}, {}, {}, absl::GetFlag(FLAGS_redir_mode), backlog, ec);
 
     if (ec) {

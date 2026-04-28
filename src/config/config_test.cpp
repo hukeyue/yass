@@ -286,7 +286,7 @@ TEST_F(ConfigTest, RWString) {
 
 TEST_F(ConfigTest, RWStringArrayVariant0) {
   auto config_impl = config::ConfigImpl::Create();
-  const std::vector<std::string> test_string_array = { "test-variant0-str", "test-variant0-str2" };
+  const std::vector<std::string> test_string_array = {"test-variant0-str", "test-variant0-str2"};
   const std::string test_key = absl::StrCat("test_string_array_", key_prefix());
 
   absl::SetFlag(&FLAGS_test_string_array, test_string_array);
@@ -304,7 +304,7 @@ TEST_F(ConfigTest, RWStringArrayVariant0) {
   EXPECT_TRUE(config_impl->HasKey<std::vector<std::string>>(test_key));
 #else
   EXPECT_TRUE(config_impl->HasKey<std::string>(test_key));
-  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key)); // TBD not implemented
+  EXPECT_FALSE(config_impl->HasKey<std::vector<std::string>>(test_key));  // TBD not implemented
 #endif
   EXPECT_FALSE(config_impl->HasKey<bool>(test_key));
   EXPECT_FALSE(config_impl->HasKey<uint32_t>(test_key));
@@ -330,7 +330,7 @@ TEST_F(ConfigTest, RWStringArrayVariant0) {
 
 TEST_F(ConfigTest, RWStringArrayVariant1) {
   auto config_impl = config::ConfigImpl::Create();
-  const std::vector<std::string> test_string_array = { "test-variant1-str", "test-variant1-str2" };
+  const std::vector<std::string> test_string_array = {"test-variant1-str", "test-variant1-str2"};
   const std::string test_string = absl::StrJoin(test_string_array, ",");
   const std::string test_key = absl::StrCat("test_string_array_variant1_", key_prefix());
 

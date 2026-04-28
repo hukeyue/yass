@@ -27,13 +27,15 @@
 
 #include "yass/config.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* clang-format off */
 
 #define YASS_CLIENT_ABI_VERSION 3
 #define YASS_CLIENT_ABI_STABLE  0
@@ -204,8 +206,10 @@ YASS_DLL int yass_client_instance_get_last_error_xsi_r(yass_client_instance inst
 typedef void (*yass_client_task_func_t)(void*);
 YASS_DLL int yass_client_instance_post_task(yass_client_instance instance, yass_client_task_func_t func, void* arg);
 
+/* clang-format on */
+
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // YASS_CLIENT_H

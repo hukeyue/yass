@@ -223,8 +223,7 @@ void SetDockIconStyle(bool hidden);
 //
 // from base/files/file_path.cc
 //
-int FilePath_HFSFastUnicodeCompare(std::string_view string1,
-                                   std::string_view string2);
+int FilePath_HFSFastUnicodeCompare(std::string_view string1, std::string_view string2);
 
 std::string FilePath_GetHFSDecomposedForm(std::string_view string);
 std::string FilePath_GetHFSDecomposedForm(CFStringRef cfstring);

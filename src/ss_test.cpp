@@ -155,16 +155,17 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                             bool renego_allowed_for_http11_proto,
                             SSL_CTX* upstream_ssl_ctx,
                             SSL_CTX* ssl_ctx)
-    : Connection(io_context,
-                 remote_config,
-                 local_config,
-                 upstream_ssl_config,
-                 renego_allowed_for_http11_proto,
-                 upstream_ssl_ctx,
-                 ssl_ctx) {}
+      : Connection(io_context,
+                   remote_config,
+                   local_config,
+                   upstream_ssl_config,
+                   renego_allowed_for_http11_proto,
+                   upstream_ssl_ctx,
+                   ssl_ctx) {}
 
   ~ContentProviderConnection() override {
-    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " freed memory";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " freed memory";
   }
 
   ContentProviderConnection(const ContentProviderConnection&) = delete;
@@ -176,7 +177,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void start() { do_io(); }
 
   void close() {
-    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " disconnected";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " disconnected";
     asio::error_code ec;
     downlink_->socket_.close(ec);
     on_disconnect();
@@ -191,7 +193,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_read_until(
         downlink_->socket_, recv_buff_hdr, "\r\n\r\n", [this, self](asio::error_code ec, size_t bytes_transferred) {
           if (ec) {
-            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Failed to transfer data: " << ec;
+            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                         << connection_id() << " Failed to transfer data: " << ec;
             shutdown();
             return;
           }
@@ -204,11 +207,13 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
           bool ok;
           int nparsed = parser.Parse(buf, &ok);
           if (nparsed) {
-            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http request received: "
+            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                    << connection_id() << " http request received: "
                     << std::string_view(reinterpret_cast<const char*>(buf.data()), nparsed);
           }
           if (!ok) {
-            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Bad http request received: "
+            LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                         << connection_id() << " Bad http request received: "
                          << std::string_view(reinterpret_cast<const char*>(buf.data()), nparsed);
             shutdown();
             return;
@@ -220,8 +225,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
           if (recv_buff_hdr.size()) {
             memcpy(g_recv_buffer->data(), &*asio::buffers_begin(recv_buff_hdr.data()), recv_buff_hdr.size());
             g_recv_buffer->set_offset(g_recv_buffer->offset() + recv_buff_hdr.size());
-            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                    << " read http data: " << recv_buff_hdr.size() << " bytes";
+            VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                    << connection_id() << " read http data: " << recv_buff_hdr.size() << " bytes";
           }
 
           write_http_response_hdr1();
@@ -235,13 +240,13 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, asio::const_buffer(http_response_hdr1, sizeof(http_response_hdr1) - 1),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || bytes_transferred != sizeof(http_response_hdr1) - 1) {
-                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                       << " Failed to transfer data: " << ec;
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                       << " Id " << connection_id() << " Failed to transfer data: " << ec;
                           shutdown();
                           return;
                         }
-                        VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                << " write http header: " << bytes_transferred << " bytes.";
+                        VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                                << connection_id() << " write http header: " << bytes_transferred << " bytes.";
                         read_http_request_data();
                       });
   }
@@ -252,13 +257,13 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_read(downlink_->socket_, tail_buffer(g_recv_buffer.get()),
                      [this, self](asio::error_code ec, size_t bytes_transferred) {
                        g_recv_buffer->set_offset(g_recv_buffer->offset() + bytes_transferred);
-                       VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                               << " read http data: " << bytes_transferred << " bytes";
+                       VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                               << connection_id() << " read http data: " << bytes_transferred << " bytes";
 
                        bytes_transferred = g_recv_buffer->capacity();
                        if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                         LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                      << " Failed to transfer data: " << ec;
+                         LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                      << " Id " << connection_id() << " Failed to transfer data: " << ec;
                          shutdown();
                          return;
                        }
@@ -281,8 +286,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, asio::const_buffer(http_response_hdr2.data(), http_response_hdr2.size()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || bytes_transferred != http_response_hdr2.size()) {
-                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                       << " Failed to transfer data: " << ec;
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                       << " Id " << connection_id() << " Failed to transfer data: " << ec;
                           shutdown();
                           return;
                         }
@@ -296,11 +301,11 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     asio::async_write(downlink_->socket_, const_buffer(g_send_buffer.get()),
                       [this, self](asio::error_code ec, size_t bytes_transferred) {
                         if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                       << " Failed to transfer data: " << ec;
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                       << " Id " << connection_id() << " Failed to transfer data: " << ec;
                         } else {
-                          VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
-                                  << " written: " << bytes_transferred << " bytes";
+                          VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                                  << connection_id() << " written: " << bytes_transferred << " bytes";
                         }
                         shutdown();
                       });
@@ -317,10 +322,12 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
     g_in_provider_cv.Signal();
     g_in_provider_mutex.unlock();
     asio::error_code ec;
-    LOG(INFO) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutting down";
+    LOG(INFO) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " shutting down";
     downlink_->socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec);
     if (ec) {
-      LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " shutdown failure: " << ec;
+      LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                   << connection_id() << " shutdown failure: " << ec;
     }
   }
 };
@@ -427,8 +434,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     auto params = GetParam();
     auto server_cipher = std::get<0>(params);
     auto local_cipher = std::get<1>(params);
-    if (server_cipher == CRYPTO_SOCKS4 && local_cipher == CRYPTO_SOCKS4 &&
-        absl::GetFlag(FLAGS_ipv6_mode)) {
+    if (server_cipher == CRYPTO_SOCKS4 && local_cipher == CRYPTO_SOCKS4 && absl::GetFlag(FLAGS_ipv6_mode)) {
       GTEST_SKIP() << "skipped SOCKS4 testcase as socks4 does not support ipv6 address";
       return;
     }
@@ -708,16 +714,11 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
 
   asio::error_code StartServer(cipher_method server_cipher, asio::ip::tcp::endpoint endpoint, int backlog) {
     asio::error_code ec;
-    server_server_ = std::make_unique<server::ServerServer>(io_context_, 0x100, std::string_view(), std::string_view(),
-                                                            uint16_t(), std::string_view(), std::string_view(),
-                                                            cipher_method(), bool(),
-                                                            std::string_view(), kCertificate, kPrivateKey);
-    server_server_->listen(endpoint, "localhost"sv,
-                           absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                           server_cipher,
-                           absl::GetFlag(FLAGS_padding_support),
-                           false,
-                           backlog, ec);
+    server_server_ = std::make_unique<server::ServerServer>(
+        io_context_, 0x100, std::string_view(), std::string_view(), uint16_t(), std::string_view(), std::string_view(),
+        cipher_method(), bool(), std::string_view(), kCertificate, kPrivateKey);
+    server_server_->listen(endpoint, "localhost"sv, absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
+                           server_cipher, absl::GetFlag(FLAGS_padding_support), false, backlog, ec);
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -736,18 +737,17 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     }
   }
 
-  asio::error_code StartLocal(cipher_method remote_cipher, asio::ip::tcp::endpoint remote_endpoint, asio::ip::tcp::endpoint endpoint, int backlog) {
+  asio::error_code StartLocal(cipher_method remote_cipher,
+                              asio::ip::tcp::endpoint remote_endpoint,
+                              asio::ip::tcp::endpoint endpoint,
+                              int backlog) {
     asio::error_code ec;
 
-    local_server_ =
-        std::make_unique<cli::CliServer>(io_context_, 0x0, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv,
-                                         "localhost"sv, remote_endpoint.port(),
-                                         absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password),
-                                         remote_cipher,
-                                         absl::GetFlag(FLAGS_padding_support),
-                                         kCertificate);
+    local_server_ = std::make_unique<cli::CliServer>(
+        io_context_, 0x0, absl::GetFlag(FLAGS_ipv6_mode) ? "::1"sv : "127.0.0.1"sv, "localhost"sv,
+        remote_endpoint.port(), absl::GetFlag(FLAGS_username), absl::GetFlag(FLAGS_password), remote_cipher,
+        absl::GetFlag(FLAGS_padding_support), kCertificate);
     local_server_->listen(endpoint, {}, {}, {}, {}, {}, absl::GetFlag(FLAGS_redir_mode), backlog, ec);
-
 
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
@@ -825,7 +825,7 @@ TEST_P(EndToEndTest, 256K) {
 }
 
 static constexpr const std::tuple<cipher_method, cipher_method> kCiphersPaired[] = {
-#define XX(num, name, string) std::make_tuple(CRYPTO_##name,CRYPTO_##name),
+#define XX(num, name, string) std::make_tuple(CRYPTO_##name, CRYPTO_##name),
     YASS_CIPHER_METHOD_VALID_MAP(XX)
 #undef XX
 };
@@ -836,7 +836,8 @@ INSTANTIATE_TEST_SUITE_P(Ss,
                          [](const ::testing::TestParamInfo<EndToEndTest::ParamType>& info) -> std::string {
                            auto server_cipher = std::get<0>(info.param);
                            auto local_cipher = std::get<1>(info.param);
-                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_", to_cipher_method_name(local_cipher));
+                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_",
+                                               to_cipher_method_name(local_cipher));
                          });
 
 static constexpr const cipher_method kCiphersHttps[] = {
@@ -866,13 +867,12 @@ TEST_P(EndToEndTestPostQuantumnMLKEMOnly, 1M) {
 
 INSTANTIATE_TEST_SUITE_P(Ss,
                          EndToEndTestPostQuantumnMLKEMOnly,
-                         ::testing::Combine(
-                             ::testing::ValuesIn(kCiphersHttps),
-                             ::testing::ValuesIn(kCiphersHttps)),
+                         ::testing::Combine(::testing::ValuesIn(kCiphersHttps), ::testing::ValuesIn(kCiphersHttps)),
                          [](const ::testing::TestParamInfo<EndToEndTest::ParamType>& info) -> std::string {
                            auto server_cipher = std::get<0>(info.param);
                            auto local_cipher = std::get<1>(info.param);
-                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_", to_cipher_method_name(local_cipher));
+                           return absl::StrCat(to_cipher_method_name(server_cipher), "_TO_",
+                                               to_cipher_method_name(local_cipher));
                          });
 
 #endif  // !(defined(MEMORY_SANITIZER) && !defined(NDEBUG))

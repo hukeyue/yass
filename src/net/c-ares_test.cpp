@@ -39,7 +39,8 @@
 #include "net/resolver.hpp"
 #include "test_util.hpp"
 
-ABSL_FLAG(bool, no_cares_tests,
+ABSL_FLAG(bool,
+          no_cares_tests,
 #if BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID)
           true,
 #else

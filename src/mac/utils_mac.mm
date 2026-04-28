@@ -49,8 +49,8 @@
 #include <base/apple/scoped_cftyperef.h>
 #include <base/mac/scoped_ioobject.h>
 #include <base/strings/sys_string_conversions.h>
-#include <build/build_config.h>
 #include <base/third_party/icu/icu_utf.h>
+#include <build/build_config.h>
 
 using namespace std::string_literals;
 
@@ -1053,15 +1053,12 @@ const std::array<UInt16, 11*256> lower_case_table = {
 // position indicated by `index`, or zero if there are no more.
 // The passed-in `index` is automatically advanced as the characters in the
 // input HFS-decomposed UTF-8 strings are read.
-inline base_icu::UChar32 HFSReadNextNonIgnorableCodepoint(const char* string,
-                                                          size_t length,
-                                                          size_t* index) {
+inline base_icu::UChar32 HFSReadNextNonIgnorableCodepoint(const char* string, size_t length, size_t* index) {
   base_icu::UChar32 codepoint = 0;
   while (*index < length && codepoint == 0) {
     // CBU8_NEXT returns a value < 0 in error cases. For purposes of string
     // comparison, we just use that value and flag it with DCHECK.
-    UNSAFE_BUFFERS(CBU8_NEXT(reinterpret_cast<const uint8_t*>(string), *index,
-                             length, codepoint));
+    UNSAFE_BUFFERS(CBU8_NEXT(reinterpret_cast<const uint8_t*>(string), *index, length, codepoint));
     DCHECK_GT(codepoint, 0);
 
     // Note: Here, there are no lower case conversion implemented in the
@@ -1072,8 +1069,7 @@ inline base_icu::UChar32 HFSReadNextNonIgnorableCodepoint(const char* string,
       // Check if there is a subtable for this upper byte.
       UInt16 lookup_offset = lower_case_table[unsigned_codepoint >> 8];
       if (lookup_offset != 0) {
-        codepoint =
-            lower_case_table[lookup_offset + (unsigned_codepoint & 0x00FF)];
+        codepoint = lower_case_table[lookup_offset + (unsigned_codepoint & 0x00FF)];
       }
       // Note: `codepoint` may be again 0 at this point if the character was
       // an ignorable.
@@ -1087,18 +1083,15 @@ inline base_icu::UChar32 HFSReadNextNonIgnorableCodepoint(const char* string,
 // Special UTF-8 version of FastUnicodeCompare. Cf:
 // http://developer.apple.com/mac/library/technotes/tn/tn1150.html#StringComparisonAlgorithm
 // The input strings must be in the special HFS decomposed form.
-int FilePath_HFSFastUnicodeCompare(std::string_view string1,
-                                   std::string_view string2) {
+int FilePath_HFSFastUnicodeCompare(std::string_view string1, std::string_view string2) {
   size_t length1 = string1.length();
   size_t length2 = string2.length();
   size_t index1 = 0;
   size_t index2 = 0;
 
   for (;;) {
-    base_icu::UChar32 codepoint1 =
-        HFSReadNextNonIgnorableCodepoint(string1.data(), length1, &index1);
-    base_icu::UChar32 codepoint2 =
-        HFSReadNextNonIgnorableCodepoint(string2.data(), length2, &index2);
+    base_icu::UChar32 codepoint1 = HFSReadNextNonIgnorableCodepoint(string1.data(), length1, &index1);
+    base_icu::UChar32 codepoint2 = HFSReadNextNonIgnorableCodepoint(string2.data(), length2, &index2);
     if (codepoint1 != codepoint2) {
       return (codepoint1 < codepoint2) ? -1 : 1;
     }
@@ -1112,9 +1105,8 @@ int FilePath_HFSFastUnicodeCompare(std::string_view string1,
 
 std::string FilePath_GetHFSDecomposedForm(std::string_view string) {
   apple::ScopedCFTypeRef<CFStringRef> cfstring(CFStringCreateWithBytesNoCopy(
-      nullptr, reinterpret_cast<const UInt8*>(string.data()),
-      checked_cast<CFIndex>(string.length()), kCFStringEncodingUTF8, false,
-      kCFAllocatorNull));
+      nullptr, reinterpret_cast<const UInt8*>(string.data()), checked_cast<CFIndex>(string.length()),
+      kCFStringEncodingUTF8, false, kCFAllocatorNull));
   return FilePath_GetHFSDecomposedForm(cfstring.get());
 }
 
@@ -1134,8 +1126,7 @@ std::string FilePath_GetHFSDecomposedForm(CFStringRef cfstring) {
   // (Increasing rather than decreasing it would clobber the string contents!)
   result.reserve(static_cast<size_t>(length));
   result.resize(static_cast<size_t>(length) - 1);
-  Boolean success =
-      CFStringGetFileSystemRepresentation(cfstring, &result[0], length);
+  Boolean success = CFStringGetFileSystemRepresentation(cfstring, &result[0], length);
   if (success) {
     // Reduce result.length() to actual string length.
     result.resize(strlen(result.c_str()));
@@ -1146,8 +1137,7 @@ std::string FilePath_GetHFSDecomposedForm(CFStringRef cfstring) {
   return result;
 }
 
-int FilePath_CompareIgnoreCase(std::string_view string1,
-                               std::string_view string2) {
+int FilePath_CompareIgnoreCase(std::string_view string1, std::string_view string2) {
   // Quick checks for empty strings - these speed things up a bit and make the
   // following code cleaner.
   if (string1.empty()) {
@@ -1163,13 +1153,11 @@ int FilePath_CompareIgnoreCase(std::string_view string1,
   // GetHFSDecomposedForm() returns an empty string in an error case.
   if (hfs1.empty() || hfs2.empty()) {
     apple::ScopedCFTypeRef<CFStringRef> cfstring1(CFStringCreateWithBytesNoCopy(
-        NULL, reinterpret_cast<const UInt8*>(string1.data()),
-        checked_cast<CFIndex>(string1.length()), kCFStringEncodingUTF8, false,
-        kCFAllocatorNull));
+        NULL, reinterpret_cast<const UInt8*>(string1.data()), checked_cast<CFIndex>(string1.length()),
+        kCFStringEncodingUTF8, false, kCFAllocatorNull));
     apple::ScopedCFTypeRef<CFStringRef> cfstring2(CFStringCreateWithBytesNoCopy(
-        NULL, reinterpret_cast<const UInt8*>(string2.data()),
-        checked_cast<CFIndex>(string2.length()), kCFStringEncodingUTF8, false,
-        kCFAllocatorNull));
+        NULL, reinterpret_cast<const UInt8*>(string2.data()), checked_cast<CFIndex>(string2.length()),
+        kCFStringEncodingUTF8, false, kCFAllocatorNull));
     // If neither GetHFSDecomposedForm nor CFStringCreateWithBytesNoCopy
     // succeed, fall back to strcmp. This can occur when the input string is
     // invalid UTF-8.
@@ -1184,8 +1172,7 @@ int FilePath_CompareIgnoreCase(std::string_view string1,
       }
     }
 
-    return static_cast<int>(CFStringCompare(cfstring1.get(), cfstring2.get(),
-                                            kCFCompareCaseInsensitive));
+    return static_cast<int>(CFStringCompare(cfstring1.get(), cfstring2.get(), kCFCompareCaseInsensitive));
   }
 
   return FilePath_HFSFastUnicodeCompare(hfs1, hfs2);

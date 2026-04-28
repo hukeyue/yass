@@ -35,9 +35,9 @@
 #include "config/config.hpp"
 #include "core/logging.hpp"
 #include "net/asio.hpp"
+#include "net/client_connection_config.hpp"
 #include "net/network.hpp"
 #include "net/protocol.hpp"
-#include "net/client_connection_config.hpp"
 #include "net/server_connection_config.hpp"
 #include "net/ssl_client_session_cache.hpp"
 #include "net/ssl_server_socket.hpp"
@@ -89,7 +89,10 @@ class Downlink {
   virtual void shutdown(asio::error_code& ec) { socket_.shutdown(asio::ip::tcp::socket::shutdown_send, ec); }
 
   [[nodiscard]]
-  virtual bool on_alpn_select(NextProto proto) { LOG(INFO) << "Alpn: Unexpected call"; return false; }
+  virtual bool on_alpn_select(NextProto proto) {
+    LOG(INFO) << "Alpn: Unexpected call";
+    return false;
+  }
 
   virtual void close(asio::error_code& ec) { socket_.close(ec); }
 
@@ -103,7 +106,10 @@ class Downlink {
 
 class SSLDownlink : public Downlink {
  public:
-  SSLDownlink(asio::io_context& io_context, bool renego_allowed_for_http11_proto, cipher_method *local_cipher, SSL_CTX* ssl_ctx)
+  SSLDownlink(asio::io_context& io_context,
+              bool renego_allowed_for_http11_proto,
+              cipher_method* local_cipher,
+              SSL_CTX* ssl_ctx)
       : Downlink(io_context),
         renego_allowed_for_http11_proto_(renego_allowed_for_http11_proto),
         local_cipher_(local_cipher),
@@ -176,7 +182,7 @@ class SSLDownlink : public Downlink {
     // rejected
     return false;
 
-alpn_selected:
+  alpn_selected:
     selected_proto_ = proto;
     if (proto == kProtoHTTP11) {
       *local_cipher_ = CRYPTO_HTTPS;
@@ -246,7 +252,9 @@ class Connection {
   virtual ~Connection() = default;
 
   [[nodiscard]]
-  bool on_alpn_select(NextProto proto) { return downlink_->on_alpn_select(proto); }
+  bool on_alpn_select(NextProto proto) {
+    return downlink_->on_alpn_select(proto);
+  }
 
  public:
   /// Construct the connection with socket

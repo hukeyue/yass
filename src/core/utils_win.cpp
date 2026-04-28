@@ -46,8 +46,8 @@ struct IUnknown;
 
 #include "core/logging.hpp"
 #include "core/utils.hpp"
-#include "yass/version.h"
 #include "yass/feature.h"
+#include "yass/version.h"
 
 // use our dynamic version of GetProductInfo
 #undef GetProductInfo
@@ -240,6 +240,8 @@ uint64_t GetMonotonicTime() {
   return GetTickCount() * 1000000;
 #endif
 }
+
+// clang-format off
 
 #ifdef _MSC_VER
 #define _APP_SUFFIX ".dll"
@@ -453,6 +455,8 @@ static const wchar_t* kDllWhiteList[] = {
 #endif
     nullptr,
 };
+
+// clang-format on
 
 static void CheckDynamicLibraries() {
   std::wstring exe(_MAX_PATH, L'\0');

@@ -25,6 +25,8 @@
 #ifndef YASS_CYRPTO_H
 #define YASS_CYRPTO_H
 
+/* clang-format off */
+
 // YASS_DLL
 //
 #if defined(_WIN32)
@@ -44,5 +46,7 @@
 #     define YASS_DLL
 #  endif
 #endif  // defined(_MSC_VER)
+
+/* clang-format on */
 
 #endif  // YASS_CYRPTO_H

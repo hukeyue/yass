@@ -40,11 +40,10 @@ ABSL_FLAG(int, use_timeout_dns_tests, 5000, "Timeout (in milliseconds) in DNS te
 ABSL_FLAG(int, use_concurrent_dns_tests, 2, "Concurrent DNS tests in a row");
 ABSL_FLAG(int, use_repeated_dns_tests, 2, "Repeated DNS tests in a row");
 
-#define DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://223.5.5.5/dns-query" : \
-                 "https://1.1.1.1/dns-query")
+#define DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://223.5.5.5/dns-query" : "https://1.1.1.1/dns-query")
 
-#define INVALID_DOH_URL (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://5.5.5.5/dns-query" : \
-                 "https://2.2.2.2/dns-query")
+#define INVALID_DOH_URL \
+  (absl::GetFlag(FLAGS_use_china_dns_tests) ? "https://5.5.5.5/dns-query" : "https://2.2.2.2/dns-query")
 
 using namespace net;
 

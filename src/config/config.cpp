@@ -55,20 +55,17 @@ bool ReadConfig() {
 
   /* priorize loading cli-only options */
   if (pType == YASS_CLIENT_DEFAULT) {
-    if (config_impl->HasKey<std::vector<std::string>>("proxy") ||
-        config_impl->HasKey<std::string>("proxy")) {
+    if (config_impl->HasKey<std::vector<std::string>>("proxy") || config_impl->HasKey<std::string>("proxy")) {
       config_impl->Read("proxy", &FLAGS_proxy);
     }
-    if (config_impl->HasKey<std::vector<std::string>>("listen") ||
-        config_impl->HasKey<std::string>("listen")) {
+    if (config_impl->HasKey<std::vector<std::string>>("listen") || config_impl->HasKey<std::string>("listen")) {
       config_impl->Read("listen", &FLAGS_listen);
     }
 
-    if (!absl::GetFlag(FLAGS_proxy).str_array.empty() &&
-        !absl::GetFlag(FLAGS_listen).str_array.empty()) {
+    if (!absl::GetFlag(FLAGS_proxy).str_array.empty() && !absl::GetFlag(FLAGS_listen).str_array.empty()) {
       LOG(WARNING) << "Both of LISTEN-URIs and PROXY-URIs are specified.";
       LOG(WARNING) << "All of server_host, server_sni, server_port, username, password, method, "
-        "padding_support, redir_mode, local_host and local_port fields are ignored now.";
+                      "padding_support, redir_mode, local_host and local_port fields are ignored now.";
       overridable_fields_loaded = true;
     }
   }
@@ -540,7 +537,7 @@ void SetClientUsageMessage(std::string_view exec_path) {
   --enable_post_quantum_kyber Enables post-quantum key-agreements (i.e. ML-KEM) in TLS 1.3 connections.
 )";
   constexpr std::string_view kExtraUsage =
-  R"(
+      R"(
   --proxy=PROXY-URI[","PROXY-URI] Routes traffic via the proxy URIs
   --listen=LISTEN-URI[","LISTEN-URI] Listens at given URIs
   )";
@@ -549,7 +546,8 @@ void SetClientUsageMessage(std::string_view exec_path) {
   if (pType == YASS_CLIENT_DEFAULT) {
     additionalUsage = kExtraUsage;
   }
-  absl::SetProgramUsageMessage(absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", kClientUsage, additionalUsage));
+  absl::SetProgramUsageMessage(
+      absl::StrCat("Usage: ", Basename(exec_path), " [options ...]\n", kClientUsage, additionalUsage));
 }
 
 void SetServerUsageMessage(std::string_view exec_path) {

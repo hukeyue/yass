@@ -42,11 +42,11 @@
 #include <QVBoxLayout>
 #include <QWindow>
 
+#include "_yass/gui_variant.h"
 #include "cli/cli_connection_stats.hpp"
 #include "config/config.hpp"
 #include "core/utils.hpp"
 #include "freedesktop/utils.hpp"
-#include "_yass/gui_variant.h"
 #include "yass/feature.h"
 #include "yass/version.h"
 

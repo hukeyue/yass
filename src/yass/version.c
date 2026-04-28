@@ -28,7 +28,7 @@ const char* yass_app_name(void) {
   return YASS_APP_NAME;
 }
 
-void yass_app_version(int *major, int *minor, int *patch, int *tweak) {
+void yass_app_version(int* major, int* minor, int* patch, int* tweak) {
   if (major)
     *major = YASS_APP_VERSION_MAJOR;
 
@@ -45,4 +45,3 @@ void yass_app_version(int *major, int *minor, int *patch, int *tweak) {
 const char* yass_app_version_str(void) {
   return YASS_APP_VERSION;
 }
-

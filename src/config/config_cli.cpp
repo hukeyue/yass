@@ -62,4 +62,3 @@ Once specified, all of server_host, server_sni, server_port, username, password,
 )";
 
 ABSL_FLAG(StringArrayFlag, listen, {}, kListenUsage);
-

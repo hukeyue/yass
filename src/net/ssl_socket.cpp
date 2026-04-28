@@ -31,8 +31,7 @@ using namespace std::string_view_literals;
 
 namespace net {
 
-SSLClientSessionCache::Key
-SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
+SSLClientSessionCache::Key SSLSocket::GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const {
   SSLClientSessionCache::Key key;
   key.server = host_and_port_;
   key.dest_ip_addr = dest_ip_addr;
@@ -123,8 +122,7 @@ SSLSocket::SSLSocket(int ssl_socket_data_index,
   // then disable it.
   SSL_set_options(ssl_.get(), SSL_OP_LEGACY_SERVER_CONNECT);
 
-  SSL_set_mode(ssl_.get(),
-               SSL_MODE_CBC_RECORD_SPLITTING | SSL_MODE_ENABLE_FALSE_START);
+  SSL_set_mode(ssl_.get(), SSL_MODE_CBC_RECORD_SPLITTING | SSL_MODE_ENABLE_FALSE_START);
 
   std::string command(kSSLDefaultCiphersList);
 

@@ -173,7 +173,7 @@ void ReadConfigFileAndArguments(int argc, const char** argv) {
   }
 
   // raise some early warning on SSL client/server setups
-  auto method = absl::GetFlag(FLAGS_method).method; // FIXME stop invoking absl::GetFlag directly
+  auto method = absl::GetFlag(FLAGS_method).method;  // FIXME stop invoking absl::GetFlag directly
   if (CIPHER_METHOD_IS_TLS(method)) {
     if (!config::ReadTLSConfigFile()) {
       exit(-1);

@@ -25,12 +25,12 @@
 #ifndef _TEST_UTIL_H
 #define _TEST_UTIL_H
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 #include <iosfwd>
 #include <span>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace testing {
 

@@ -54,7 +54,6 @@ class ConfigImplApple : public ConfigImpl {
   bool HasKeyInt32Impl(const std::string& key) override;
   bool HasKeyInt64Impl(const std::string& key) override;
 
-
   bool ReadImpl(const std::string& key, std::string* value) override;
   bool ReadImpl(const std::string& key, std::vector<std::string>* value) override;
   bool ReadImpl(const std::string& key, bool* value) override;

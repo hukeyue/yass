@@ -190,8 +190,8 @@ int main(int argc, const char* argv[]) {
 
   ServerServer server(io_context, 0x100);
   for (auto& endpoint : endpoints) {
-    server.listen(endpoint, host_sni, server_username, server_password, server_method,
-                  server_padding_support, {}, SOMAXCONN, ec);
+    server.listen(endpoint, host_sni, server_username, server_password, server_method, server_padding_support, {},
+                  SOMAXCONN, ec);
     if (ec) {
       LOG(ERROR) << "listen failed due to: " << ec;
       server.stop();

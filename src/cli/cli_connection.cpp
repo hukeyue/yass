@@ -37,8 +37,8 @@
 #include "net/padding.hpp"
 #include "net/socks4_request_parser.hpp"
 #include "net/socks5_request_parser.hpp"
-#include "yass/version.h"
 #include "yass/feature.h"
+#include "yass/version.h"
 
 #include <build/build_config.h>
 
@@ -183,7 +183,8 @@ CliConnection::CliConnection(asio::io_context& io_context,
       resolver_(io_context) {}
 
 CliConnection::~CliConnection() {
-  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " freed memory";
+  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " freed memory";
 }
 
 void CliConnection::start() {
@@ -240,7 +241,8 @@ bool CliConnection::on_received_data(GrowableIOBuffer* buf) {
 }
 
 void CliConnection::on_protocol_error() {
-  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Protocol error";
+  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+               << " Protocol error";
   disconnected(asio::error::connection_aborted);
 }
 
@@ -275,23 +277,24 @@ bool CliConnection::OnEndHeadersForStream(http2::adapter::Http2StreamId stream_i
     int status_code;
     // https://httpwg.org/specs/rfc9110.html#overview.of.status.codes
     if (!StringToInt(status_code_field, &status_code) || status_code < 100 || status_code >= 600) {
-      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for " << remote_domain()
-                << " got response with invalid status code: " << status_code_field;
+      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for "
+                << remote_domain() << " got response with invalid status code: " << status_code_field;
       return false;
     }
     if (status_code != 200) {
-      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for " << remote_domain()
-                << " got response with unexpected status code: " << status_code << " expected: 200";
+      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for "
+                << remote_domain() << " got response with unexpected status code: " << status_code << " expected: 200";
       return false;
     }
   } else {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for " << remote_domain()
-                 << " got response with empty status code";
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for "
+                 << remote_domain() << " got response with empty status code";
     return false;
   }
 
-  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for " << remote_domain() << " Padding support "
-            << (padding_support_in_fact_ ? "enabled" : "disabled") << " Backed by " << server_field << ".";
+  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " for "
+            << remote_domain() << " Padding support " << (padding_support_in_fact_ ? "enabled" : "disabled")
+            << " Backed by " << server_field << ".";
 
   // we're done
   request_map_.clear();
@@ -317,7 +320,8 @@ bool CliConnection::OnCloseStream(StreamId stream_id, http2::adapter::Http2Error
 }
 
 void CliConnection::OnConnectionError(ConnectionError error) {
-  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http2 connection error: " << (int)error;
+  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " http2 connection error: " << (int)error;
   data_frame_ = nullptr;
   stream_id_ = 0;
   disconnected(asio::error::invalid_argument);
@@ -325,7 +329,8 @@ void CliConnection::OnConnectionError(ConnectionError error) {
 
 bool CliConnection::OnFrameHeader(StreamId stream_id, size_t /*length*/, uint8_t /*type*/, uint8_t /*flags*/) {
   if (stream_id && stream_id != stream_id_) {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " refused unexpected HTTP/2 Push";
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                 << " refused unexpected HTTP/2 Push";
     return false;
   }
   return true;
@@ -366,8 +371,8 @@ bool CliConnection::OnDataForStream(StreamId stream_id, absl::string_view data) 
       DCHECK(buf && buf->size());
       downstream_.push_back(buf);
       ++num_padding_recv_;
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " removed padding for: received " << num_padding_recv_
-              << "th chunk";
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " removed padding for: received " << num_padding_recv_ << "th chunk";
     }
     // Deal with in_middle_buf outside paddings
     if (num_padding_recv_ >= kFirstPaddings && !padding_in_middle_buf_->empty()) {
@@ -472,7 +477,7 @@ void CliConnection::ReadMethodSelect() {
       ec = OnReadHttpRequest(buf.get());
     }
 
-done:
+  done:
     if (ec) {
       OnDisconnect(ec);
     } else {
@@ -525,7 +530,8 @@ void CliConnection::ReadSocks5Handshake() {
 
 asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
 #if BUILDFLAG(IS_MAC)
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " connect redir handshake";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   const bool ipv4_compatible = peer_endpoint_.address().is_v4();
 
@@ -587,11 +593,13 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   }
 
   if (endpoint.address().is_unspecified() || endpoint.port() == 0u) {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir: requested empty host or invalid port";
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                 << " redir: requested empty host or invalid port";
     return asio::error::invalid_argument;
   }
 
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir stream from " << endpoint_ << " to " << endpoint;
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " redir stream from " << endpoint_ << " to " << endpoint;
   OnCmdConnect(endpoint);
 
   asio::error_code ec;
@@ -603,7 +611,8 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   }
   return ec;
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " connect redir handshake";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " connect redir handshake";
   scoped_refptr<CliConnection> self(this);
   struct sockaddr_storage ss = {};
   socklen_t ss_len = sizeof(struct sockaddr_in6);
@@ -626,7 +635,8 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
   }
 
   if (endpoint.address().is_unspecified() || endpoint.port() == 0u) {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir: requested empty host or invalid port";
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                 << " redir: requested empty host or invalid port";
     return asio::error::invalid_argument;
   }
 
@@ -641,18 +651,22 @@ asio::error_code CliConnection::OnReadRedirHandshake(GrowableIOBuffer* buf) {
     int ret = getnameinfo(reinterpret_cast<const struct sockaddr*>(endpoint.data()), endpoint.size(), hostname,
                           sizeof(hostname), service, sizeof(service), NI_NAMEREQD);
     if (ret == 0 && strlen(hostname) != 0 && strlen(hostname) <= TLSEXT_MAXLEN_host_name) {
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir stream from " << hostname << ":" << port << " to "
-              << endpoint;
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " redir stream from " << hostname << ":" << port << " to " << endpoint;
       OnCmdConnect(hostname, port);
     } else {
       if (ret) {
-        VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir getnameinfo failure: " << gai_strerror(ret);
+        VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " redir getnameinfo failure: " << gai_strerror(ret);
       } else if (strlen(hostname) > TLSEXT_MAXLEN_host_name) {
-        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir too long domain name: " << hostname;
+        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                     << " redir too long domain name: " << hostname;
       } else {
-        VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir getnameinfo failure: truncated host name";
+        VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " redir getnameinfo failure: truncated host name";
       }
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " redir stream from " << endpoint_ << " to " << endpoint;
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " redir stream from " << endpoint_ << " to " << endpoint;
       OnCmdConnect(endpoint);
     }
 
@@ -685,18 +699,21 @@ asio::error_code CliConnection::OnReadSocks5MethodSelect(GrowableIOBuffer* buf) 
     auto it = std::find(request.begin(), request.end(), socks5::no_auth_required);
     if (it == request.end()) {
       // accepted but rejected
-      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks5: no auth required.";
+      LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " socks5: no auth required.";
       return asio::error::connection_refused;
     }
 
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks5 method select";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " socks5 method select";
     return asio::error_code();
   }
   return asio::error::invalid_argument;
 }
 
 asio::error_code CliConnection::OnReadSocks5Handshake(GrowableIOBuffer* buf) {
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " try socks5 handshake";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " try socks5 handshake";
   socks5::request_parser parser;
   socks5::request_parser::result_type result;
   std::tie(result, std::ignore) = parser.parse(s5_request_, buf->data(), buf->data() + buf->size());
@@ -706,14 +723,16 @@ asio::error_code CliConnection::OnReadSocks5Handshake(GrowableIOBuffer* buf) {
     buf->set_offset(buf->offset() + s5_request_.length());
     SetState(state_socks5_handshake);
 
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks5 handshake began";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " socks5 handshake began";
     return asio::error_code();
   }
   return asio::error::invalid_argument;
 }
 
 asio::error_code CliConnection::OnReadSocks4Handshake(GrowableIOBuffer* buf) {
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " try socks4 handshake";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " try socks4 handshake";
   socks4::request_parser parser;
   socks4::request_parser::result_type result;
   std::tie(result, std::ignore) = parser.parse(s4_request_, buf->data(), buf->data() + buf->size());
@@ -722,14 +741,16 @@ asio::error_code CliConnection::OnReadSocks4Handshake(GrowableIOBuffer* buf) {
     buf->set_offset(buf->offset() + s4_request_.length());
     SetState(state_socks4_handshake);
 
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks4 handshake began";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " socks4 handshake began";
     return asio::error_code();
   }
   return asio::error::invalid_argument;
 }
 
 asio::error_code CliConnection::OnReadHttpRequest(GrowableIOBuffer* buf) {
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " try http handshake";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " try http handshake";
 
   HttpRequestParser parser;
 
@@ -765,7 +786,8 @@ asio::error_code CliConnection::OnReadHttpRequest(GrowableIOBuffer* buf) {
       http_is_keep_alive_ = gurl_base::CompareCaseInsensitiveASCII(parser.connection(), "Keep-Alive"sv) == 0;
       http_keep_alive_remaining_bytes_ = parser.content_length() + header.size() - buf->size();
       if (http_is_keep_alive_ && http_keep_alive_remaining_bytes_ < 0) {
-        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http keepalive request splited";
+        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " http keepalive request splited";
         // split buf into two buffers
         // buf                          -> (request_size)
         // http_keep_alive_pending_buf_ -> (bytes after request_size)
@@ -777,8 +799,9 @@ asio::error_code CliConnection::OnReadHttpRequest(GrowableIOBuffer* buf) {
         DCHECK_EQ(buf->size(), static_cast<int>(request_size));
         // FIXME yield to resume http handling
       }
-      VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " Host: " << http_host_ << " Port: " << http_port_
-              << " KEEPALIVE: " << std::boolalpha << http_is_keep_alive_;
+      VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " Host: " << http_host_ << " Port: " << http_port_ << " KEEPALIVE: " << std::boolalpha
+              << http_is_keep_alive_;
       if (parser.transfer_encoding_is_chunked()) {
         // See #957
         LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
@@ -786,16 +809,18 @@ asio::error_code CliConnection::OnReadHttpRequest(GrowableIOBuffer* buf) {
         http_is_keep_alive_ = false;
       }
     } else {
-      VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " CONNECT: " << http_host_ << " Port: " << http_port_;
+      VLOG(3) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " CONNECT: " << http_host_ << " Port: " << http_port_;
     }
 
     SetState(state_http_handshake);
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http handshake began";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " http handshake began";
     return asio::error_code();
   }
 
-  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " " << parser.ErrorMessage() << ": "
-               << std::string(reinterpret_cast<const char*>(buf->data()), nparsed);
+  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " "
+               << parser.ErrorMessage() << ": " << std::string(reinterpret_cast<const char*>(buf->data()), nparsed);
   return asio::error::invalid_argument;
 }
 
@@ -814,7 +839,8 @@ asio::error_code CliConnection::OnReadHttpRequestAfterReuse(scoped_refptr<Growab
   // request_ isn't updated after OnReadHttpRequest(),
   // so we are safe to use it to tell whether the new destination is different
   if (request_.domain_name() != http_host_ || request_.port() != http_port_) {
-    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " re-used";
+    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " re-used";
     upstream_readable_ = false;
     upstream_writable_ = false;
     request_ = {};
@@ -831,7 +857,8 @@ asio::error_code CliConnection::OnReadHttpRequestAfterReuse(scoped_refptr<Growab
     SetState(state_stream);
     return asio::error::try_again;
   }
-  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " connect (re-used) " << remote_domain();
+  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " connect (re-used) " << remote_domain();
   SetState(state_stream);
   return asio::error_code();
 }
@@ -1149,7 +1176,8 @@ try_again:
     goto out;
   }
   if (read) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream: received reply (pipe): " << read << " bytes."
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " upstream: received reply (pipe): " << read << " bytes."
             << " done: " << channel_->rbytes_transferred() << " bytes.";
   } else {
     goto out;
@@ -1229,7 +1257,8 @@ out:
     WriteUpstreamInPipe();
   }
   if (http2_stream_recv_eof_ && downstream_.empty() && !shutdown_) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " last data sent: shutting down";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " last data sent: shutting down";
     shutdown_ = true;
     asio::error_code ec;
     downlink_->shutdown(ec);
@@ -1274,7 +1303,8 @@ void CliConnection::ReadUpstreamHttpsHandshake(GrowableIOBuffer* buf, asio::erro
                    << " upstream server unhandled: " << parser.ErrorMessage() << ": "
                    << std::string(reinterpret_cast<const char*>(buf->data()), nparsed);
     } else {
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream server returns: " << parser.status_code();
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " upstream server returns: " << parser.status_code();
     }
     ec = asio::error::connection_refused;
     disconnected(ec);
@@ -1302,7 +1332,8 @@ void CliConnection::ReadUpstreamHttpsChunk(GrowableIOBuffer* buf, asio::error_co
     buf->set_offset(buf->offset() + nparsed);
     upstream_https_chunked_ = false;
     if (parser.content_length() != 0) {
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream server returns unexpected body";
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " upstream server returns unexpected body";
       ec = asio::error::invalid_argument;
       return;
     }
@@ -1316,7 +1347,8 @@ void CliConnection::ReadUpstreamHttpsChunk(GrowableIOBuffer* buf, asio::error_co
                    << " upstream server unhandled: " << parser.ErrorMessage() << ": "
                    << std::string(reinterpret_cast<const char*>(buf->data()), nparsed);
     } else {
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream server returns: " << parser.status_code();
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " upstream server returns: " << parser.status_code();
     }
     ec = asio::error::connection_refused;
     return;
@@ -1362,15 +1394,17 @@ void CliConnection::ReadUpstreamMethodSelectResponse(GrowableIOBuffer* buf, asio
     goto err_out;
   }
   if (!socks5_auth_handshake_ && response->method != socks5::no_auth_required) {
-    LOG(INFO) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks5: noauth required.";
+    LOG(INFO) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " upstream socks5: noauth required.";
     goto err_out;
   }
   if (socks5_auth_handshake_ && response->method != socks5::username_or_password) {
-    LOG(INFO) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks5: auth required.";
+    LOG(INFO) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " upstream socks5: auth required.";
     goto err_out;
   }
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks5 method select response "
-          << (socks5_auth_handshake_ ? "(auth)" : "(noauth)");
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " upstream socks5 method select response " << (socks5_auth_handshake_ ? "(auth)" : "(noauth)");
   buf->set_offset(buf->offset() + sizeof(socks5::method_select_response));
 
   if (socks5_auth_handshake_) {
@@ -1421,18 +1455,22 @@ void CliConnection::ReadUpstreamAuthResponse(GrowableIOBuffer* buf, asio::error_
   socks5_auth_handshake_ = false;
   auto response = reinterpret_cast<const socks5::auth_response*>(buf->data());
   if (buf->size() < (int)sizeof(socks5::auth_response)) {
-    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " malformed upstream socks5 auth response.";
+    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " malformed upstream socks5 auth response.";
     goto err_out;
   }
   if (response->ver != socks5::version) {
-    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " malformed upstream socks5 auth response.";
+    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " malformed upstream socks5 auth response.";
     goto err_out;
   }
   if (response->status != socks5::auth_response_status::success) {
-    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " rejected in upstream auth handshake response.";
+    LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " rejected in upstream auth handshake response.";
     goto err_out;
   }
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks5 auth response";
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " upstream socks5 auth response";
   buf->set_offset(buf->offset() + sizeof(socks5::auth_response));
 
   WriteUpstreamSocks5Request();
@@ -1582,7 +1620,8 @@ void CliConnection::ReadUpstreamSocksResponse(GrowableIOBuffer* buf, asio::error
       if (response->null_byte != 0 || response->status != socks4::reply::request_granted) {
         goto err_out;
       }
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks4 handshake response";
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " upstream socks4 handshake response";
       buf->set_offset(buf->offset() + sizeof(socks4::reply_header));
       break;
     };
@@ -1624,7 +1663,8 @@ void CliConnection::ReadUpstreamSocksResponse(GrowableIOBuffer* buf, asio::error
         goto err_out;
         return;
       }
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream socks5 handshake response";
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " upstream socks5 handshake response";
       break;
     };
     default:
@@ -1638,7 +1678,8 @@ void CliConnection::ReadUpstreamSocksResponse(GrowableIOBuffer* buf, asio::error
   return;
 
 err_out:
-  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " malformed upstream socks handshake response";
+  LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+               << " malformed upstream socks handshake response";
   ec = asio::error::connection_refused;
   disconnected(ec);
   return;
@@ -1697,7 +1738,8 @@ void CliConnection::WriteUpstreamInPipe() {
       DCHECK_EQ(0u, written);
       break;
     }
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream: sent request (pipe): " << written << " bytes"
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " upstream: sent request (pipe): " << written << " bytes"
             << " done: " << channel_->wbytes_transferred() << " bytes."
             << " ec: " << ec;
     // continue to resume
@@ -1765,7 +1807,8 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
 
 #ifdef HAVE_QUICHE
   if (data_frame_ && !data_frame_->empty()) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " has pending data to send upstream, defer reading";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " has pending data to send upstream, defer reading";
     *upstream_blocked = true;
     ec = asio::error::try_again;
     goto out;
@@ -1774,7 +1817,8 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
 
   // if we have read previously in OnReadHttpRequestAfterReuse
   if (http_is_keep_alive_ && http_keep_alive_pending_buf_) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http keepalive splited request resumed";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " http keepalive splited request resumed";
     buf = std::move(http_keep_alive_pending_buf_);
     read = buf->size();
     DCHECK(!http_keep_alive_pending_buf_);
@@ -1808,7 +1852,8 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
   ++total_rx_times;
   *bytes_transferred += read;
   if (read) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " received data (pipe): " << read << " bytes."
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " received data (pipe): " << read << " bytes."
             << " done: " << rbytes_transferred_ << " bytes.";
   } else {
     goto out;
@@ -1845,7 +1890,8 @@ after_read:
       buf->SetCapacity(http_keep_alive_remaining_bytes_);
       http_keep_alive_remaining_bytes_ = 0;
     } else {
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http keepalive consumed: " << read;
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " http keepalive consumed: " << read;
       http_keep_alive_remaining_bytes_ -= read;
     }
   }
@@ -1859,8 +1905,8 @@ after_read:
     if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       buf = AddPadding(buf.get());
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " added padding for: " << num_padding_send_
-              << "th chunk to be sent";
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " added padding for: " << num_padding_send_ << "th chunk to be sent";
     }
     data_frame_->AddChunk(buf.get());
   } else
@@ -1905,7 +1951,8 @@ asio::error_code CliConnection::PerformCmdOpsV5(const socks5::request* request, 
     case socks5::cmd_connect: {
       if (request->port() == 0u || (request->address_type() == socks5::domain && request->domain_name().empty()) ||
           (request->address_type() != socks5::domain && request->endpoint().address().is_unspecified())) {
-        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks5: requested invalid port or empty host";
+        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                     << " socks5: requested invalid port or empty host";
         reply->mutable_status() = socks5::reply::request_failed_network_unreachable;
         ec = asio::error::invalid_argument;
         break;
@@ -1931,8 +1978,8 @@ asio::error_code CliConnection::PerformCmdOpsV5(const socks5::request* request, 
     case socks5::cmd_udp_associate:
     default:
       // NOT IMPLETMENTED
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " not supported command 0x" << std::hex
-                   << static_cast<int>(request->command()) << std::dec;
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " not supported command 0x" << std::hex << static_cast<int>(request->command()) << std::dec;
       reply->mutable_status() = socks5::reply::request_failed_cmd_not_supported;
       ec = asio::error::invalid_argument;
       break;
@@ -1947,7 +1994,8 @@ asio::error_code CliConnection::PerformCmdOpsV4(const socks4::request* request, 
     case socks4::cmd_connect: {
       if (request->port() == 0u || (request->is_socks4a() && request->domain_name().empty()) ||
           (!request->is_socks4a() && request->endpoint().address().is_unspecified())) {
-        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks4: requested invalid port or empty host";
+        LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                     << " socks4: requested invalid port or empty host";
         reply->mutable_status() = socks4::reply::request_failed;
         ec = asio::error::invalid_argument;
         break;
@@ -1974,8 +2022,8 @@ asio::error_code CliConnection::PerformCmdOpsV4(const socks4::request* request, 
     case socks4::cmd_bind:
     default:
       // NOT IMPLETMENTED
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " not supported command 0x" << std::hex
-                   << static_cast<int>(request->command()) << std::dec;
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " not supported command 0x" << std::hex << static_cast<int>(request->command()) << std::dec;
       reply->mutable_status() = socks4::reply::request_failed;
       ec = asio::error::invalid_argument;
       break;
@@ -1985,12 +2033,14 @@ asio::error_code CliConnection::PerformCmdOpsV4(const socks4::request* request, 
 
 asio::error_code CliConnection::PerformCmdOpsHttp() {
   if (http_host_.size() > TLSEXT_MAXLEN_host_name) {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http: too long domain name: " << http_host_;
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                 << " http: too long domain name: " << http_host_;
     return asio::error::invalid_argument;
   }
 
   if (http_host_.empty() || http_port_ == 0u) {
-    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " https: requested empty host or invalid port";
+    LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                 << " https: requested empty host or invalid port";
     return asio::error::invalid_argument;
   }
 
@@ -2000,7 +2050,8 @@ asio::error_code CliConnection::PerformCmdOpsHttp() {
 }
 
 void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code ec, size_t bytes_transferred) {
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " received data: " << bytes_transferred << " bytes"
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " received data: " << bytes_transferred << " bytes"
           << " done: " << rbytes_transferred_ << " bytes."
           << " ec: " << ec;
 
@@ -2025,7 +2076,8 @@ void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code 
           ReadStream(true);
           return;
         }
-        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks5 handshake finished";
+        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " socks5 handshake finished";
         goto handle_stream;
       case state_socks4_handshake: {
         auto reply = std::make_unique<socks4::reply>();
@@ -2037,7 +2089,8 @@ void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code 
           ReadStream(true);
           return;
         }
-        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " socks4 handshake finished";
+        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " socks4 handshake finished";
         goto handle_stream;
       case state_http_handshake:
         ec = PerformCmdOpsHttp();
@@ -2045,7 +2098,8 @@ void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code 
           break;
         }
         WriteHandshakeHttp();
-        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " http handshake finished";
+        VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                << " http handshake finished";
         goto handle_stream;
       case state_stream:
       handle_stream:
@@ -2060,8 +2114,8 @@ void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code 
         ec = asio::error::invalid_argument;
         break;
       default:
-        LOG(FATAL) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " bad state 0x" << std::hex
-                   << static_cast<int>(CurrentState()) << std::dec;
+        LOG(FATAL) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " bad state 0x" << std::hex << static_cast<int>(CurrentState()) << std::dec;
     };
   }
   if (ec) {
@@ -2075,7 +2129,8 @@ void CliConnection::ProcessSentData(asio::error_code ec, size_t bytes_transferre
   total_tx_bytes += bytes_transferred;
   ++total_tx_times;
 
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " sent data: " << bytes_transferred << " bytes."
+  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " sent data: " << bytes_transferred << " bytes."
           << " done: " << wbytes_transferred_ << " bytes."
           << " ec: " << ec;
 
@@ -2098,8 +2153,8 @@ void CliConnection::ProcessSentData(asio::error_code ec, size_t bytes_transferre
         ec = asio::error::invalid_argument;
         break;
       default:
-        LOG(FATAL) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " bad state 0x" << std::hex
-                   << static_cast<int>(CurrentState()) << std::dec;
+        LOG(FATAL) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " bad state 0x" << std::hex << static_cast<int>(CurrentState()) << std::dec;
     }
   }
 
@@ -2134,7 +2189,8 @@ void CliConnection::OnCmdConnect(const std::string& domain_name, uint16_t port) 
   DCHECK_LE(domain_name.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
   if (CIPHER_METHOD_IS_SOCKS_NON_DOMAIN_NAME(method())) {
-    VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " resolving domain name " << domain_name << " locally";
+    VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " resolving domain name " << domain_name << " locally";
     scoped_refptr<CliConnection> self(this);
     if (!resolver_inited_) {
       auto __ec = resolver_.Init();
@@ -2166,13 +2222,13 @@ void CliConnection::OnCmdConnect(const std::string& domain_name, uint16_t port) 
             break;
           }
           if (endpoint.address().is_unspecified() || endpoint.port() == 0u) {
-            LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " failed to resolve domain name "
-                         << domain_name;
+            LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                         << " failed to resolve domain name " << domain_name;
             OnDisconnect(asio::error::invalid_argument);
             return;
           }
-          VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " resolved domain name " << domain_name << " to "
-                  << endpoint.address();
+          VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                  << " resolved domain name " << domain_name << " to " << endpoint.address();
           request_ = {endpoint};
           OnConnect();
         });
@@ -2186,16 +2242,17 @@ void CliConnection::OnCmdConnect(const std::string& domain_name, uint16_t port) 
 
 void CliConnection::OnConnect() {
   scoped_refptr<CliConnection> self(this);
-  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " connect " << remote_domain();
+  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " connect "
+            << remote_domain();
   // create lazy
   if (upstream_ssl_ctx_ != nullptr) {
-    channel_ = ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_,
-                                  remote_config_.host_ips, remote_config_.host_sni, remote_config_.port,
-                                  this, upstream_ssl_config_,
-                                  upstream_ssl_ctx_);
+    channel_ =
+        ssl_stream::create(ssl_socket_data_index(), ssl_client_session_cache(), *io_context_, remote_config_.host_ips,
+                           remote_config_.host_sni, remote_config_.port, this, upstream_ssl_config_, upstream_ssl_ctx_);
 
   } else {
-    channel_ = stream::create(*io_context_, remote_config_.host_ips, remote_config_.host_sni, remote_config_.port, this);
+    channel_ =
+        stream::create(*io_context_, remote_config_.host_ips, remote_config_.host_sni, remote_config_.port, this);
   }
   channel_->async_connect([this, self](asio::error_code ec) {
     if (UNLIKELY(closed_)) {
@@ -2213,7 +2270,8 @@ void CliConnection::OnStreamRead(GrowableIOBuffer* buf) {
   if (!channel_ || !channel_->connected()) {
     constexpr const size_t kMaxHeaderSize = 1024 * 1024 + 1024;
     if (pending_data_.byte_length() + buf->size() > kMaxHeaderSize) {
-      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " too much data in incoming";
+      LOG(WARNING) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+                   << " too much data in incoming";
       OnDisconnect(asio::error::connection_reset);
       return;
     }
@@ -2231,8 +2289,8 @@ void CliConnection::OnStreamRead(GrowableIOBuffer* buf) {
     if (padding_support_in_fact_ && num_padding_send_ < kFirstPaddings) {
       ++num_padding_send_;
       send_buf = AddPadding(buf);
-      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " added padding for: " << num_padding_send_
-              << "th chunk to be sent";
+      VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " added padding for: " << num_padding_send_ << "th chunk to be sent";
     }
     data_frame_->AddChunk(send_buf.get());
     data_frame_->SetSendCompletionCallback(std::function<void()>());
@@ -2261,7 +2319,8 @@ void CliConnection::OnStreamWrite() {
 #else
   if (channel_ && channel_->eof() && downstream_.empty() && !shutdown_) {
 #endif
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " last data sent: shutting down";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " last data sent: shutting down";
     shutdown_ = true;
     asio::error_code ec;
     downlink_->shutdown(ec);
@@ -2279,7 +2338,8 @@ void CliConnection::OnDisconnect(asio::error_code ec) {
     ec = asio::error_code();
   }
 #endif
-  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " closed: " << ec;
+  LOG(INFO) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " closed: " << ec;
   close();
 }
 
@@ -2296,8 +2356,8 @@ void CliConnection::OnDownstreamWrite(GrowableIOBuffer* buf) {
   }
   if (!downstream_.empty() && !write_inprogress_) {
     if (CurrentState() == state_error) {
-      VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " failed to sending " << (buf ? buf->size() : 0)
-              << " bytes.";
+      VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+              << " failed to sending " << (buf ? buf->size() : 0) << " bytes.";
       return;
     }
     WriteStream();
@@ -2310,8 +2370,8 @@ void CliConnection::OnUpstreamWriteFlush() {
 
 void CliConnection::OnUpstreamWrite(GrowableIOBuffer* buf) {
   if (buf && !buf->empty()) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream: ready to send request: " << buf->size()
-            << " bytes.";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " upstream: ready to send request: " << buf->size() << " bytes.";
     upstream_.push_back(buf);
   }
   if (!upstream_.empty() && upstream_writable_) {
@@ -2418,8 +2478,9 @@ void CliConnection::connected() {
     headers.emplace_back("host"s, hostname_and_port);
     bool auth_required = !remote_config_.username.empty() && !remote_config_.password.empty();
     if (auth_required) {
-      headers.emplace_back("proxy-authorization"s,
-                           absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_config_.username, remote_config_.password)));
+      headers.emplace_back(
+          "proxy-authorization"s,
+          absl::StrCat("basic ", GetProxyAuthorizationIdentity(remote_config_.username, remote_config_.password)));
     }
     // Send "Padding" header
     // originated from naive_proxy_delegate.go;func ServeHTTP
@@ -2552,14 +2613,15 @@ void CliConnection::sent() {
 
 void CliConnection::disconnected(asio::error_code ec) {
   scoped_refptr<CliConnection> self(this);
-  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " upstream: lost connection with: " << remote_domain()
-          << " due to " << ec;
+  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+          << " upstream: lost connection with: " << remote_domain() << " due to " << ec;
   upstream_readable_ = false;
   upstream_writable_ = false;
   channel_->close();
   /* delay the socket's close because downstream is buffered */
   if (downstream_.empty() && !shutdown_) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id() << " last data sent: shutting down";
+    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " last data sent: shutting down";
     shutdown_ = true;
     downlink_->shutdown(ec);
   } else {

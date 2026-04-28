@@ -35,8 +35,8 @@
 #include <absl/strings/str_cat.h>
 #include <base/debug/debugger.h>
 #include <base/strings/string_util.h>
-#include <format>
 #include <locale.h>
+#include <format>
 #include <iostream>
 #include "third_party/boringssl/src/include/openssl/crypto.h"
 
@@ -343,8 +343,8 @@ static std::string SystemErrorCodeToString(DWORD dwError) {
   const int kErrorMessageBufferSize = 256;
   wchar_t msgbuf[kErrorMessageBufferSize];
   DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-  DWORD len = FormatMessageW(flags, nullptr, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                             msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
+  DWORD len = FormatMessageW(flags, nullptr, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), msgbuf,
+                             sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
   if (len) {
     std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
     // Messages returned by system end with line breaks.
@@ -354,8 +354,7 @@ static std::string SystemErrorCodeToString(DWORD dwError) {
   static HMODULE hDll = LoadLibraryExW(L"netmsg.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
   if (hDll != NULL) {
     DWORD flags = FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS;
-    len = FormatMessageW(flags, hDll, dwError, 0,
-                         msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
+    len = FormatMessageW(flags, hDll, dwError, 0, msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr);
     if (len) {
       std::string msg = gurl_base::SysWideToUTF8(std::wstring(msgbuf, len));
       // Messages returned by system end with line breaks.
@@ -385,15 +384,15 @@ void CYassApp::OnStart(bool quiet) {
         message = new std::string;
 
         // translate asio netdb and addrinfo categories back to WSA Error Codes
-        if (ec == asio::error::host_not_found) // netdb_category
+        if (ec == asio::error::host_not_found)  // netdb_category
           ec = asio::error_code(EAI_NONAME, asio::error::get_system_category());
-        else if (ec == asio::error::host_not_found_try_again) // netdb_category
+        else if (ec == asio::error::host_not_found_try_again)  // netdb_category
           ec = asio::error_code(EAI_AGAIN, asio::error::get_system_category());
-        else if (ec == asio::error::no_recovery) // netdb_category
+        else if (ec == asio::error::no_recovery)  // netdb_category
           ec = asio::error_code(EAI_FAIL, asio::error::get_system_category());
-        else if (ec == asio::error::service_not_found) // addrinfo_category
+        else if (ec == asio::error::service_not_found)  // addrinfo_category
           ec = asio::error_code(EAI_SERVICE, asio::error::get_system_category());
-        else if (ec == asio::error::socket_type_not_supported) // addrinfo_category
+        else if (ec == asio::error::socket_type_not_supported)  // addrinfo_category
           ec = asio::error_code(EAI_SOCKTYPE, asio::error::get_system_category());
 
         if (ec.category() == asio::error::get_system_category()) {

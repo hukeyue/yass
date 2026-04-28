@@ -26,8 +26,8 @@
 
 #ifdef HAVE_C_ARES
 
-#include "net/c-ares.hpp"
 #include "core/utils.hpp"
+#include "net/c-ares.hpp"
 
 #define CURL_TIMEOUT_RESOLVE                      \
   300 /* when using asynch methods, we allow this \

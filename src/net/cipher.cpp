@@ -494,7 +494,8 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
 
   DCHECK_GE(c_total_len, static_cast<int>(clen));
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<std::byte*>(len.buf), CHUNK_SIZE_LEN);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<std::byte*>(len.buf),
+                             CHUNK_SIZE_LEN);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
@@ -513,7 +514,8 @@ int cipher::chunk_encrypt_frame_aead(uint64_t* counter,
   // FIXME it is a bug with crypto layer
   memset(ciphertext->bytes() + headroom, 0, clen);
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen,
+                             reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;
@@ -542,7 +544,8 @@ int cipher::chunk_encrypt_frame_stream(uint64_t* counter,
 
   VLOG(4) << "encrypt: stream chunk: origin: " << plaintext_size << " actual: " << clen;
 
-  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen, reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
+  err = impl_->EncryptPacket(*counter, ciphertext->bytes() + headroom, &clen,
+                             reinterpret_cast<const std::byte*>(plaintext_data), plaintext_size);
   if (err) {
     ciphertext->SetCapacity(previous_capacity);
     return -EBADMSG;

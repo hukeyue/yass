@@ -254,9 +254,13 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
 
   [[nodiscard]]
 #ifdef HAVE_NGHTTP2
-  http2::adapter::NgHttp2Adapter* adapter() { return adapter_.get(); }
+  http2::adapter::NgHttp2Adapter* adapter() {
+    return adapter_.get();
+  }
 #else
-  http2::adapter::OgHttp2Adapter* adapter() { return adapter_.get(); }
+  http2::adapter::OgHttp2Adapter* adapter() {
+    return adapter_.get();
+  }
 #endif
 
 #endif
@@ -276,7 +280,9 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   ///
   /// Return current state of service
   [[nodiscard]]
-  state CurrentState() const { return state_; }
+  state CurrentState() const {
+    return state_;
+  }
   /// Set the state machine to the given state
   /// \param nextState the state the service would be set to
   void SetState(state nextState) { state_ = nextState; }
@@ -531,13 +537,19 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
   bool write_inprogress_ = false;
 
   [[nodiscard]]
-  cipher_method method() const { return remote_cipher_; }
+  cipher_method method() const {
+    return remote_cipher_;
+  }
 
   [[nodiscard]]
-  bool padding_support() const { return remote_config_.padding_support; }
+  bool padding_support() const {
+    return remote_config_.padding_support;
+  }
 
   [[nodiscard]]
-  bool redir_mode() const { return local_config_.redir_mode; }
+  bool redir_mode() const {
+    return local_config_.redir_mode;
+  }
 
   friend class DataFrameSource;
 };

@@ -26,7 +26,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 
-#pragma GCC visibility push (hidden)
+#pragma GCC visibility push(hidden)
 
 extern int app_indicator_init(void);
 extern void app_indicator_uninit(void);
@@ -122,4 +122,3 @@ void app_indicator_set_secondary_activate_target(void* indicator, void* menuitem
 
   o_app_indicator_set_secondary_activate_target(indicator, menuitem);
 }
-

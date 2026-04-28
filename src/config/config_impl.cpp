@@ -264,7 +264,8 @@ bool ConfigImpl::Read(const std::string& key, absl::Flag<StringArrayFlag>* value
     StringArrayFlag str_arr;
     str_arr.str_array = std::move(real_value_array);
     absl::SetFlag(value, str_arr);
-    std::cerr << "loaded option " << key << ": " << to_masked_string(str_arr.operator std::string(), is_masked) << std::endl;
+    std::cerr << "loaded option " << key << ": " << to_masked_string(str_arr.operator std::string(), is_masked)
+              << std::endl;
     return true;
   }
   alignas(std::string) alignas(8) std::string real_value;

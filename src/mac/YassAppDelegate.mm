@@ -32,6 +32,7 @@
 #include <absl/flags/flag.h>
 #include <base/strings/sys_string_conversions.h>
 
+#include "_yass/gui_variant.h"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
@@ -39,7 +40,6 @@
 #include "mac/YassViewController.h"
 #include "mac/YassWindowController.h"
 #include "mac/utils.h"
-#include "_yass/gui_variant.h"
 #include "yass/feature.h"
 #include "yass/version.h"
 
@@ -152,15 +152,13 @@
 
     if (ec) {
       if (ec.category() == asio::error::get_netdb_category() || ec.category() == asio::error::get_addrinfo_category()) {
-        NSError *urlError = [[NSError alloc] initWithDomain:NSURLErrorDomain
+        NSError* urlError = [[NSError alloc] initWithDomain:NSURLErrorDomain
                                                        code:NSURLErrorCannotFindHost
                                                    userInfo:nil];
         msg = SysNSStringToUTF8((urlError.localizedDescription));
         NSLog(@"Translated URL error: %@", urlError.localizedDescription);
       } else if (ec.category() == asio::error::get_system_category()) {
-        NSError *posixError = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain
-                                                         code:ec.value()
-                                                     userInfo:nil];
+        NSError* posixError = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain code:ec.value() userInfo:nil];
         msg = SysNSStringToUTF8((posixError.localizedDescription));
         NSLog(@"Translated POSIX error: %@", posixError.localizedDescription);
       } else {

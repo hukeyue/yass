@@ -40,11 +40,9 @@ ABSL_DECLARE_FLAG(int, use_timeout_dns_tests);
 ABSL_DECLARE_FLAG(int, use_concurrent_dns_tests);
 ABSL_DECLARE_FLAG(int, use_repeated_dns_tests);
 
-#define DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "223.5.5.5" : \
-                 "1.1.1.1")
+#define DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "223.5.5.5" : "1.1.1.1")
 
-#define INVALID_DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "5.5.5.5" : \
-                 "2.2.2.2")
+#define INVALID_DOT_DOMAIN (absl::GetFlag(FLAGS_use_china_dns_tests) ? "5.5.5.5" : "2.2.2.2")
 
 using namespace net;
 

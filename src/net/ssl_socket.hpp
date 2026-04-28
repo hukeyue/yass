@@ -107,8 +107,7 @@ class SSLSocket : public gurl_base::RefCountedThreadSafe<SSLSocket> {
   asio::ip::tcp::socket* stream_socket_;
 
   // Returns a session cache key for this socket.
-  SSLClientSessionCache::Key GetSessionCacheKey(
-      std::optional<asio::ip::address> dest_ip_addr) const;
+  SSLClientSessionCache::Key GetSessionCacheKey(std::optional<asio::ip::address> dest_ip_addr) const;
 
   // Returns true if renegotiations are allowed.
   bool IsRenegotiationAllowed() const;

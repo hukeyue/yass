@@ -22,10 +22,10 @@
 
 /* Copyright (c) 2019-2026 Chilledheart  */
 
-#include "yass/client.h"
 #include "config/config.hpp"
 #include "config/config_cli.hpp"
 #include "crypto/crypter_export.hpp"
+#include "yass/client.h"
 
 #include <absl/debugging/failure_signal_handler.h>
 #include <absl/debugging/symbolize.h>
@@ -36,9 +36,9 @@
 #include <locale.h>
 #include <memory>
 #include <vector>
+#include "third_party/boringssl/src/include/openssl/crypto.h"
 #include "third_party/googleurl/url/gurl.h"
 #include "third_party/googleurl/url/url_util.h"
-#include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #include "cli/cli_connection_stats.hpp"
 #include "core/logging.hpp"
@@ -88,7 +88,6 @@ int main(int argc, const char* argv[]) {
     LOG(WARNING) << "Configuration Validated";
     return 0;
   }
-
 
   // Forcely disabling c-ares due to cli usage for android
 #if defined(HAVE_C_ARES) && (BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS))
@@ -159,7 +158,8 @@ int main(int argc, const char* argv[]) {
       return -1;
     }
     for (unsigned i = 0; i < proxy_uri_strs.size(); ++i) {
-      ret = yass_client_instance_add_server_uri(instance, i, proxy_uri_strs[i].c_str(), listen_uri_strs[i].c_str(), nullptr);
+      ret = yass_client_instance_add_server_uri(instance, i, proxy_uri_strs[i].c_str(), listen_uri_strs[i].c_str(),
+                                                nullptr);
       if (ret != 0) {
         LOG(WARNING) << yass_client_instance_get_last_error_str(instance);
         yass_client_instance_destroy(instance);
@@ -180,11 +180,10 @@ int main(int argc, const char* argv[]) {
     uint16_t local_port = absl::GetFlag(FLAGS_local_port);
     bool redir_mode = absl::GetFlag(FLAGS_redir_mode);
 
-    ret = yass_client_instance_add_server(instance, 0,
-                                          remote_host_name.c_str(), remote_host_sni.c_str(), remote_port,
-                                          remote_username.c_str(), remote_password.c_str(),
-                                          remote_cipher, remote_padding_support,
-                                          local_host_name.c_str(), local_port, redir_mode, nullptr);
+    ret = yass_client_instance_add_server(instance, 0, remote_host_name.c_str(), remote_host_sni.c_str(), remote_port,
+                                          remote_username.c_str(), remote_password.c_str(), remote_cipher,
+                                          remote_padding_support, local_host_name.c_str(), local_port, redir_mode,
+                                          nullptr);
     if (ret) {
       LOG(WARNING) << yass_client_instance_get_last_error_str(instance);
       yass_client_instance_destroy(instance);
@@ -192,9 +191,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  std::thread signal_listener_thread([&]{
-    io_context.run();
-  });
+  std::thread signal_listener_thread([&] { io_context.run(); });
 
   ret = yass_client_instance_run(instance);
   work_guard.reset();

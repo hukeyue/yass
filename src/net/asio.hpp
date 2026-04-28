@@ -57,8 +57,10 @@
 #ifdef __MINGW32__
 #undef _POSIX_THREADS
 #endif
+// clang-format off
 #include "third_party/asio/include/asio.hpp"
 #include "net/asio_throw_exceptions.hpp"
+// clang-format on
 
 #pragma GCC diagnostic pop
 
@@ -70,8 +72,7 @@
 /**
  * @returns <tt>mutable_buffer(tail, tailroom)</tt>.
  */
-inline asio::mutable_buffer tail_buffer(net::GrowableIOBuffer* io_buf,
-                                             uint32_t max_length = UINT32_MAX) ASIO_NOEXCEPT {
+inline asio::mutable_buffer tail_buffer(net::GrowableIOBuffer* io_buf, uint32_t max_length = UINT32_MAX) ASIO_NOEXCEPT {
   return asio::mutable_buffer(io_buf->data(), std::min<uint32_t>(io_buf->size(), max_length));
 }
 

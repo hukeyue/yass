@@ -30,7 +30,6 @@
 #include <format>
 #include <thread>
 
-
 #include "cli/cli_connection_stats.hpp"
 #include "cli/cli_worker.hpp"
 #include "config/config.hpp"
@@ -113,15 +112,13 @@ static constexpr const uint32_t kYieldConcurrencyOfConnections = 12u;
 
     if (ec) {
       if (ec.category() == asio::error::get_netdb_category() || ec.category() == asio::error::get_addrinfo_category()) {
-        NSError *urlError = [[NSError alloc] initWithDomain:NSURLErrorDomain
+        NSError* urlError = [[NSError alloc] initWithDomain:NSURLErrorDomain
                                                        code:NSURLErrorCannotFindHost
                                                    userInfo:nil];
         err_msg = SysNSStringToUTF8((urlError.localizedDescription));
         NSLog(@"Translated URL error: %@", urlError.localizedDescription);
       } else if (ec.category() == asio::error::get_system_category()) {
-        NSError *posixError = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain
-                                                         code:ec.value()
-                                                     userInfo:nil];
+        NSError* posixError = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain code:ec.value() userInfo:nil];
         err_msg = SysNSStringToUTF8((posixError.localizedDescription));
         NSLog(@"Translated POSIX error: %@", posixError.localizedDescription);
       } else {

@@ -165,9 +165,7 @@ class ConfigImplWindows : public ConfigImpl {
            size % sizeof(wchar_t) == 0;
   }
 
-  bool HasKeyStringArrayImpl(const std::string& key) override {
-    return false; /* TBD */
-  }
+  bool HasKeyStringArrayImpl(const std::string& key) override { return false; /* TBD */ }
 
   bool HasKeyBoolImpl(const std::string& key) override { return HasKeyUint32Impl(key); }
 
@@ -225,9 +223,7 @@ class ConfigImplWindows : public ConfigImpl {
     return false;
   }
 
-  bool ReadImpl(const std::string& key, std::vector<std::string>* value) override {
-    return false; /* TBD */
-  }
+  bool ReadImpl(const std::string& key, std::vector<std::string>* value) override { return false; /* TBD */ }
 
   bool ReadImpl(const std::string& key, bool* value) override {
     uint32_t v;
@@ -291,9 +287,7 @@ class ConfigImplWindows : public ConfigImpl {
     return false;
   }
 
-  bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override {
-    return false; /* TBD */
-  }
+  bool WriteImpl(const std::string& key, const std::vector<std::string>& value) override { return false; /* TBD */ }
 
   bool WriteImpl(const std::string& key, bool value) override {
     uint32_t v = value ? 1 : 0;
