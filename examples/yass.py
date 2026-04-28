@@ -94,11 +94,10 @@ def main():
                       description='Example of how to use YASS-C dylib',
                       epilog='NASTY (plugin) client written in C++.')
 
-  parser.add_argument('-v', '--version',
-                      action='store_true')  # on/off flag
-  parser.add_argument('--tag', default=0)
-  parser.add_argument('--proxy', default='https://username:password@http2.github.io')
-  parser.add_argument('--listen', default='auto://127.0.0.1:1080')
+  parser.add_argument('-v', '--version', action='store_true')  # on/off flag
+  parser.add_argument('--tag', nargs='+', default=[0])
+  parser.add_argument('--proxy', nargs='+', default=['https://username:password@http2.github.io'])
+  parser.add_argument('--listen', nargs='+', default=['auto://127.0.0.1:1080'])
 
   args = parser.parse_args()
   dll = get_dll()
@@ -107,8 +106,11 @@ def main():
     return
   print('Hello, World\nvia YASS-C binding')
   client = YassClient(dll)
-  port = client.add_server(int(args.tag), args.proxy, args.listen)
-  print(f'tag {args.tag} listen at {args.listen} port {port}')
+  if len(args.tag) != len(args.listen) or len(args.proxy) != len(args.listen):
+    raise Exception('--proxy and --listen pairs doesn\'t match')
+  for i in range(len(args.tag)):
+    port = client.add_server(int(args.tag[i]), args.proxy[i], args.listen[i])
+    print(f'tag {args.tag[i]} listen at {args.listen[i]} port {port}')
   client.run()
 
 if __name__ == '__main__':
