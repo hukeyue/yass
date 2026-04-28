@@ -38,11 +38,11 @@ Steps:
 [![MSVC+XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
 [![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2026.yml)
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
-[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=Sanitizers%20and%20Ubuntu%20arm)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
+[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=CircleCI%20Meta%20Bots)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
 [![MUSL Build](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml)
 
 ## Build from Source
-Take a look at [build instructions](BUILDING.md) and [packaging instructions](PACKAGING.md).
+Take a look at [build instructions](BUILDING.md).
 
 ## Debug Guide
 Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
