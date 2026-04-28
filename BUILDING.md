@@ -1,6 +1,6 @@
 # Building Instruments
 
-## Windows (MinGW)
+## Windows (from Scratch)
 
 1. Install [Chocolatey][chocolatey] Package Manager.
 
@@ -21,7 +21,7 @@ choco install ninja
 choco install golang
 ```
 
-3. Open `Git Bash` from Start Menu and run
+3. Open `Git Bash` from _Start Menu_:
 
 ```
 git clone https://github.com/hukeyue/yass
@@ -30,12 +30,12 @@ git submodule update --init
 ./scripts/build-mingw.sh
 ```
 
-## Windows (MSYS2)
+## Windows (MinGW Terminal)
 
 1. Download and run MSYS2 installer from [MSYS2 site][msys2].
 2. Install required tools
 
-Run `MSYS2 CLANG64` in Start Menu:
+Run `MSYS2 CLANG64` in _Start Menu_:
 ```
 pacman -S mingw-w64-clang-x86_64-clang \
           mingw-w64-clang-x86_64-gcc-compat \
@@ -56,7 +56,7 @@ export GOPATH=/clang64
 
 3. Compiling the program.
 
-Run `MSYS2 CLANG64` in Start Menu:
+Run `MSYS2 CLANG64` in _Start Menu_:
 ```
 git clone https://github.com/hukeyue/yass
 cd yass
@@ -67,7 +67,7 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
 
-## Windows (MSVC)
+## Windows (Visual Studio Community Edition)
 
 1. Make sure you have [Git for Windows][gitforwindows] installed.
 2. Make sure you have [Perl], [CMake] (3.16 or later), [Ninja], [Golang] and [NASM] installed and put them in `PATH`.
@@ -78,7 +78,7 @@ ninja yass
     which can confuse some build tools when identifying the compiler
     (removing `C:\Strawberry\c\bin` from `PATH` should resolve any problems).
 
-3. Make sure you use [Visual Studio][visualstudio] 2019 (or 2022).
+3. Make sure you use [Visual Studio][visualstudio] 2022 (or 2026).
 
   * Make sure you have `Visual Studio with C++` selected from download page.
 
@@ -92,7 +92,7 @@ Notes: please make sure you have [LLVM][llvm-win64] (20.0 or above).
 
 5. Compile the program with Release configuration.
 
-Run `x64 Native Tools Command Prompt for VS 2019 (or 2022)` in Start Menu:
+Run `x64 Native Tools Command Prompt for VS 2022 (or 2026)` in _Start Menu_:
 ```
 git clone https://github.com/hukeyue/yass
 cd yass
@@ -105,17 +105,15 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DGUI=on ..
 ninja yass
 ```
 
-## macOS
+## macOS (with Xcode)
 
 1. Make sure you have [Xcode] installed:
 
-After download _Xcode.xip_ and extract _Xcode.app_ into `/Applications` (optional)
-
 Run in `Terminal`:
 ```
-xcode-select -s /Applications/Xcode.app
-xcode-select --install
-xcodebuild -runFirstLaunch
+sudo xcode-select -s /Applications/Xcode.app
+sudo xcode-select --install
+sudo xcodebuild -runFirstLaunch
 ```
 
 2. Make sure you have [MacPorts] installed:
@@ -154,7 +152,7 @@ Run in `Console`:
 sudo apt-get install -y cmake ninja-build pkg-config perl gettext libgtk-3-dev golang
 ```
 
-Notes: please make sure you have [GCC] (7.1 or above) and [CMake] (3.16 or above).
+Notes: please make sure you have [GCC] (13.0 or above) and [CMake] (3.16 or above).
 
 You might want to give these APT/PPA sites a look if the requirements are not meet:
 
@@ -192,7 +190,7 @@ or (for RHEL/CentOS users)
 sudo yum install -y cmake3 ninja-build pkg-config perl gtk3-devel gettext golang
 ```
 
-Notes: please make sure you have [GCC] (7.1 or above) and [CMake] (3.16 or above).
+Notes: please make sure you have [GCC] (13.0 or above) and [CMake] (3.16 or above).
 
 You might want to enable CodeReady (for RHEL), PowerTools (for CentOS) and EPEL repo before above commands:
 
