@@ -44,9 +44,6 @@ Steps:
 ## Build from Source
 Take a look at [build instructions](BUILDING.md).
 
-## Debug Guide
-Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
-
 ## Notes on System Requirement
 
 - Android: Require 7.0 or above
@@ -54,22 +51,6 @@ Start from wiki's [Guide](https://github.com/hukeyue/yass/wiki/Debug-Guide)
 - Legacy Windows (missing ucrtbase.dll): for Windows 7 install [KB3118401] or [KB2999226] first, and for Windows XP SP3 try [last vs 2019 runtime supporting xp sp3][vs2019_xp_x86] (VS 2019 version 14.28.29213.0 is the last version compatible with Windows XP SP3).
 - macOS: Require 10.14 or above
 - Windows (missing VCRUNTIME140.DLL and etc): for x64 install [vs 2022 x64 runtime][vs2022_x64], for x86 install [vs 2022 x86 runtime][vs2022_x86], and for arm64 [vs 2022 arm64 runtime][vs2022_arm64] (VS 2022 will be the last v14 for Windows 7/8/8.1 and their Windows Server equivalents).
-
-See [Status of Package Store](https://github.com/hukeyue/yass/wiki/Status-of-Package-Store) for more.
-See [Supporteded Operating System](https://github.com/hukeyue/yass/wiki/Supported-Operating-System) for more.
-
-## Usage
-Visit wiki's [Usage](https://github.com/hukeyue/yass/wiki/Usage).
-
-## Server side support (mostly outside this project)
-
-See [Setup forwardproxy caddy service](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#setup-forwardproxy-caddy-service) for more.
-
-See [Window sizes for large bandwidth](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#window-sizes-for-large-bandwidth) for more.
-
-See [Use BBR Congestion Control](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#use-bbr-congestion-control) for more.
-
-See [ChatGPT capable caddy Server](https://github.com/hukeyue/yass/wiki/Usage:-server-setup#chatgpt-capable-caddy-server) for more.
 
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
