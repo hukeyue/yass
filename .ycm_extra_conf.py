@@ -153,7 +153,21 @@ def Settings( **kwargs ):
         continue
       if flag == '-TP':
         continue
+      if flag.startswith('/std:') or flag.startswith('-std:'):
+        # FIXME buggy cl mode in ycm
+        final_flags.append('-std=' + flag[5:])
+        continue
+      # FIXME hacky but works while '/I' doesnt work
+      if flag == '-imsvc' or flag == '/imsvc':
+        flag = '-isystem'
       final_flags.append(flag)
+
+    if 'clang-cl' in final_flags[0]:
+      final_flags = final_flags[1:]
+    if '--driver-mode=cl' in final_flags[0]:
+      final_flags = final_flags[1:]
+    if '/nologo' in final_flags[0]:
+      final_flags = final_flags[1:]
 
     return {
       'flags': final_flags,
