@@ -4,11 +4,7 @@
 [![Language: C++](https://img.shields.io/github/languages/top/hukeyue/yass.svg)](https://github.com/hukeyue/yass/search?l=cpp)
 [![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/hukeyue/yass/latest/total)](https://github.com/hukeyue/yass/releases/latest)
 
-[![aur yass-proxy-gtk3](https://img.shields.io/aur/version/yass-proxy-gtk3)](https://aur.archlinux.org/packages/yass-proxy-gtk3)
-[![aur yass-proxy-qt5](https://img.shields.io/aur/version/yass-proxy-qt5)](https://aur.archlinux.org/packages/yass-proxy-qt5)
 [![aur yass-proxy](https://img.shields.io/aur/version/yass-proxy)](https://aur.archlinux.org/packages/yass-proxy)
-[![aur yass-proxy-qt6](https://img.shields.io/aur/version/yass-proxy-qt6)](https://aur.archlinux.org/packages/yass-proxy-qt6)
-[![aur yass-proxy-cli](https://img.shields.io/aur/version/yass-proxy-cli)](https://aur.archlinux.org/packages/yass-proxy-cli)
 [![Flathub Version](https://img.shields.io/flathub/v/io.github.chilledheart.yass)][flathub_url]
 [![Flathub Downloads](https://img.shields.io/flathub/downloads/io.github.chilledheart.yass)][flathub_url]
 
