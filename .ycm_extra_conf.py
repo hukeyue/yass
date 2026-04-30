@@ -154,10 +154,10 @@ def Settings( **kwargs ):
       if flag == '-TP':
         continue
       if flag.startswith('/std:') or flag.startswith('-std:'):
-        # FIXME buggy cl mode in ycm
+        # workaround buggy cl mode in libclang-c.so
         final_flags.append('-std=' + flag[5:])
         continue
-      # FIXME hacky but works while '/I' doesnt work
+      # workaround while '/I' doesnt work
       if flag == '-imsvc' or flag == '/imsvc':
         flag = '-isystem'
       final_flags.append(flag)
