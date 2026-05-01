@@ -51,20 +51,37 @@
 
 void PrintMallocStats() {
 #if defined(HAVE_TBBMALLOC)
-  LOG(ERROR) << "TBBMALLOC: report not support";
+  LOG(ERROR) << "TBBMALLOC: report is not supported";
 #elif defined(HAVE_TCMALLOC)
+  // clang-format off
   constexpr const char* properties[] = {
-      "generic.current_allocated_bytes",       "generic.heap_size",
-      "generic.total_physical_bytes",          "tcmalloc.central_cache_free_bytes",
-      "tcmalloc.transfer_cache_free_bytes",    "tcmalloc.thread_cache_free_bytes",
-      "tcmalloc.pageheap_free_bytes",          "tcmalloc.pageheap_unmapped_bytes",
-      "tcmalloc.pageheap_committed_bytes",     "tcmalloc.pageheap_scavenge_count",
-      "tcmalloc.pageheap_commit_count",        "tcmalloc.pageheap_total_commit_bytes",
-      "tcmalloc.pageheap_decommit_count",      "tcmalloc.pageheap_total_decommit_bytes",
-      "tcmalloc.pageheap_reserve_count",       "tcmalloc.pageheap_total_reserve_bytes",
-      "tcmalloc.max_total_thread_cache_bytes", "tcmalloc.current_total_thread_cache_bytes",
-      "tcmalloc.aggressive_memory_decommit",   "tcmalloc.heap_limit_mb",
+    /* generic */
+      "generic.current_allocated_bytes",
+      "generic.heap_size",
+      "generic.total_physical_bytes",
+    /* tcmalloc-specified */
+      "tcmalloc.max_total_thread_cache_bytes",
+      "tcmalloc.min_per_thread_cache_bytes",
+      "tcmalloc.current_total_thread_cache_bytes",
+      "tcmalloc.central_cache_free_bytes",
+      "tcmalloc.transfer_cache_free_bytes",
+      "tcmalloc.thread_cache_free_bytes",
+      "tcmalloc.pageheap_free_bytes",
+      "tcmalloc.pageheap_unmapped_bytes",
+    /* undocumented */
+      "tcmalloc.pageheap_committed_bytes",
+      "tcmalloc.pageheap_scavenge_count",
+      "tcmalloc.pageheap_commit_count",
+      "tcmalloc.pageheap_total_commit_bytes",
+      "tcmalloc.pageheap_decommit_count",
+      "tcmalloc.pageheap_total_decommit_bytes",
+      "tcmalloc.pageheap_reserve_count",
+      "tcmalloc.pageheap_total_reserve_bytes",
+      "tcmalloc.aggressive_memory_decommit",
+      "tcmalloc.heap_limit_mb",
+      "tcmalloc.impl.thread_cache_count",
   };
+  // clang-format on
   for (auto property : properties) {
     size_t size;
     if (MallocExtension_GetNumericProperty(property, &size)) {
