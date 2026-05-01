@@ -163,6 +163,8 @@ set(googleurl_SOURCES
   googleurl/base/atomicops_internals_portable.h
   googleurl/base/atomicops_internals_atomicword_compat.h
   googleurl/base/files/file_util.h
+  googleurl/base/files/file_path.cc
+  googleurl/base/files/file_path.h
   googleurl/base/macros/concat.h
   googleurl/base/macros/if.h
   googleurl/base/macros/remove_parens.h
