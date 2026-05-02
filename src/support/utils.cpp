@@ -29,6 +29,13 @@
 #include "config/config.hpp"
 #include "core/logging.hpp"
 
+#ifdef HAVE_TBBMALLOC
+#ifdef _WIN32
+/* Public Windows API */
+extern "C" int TBB_malloc_replacement_log(char *** function_replacement_log_ptr);
+#endif
+#endif
+
 #ifdef HAVE_TCMALLOC
 #include <gperftools/malloc_extension_c.h>
 #endif
@@ -51,6 +58,13 @@
 
 void PrintMallocStats() {
 #if defined(HAVE_TBBMALLOC)
+#ifdef _WIN32
+  char **func_replacement_log;
+  int func_replacement_status = TBB_malloc_replacement_log(&func_replacement_log);
+  for (char** log_string = func_replacement_log; *log_string != 0; log_string++) {
+    LOG(ERROR) << "TBBMALLOC_PROXY: " << *log_string;
+  }
+#endif
   LOG(ERROR) << "TBBMALLOC: report is not supported";
 #elif defined(HAVE_TCMALLOC)
   // clang-format off
