@@ -340,13 +340,6 @@ jobs:
       run:
         shell: cmd
     steps:
-      - name: Populate depedencies (Tests-i686)
-        if: ${{ matrix.arch == 'i686' }}
-        run: |
-          REM Install vcredist2010
-          curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
-          vcredist_x86.exe /install /quiet /norestart
-          del vcredist_x86.exe
       - name: Download built executables
         uses: actions/download-artifact@v7
         with:
@@ -375,13 +368,6 @@ jobs:
       run:
         shell: cmd
     steps:
-      - name: Populate depedencies (Tests-i686)
-        if: ${{ matrix.arch == 'i686' }}
-        run: |
-          REM Install vcredist2010
-          curl -L -O https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe
-          vcredist_x86.exe /install /quiet /norestart
-          del vcredist_x86.exe
       - name: Download built executables
         uses: actions/download-artifact@v7
         with:
