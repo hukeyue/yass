@@ -1,3 +1,7 @@
+yass (1.24.8-1) UNRELEASED; urgency=medium
+
+  * address more concerns of the standard library.
+ -- Chilledheart <hukeyue@vip.163.com>  Sat, 2 May 2026 15:41:16 +0800
 yass (1.24.7-1) UNRELEASED; urgency=medium
 
   * update copyright year from 2025 to 2026.
