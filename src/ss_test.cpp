@@ -368,23 +368,27 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     auto params = GetParam();
     auto server_cipher = std::get<0>(params);
     auto local_cipher = std::get<1>(params);
-    std::mutex m;
+    absl::Mutex m;
+    absl::CondVar cv;
     bool done = false;
-    asio::post(io_context_, [this, server_cipher, local_cipher, &m, &done]() {
-      std::lock_guard<std::mutex> lk(m);
+    asio::post(io_context_, [this, server_cipher, local_cipher, &m, &cv, &done]() {
       auto ec = StartContentProvider(GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
       ec = StartServer(server_cipher, GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
       ec = StartLocal(local_cipher, server_endpoint_, GetReusableEndpoint(), SOMAXCONN);
       ASSERT_FALSE(ec) << ec;
+      m.lock();
       done = true;
+      cv.Signal();
+      m.unlock();
     });
-    while (true) {
-      std::lock_guard<std::mutex> lk(m);
-      if (done)
-        break;
+
+    m.lock();
+    while (!done) {
+      cv.Wait(&m);
     }
+    m.unlock();
   }
 
   void TearDown() override {
@@ -394,9 +398,6 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     work_guard_.reset();
     thread_->join();
     thread_.reset();
-    local_server_.reset();
-    server_server_.reset();
-    content_provider_server_.reset();
   }
 
  protected:
@@ -426,6 +427,9 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
           std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
       io_context_.run();
       io_context_.restart();
+      local_server_.reset();
+      server_server_.reset();
+      content_provider_server_.reset();
       VLOG(1) << "background thread stopped";
     });
   }
