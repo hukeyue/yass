@@ -4686,11 +4686,6 @@ add_library(yass_support STATIC
   src/support/utils.hpp
 )
 
-# override default malloc
-if (USE_TBBMALLOC AND MINGW)
-  target_sources(yass_support PUBLIC src/tbbmalloc.cc)
-endif()
-
 if (APPLE)
   target_sources(yass_support PRIVATE src/config/config_impl_apple.hpp)
   target_sources(yass_support PRIVATE src/config/config_impl_apple.mm)
