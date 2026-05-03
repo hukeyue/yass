@@ -361,6 +361,17 @@ class SsEndToEndBM : public benchmark::Fixture {
     CHECK(!ec) << "Connection (content-consumer) connect failure " << ec;
     SetSocketTcpNoDelay(&s, ec);
     CHECK(!ec) << "Connection (content-consumer) set TCP_NODELAY failure: " << ec;
+#ifdef _WIN32
+    if (!IsWindowsVersionBNOrGreater(10, 0, 14393)) {
+      asio::socket_base::send_buffer_size send_option(64 * 1024);
+      s.set_option(send_option, ec);
+      CHECK(!ec) << ec;
+      asio::socket_base::receive_buffer_size recv_option(64 * 1024);
+      s.set_option(recv_option, ec);
+      CHECK(!ec) << ec;
+    }
+#endif
+
     auto request_buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
     GenerateConnectRequest("localhost"sv, content_provider_endpoint_.port(), request_buf.get());
 

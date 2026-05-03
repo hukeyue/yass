@@ -326,6 +326,15 @@ class ContentServer {
     }
     SetTCPKeepAlive(socket.native_handle(), ec);
     SetSocketTcpNoDelay(&socket, ec);
+#ifdef _WIN32
+    if (!IsWindowsVersionBNOrGreater(10, 0, 14393)) {
+      asio::socket_base::send_buffer_size send_option(64 * 1024);
+      socket.set_option(send_option, ec);
+      asio::socket_base::receive_buffer_size recv_option(64 * 1024);
+      socket.set_option(recv_option, ec);
+    }
+#endif
+
     conn->on_accept(std::move(socket), ctx.endpoint, ctx.peer_endpoint, connection_id, tlsext_ctx,
                     ssl_socket_data_index_, ssl_client_session_cache_.get());
     conn->set_disconnect_cb([this, conn]() mutable { on_disconnect(conn); });

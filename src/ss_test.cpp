@@ -550,6 +550,16 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     ASSERT_FALSE(ec) << ec;
     SetSocketTcpNoDelay(&s, ec);
     ASSERT_FALSE(ec) << ec;
+#ifdef _WIN32
+    if (!IsWindowsVersionBNOrGreater(10, 0, 14393)) {
+      asio::socket_base::send_buffer_size send_option(64 * 1024);
+      s.set_option(send_option, ec);
+      ASSERT_FALSE(ec) << ec;
+      asio::socket_base::receive_buffer_size recv_option(64 * 1024);
+      s.set_option(recv_option, ec);
+      ASSERT_FALSE(ec) << ec;
+    }
+#endif
 
     // Generate http 1.0 proxy header
     auto request_buf = gurl_base::MakeRefCounted<GrowableIOBuffer>();
