@@ -495,7 +495,15 @@ cmake_dependent_option(
 
 cmake_dependent_option(
   USE_SYSTEM_TBBMALLOC "Build with system or vendored tbbmalloc" OFF
-  USE_TBBMALLOC OFF)
+  "USE_TBBMALLOC" OFF)
+
+cmake_dependent_option(
+  USE_TBB "Build with intel tbb" ON
+  "USE_TBBMALLOC; OS_X86 OR OS_X64; NOT ALLOW_XP; NOT MINGW" OFF)
+
+cmake_dependent_option(
+  USE_SYSTEM_TBB "Build with system or vendored tbb" OFF
+  "USE_SYSTEM_TBBMALLOC; USE_TBB" OFF)
 
 cmake_dependent_option(
   USE_TCMALLOC "Build with tcmalloc" OFF
@@ -2719,7 +2727,7 @@ else()
 endif()
 
 # *****************************************************************************************
-#           tbbmalloc Library
+#           tbbmalloc & tbb Library
 # *****************************************************************************************
 if (USE_TBBMALLOC AND NOT USE_SYSTEM_TBBMALLOC)
   if (MSVC AND NOT MSVC_CRT_LINKAGE STREQUAL "dynamic")
@@ -2735,11 +2743,13 @@ endif()
 if (USE_SYSTEM_TBBMALLOC)
   find_package(TBB)
   if (NOT TBB_FOUND)
-    message(STATUS "System tcmalloc not found, using bundled one")
+    message(STATUS "System tbbmalloc/tbb not found, using bundled one")
+    set(USE_SYSTEM_TBB FALSE)
     set(USE_SYSTEM_TBBMALLOC FALSE)
   endif()
   if (USE_LIBCXX)
-    message(STATUS "Cannot use system tcmalloc with custom libc++, using bundled one")
+    message(STATUS "Cannot use system tbbmalloc with custom libc++, using bundled one")
+    set(USE_SYSTEM_TBB FALSE)
     set(USE_SYSTEM_TBBMALLOC FALSE)
   endif()
 endif()
@@ -2755,6 +2765,16 @@ if (USE_SYSTEM_TBBMALLOC AND USE_TBBMALLOC)
     HAVE_TBBMALLOC
     ${SUPPORT_DEFINITIONS}
   )
+
+  if (USE_TBB)
+    message(STATUS "Compiling with system tbb support")
+    list(APPEND YASS_APP_FEATURES "system tbb")
+    set(TBBMALLOC_LIB TBB::tbbmalloc TBB::tbb)
+    set(SUPPORT_DEFINITIONS
+      HAVE_TBB
+      ${SUPPORT_DEFINITIONS}
+    )
+  endif()
 elseif (USE_TBBMALLOC)
   message(STATUS "Compiling with bundled tbbmalloc support")
 
@@ -2763,7 +2783,11 @@ elseif (USE_TBBMALLOC)
   set(TBB_STRICT OFF CACHE BOOL "")
   set(TBB_WINDOWS_DRIVER OFF CACHE BOOL "")
   set(TBB4PY_BUILD OFF CACHE BOOL "")
-  set(TBB_BUILD OFF CACHE BOOL "")
+  if (TBB_BUILD)
+    set(TBB_BUILD ON CACHE BOOL "")
+  else()
+    set(TBB_BUILD OFF CACHE BOOL "")
+  endif()
   set(TBBMALLOC_BUILD ON CACHE BOOL "")
   set(TBBMALLOC_PROXY_BUILD ON CACHE BOOL "")
   set(TBB_CPF ON CACHE BOOL "")
@@ -2780,20 +2804,27 @@ elseif (USE_TBBMALLOC)
   set(TBB_BUILD_SHARED_LIBS ON CACHE BOOL "")
   add_subdirectory(third_party/oneTBB EXCLUDE_FROM_ALL)
   if (USE_LTO_CMAKE)
+    if (TARGET tbb)
+      set_property(TARGET tbb
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
     set_property(TARGET tbbmalloc
       PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    set_property(TARGET tbbmalloc_proxy
-      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
-
-  # in tbb build, there is a semaphore.cpp, force newer build use srwlock
-  if (TARGET tbb AND WIN32 AND NOT (ALLOW_XP AND OS_X86))
-    target_compile_definitions(tbb PRIVATE __TBB_USE_SRWLOCK=1)
+    if (TARGET tbbmalloc_proxy)
+      set_property(TARGET tbbmalloc_proxy
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
   endif()
 
   #an unwanted dependency on libstdc++.so
   if (LINUX AND ENABLE_ASSERTIONS AND NOT USE_LIBCXX)
+    if (TARGET tbb)
+      target_compile_options(tbb PRIVATE -U_GLIBCXX_ASSERTIONS)
+    endif()
     target_compile_options(tbbmalloc PRIVATE -U_GLIBCXX_ASSERTIONS)
+    if (TARGET tbbmalloc_proxy)
+      target_compile_options(tbbmalloc_proxy PRIVATE -U_GLIBCXX_ASSERTIONS)
+    endif()
   endif()
 
   list(APPEND YASS_APP_FEATURES "tbbmalloc (dll)")
@@ -2803,8 +2834,13 @@ elseif (USE_TBBMALLOC)
   list(APPEND YASS_SHARED_LIBS ${TBBMALLOC_LIB})
 
   if (WIN32)
-    set_target_properties(tbbmalloc_proxy PROPERTIES PREFIX "")
+    if (TARGET tbb)
+      set_target_properties(tbb PROPERTIES PREFIX "")
+    endif()
     set_target_properties(tbbmalloc PROPERTIES PREFIX "")
+    if (TARGET tbbmalloc_proxy)
+      set_target_properties(tbbmalloc_proxy PROPERTIES PREFIX "")
+    endif()
   endif()
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -2813,8 +2849,13 @@ elseif (USE_TBBMALLOC)
     set(TBBMALLOC_DLL_SUFFIX "64")
   endif()
   if (WIN32)
-    set_target_properties(tbbmalloc_proxy PROPERTIES OUTPUT_NAME "tbbmalloc_proxy${TBBMALLOC_DLL_SUFFIX}")
+    if (TARGET tbb)
+      set_target_properties(tbb PROPERTIES OUTPUT_NAME "tbb${TBBMALLOC_DLL_SUFFIX}")
+    endif()
     set_target_properties(tbbmalloc PROPERTIES OUTPUT_NAME "tbbmalloc${TBBMALLOC_DLL_SUFFIX}")
+    if (TARGET tbbmalloc_proxy)
+      set_target_properties(tbbmalloc_proxy PROPERTIES OUTPUT_NAME "tbbmalloc_proxy${TBBMALLOC_DLL_SUFFIX}")
+    endif()
   endif()
 
   set(SUPPORT_DEFINITIONS
@@ -2827,24 +2868,36 @@ elseif (USE_TBBMALLOC)
     ${SUPPORT_INCLUDE_DIRS}
   )
 
+  if (TARGET tbb)
+    message(STATUS "Compiling with tbb support")
+    list(APPEND YASS_APP_FEATURES "tbb (dll)")
+    set(SUPPORT_LIBS tbb ${SUPPORT_LIBS})
+    list(APPEND YASS_SHARED_LIBS tbb)
+    set(SUPPORT_DEFINITIONS
+      HAVE_TBB
+      ${SUPPORT_DEFINITIONS}
+    )
+  endif()
+endif()
+
+set(DEFAULT_MALLOC_LIB ${TBBMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
+if (USE_TBBMALLOC)
   # patching manually, see tbb/tbbmalloc_proxy.h
   if (MSVC)
     if (OS_X86)
       set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:___TBB_malloc_proxy)
-    else()
+    elseif(OS_X64)
       set(DEFAULT_MALLOC_LINK_OPTIONS /INCLUDE:__TBB_malloc_proxy)
     endif()
   endif()
   if (MINGW)
     if (OS_X86)
       set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u___TBB_malloc_proxy)
-    else()
+    elseif(OS_X64)
       set(DEFAULT_MALLOC_LINK_OPTIONS -Wl,-u__TBB_malloc_proxy)
     endif()
   endif()
 endif()
-
-set(DEFAULT_MALLOC_LIB ${TBBMALLOC_LIB} ${DEFAULT_MALLOC_LIB})
 
 # *****************************************************************************************
 #           tcmalloc Library
