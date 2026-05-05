@@ -25,11 +25,16 @@
 #ifndef H_NET_CONTENT_SERVER
 #define H_NET_CONTENT_SERVER
 
+#ifdef HAVE_TBB
+#include <tbb/concurrent_hash_map.h>
+#else
 #include <absl/container/flat_hash_map.h>
+#endif
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <algorithm>
 #include <array>
+#include <format>
 #include <functional>
 #include <string>
 #include <string_view>
@@ -95,7 +100,8 @@ class ContentServer {
         upstream_ssl_config_(),
         certificate_(certificate),
         private_key_(private_key),
-        delegate_(delegate) {
+        delegate_(delegate),
+        wqthread_count_(6) {
     remote_config_.host_ips = remote_host_ips;
     remote_config_.host_sni = remote_host_sni;
     remote_config_.port = remote_port;
@@ -111,6 +117,7 @@ class ContentServer {
     enable_tls_ &= T::Type == CONNECTION_FACTORY_SERVER;
     DCHECK_LE(remote_config_.host_sni.size(), (unsigned int)TLSEXT_MAXLEN_host_name);
 
+    StartWQThreads();
     VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " allocated memory";
   }
 
@@ -118,14 +125,43 @@ class ContentServer {
     VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " freed memory";
 
     CHECK_EQ(pending_next_listen_ctxes_.size(), 0u) << "ContentServer freed on pending listen ctx";
+#ifndef HAVE_TBB
     CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
+#endif
     CHECK_EQ(connection_map_.size(), 0u) << "ContentServer freed on non-closed connections";
 
     work_guard_.reset();
+    CancelWQThreads();
+    JoinWQThreads();
   }
 
   ContentServer(const ContentServer&) = delete;
   ContentServer& operator=(const ContentServer&) = delete;
+
+  void StartWQThreads() {
+#ifdef HAVE_TBB
+    wqthreads_.reserve(wqthread_count_);
+    for(int i = 0; i < wqthread_count_; ++i) {
+      wqthreads_.emplace_back(std::make_unique<WQThreadCtx>(server_tag_, i));
+    }
+#endif
+  }
+
+  void CancelWQThreads() {
+#ifdef HAVE_TBB
+    for(int i = 0; i < wqthread_count_; ++i) {
+      wqthreads_[i]->Cancel();
+    }
+#endif
+  }
+
+  void JoinWQThreads() {
+#ifdef HAVE_TBB
+    for(int i = 0; i < wqthread_count_; ++i) {
+      wqthreads_[i]->Join();
+    }
+#endif
+  }
 
   // Retrieve last local endpoint
   const asio::ip::tcp::endpoint& endpoint() const {
@@ -233,6 +269,8 @@ class ContentServer {
         LOG(WARNING) << "Waiting for remaining connects: " << connection_map_.size();
         in_shutdown_ = true;
       }
+
+      CancelWQThreads();
     });
   }
   // Allow called from different threads
@@ -264,6 +302,7 @@ class ContentServer {
         conn->close();
       }
 
+      CancelWQThreads();
       work_guard_.reset();
     });
   }
@@ -290,36 +329,53 @@ class ContentServer {
             work_guard_.reset();
             return;
           }
-          tlsext_ctx_t* tlsext_ctx = nullptr;
-          if (ctx.enable_tls) {
-            tlsext_ctx = new tlsext_ctx_t{this, next_connection_id_, listen_ctx_num};
-            setup_ssl_ctx_alpn_cb(ctx.ssl_ctx.get(), tlsext_ctx);
-            setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx);
-          }
-          scoped_refptr<ConnectionType> conn =
-              T::Create(io_context_, remote_config_, ctx.server_config, upstream_ssl_config_,
-                        ctx.renego_allowed_for_http11_proto, upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
-          on_accept(conn, std::move(socket), listen_ctx_num, tlsext_ctx);
-          if (in_shutdown_) {
-            return;
-          }
-          if (connection_map_.size() >= absl::GetFlag(FLAGS_parallel_max)) {
-            LOG(INFO) << "Disabling accepting new connection: " << listen_ctxs_[listen_ctx_num].endpoint;
-            pending_next_listen_ctxes_.push_back(listen_ctx_num);
-            return;
-          }
-          accept(listen_ctx_num);
+          int connection_id = next_connection_id_++;
+          on_async_accept(listen_ctx_num, connection_id, std::move(socket));
         });
   }
 
-  void on_accept(scoped_refptr<ConnectionType> conn,
+  void on_async_accept(int listen_ctx_num, int connection_id, asio::ip::tcp::socket&& socket) {
+    ListenCtx& ctx = listen_ctxs_[listen_ctx_num];
+    tlsext_ctx_t* tlsext_ctx = nullptr;
+    if (ctx.enable_tls) {
+      tlsext_ctx = new tlsext_ctx_t{this, connection_id, listen_ctx_num};
+      setup_ssl_ctx_alpn_cb(ctx.ssl_ctx.get(), tlsext_ctx, connection_id);
+      setup_ssl_ctx_tlsext_cb(ctx.ssl_ctx.get(), tlsext_ctx, connection_id);
+    }
+#ifdef HAVE_TBB
+    asio::io_context& io_context = wqthreads_[connection_id % wqthread_count_]->io_context;
+    auto protocol = socket.local_endpoint().protocol();
+    auto s = socket.release(); // requires windows 8.1 or later
+    socket = asio::ip::tcp::socket(io_context); // rebind to new io_context
+    socket.assign(protocol, s);
+#else
+    asio::io_context& io_context = io_context_;
+#endif
+    scoped_refptr<ConnectionType> conn =
+        T::Create(io_context,
+                  remote_config_, ctx.server_config, upstream_ssl_config_,
+                  ctx.renego_allowed_for_http11_proto, upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
+    on_accept(io_context, conn, std::move(socket), listen_ctx_num, connection_id, tlsext_ctx);
+    if (in_shutdown_) {
+      return;
+    }
+    if (connection_map_.size() >= absl::GetFlag(FLAGS_parallel_max)) {
+      LOG(INFO) << "Disabling accepting new connection: " << listen_ctxs_[listen_ctx_num].endpoint;
+      pending_next_listen_ctxes_.push_back(listen_ctx_num);
+      return;
+    }
+    accept(listen_ctx_num);
+  }
+
+  void on_accept(asio::io_context& io_context,
+                 scoped_refptr<ConnectionType> conn,
                  asio::ip::tcp::socket&& socket,
                  int listen_ctx_num,
+                 int connection_id,
                  tlsext_ctx_t* tlsext_ctx) {
     asio::error_code ec;
     ListenCtx& ctx = listen_ctxs_[listen_ctx_num];
 
-    int connection_id = next_connection_id_++;
     socket.non_blocking(true, ec);
     if constexpr (T::Type == CONNECTION_FACTORY_SERVER) {
       SetTCPCongestion(socket.native_handle(), ec);
@@ -340,25 +396,37 @@ class ContentServer {
     conn->set_disconnect_cb([this, conn]() mutable { on_disconnect(conn); });
     connection_map_.insert(std::make_pair(connection_id, conn));
     ++opened_connections_;
+#ifndef HAVE_TBB
     DCHECK_EQ(connection_map_.size(), opened_connections_);
+#endif
     if (delegate_) {
       delegate_->OnConnect(connection_id);
     }
     VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " with "
             << conn->peer_endpoint() << " connected";
-    conn->start();
+    asio::post(io_context, [conn]() { conn->start(); });
   }
 
   void on_disconnect(scoped_refptr<ConnectionType> conn) {
     int connection_id = conn->connection_id();
     VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id
             << " disconnected (has ref " << std::boolalpha << conn->HasAtLeastOneRef() << std::noboolalpha << ")";
+#ifdef HAVE_TBB
+    typename ConnectionMapType::accessor a;
+    bool found = connection_map_.find(a, connection_id);
+    if (found) {
+      connection_map_.erase(a);
+      --opened_connections_;
+    }
+    a.release();
+#else
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
       connection_map_.erase(iter);
       --opened_connections_;
       DCHECK_EQ(connection_map_.size(), (size_t)opened_connections_);
     }
+#endif
     if (delegate_) {
       delegate_->OnDisconnect(connection_id);
     }
@@ -504,7 +572,7 @@ class ContentServer {
     return ssl_ctx;
   }
 
-  void setup_ssl_ctx_alpn_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
+  void setup_ssl_ctx_alpn_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx, int connection_id) {
     SSL_CTX_set_alpn_select_cb(ctx, &ContentServer::on_alpn_select, tlsext_ctx);
     auto listen_ctx_num = tlsext_ctx->listen_ctx_num;
     auto renego_allowed_for_http11_proto = listen_ctxs_[listen_ctx_num].renego_allowed_for_http11_proto;
@@ -521,7 +589,7 @@ class ContentServer {
     } else {
       DLOG(FATAL) << "Alpn: Unexpected cipher: " << to_cipher_method_name(cipher);
     }
-    VLOG(1) << "Alpn support (server) enabled for connection " << next_connection_id_ << " : " << protos;
+    VLOG(1) << "Alpn support (server) enabled for connection " << connection_id << " : " << protos;
   }
 
   [[nodiscard]]
@@ -569,11 +637,11 @@ class ContentServer {
     return SSL_TLSEXT_ERR_ALERT_FATAL;
   }
 
-  void setup_ssl_ctx_tlsext_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx) {
+  void setup_ssl_ctx_tlsext_cb(SSL_CTX* ctx, tlsext_ctx_t* tlsext_ctx, int connection_id) {
     SSL_CTX_set_tlsext_servername_callback(ctx, &ContentServer::on_tlsext);
     SSL_CTX_set_tlsext_servername_arg(ctx, tlsext_ctx);
 
-    VLOG(1) << "TLSEXT: Servername (server) enabled for connection " << next_connection_id_
+    VLOG(1) << "TLSEXT: Servername (server) enabled for connection " << connection_id
             << " server_name: " << listen_ctxs_[tlsext_ctx->listen_ctx_num].server_config.server_name;
   }
 
@@ -605,9 +673,16 @@ class ContentServer {
 
   [[nodiscard]]
   bool on_alpn_select(int connection_id, NextProto proto) {
+#ifdef HAVE_TBB
+    typename ConnectionMapType::accessor a;
+    bool found = connection_map_.find(a, connection_id);
+    if (found) {
+      return a->second->on_alpn_select(proto);
+#else
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
       return iter->second->on_alpn_select(proto);
+#endif
     } else {
       LOG(INFO) << "Connection (" << T::Name << ") " << "Tag " << server_tag_
                 << " invalid connection id: " << connection_id;
@@ -711,10 +786,12 @@ class ContentServer {
     });
     SSL_CTX_set_ex_data(ctx, ssl_ctx_data_index_, this);
     ssl_client_session_cache_ = std::make_unique<SSLClientSessionCache>(SSLClientSessionCache::Config{});
+#ifndef HAVE_TBB // TODO with concurrent_lru_cache
     // Disable the internal session cache. Session caching is handled
     // externally (i.e. by SSLClientSessionCache).
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL);
     SSL_CTX_sess_set_new_cb(ctx, NewSessionCallback);
+#endif
 
     SSL_CTX_set_timeout(ctx, 1 * 60 * 60 /* one hour */);
 
@@ -782,10 +859,54 @@ class ContentServer {
   std::vector<int> pending_next_listen_ctxes_;
   bool in_shutdown_ = false;
 
-  absl::flat_hash_map<int, scoped_refptr<ConnectionType>> connection_map_;
+#ifdef HAVE_TBB
+  typedef tbb::concurrent_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
+#else
+  typedef absl::flat_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
+#endif
+  ConnectionMapType connection_map_;
 
-  int next_connection_id_ = 1;
+  std::atomic<int32_t> next_connection_id_ = 1;
   std::atomic<size_t> opened_connections_ = 0;
+
+  const int wqthread_count_;
+
+#ifdef HAVE_TBB
+  struct WQThreadCtx {
+    int tid;
+    int reserved;
+    asio::io_context io_context;
+    std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_;
+    std::thread t;
+    WQThreadCtx(int tag, int thread_id)
+      : tid(thread_id),
+        work_guard_(std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor())),
+        t([this, tag, thread_id]{
+      std::string tname = std::format("wq-{}-{}-{}", tag, thread_id, T::Name);
+      if (!SetCurrentThreadName(tname)) {
+        PLOG(WARNING) << "wqthread: failed to set thread name: " << tname;
+      }
+      if (!SetCurrentThreadPriority(ThreadPriority::ABOVE_NORMAL)) {
+        PLOG(WARNING) << "wqthread: failed to set thread priority";
+      }
+
+      LOG(INFO) << "wqthread: " << tname << " started";
+      io_context.run();
+      LOG(INFO) << "wqthread: " << tname << " stopped";
+    }) {}
+    WQThreadCtx(const WQThreadCtx&) = delete;
+    WQThreadCtx& operator=(const WQThreadCtx&) = delete;
+    WQThreadCtx(WQThreadCtx&&) = default;
+    WQThreadCtx& operator=(WQThreadCtx&&) = default;
+    void Cancel() {
+      work_guard_.reset();
+    }
+    void Join() {
+      t.join();
+    }
+  };
+  std::vector<std::unique_ptr<WQThreadCtx>> wqthreads_;
+#endif
 };
 
 template <typename T>
