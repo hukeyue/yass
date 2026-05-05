@@ -101,7 +101,7 @@ class ContentServer {
         certificate_(certificate),
         private_key_(private_key),
         delegate_(delegate),
-        wqthread_count_(6) {
+        wqthread_count_(std::thread::hardware_concurrency()) {
     remote_config_.host_ips = remote_host_ips;
     remote_config_.host_sni = remote_host_sni;
     remote_config_.port = remote_port;
