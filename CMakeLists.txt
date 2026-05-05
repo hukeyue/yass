@@ -2816,6 +2816,11 @@ elseif (USE_TBBMALLOC)
     endif()
   endif()
 
+  # in tbb build, there is a semaphore.cpp, force newer build use srwlock
+  if (TARGET tbb AND WIN32 AND NOT (ALLOW_XP AND OS_X86))
+    target_compile_definitions(tbb PRIVATE __TBB_USE_SRWLOCK=1)
+  endif()
+
   #an unwanted dependency on libstdc++.so
   if (LINUX AND ENABLE_ASSERTIONS AND NOT USE_LIBCXX)
     if (TARGET tbb)
