@@ -77,7 +77,9 @@ class SSLClientSessionCache {
   // Returns true if |entry| is expired as of |now|.
   static bool IsExpired(SSL_SESSION* session, time_t now);
 
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
   size_t size() const;
+#endif
 
   // Returns the session associated with |cache_key| and moves it to the front
   // of the MRU list. Returns nullptr if there is none.
@@ -118,8 +120,10 @@ class SSLClientSessionCache {
     bssl::UniquePtr<SSL_SESSION> sessions[2];
   };
 
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
   // Removes all expired sessions from the cache.
   void FlushExpiredSessions();
+#endif
 
 #ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
   static std::shared_ptr<Entry> Construct(Key key);

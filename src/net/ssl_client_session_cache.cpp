@@ -117,10 +117,6 @@ void SSLClientSessionCache::ClearEarlyData(const Key& cache_key) {
   }
 }
 
-void SSLClientSessionCache::Flush() {
-  // noop
-  // cache_.Clear();
-}
 #else
 bssl::UniquePtr<SSL_SESSION> SSLClientSessionCache::Lookup(const Key& cache_key) {
   // Expire stale sessions.
@@ -162,11 +158,12 @@ void SSLClientSessionCache::ClearEarlyData(const Key& cache_key) {
     }
   }
 }
-
-void SSLClientSessionCache::Flush() {
-  cache_.Clear();
-}
 #endif
+void SSLClientSessionCache::Flush() {
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+  cache_.Clear();
+#endif
+}
 
 bool SSLClientSessionCache::IsExpired(SSL_SESSION* session, time_t now) {
   if (now < 0)
