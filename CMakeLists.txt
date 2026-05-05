@@ -498,7 +498,7 @@ cmake_dependent_option(
   "USE_TBBMALLOC" OFF)
 
 cmake_dependent_option(
-  USE_TBB "Build with intel tbb" ON
+  USE_TBB "Build with intel tbb" OFF
   "USE_TBBMALLOC; OS_X86 OR OS_X64; NOT ALLOW_XP; NOT MINGW" OFF)
 
 cmake_dependent_option(
@@ -2783,7 +2783,7 @@ elseif (USE_TBBMALLOC)
   set(TBB_STRICT OFF CACHE BOOL "")
   set(TBB_WINDOWS_DRIVER OFF CACHE BOOL "")
   set(TBB4PY_BUILD OFF CACHE BOOL "")
-  if (TBB_BUILD)
+  if (USE_TBB)
     set(TBB_BUILD ON CACHE BOOL "")
   else()
     set(TBB_BUILD OFF CACHE BOOL "")
@@ -2877,6 +2877,10 @@ elseif (USE_TBBMALLOC)
       HAVE_TBB
       ${SUPPORT_DEFINITIONS}
     )
+
+    if (TARGET tbb)
+      target_compile_definitions(tbb PUBLIC TBB_PREVIEW_CONCURRENT_LRU_CACHE=1)
+    endif()
   endif()
 endif()
 
