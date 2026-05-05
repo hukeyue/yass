@@ -786,7 +786,7 @@ class ContentServer {
     });
     SSL_CTX_set_ex_data(ctx, ssl_ctx_data_index_, this);
     ssl_client_session_cache_ = std::make_unique<SSLClientSessionCache>(SSLClientSessionCache::Config{});
-#ifndef HAVE_TBB // TODO with concurrent_lru_cache
+#if defined(TBB_PREVIEW_CONCURRENT_LRU_CACHE) || !defined(HAVE_TBB)
     // Disable the internal session cache. Session caching is handled
     // externally (i.e. by SSLClientSessionCache).
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL);

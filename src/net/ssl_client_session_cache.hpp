@@ -32,7 +32,11 @@
 #include <optional>
 #include <string>
 
+#ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+#include "oneapi/tbb/concurrent_lru_cache.h"
+#else
 #include "base/containers/lru_cache.h"
+#endif
 #include "base/memory/raw_ptr.h"
 #include "net/asio.hpp"
 #include "third_party/boringssl/src/include/openssl/base.h"
@@ -96,6 +100,7 @@ class SSLClientSessionCache {
   struct Entry {
     Entry();
     Entry(Entry&&);
+    Entry& operator=(Entry&&);
     ~Entry();
 
     // Adds a new session onto this entry, dropping the oldest one if two are
@@ -116,6 +121,10 @@ class SSLClientSessionCache {
   // Removes all expired sessions from the cache.
   void FlushExpiredSessions();
 
+#ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+  static std::shared_ptr<Entry> Construct(Key key);
+#endif
+
 #if 0
   // Clear cache on low memory notifications callback.
   void OnMemoryPressure(
@@ -123,8 +132,15 @@ class SSLClientSessionCache {
 #endif
 
   Config config_;
-  gurl_base::LRUCache<Key, Entry> cache_;
+#ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+  typedef tbb::concurrent_lru_cache<Key, std::shared_ptr<Entry>> CacheType;
+#else
+  typedef gurl_base::LRUCache<Key, Entry> CacheType;
+#endif
+  CacheType cache_;
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
   size_t lookups_since_flush_ = 0;
+#endif
   // std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
 };
 

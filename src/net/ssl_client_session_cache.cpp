@@ -61,16 +61,67 @@ bool SSLClientSessionCache::Key::operator<(const Key& other) const {
   return TieKeyFields(*this) < TieKeyFields(other);
 }
 
+#ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+SSLClientSessionCache::SSLClientSessionCache(const Config& config) : config_(config),
+  cache_(SSLClientSessionCache::Construct, config.max_entries) {}
+#else
 SSLClientSessionCache::SSLClientSessionCache(const Config& config) : config_(config), cache_(config.max_entries) {}
+#endif
 
 SSLClientSessionCache::~SSLClientSessionCache() {
   Flush();
 }
 
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
 size_t SSLClientSessionCache::size() const {
   return cache_.size();
 }
+#endif
 
+#ifdef TBB_PREVIEW_CONCURRENT_LRU_CACHE
+std::shared_ptr<SSLClientSessionCache::Entry> SSLClientSessionCache::Construct(Key cache_key) {
+  return std::make_shared<Entry>();
+}
+
+bssl::UniquePtr<SSL_SESSION> SSLClientSessionCache::Lookup(const Key& cache_key) {
+  auto handle = cache_[cache_key];
+  if (!handle.operator bool())
+    return nullptr;
+
+  time_t now = absl::ToTimeT(absl::Now());
+  bssl::UniquePtr<SSL_SESSION> session = handle.value()->Pop();
+  if (handle.value()->ExpireSessions(now))
+    handle.value()->Pop();
+
+  if (IsExpired(session.get(), now))
+    session = nullptr;
+
+  return session;
+}
+
+void SSLClientSessionCache::Insert(const Key& cache_key, bssl::UniquePtr<SSL_SESSION> session) {
+  auto handle = cache_[cache_key];
+  if (!handle.operator bool())
+    handle.value() = std::make_shared<Entry>();
+  handle.value()->Push(std::move(session));
+}
+
+void SSLClientSessionCache::ClearEarlyData(const Key& cache_key) {
+  auto handle = cache_[cache_key];
+  if (handle.operator bool()) {
+    for (auto& session : handle.value()->sessions) {
+      if (session) {
+        session.reset(SSL_SESSION_copy_without_early_data(session.get()));
+      }
+    }
+  }
+}
+
+void SSLClientSessionCache::Flush() {
+  // noop
+  // cache_.Clear();
+}
+#else
 bssl::UniquePtr<SSL_SESSION> SSLClientSessionCache::Lookup(const Key& cache_key) {
   // Expire stale sessions.
   lookups_since_flush_++;
@@ -115,6 +166,7 @@ void SSLClientSessionCache::ClearEarlyData(const Key& cache_key) {
 void SSLClientSessionCache::Flush() {
   cache_.Clear();
 }
+#endif
 
 bool SSLClientSessionCache::IsExpired(SSL_SESSION* session, time_t now) {
   if (now < 0)
@@ -130,6 +182,7 @@ bool SSLClientSessionCache::IsExpired(SSL_SESSION* session, time_t now) {
 
 SSLClientSessionCache::Entry::Entry() = default;
 SSLClientSessionCache::Entry::Entry(Entry&&) = default;
+SSLClientSessionCache::Entry& SSLClientSessionCache::Entry::operator=(Entry&&) = default;
 SSLClientSessionCache::Entry::~Entry() = default;
 
 void SSLClientSessionCache::Entry::Push(bssl::UniquePtr<SSL_SESSION> session) {
@@ -165,6 +218,7 @@ bool SSLClientSessionCache::Entry::ExpireSessions(time_t now) {
   return false;
 }
 
+#ifndef TBB_PREVIEW_CONCURRENT_LRU_CACHE
 void SSLClientSessionCache::FlushExpiredSessions() {
   time_t now = absl::ToTimeT(absl::Now());
   auto iter = cache_.begin();
@@ -176,6 +230,7 @@ void SSLClientSessionCache::FlushExpiredSessions() {
     }
   }
 }
+#endif
 
 #if 0
 void SSLClientSessionCache::OnMemoryPressure(
