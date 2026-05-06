@@ -4516,9 +4516,11 @@ add_library(yass_core STATIC
     src/core/process_utils.hpp
     src/core/process_utils.cpp
     src/core/utils.cpp
-    src/core/utils_fs.cpp
     src/core/utils.hpp
+    src/core/utils_fs.cpp
     src/core/utils_fs.hpp
+    src/core/utils_socket.cpp
+    src/core/utils_socket.hpp
     src/crypto/crypter_export.cpp
     src/crypto/crypter_export.hpp
   )

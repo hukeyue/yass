@@ -27,6 +27,7 @@
 #ifdef HAVE_C_ARES
 
 #include "core/utils.hpp"
+#include "core/utils_socket.hpp"
 #include "net/c-ares.hpp"
 
 #define CURL_TIMEOUT_RESOLVE                      \
@@ -91,26 +92,6 @@ struct async_resolve_ctx {
 };
 
 }  // anonymous namespace
-
-static bool DuplicateSocket(fd_t fd, fd_t* dup_fd) {
-#ifdef _WIN32
-  WSAPROTOCOL_INFOW pi{};
-  if (::WSADuplicateSocketW(fd, ::GetCurrentProcessId(), &pi) != 0) {
-    return false;
-  }
-  fd_t fd2 = ::WSASocketW(pi.iAddressFamily, pi.iSocketType, pi.iProtocol, &pi, 0, 0);
-  if (fd2 == INVALID_SOCKET) {
-    return false;
-  }
-#else
-  fd_t fd2 = dup(fd);
-  if (fd2 < 0) {
-    return false;
-  }
-#endif
-  *dup_fd = fd2;
-  return true;
-}
 
 // Convert struct ares_addrinfo into normal struct addrinfo
 static struct addrinfo* addrinfo_dup(struct ares_addrinfo* result) {

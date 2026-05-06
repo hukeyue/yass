@@ -22,8 +22,8 @@
 
 /* Copyright (c) 2022-2026 Chilledheart  */
 
-#ifndef YASS_UTILS
-#define YASS_UTILS
+#ifndef YASS_CORE_UTILS
+#define YASS_CORE_UTILS
 
 #include <stdint.h>
 #include <wchar.h>
@@ -66,14 +66,6 @@ bool SetCurrentThreadName(const std::string& name);
 uint64_t GetMonotonicTime();
 
 #define NS_PER_SECOND (1000 * 1000 * 1000)
-
-namespace internal {
-#ifdef _WIN32
-using fd_t = HANDLE;
-#else
-using fd_t = int;
-#endif
-}  // namespace internal
 
 using gurl_base::StringToInt;
 using gurl_base::StringToInt64;
@@ -234,4 +226,4 @@ void HumanReadableByteCountBin(std::wostream* ss, uint64_t bytes);
 template <int DefaultPort>
 bool SplitHostPortWithDefaultPort(std::string* out_hostname, uint16_t* out_port, const std::string& host_port_string);
 
-#endif  // YASS_UTILS
+#endif  // YASS_CORE_UTILS
