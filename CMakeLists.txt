@@ -499,7 +499,7 @@ cmake_dependent_option(
 
 cmake_dependent_option(
   USE_TBB "Build with intel tbb" OFF
-  "USE_TBBMALLOC; OS_X86 OR OS_X64; NOT ALLOW_XP; NOT MINGW" OFF)
+  "USE_TBBMALLOC; NOT ALLOW_XP; NOT MINGW" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_TBB "Build with system or vendored tbb" OFF
@@ -2819,6 +2819,11 @@ elseif (USE_TBBMALLOC)
   # in tbb build, there is a semaphore.cpp, force newer build use srwlock
   if (TARGET tbb AND WIN32 AND NOT (ALLOW_XP AND OS_X86))
     target_compile_definitions(tbb PRIVATE __TBB_USE_SRWLOCK=1)
+  endif()
+
+  # in tbb build requiring exceptions
+  if (TARGET tbb AND NOT MSVC)
+    target_compile_options(tbb PRIVATE -fexceptions)
   endif()
 
   #an unwanted dependency on libstdc++.so

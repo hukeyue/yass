@@ -24,7 +24,7 @@ else()
 endif()
 
 # experimental, turn off to build libc++ without exceptions
-if (MSVC OR APPLE)
+if (NOT MINGW)
   set(libcxx_USE_EXCEPTIONS ON)
 else()
   # FIXME workaround with newer lld linkage issue with different exception frames
@@ -34,12 +34,8 @@ else()
   # >>>               thinlto-cache/llvmcache-C577B9C572ACF510A97E7F74D80906652031E64C:(.eh_frame+0xAC69)
   set(libcxx_USE_EXCEPTIONS OFF)
 endif()
-
-if (ANDROID OR MSVC OR APPLE OR MINGW)
-  set(libcxx_USE_RTTI ON)
-else()
-  set(libcxx_USE_RTTI OFF)
-endif()
+# experimental, turn off to build libc++ without rtti
+set(libcxx_USE_RTTI ON)
 
 # gcc's lto implementation is buggy and cannot find std::terminate if libc++ built with -fexceptions while used with
 # -fno-exceptions, setting to OFF
