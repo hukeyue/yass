@@ -27,11 +27,6 @@ endif()
 if (NOT MINGW)
   set(libcxx_USE_EXCEPTIONS ON)
 else()
-  # FIXME workaround with newer lld linkage issue with different exception frames
-  # ld.lld: error: relocation R_MIPS_32 cannot be used against local symbol; recompile with -fPIC
-  # >>> defined in thinlto-cache/llvmcache-C577B9C572ACF510A97E7F74D80906652031E64C
-  # >>> referenced by chrono.cpp
-  # >>>               thinlto-cache/llvmcache-C577B9C572ACF510A97E7F74D80906652031E64C:(.eh_frame+0xAC69)
   set(libcxx_USE_EXCEPTIONS OFF)
 endif()
 # experimental, turn off to build libc++ without rtti
@@ -617,9 +612,11 @@ if (ANDROID)
   set(libunwind_SOURCES
     # C++ sources
     ../libunwind/trunk/src/Unwind-EHABI.cpp
+    ../libunwind/trunk/src/Unwind-seh.cpp
     ../libunwind/trunk/src/libunwind.cpp
     # C sources
     ../libunwind/trunk/src/Unwind-sjlj.c
+    ../libunwind/trunk/src/Unwind-wasm.c
     ../libunwind/trunk/src/UnwindLevel1-gcc-ext.c
     ../libunwind/trunk/src/UnwindLevel1.c
     # ASM sources
@@ -660,6 +657,20 @@ if (ANDROID)
 
   target_compile_options(unwind PRIVATE "-frtti")
   target_compile_options(unwind PRIVATE "-fexceptions")
+
+  # FIXME disable LTO on
+  # ld.lld: error: relocation R_ARM_THM_JUMP11 cannot be used against symbol '_Unwind_Resume'; recompile with -fPIC
+  # >>> defined in third_party/libc++/CMakeFiles/unwind.dir/__/libunwind/trunk/src/libc++.so.lto.Unwind-EHABI.cpp.o
+  # >>> referenced by cxa_exception.cpp
+  # >>>               third_party/libc++/CMakeFiles/cxxabi.dir/__/libc++abi/trunk/src/libc++.so.lto.cxa_exception.cpp.o:(.text.__cxa_end_cleanup+0xc)
+  if (LTO AND OS_ARM)
+    target_link_options(cxx PRIVATE -fno-lto)
+    target_compile_options(cxx PRIVATE -fno-lto)
+    target_link_options(cxxabi PRIVATE -fno-lto)
+    target_compile_options(cxxabi PRIVATE -fno-lto)
+    target_link_options(unwind PRIVATE -fno-lto)
+    target_compile_options(unwind PRIVATE -fno-lto)
+  endif()
 
   target_link_libraries(cxx unwind)
 endif()
