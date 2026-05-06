@@ -35,6 +35,6 @@ using socket_t = SOCKET;
 using socket_t = int;
 #endif
 
-bool DuplicateSocket(socket_t fd, socket_t* dup_fd);
+bool DuplicateSocket(socket_t fd, socket_t* dup_fd, bool overlapped = false);
 
 #endif  // YASS_CORE_UTILS_SOCKET

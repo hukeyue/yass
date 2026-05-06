@@ -28,13 +28,13 @@
 #include <unistd.h>
 #endif
 
-bool DuplicateSocket(socket_t fd, socket_t* dup_fd) {
+bool DuplicateSocket(socket_t fd, socket_t* dup_fd, bool overlapped) {
 #ifdef _WIN32
   WSAPROTOCOL_INFOW pi{};
   if (::WSADuplicateSocketW(fd, ::GetCurrentProcessId(), &pi) != 0) {
     return false;
   }
-  socket_t fd2 = ::WSASocketW(pi.iAddressFamily, pi.iSocketType, pi.iProtocol, &pi, 0, 0);
+  socket_t fd2 = ::WSASocketW(pi.iAddressFamily, pi.iSocketType, pi.iProtocol, &pi, 0, overlapped ? WSA_FLAG_OVERLAPPED : 0);
   if (fd2 == INVALID_SOCKET) {
     return false;
   }
