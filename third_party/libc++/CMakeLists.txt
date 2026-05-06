@@ -24,7 +24,8 @@ else()
 endif()
 
 # experimental, turn off to build libc++ without exceptions
-if (NOT MINGW)
+# NOTE: mingw's exception requires libunwind which requires windows vista or later
+if (NOT (MINGW AND ALLOW_XP AND OS_X86))
   set(libcxx_USE_EXCEPTIONS ON)
 else()
   set(libcxx_USE_EXCEPTIONS OFF)
@@ -608,7 +609,7 @@ if (NOT MSVC)
   target_link_libraries(cxx cxxabi)
 endif()
 
-if (ANDROID)
+if (ANDROID OR (MINGW AND libcxx_USE_EXCEPTIONS))
   set(libunwind_SOURCES
     # C++ sources
     ../libunwind/trunk/src/Unwind-EHABI.cpp

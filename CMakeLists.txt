@@ -499,7 +499,7 @@ cmake_dependent_option(
 
 cmake_dependent_option(
   USE_TBB "Build with intel tbb" OFF
-  "USE_TBBMALLOC; NOT ALLOW_XP; NOT MINGW" OFF)
+  "USE_TBBMALLOC; NOT ALLOW_XP" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_TBB "Build with system or vendored tbb" OFF
