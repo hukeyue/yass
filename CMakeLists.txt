@@ -499,11 +499,11 @@ cmake_dependent_option(
 
 cmake_dependent_option(
   USE_TBB "Build with intel tbb" OFF
-  "USE_TBBMALLOC; NOT ALLOW_XP" OFF)
+  "NOT ALLOW_XP" OFF)
 
 cmake_dependent_option(
   USE_SYSTEM_TBB "Build with system or vendored tbb" OFF
-  "USE_SYSTEM_TBBMALLOC; USE_TBB" OFF)
+  "USE_TBB" OFF)
 
 cmake_dependent_option(
   USE_TCMALLOC "Build with tcmalloc" OFF
@@ -2740,31 +2740,30 @@ if (USE_TBBMALLOC AND NOT USE_SYSTEM_TBBMALLOC)
   endif()
 endif()
 
-if (USE_SYSTEM_TBBMALLOC)
+if (USE_SYSTEM_TBBMALLOC OR USE_SYSTEM_TBB)
   find_package(TBB)
   if (NOT TBB_FOUND)
     message(STATUS "System tbbmalloc/tbb not found, using bundled one")
     set(USE_SYSTEM_TBB FALSE)
     set(USE_SYSTEM_TBBMALLOC FALSE)
   endif()
-  if (USE_LIBCXX)
+  if (USE_LIBCXX AND USE_SYSTEM_TBBMALLOC)
     message(STATUS "Cannot use system tbbmalloc with custom libc++, using bundled one")
     set(USE_SYSTEM_TBB FALSE)
     set(USE_SYSTEM_TBBMALLOC FALSE)
   endif()
 endif()
 
-if (USE_SYSTEM_TBBMALLOC AND USE_TBBMALLOC)
-  message(STATUS "Compiling with system tbbmalloc support")
-
-  list(APPEND YASS_APP_FEATURES "system tbbmalloc")
-
-  set(TBBMALLOC_LIB TBB::tbbmalloc_proxy TBB::tbbmalloc)
-
-  set(SUPPORT_DEFINITIONS
-    HAVE_TBBMALLOC
-    ${SUPPORT_DEFINITIONS}
-  )
+if (USE_SYSTEM_TBBMALLOC OR USE_SYSTEM_TBB)
+  if (USE_TBBMALLOC)
+    message(STATUS "Compiling with system tbbmalloc support")
+    list(APPEND YASS_APP_FEATURES "system tbbmalloc")
+    set(TBBMALLOC_LIB TBB::tbbmalloc_proxy TBB::tbbmalloc)
+    set(SUPPORT_DEFINITIONS
+      HAVE_TBBMALLOC
+      ${SUPPORT_DEFINITIONS}
+    )
+  endif()
 
   if (USE_TBB)
     message(STATUS "Compiling with system tbb support")
@@ -2775,9 +2774,7 @@ if (USE_SYSTEM_TBBMALLOC AND USE_TBBMALLOC)
       ${SUPPORT_DEFINITIONS}
     )
   endif()
-elseif (USE_TBBMALLOC)
-  message(STATUS "Compiling with bundled tbbmalloc support")
-
+elseif (USE_TBBMALLOC OR USE_TBB)
   set(TBB_TEST OFF CACHE BOOL "")
   set(TBB_EXAMPLES OFF CACHE BOOL "")
   set(TBB_STRICT OFF CACHE BOOL "")
@@ -2788,8 +2785,13 @@ elseif (USE_TBBMALLOC)
   else()
     set(TBB_BUILD OFF CACHE BOOL "")
   endif()
-  set(TBBMALLOC_BUILD ON CACHE BOOL "")
-  set(TBBMALLOC_PROXY_BUILD ON CACHE BOOL "")
+  if (USE_TBBMALLOC)
+    set(TBBMALLOC_BUILD ON CACHE BOOL "")
+    set(TBBMALLOC_PROXY_BUILD ON CACHE BOOL "")
+  else()
+    set(TBBMALLOC_BUILD OFF CACHE BOOL "")
+    set(TBBMALLOC_PROXY_BUILD OFF CACHE BOOL "")
+  endif()
   set(TBB_CPF ON CACHE BOOL "")
   set(TBB_FIND_PACKAGE OFF CACHE BOOL "")
   set(TBB_DISABLE_HWLOC_AUTOMATIC_SEARCH OFF CACHE BOOL "")
@@ -2808,8 +2810,10 @@ elseif (USE_TBBMALLOC)
       set_property(TARGET tbb
         PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
-    set_property(TARGET tbbmalloc
-      PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    if (TARGET tbbmalloc)
+      set_property(TARGET tbbmalloc
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
     if (TARGET tbbmalloc_proxy)
       set_property(TARGET tbbmalloc_proxy
         PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -2831,23 +2835,21 @@ elseif (USE_TBBMALLOC)
     if (TARGET tbb)
       target_compile_options(tbb PRIVATE -U_GLIBCXX_ASSERTIONS)
     endif()
-    target_compile_options(tbbmalloc PRIVATE -U_GLIBCXX_ASSERTIONS)
+    if (TARGET tbbmalloc)
+      target_compile_options(tbbmalloc PRIVATE -U_GLIBCXX_ASSERTIONS)
+    endif()
     if (TARGET tbbmalloc_proxy)
       target_compile_options(tbbmalloc_proxy PRIVATE -U_GLIBCXX_ASSERTIONS)
     endif()
   endif()
 
-  list(APPEND YASS_APP_FEATURES "tbbmalloc (dll)")
-
-  set(TBBMALLOC_LIB tbbmalloc_proxy tbbmalloc)
-
-  list(APPEND YASS_SHARED_LIBS ${TBBMALLOC_LIB})
-
   if (WIN32)
     if (TARGET tbb)
       set_target_properties(tbb PROPERTIES PREFIX "")
     endif()
-    set_target_properties(tbbmalloc PROPERTIES PREFIX "")
+    if (TARGET tbbmalloc)
+      set_target_properties(tbbmalloc PROPERTIES PREFIX "")
+    endif()
     if (TARGET tbbmalloc_proxy)
       set_target_properties(tbbmalloc_proxy PROPERTIES PREFIX "")
     endif()
@@ -2862,21 +2864,30 @@ elseif (USE_TBBMALLOC)
     if (TARGET tbb)
       set_target_properties(tbb PROPERTIES OUTPUT_NAME "tbb${TBBMALLOC_DLL_SUFFIX}")
     endif()
-    set_target_properties(tbbmalloc PROPERTIES OUTPUT_NAME "tbbmalloc${TBBMALLOC_DLL_SUFFIX}")
+    if (TARGET tbbmalloc)
+      set_target_properties(tbbmalloc PROPERTIES OUTPUT_NAME "tbbmalloc${TBBMALLOC_DLL_SUFFIX}")
+    endif()
     if (TARGET tbbmalloc_proxy)
       set_target_properties(tbbmalloc_proxy PROPERTIES OUTPUT_NAME "tbbmalloc_proxy${TBBMALLOC_DLL_SUFFIX}")
     endif()
   endif()
 
-  set(SUPPORT_DEFINITIONS
-    HAVE_TBBMALLOC
-    ${SUPPORT_DEFINITIONS}
-  )
   set(SUPPORT_INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}/third_party/oneTBB/include
     third_party/oneTBB/include
     ${SUPPORT_INCLUDE_DIRS}
   )
+
+  if (TARGET tbbmalloc_proxy)
+    message(STATUS "Compiling with bundled tbbmalloc support")
+    list(APPEND YASS_APP_FEATURES "tbbmalloc (dll)")
+    set(TBBMALLOC_LIB tbbmalloc_proxy tbbmalloc)
+    list(APPEND YASS_SHARED_LIBS ${TBBMALLOC_LIB})
+    set(SUPPORT_DEFINITIONS
+      HAVE_TBBMALLOC
+      ${SUPPORT_DEFINITIONS}
+    )
+  endif()
 
   if (TARGET tbb)
     message(STATUS "Compiling with tbb support")
@@ -2888,9 +2899,7 @@ elseif (USE_TBBMALLOC)
       ${SUPPORT_DEFINITIONS}
     )
 
-    if (TARGET tbb)
-      target_compile_definitions(tbb PUBLIC TBB_PREVIEW_CONCURRENT_LRU_CACHE=1)
-    endif()
+    target_compile_definitions(tbb PUBLIC TBB_PREVIEW_CONCURRENT_LRU_CACHE=1)
   endif()
 endif()
 
