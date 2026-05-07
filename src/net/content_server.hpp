@@ -415,6 +415,7 @@ class ContentServer {
     typename ConnectionMapType::accessor a;
     bool found = connection_map_.find(a, connection_id);
     if (found) {
+      asio::post(io_context_, [conn](){ static_cast<void>(conn); }); // defer dtor
       connection_map_.erase(a);
       --opened_connections_;
     }
