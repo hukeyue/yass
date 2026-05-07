@@ -88,6 +88,7 @@ int SSLServerSocket::Handshake(CompletionOnceCallback callback) {
     net_log_.EndEventWithNetErrorCode(NetLogEventType::SSL_SERVER_HANDSHAKE,
                                       rv);
 #endif
+    callback(rv > OK ? OK : rv);
   }
 
   return rv > OK ? OK : rv;
