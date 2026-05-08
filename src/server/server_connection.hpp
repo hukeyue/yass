@@ -113,6 +113,7 @@ class ServerConnection : public gurl_base::RefCountedThreadSafe<ServerConnection
  public:
   static constexpr const ConnectionFactoryType Type = CONNECTION_FACTORY_SERVER;
   static constexpr const std::string_view Name = "server";
+  static constexpr const std::string_view ShortName = "server";
 
  public:
   /// The state of service

@@ -125,6 +125,7 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
  public:
   static constexpr const ConnectionFactoryType Type = CONNECTION_FACTORY_CONTENT_PROVIDER;
   static constexpr const std::string_view Name = "content-provider";
+  static constexpr const std::string_view ShortName = "cp";
 
  public:
   ContentProviderConnection(asio::io_context& io_context,

@@ -900,7 +900,7 @@ class ContentServer {
       : tid(thread_id),
         work_guard_(std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor())),
         t([this, tag, thread_id]{
-      std::string tname = std::format("wq-{}-{}-{}", tag, thread_id, T::Name);
+      std::string tname = std::format("wq-t{:x}-T{:x}-{}", tag, thread_id, T::ShortName);
       if (!SetCurrentThreadName(tname)) {
         PLOG(WARNING) << "wqthread: failed to set thread name: " << tname;
       }

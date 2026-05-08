@@ -377,6 +377,8 @@ template <typename T>
 concept BasicConnection = requires(T t) {
   /// require Name field
   { T::Name } -> std::convertible_to<std::string_view>;
+  /// require ShortName field
+  { T::ShortName } -> std::convertible_to<std::string_view>;
   /// require Type field
   { T::Type } -> std::convertible_to<ConnectionFactoryType>;
 };
@@ -403,6 +405,7 @@ class ConnectionFactory {
   }
   static constexpr const ConnectionFactoryType Type = ConnectionType::Type;
   static constexpr const std::string_view Name = ConnectionType::Name;
+  static constexpr const std::string_view ShortName = ConnectionType::ShortName;
 };
 
 }  // namespace net

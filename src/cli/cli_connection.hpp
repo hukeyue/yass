@@ -117,6 +117,7 @@ class CliConnection : public gurl_base::RefCountedThreadSafe<CliConnection>,
  public:
   static constexpr const ConnectionFactoryType Type = CONNECTION_FACTORY_CLIENT;
   static constexpr const std::string_view Name = "client";
+  static constexpr const std::string_view ShortName = "client";
 
  public:
   /// The state of service
