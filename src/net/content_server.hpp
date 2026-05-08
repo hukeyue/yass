@@ -124,15 +124,13 @@ class ContentServer {
   ~ContentServer() {
     VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " freed memory";
 
-    CHECK_EQ(pending_next_listen_ctxes_.size(), 0u) << "ContentServer freed on pending listen ctx";
-#ifndef HAVE_TBB
-    CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
-#endif
-    CHECK_EQ(connection_map_.size(), 0u) << "ContentServer freed on non-closed connections";
-
     work_guard_.reset();
     CancelWQThreads();
     JoinWQThreads();
+
+    CHECK_EQ(pending_next_listen_ctxes_.size(), 0u) << "ContentServer freed on pending listen ctx";
+    CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
+    CHECK_EQ(connection_map_.size(), 0u) << "ContentServer freed on non-closed connections";
   }
 
   ContentServer(const ContentServer&) = delete;
@@ -159,6 +157,21 @@ class ContentServer {
 #ifdef HAVE_TBB
     for(int i = 0; i < wqthread_count_; ++i) {
       wqthreads_[i]->Join();
+    }
+
+    // Defer closing active connections after joining wqthreads because:
+    // 1. iteration is not safe when we might do erase in wqthreads
+    // 2. we cannot let connection freed silently because it calls on_disconnect
+    // which increase the refcnt of itself (after 5daf5c64), which triggering in_dtor assertions
+    auto connection_map = std::move(connection_map_);
+    // Fatal: If this log triggers, then a hash table was move-assigned to itself
+    // and then used again later without being reinitialized.
+    connection_map_.clear();
+
+    opened_connections_ = 0;
+    for (auto [conn_id, conn] : connection_map) {
+      VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
+      conn->close();
     }
 #endif
   }
@@ -291,6 +304,9 @@ class ContentServer {
 
       pending_next_listen_ctxes_.clear();
 
+#ifdef HAVE_TBB
+      // Defer closing active connections after thread joining
+#else
       auto connection_map = std::move(connection_map_);
       // Fatal: If this log triggers, then a hash table was move-assigned to itself
       // and then used again later without being reinitialized.
@@ -301,6 +317,7 @@ class ContentServer {
         VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
         conn->close();
       }
+#endif
 
       CancelWQThreads();
       work_guard_.reset();
