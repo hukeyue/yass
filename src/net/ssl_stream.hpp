@@ -68,7 +68,7 @@ class ssl_stream : public stream {
         ssl_config_(ssl_config),
         ssl_socket_(nullptr) {}
 
-  ~ssl_stream() override {}
+  ~ssl_stream() override { close(); }
 
   NextProto negotiated_protocol() const override { return ssl_socket_->negotiated_protocol(); }
 

@@ -53,7 +53,10 @@ class Downlink {
 
   Downlink(asio::io_context& io_context) : io_context_(io_context), socket_(io_context_) {}
 
-  virtual ~Downlink() {}
+  virtual ~Downlink() {
+    asio::error_code ec;
+    close(ec);
+  }
 
   void on_accept(asio::ip::tcp::socket&& socket) { socket_ = std::move(socket); }
 
@@ -115,7 +118,11 @@ class SSLDownlink : public Downlink {
         local_cipher_(local_cipher),
         ssl_socket_(SSLServerSocket::Create(&io_context, &socket_, ssl_ctx)) {}
 
-  ~SSLDownlink() override { DCHECK(!handshake_callback_); }
+  ~SSLDownlink() override {
+    DCHECK(!handshake_callback_);
+    asio::error_code ec;
+    close(ec);
+  }
 
   void handshake(handle_t&& cb) override {
     DCHECK(!handshake_callback_);
