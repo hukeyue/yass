@@ -111,9 +111,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     fflush(stderr);
   }
 
-  absl::InitializeSymbolizer(exec_path.c_str());
-  absl::FailureSignalHandlerOptions failure_handle_options;
-  absl::InstallFailureSignalHandler(failure_handle_options);
+  if (!getenv("YASS_ENABLE_WER")) {
+    absl::InitializeSymbolizer(exec_path.c_str());
+    absl::FailureSignalHandlerOptions failure_handle_options;
+    absl::InstallFailureSignalHandler(failure_handle_options);
+  }
 
   // TODO move to standalone function
   // Parse command line for internal options

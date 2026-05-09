@@ -72,9 +72,11 @@ int main(int argc, const char* argv[]) {
   // Major routine
   // - Read config from ss config file
   // - Listen by local address and local port
-  absl::InitializeSymbolizer(exec_path.c_str());
-  absl::FailureSignalHandlerOptions failure_handle_options;
-  absl::InstallFailureSignalHandler(failure_handle_options);
+  if (!getenv("YASS_ENABLE_WER")) {
+    absl::InitializeSymbolizer(exec_path.c_str());
+    absl::FailureSignalHandlerOptions failure_handle_options;
+    absl::InstallFailureSignalHandler(failure_handle_options);
+  }
 
   config::SetClientUsageMessage(exec_path);
   config::ReadConfigFileAndArguments(argc, argv);

@@ -686,9 +686,15 @@ int main(int argc, char** argv) {
 #endif
 #endif
 
-  absl::InitializeSymbolizer(exec_path.c_str());
-  absl::FailureSignalHandlerOptions failure_handle_options;
-  absl::InstallFailureSignalHandler(failure_handle_options);
+  if (!getenv("YASS_ENABLE_WER")) {
+    absl::InitializeSymbolizer(exec_path.c_str());
+    absl::FailureSignalHandlerOptions failure_handle_options;
+    absl::InstallFailureSignalHandler(failure_handle_options);
+  } else {
+#ifdef _WIN32
+    ::SetErrorMode(SEM_FAILCRITICALERRORS);
+#endif
+  }
 
   absl::SetFlag(&FLAGS_v, 0);
   absl::SetFlag(&FLAGS_ipv6_mode, false);
