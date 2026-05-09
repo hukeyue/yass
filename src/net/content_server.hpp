@@ -26,6 +26,7 @@
 #define H_NET_CONTENT_SERVER
 
 #ifdef HAVE_TBB
+#include <absl/synchronization/mutex.h>
 #include <tbb/concurrent_hash_map.h>
 #else
 #include <absl/container/flat_hash_map.h>
@@ -163,12 +164,15 @@ class ContentServer {
     // 1. iteration is not safe when we might do erase in wqthreads
     // 2. we cannot let connection freed silently because it calls on_disconnect
     // which increase the refcnt of itself (after 5daf5c64), which triggering in_dtor assertions
+    connection_map_mutex_.lock();
     auto connection_map = std::move(connection_map_);
     // Fatal: If this log triggers, then a hash table was move-assigned to itself
     // and then used again later without being reinitialized.
     connection_map_.clear();
 
     opened_connections_ = 0;
+    connection_map_mutex_.unlock();
+
     for (auto [conn_id, conn] : connection_map) {
       VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
       conn->close();
@@ -274,16 +278,11 @@ class ContentServer {
 
       pending_next_listen_ctxes_.clear();
 
-      if (connection_map_.empty()) {
-        LOG(WARNING) << "No more connections alive... ready to stop";
-        work_guard_.reset();
-        in_shutdown_ = false;
-      } else {
-        LOG(WARNING) << "Waiting for remaining connects: " << connection_map_.size();
-        in_shutdown_ = true;
-      }
+      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      in_shutdown_ = true;
 
       CancelWQThreads();
+      work_guard_.reset();
     });
   }
   // Allow called from different threads
@@ -304,8 +303,22 @@ class ContentServer {
 
       pending_next_listen_ctxes_.clear();
 
+      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      in_shutdown_ = true;
+
 #ifdef HAVE_TBB
-      // Defer closing active connections after thread joining
+      connection_map_mutex_.lock();
+      ConnectionMapType connection_map;
+      // TODO use parallel_for to save time
+      for (auto [conn_id, conn] : connection_map_) {
+        connection_map.insert(std::make_pair(conn_id, conn));
+      }
+      // Fatal: If this log triggers, then a hash table was move-assigned to itself
+      // and then used again later without being reinitialized.
+      connection_map_.clear();
+
+      opened_connections_ = 0;
+      connection_map_mutex_.unlock();
 #else
       auto connection_map = std::move(connection_map_);
       // Fatal: If this log triggers, then a hash table was move-assigned to itself
@@ -313,11 +326,11 @@ class ContentServer {
       connection_map_.clear();
 
       opened_connections_ = 0;
+#endif
       for (auto [conn_id, conn] : connection_map) {
         VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
         conn->close();
       }
-#endif
 
       CancelWQThreads();
       work_guard_.reset();
@@ -334,6 +347,9 @@ class ContentServer {
           // acceptor->close might return success as well
           ListenCtx& ctx = listen_ctxs_[listen_ctx_num];
           if (!ctx.acceptor) {
+            return;
+          }
+          if (in_shutdown_) {
             return;
           }
           // cancelled
@@ -373,10 +389,8 @@ class ContentServer {
                   remote_config_, ctx.server_config, upstream_ssl_config_,
                   ctx.renego_allowed_for_http11_proto, upstream_ssl_ctx_.get(), ctx.ssl_ctx.get());
     on_accept(io_context, conn, std::move(socket), listen_ctx_num, connection_id, tlsext_ctx);
-    if (in_shutdown_) {
-      return;
-    }
-    if (connection_map_.size() >= absl::GetFlag(FLAGS_parallel_max)) {
+
+    if (opened_connections_ >= absl::GetFlag(FLAGS_parallel_max)) {
       LOG(INFO) << "Disabling accepting new connection: " << listen_ctxs_[listen_ctx_num].endpoint;
       pending_next_listen_ctxes_.push_back(listen_ctx_num);
       return;
@@ -411,9 +425,16 @@ class ContentServer {
     conn->on_accept(std::move(socket), ctx.endpoint, ctx.peer_endpoint, connection_id, tlsext_ctx,
                     ssl_socket_data_index_, ssl_client_session_cache_.get());
     conn->set_disconnect_cb([this, conn]() mutable { on_disconnect(conn); });
+
+#ifdef HAVE_TBB
+    connection_map_mutex_.lock();
     connection_map_.insert(std::make_pair(connection_id, conn));
     ++opened_connections_;
-#ifndef HAVE_TBB
+    DCHECK_EQ(connection_map_.size(), opened_connections_);
+    connection_map_mutex_.unlock();
+#else
+    connection_map_.insert(std::make_pair(connection_id, conn));
+    ++opened_connections_;
     DCHECK_EQ(connection_map_.size(), opened_connections_);
 #endif
     if (delegate_) {
@@ -430,13 +451,15 @@ class ContentServer {
             << " disconnected (has ref " << std::boolalpha << conn->HasAtLeastOneRef() << std::noboolalpha << ")";
 #ifdef HAVE_TBB
     typename ConnectionMapType::accessor a;
+    connection_map_mutex_.lock();
     bool found = connection_map_.find(a, connection_id);
     if (found) {
-      asio::post(io_context_, [conn](){ static_cast<void>(conn); }); // defer dtor
       connection_map_.erase(a);
       --opened_connections_;
     }
     a.release();
+    connection_map_mutex_.unlock();
+    asio::post(io_context_, [conn](){ static_cast<void>(conn); }); // defer dtor
 #else
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
@@ -448,16 +471,8 @@ class ContentServer {
     if (delegate_) {
       delegate_->OnDisconnect(connection_id);
     }
-    // reset guard to quit io loop if in shutdown
     if (in_shutdown_) {
-      pending_next_listen_ctxes_.clear();
-      if (connection_map_.empty()) {
-        LOG(WARNING) << "No more connections alive... ready to stop";
-        work_guard_.reset();
-        in_shutdown_ = false;
-      } else {
-        LOG(WARNING) << "Waiting for remaining connects: " << connection_map_.size();
-      }
+      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
     }
     auto listen_ctxes = std::move(pending_next_listen_ctxes_);
     for (int listen_ctx_num : listen_ctxes) {
@@ -693,7 +708,9 @@ class ContentServer {
   bool on_alpn_select(int connection_id, NextProto proto) {
 #ifdef HAVE_TBB
     typename ConnectionMapType::accessor a;
+    connection_map_mutex_.lock_shared();
     bool found = connection_map_.find(a, connection_id);
+    connection_map_mutex_.unlock_shared();
     if (found) {
       return a->second->on_alpn_select(proto);
 #else
@@ -879,10 +896,12 @@ class ContentServer {
 
 #ifdef HAVE_TBB
   typedef tbb::concurrent_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
+  absl::Mutex connection_map_mutex_;
+  ConnectionMapType connection_map_ ABSL_GUARDED_BY(connection_map_mutex_);
 #else
   typedef absl::flat_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
-#endif
   ConnectionMapType connection_map_;
+#endif
 
   std::atomic<int32_t> next_connection_id_ = 1;
   std::atomic<size_t> opened_connections_ = 0;
