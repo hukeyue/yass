@@ -523,6 +523,8 @@ func getUseAllocatorSuffix() string {
 		return "-mimalloc"
 	} else if useAllocatorFlag == "jemalloc" {
 		return "-jemalloc"
+	} else if useAllocatorFlag == "tbb" {
+		return "-tbb"
 	} else if useAllocatorFlag == "system" {
 		return ""
 	}
@@ -931,6 +933,12 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=on")
+	} else if useAllocatorFlag == "tbb" {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBB=on")
 	} else if useAllocatorFlag == "system" {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
