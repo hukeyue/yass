@@ -229,6 +229,10 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
+      - name: Download debuginfo
+        uses: actions/download-artifact@v7
+        with:
+          name: msvc-winxp-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-pdb
       - name: Run tests
         run: |
           yass_test || exit /b
