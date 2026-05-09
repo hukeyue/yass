@@ -1,3 +1,7 @@
+yass (1.24.9-1) UNRELEASED; urgency=medium
+
+  * introduce experimental concurrent mode with Threading Building Blocks library.
+ -- Chilledheart <hukeyue@vip.163.com>  Sat, 9 May 2026 13:32:57 +0800
 yass (1.24.8-1) UNRELEASED; urgency=medium
 
   * address more concerns of the standard library.

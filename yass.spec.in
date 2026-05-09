@@ -350,10 +350,12 @@ for embedded devices and low end boxes.
 /usr/include/%{name}/*.h
 
 %changelog
+* Sat May 9 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.9-1
+  - introduce experimental concurrent mode with Threading Building Blocks library
 * Sat May 2 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.8-1
   - address more concerns of the standard library
 * Mon Apr 27 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.7-1
-  - update copyright year from 2025 to 2026.
+  - update copyright year from 2025 to 2026
   - restore mold-linker compatibility
   - miscellaneous fixes
 * Sun Apr 19 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.6-1
