@@ -28,6 +28,11 @@
 #ifdef HAVE_TBB
 #include <absl/synchronization/mutex.h>
 #include <tbb/concurrent_hash_map.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra-semi"
+#include <tbb/parallel_for.h>
+#pragma clang diagnostic pop
 #else
 #include <absl/container/flat_hash_map.h>
 #endif
@@ -309,10 +314,16 @@ class ContentServer {
 #ifdef HAVE_TBB
       connection_map_mutex_.lock();
       ConnectionMapType connection_map;
-      // TODO use parallel_for to save time
+#if 1
+      tbb::parallel_for(connection_map_.range(), [&connection_map](const ConnectionMapType::range_type&r) {
+        for(auto it = r.begin(); it != r.end(); ++it)
+          connection_map.insert(std::make_pair(it->first, it->second));
+      });
+#else
       for (auto [conn_id, conn] : connection_map_) {
         connection_map.insert(std::make_pair(conn_id, conn));
       }
+#endif
       // Fatal: If this log triggers, then a hash table was move-assigned to itself
       // and then used again later without being reinitialized.
       connection_map_.clear();
