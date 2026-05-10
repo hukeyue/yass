@@ -945,6 +945,31 @@ class ContentServer {
       if (!SetCurrentThreadPriority(ThreadPriority::ABOVE_NORMAL)) {
         PLOG(WARNING) << "wqthread: failed to set thread priority";
       }
+#ifdef _WIN32
+      {
+        // Pin to current cpu group up to 64
+#if 0
+        // Basic API is supported
+        HANDLE self = ::GetCurrentThread();
+        DWORD_PTR mask = static_cast<DWORD_PTR>(1) << (thread_id % 64);
+        if (::SetThreadAffinityMask(self, mask) == 0) {
+          PLOG(WARNING) << "wqthread: failed to set thread affinity";
+        }
+#else
+        // Extended API is supported (require Windows 7)
+        PROCESSOR_NUMBER pnum;
+        ::GetCurrentProcessorNumberEx(&pnum);
+
+        HANDLE self = ::GetCurrentThread();
+        GROUP_AFFINITY affinity {};
+        affinity.Mask = static_cast<DWORD_PTR>(1) << (thread_id % 64);
+        affinity.Group = pnum.Group;
+        if (!::SetThreadGroupAffinity(self, &affinity, nullptr)) {
+          PLOG(WARNING) << "wqthread: failed to set thread group affinity";
+        }
+#endif
+      }
+#endif
 
       LOG(INFO) << "wqthread: " << tname << " started";
       io_context.run();
