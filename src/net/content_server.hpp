@@ -955,7 +955,9 @@ class ContentServer {
     WQThreadCtx(WQThreadCtx&&) = default;
     WQThreadCtx& operator=(WQThreadCtx&&) = default;
     void Cancel() {
-      work_guard_.reset();
+      asio::post(io_context, [this]() {
+        work_guard_.reset();
+      });
     }
     void Join() {
       t.join();
