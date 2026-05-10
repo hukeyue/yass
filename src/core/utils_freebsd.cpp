@@ -34,6 +34,8 @@
 #include <pthread_np.h>
 #include <time.h>  // For clock_gettime
 
+#include <mutex>
+
 // TBD
 bool SetCurrentThreadPriority(ThreadPriority /*priority*/) {
   return true;
@@ -46,17 +48,15 @@ bool SetCurrentThreadName(const std::string& name) {
 
 uint64_t GetMonotonicTime() {
   static struct timespec start_ts;
-  static bool started;
+  static std::once_flag started_flag;
   struct timespec ts;
   int ret;
-  if (!started) {
-    ret = clock_gettime(CLOCK_MONOTONIC, &start_ts);
+  std::call_once(started_flag, [](){
+    int ret = clock_gettime(CLOCK_MONOTONIC, &start_ts);
     if (ret < 0) {
       RAW_LOG(FATAL, "clock_gettime failed");
-      return 0;
     }
-    started = true;
-  }
+  });
   // Activity to be timed
 
   ret = clock_gettime(CLOCK_MONOTONIC, &ts);

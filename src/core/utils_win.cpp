@@ -41,6 +41,7 @@ struct IUnknown;
 #include <base/compiler_specific.h>
 #include <build/build_config.h>
 #include <limits>
+#include <mutex>
 
 #define MAKE_WIN_VER(major, minor, build_number) (((major) << 24) | ((minor) << 16) | (build_number))
 
@@ -190,21 +191,18 @@ bool SetCurrentThreadName(const std::string& name) {
 
 static inline uint64_t GetMonotonicTimeQPC() {
   static LARGE_INTEGER StartTime, Frequency;
-  static bool started;
+  static std::once_flag started_flag;
 
   LARGE_INTEGER CurrentTime, ElapsedNanoseconds;
 
-  if (!started) {
+  std::call_once(started_flag, [](){
     if (!QueryPerformanceFrequency(&Frequency)) {
       RAW_LOG(FATAL, "QueryPerformanceFrequency failed");
-      return 0;
     }
     if (!QueryPerformanceCounter(&StartTime)) {
       RAW_LOG(FATAL, "QueryPerformanceCounter failed");
-      return 0;
     }
-    started = true;
-  }
+  });
   // Activity to be timed
   if (!QueryPerformanceCounter(&CurrentTime)) {
     RAW_LOG(FATAL, "QueryPerformanceCounter failed");

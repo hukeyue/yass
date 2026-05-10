@@ -37,6 +37,7 @@
 
 #include <base/threading/platform_thread.h>
 #include <filesystem>
+#include <mutex>
 
 #include "core/logging.hpp"
 #include "core/utils_fs.hpp"
@@ -181,17 +182,16 @@ bool SetCurrentThreadName(const std::string& name) {
 
 uint64_t GetMonotonicTime() {
   static struct timespec start_ts;
-  static bool started;
+  static std::once_flag started_flag;
   struct timespec ts;
   int ret;
-  if (!started) {
-    ret = clock_gettime(CLOCK_MONOTONIC_RAW, &start_ts);
+
+  std::call_once(started_flag, [](){
+    int ret = clock_gettime(CLOCK_MONOTONIC_RAW, &start_ts);
     if (ret < 0) {
       RAW_LOG(FATAL, "clock_gettime failed");
-      return 0;
     }
-    started = true;
-  }
+  });
   // Activity to be timed
 
   ret = clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
