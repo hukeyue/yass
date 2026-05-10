@@ -25,6 +25,7 @@
 [![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
 [![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=CircleCI%20Meta%20Bots)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
 [![MUSL Build](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml)
+[![TBB Build](https://github.com/hukeyue/yass/actions/workflows/releases-tbb.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-tbb.yml)
 
 ## Build from Source
 Take a look at [build instructions](BUILDING.md).
