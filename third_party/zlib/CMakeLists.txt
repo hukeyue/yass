@@ -52,6 +52,10 @@ else()
   add_library(zlib STATIC ${zlib_SRCS})
 endif()
 
+if (WIN32)
+  target_sources(zlib PRIVATE win32/zlib1.rc)
+endif()
+
 target_include_directories(zlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (ZLIB_BUILD_SHARED_LIBS)
