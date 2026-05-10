@@ -286,8 +286,10 @@ class ContentServer {
       LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
       in_shutdown_ = true;
 
-      CancelWQThreads();
-      work_guard_.reset();
+      if (opened_connections_ == 0) {
+        CancelWQThreads();
+        work_guard_.reset();
+      }
     });
   }
   // Allow called from different threads
@@ -324,12 +326,12 @@ class ContentServer {
         connection_map.insert(std::make_pair(conn_id, conn));
       }
 #endif
-      // Fatal: If this log triggers, then a hash table was move-assigned to itself
-      // and then used again later without being reinitialized.
-      connection_map_.clear();
-
-      opened_connections_ = 0;
       connection_map_mutex_.unlock();
+      for (auto [conn_id, conn] : connection_map) {
+        VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
+        asio::io_context& io_context = wqthreads_[conn_id % wqthread_count_]->io_context;
+        asio::post(io_context, [conn]() { conn->close(); });
+      }
 #else
       auto connection_map = std::move(connection_map_);
       // Fatal: If this log triggers, then a hash table was move-assigned to itself
@@ -337,14 +339,16 @@ class ContentServer {
       connection_map_.clear();
 
       opened_connections_ = 0;
-#endif
       for (auto [conn_id, conn] : connection_map) {
         VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
         conn->close();
       }
+#endif
 
-      CancelWQThreads();
-      work_guard_.reset();
+      if (opened_connections_ == 0) {
+        CancelWQThreads();
+        work_guard_.reset();
+      }
     });
   }
 
@@ -484,6 +488,10 @@ class ContentServer {
     }
     if (in_shutdown_) {
       LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      if (opened_connections_ == 0) {
+        CancelWQThreads();
+        work_guard_.reset();
+      }
     }
     auto listen_ctxes = std::move(pending_next_listen_ctxes_);
     for (int listen_ctx_num : listen_ctxes) {
