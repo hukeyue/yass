@@ -164,24 +164,7 @@ class ContentServer {
     for(int i = 0; i < wqthread_count_; ++i) {
       wqthreads_[i]->Join();
     }
-
-    // Defer closing active connections after joining wqthreads because:
-    // 1. iteration is not safe when we might do erase in wqthreads
-    // 2. we cannot let connection freed silently because it calls on_disconnect
-    // which increase the refcnt of itself (after 5daf5c64), which triggering in_dtor assertions
-    connection_map_mutex_.lock();
-    auto connection_map = std::move(connection_map_);
-    // Fatal: If this log triggers, then a hash table was move-assigned to itself
-    // and then used again later without being reinitialized.
-    connection_map_.clear();
-
-    opened_connections_ = 0;
-    connection_map_mutex_.unlock();
-
-    for (auto [conn_id, conn] : connection_map) {
-      VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
-      conn->close();
-    }
+    DCHECK_EQ(0u, opened_connections_);
 #endif
   }
 

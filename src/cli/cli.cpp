@@ -196,7 +196,7 @@ int main(int argc, const char* argv[]) {
   std::thread signal_listener_thread([&] { io_context.run(); });
 
   ret = yass_client_instance_run(instance);
-  work_guard.reset();
+  asio::post(io_context, [&work_guard]() { work_guard.reset(); });
 
   signal_listener_thread.join();
 

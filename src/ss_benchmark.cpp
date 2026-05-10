@@ -331,7 +331,7 @@ class SsEndToEndBM : public benchmark::Fixture {
     StopContentProvider();
     StopServer();
     StopClient();
-    work_guard_.reset();
+    asio::post(io_context_, [this]() { work_guard_.reset(); });
     thread_->join();
     thread_.reset();
   }

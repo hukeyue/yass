@@ -401,7 +401,7 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     StopClient();
     StopServer();
     StopContentProvider();
-    work_guard_.reset();
+    asio::post(io_context_, [this]() { work_guard_.reset(); });
     thread_->join();
     thread_.reset();
   }
