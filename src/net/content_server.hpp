@@ -130,7 +130,7 @@ class ContentServer {
   ~ContentServer() {
     VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " freed memory";
 
-    work_guard_.reset();
+    DCHECK_EQ(nullptr, work_guard_);
     CancelWQThreads();
     JoinWQThreads();
 
@@ -264,9 +264,16 @@ class ContentServer {
         }
       }
 
+#ifdef HAVE_TBB
+      pending_next_listen_ctxes_mutex_.lock();
       pending_next_listen_ctxes_.clear();
+      pending_next_listen_ctxes_mutex_.unlock();
+#else
+      pending_next_listen_ctxes_.clear();
+#endif
 
-      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " waiting for remaining connects: "
+                   << opened_connections_;
       in_shutdown_ = true;
 
       if (opened_connections_ == 0) {
@@ -291,18 +298,28 @@ class ContentServer {
         }
       }
 
+#ifdef HAVE_TBB
+      pending_next_listen_ctxes_mutex_.lock();
       pending_next_listen_ctxes_.clear();
+      pending_next_listen_ctxes_mutex_.unlock();
+#else
+      pending_next_listen_ctxes_.clear();
+#endif
 
-      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " waiting for remaining connects: "
+                   << opened_connections_;
       in_shutdown_ = true;
 
 #ifdef HAVE_TBB
       connection_map_mutex_.lock();
       ConnectionMapType connection_map;
 #if 1
-      tbb::parallel_for(connection_map_.range(), [&connection_map](const ConnectionMapType::range_type&r) {
-        for(auto it = r.begin(); it != r.end(); ++it)
+      tbb::parallel_for(connection_map_.range(), [this, &connection_map](const ConnectionMapType::range_type&r) {
+        for(auto it = r.begin(); it != r.end(); ++it) {
+          VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " queuing closing Connection: "
+                  << it->first;
           connection_map.insert(std::make_pair(it->first, it->second));
+        }
       });
 #else
       for (auto [conn_id, conn] : connection_map_) {
@@ -390,7 +407,13 @@ class ContentServer {
 
     if (opened_connections_ >= absl::GetFlag(FLAGS_parallel_max)) {
       LOG(INFO) << "Disabling accepting new connection: " << listen_ctxs_[listen_ctx_num].endpoint;
+#ifdef HAVE_TBB
+      pending_next_listen_ctxes_mutex_.lock();
       pending_next_listen_ctxes_.push_back(listen_ctx_num);
+      pending_next_listen_ctxes_mutex_.unlock();
+#else
+      pending_next_listen_ctxes_.push_back(listen_ctx_num);
+#endif
       return;
     }
     accept(listen_ctx_num);
@@ -457,7 +480,8 @@ class ContentServer {
     }
     a.release();
     connection_map_mutex_.unlock();
-    asio::post(io_context_, [conn](){ static_cast<void>(conn); }); // defer dtor
+    asio::io_context& io_context = wqthreads_[connection_id % wqthread_count_]->io_context;
+    asio::post(io_context, [conn](){ static_cast<void>(conn); }); // defer dtor
 #else
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {
@@ -470,17 +494,30 @@ class ContentServer {
       delegate_->OnDisconnect(connection_id);
     }
     if (in_shutdown_) {
-      LOG(WARNING) << "Waiting for remaining connects: " << opened_connections_;
+      LOG(WARNING) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " waiting for remaining connects: "
+                   << opened_connections_;
       if (opened_connections_ == 0) {
         CancelWQThreads();
-        work_guard_.reset();
+        asio::post(io_context_, [this]() { work_guard_.reset(); } );
       }
     }
+#ifdef HAVE_TBB
+    pending_next_listen_ctxes_mutex_.lock();
+    auto listen_ctxes = std::move(pending_next_listen_ctxes_);
+    pending_next_listen_ctxes_mutex_.unlock();
+    for (int listen_ctx_num : listen_ctxes) {
+      LOG(INFO) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " resuming accepting new connection: "
+                << listen_ctxs_[listen_ctx_num].endpoint;
+      asio::post(io_context_, [this, listen_ctx_num]() { accept(listen_ctx_num); });
+    }
+#else
     auto listen_ctxes = std::move(pending_next_listen_ctxes_);
     for (int listen_ctx_num : listen_ctxes) {
-      LOG(INFO) << "Resuming accepting new connection: " << listen_ctxs_[listen_ctx_num].endpoint;
+      LOG(INFO) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " resuming accepting new connection: "
+                << listen_ctxs_[listen_ctx_num].endpoint;
       accept(listen_ctx_num);
     }
+#endif
   }
 
   [[nodiscard]]
@@ -893,8 +930,13 @@ class ContentServer {
   };
   std::array<ListenCtx, MAX_LISTEN_ADDRESSES> listen_ctxs_;
   int next_listen_ctx_ = 0;
+#ifdef HAVE_TBB
+  absl::Mutex pending_next_listen_ctxes_mutex_;
+  std::vector<int> pending_next_listen_ctxes_ ABSL_GUARDED_BY(pending_next_listen_ctxes_mutex_);
+#else
   std::vector<int> pending_next_listen_ctxes_;
-  bool in_shutdown_ = false;
+#endif
+  std::atomic<bool> in_shutdown_ = false;
 
 #ifdef HAVE_TBB
   typedef tbb::concurrent_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
@@ -963,9 +1005,7 @@ class ContentServer {
     WQThreadCtx(WQThreadCtx&&) = default;
     WQThreadCtx& operator=(WQThreadCtx&&) = default;
     void Cancel() {
-      asio::post(io_context, [this]() {
-        work_guard_.reset();
-      });
+      asio::post(io_context, [this]() { work_guard_.reset(); });
     }
     void Join() {
       t.join();

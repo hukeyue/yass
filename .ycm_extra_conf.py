@@ -160,6 +160,8 @@ def Settings( **kwargs ):
       # workaround while '/I' doesnt work
       if flag == '-imsvc' or flag == '/imsvc':
         flag = '-isystem'
+      if flag.startswith('-imsvc') or flag.startswith('/imsvc'):
+        flag = '-isystem' + flag[6:]
       final_flags.append(flag)
 
     if 'clang-cl' in final_flags[0]:

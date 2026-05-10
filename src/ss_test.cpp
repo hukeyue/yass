@@ -478,6 +478,8 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     std::string proxy_url = absl::StrCat("localhost:", local_endpoint_.port());
     curl_easy_setopt(curl, CURLOPT_PROXY, proxy_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0L);
     if (absl::GetFlag(FLAGS_proxy_type) == "socks4"s) {
       curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
     } else if (absl::GetFlag(FLAGS_proxy_type) == "socks4a"s) {
