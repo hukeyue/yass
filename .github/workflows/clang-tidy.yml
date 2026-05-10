@@ -15,6 +15,12 @@ on:
         description: 'Test scenario tags'
         required: false
         type: boolean
+  push:
+    branches: [ctidy]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
   schedule:
     - cron: '0 16 * * *'
 env:
@@ -22,7 +28,7 @@ env:
   GOPROXY: direct
 jobs:
   win-clang-tidy:
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     if: ${{ github.event_name != 'release' }}
     strategy:
       fail-fast: false
@@ -73,7 +79,7 @@ jobs:
           set Winsdk=${{ matrix.winsdk_version }}
           set "WindowsSDKVersion=%Winsdk%\"
           if "${{ matrix.arch }}" == "arm64" (call :SetNewVCToolsVersion)
-          set vsdevcmd=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat
+          set vsdevcmd=C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\Tools\VsDevCmd.bat
           set "VSCMD_START_DIR=%CD%"
           set Platform=${{ matrix.arch }}
 
