@@ -480,8 +480,6 @@ class ContentServer {
     }
     a.release();
     connection_map_mutex_.unlock();
-    asio::io_context& io_context = wqthreads_[connection_id % wqthread_count_]->io_context;
-    asio::post(io_context, [conn](){ static_cast<void>(conn); }); // defer dtor
 #else
     auto iter = connection_map_.find(connection_id);
     if (iter != connection_map_.end()) {

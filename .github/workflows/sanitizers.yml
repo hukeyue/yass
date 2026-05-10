@@ -15,6 +15,12 @@ on:
         description: 'Test scenario tags'
         required: false
         type: boolean
+  push:
+    branches: [sanitizers]
+    paths-ignore:
+    - '**/*.md'
+    - '.circleci/**'
+    - '.cirrus.yml'
   schedule:
     - cron: '0 16 * * *'
 env:
@@ -26,6 +32,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: address with intel tbb
+            cmake_options: -DASAN=on -DUSE_LIBCXX=on -DUSE_TBB=on
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 5
           - name: address
             cmake_options: -DASAN=on -DUSE_LIBCXX=on
             arch: amd64
@@ -46,6 +57,11 @@ jobs:
             arch: amd64
             build_type: Debug
             gtest_repeat_times: 20
+          - name: thread with intel tbb
+            cmake_options: -DTSAN=on -DUSE_LIBCXX=on -DUSE_TBB=on
+            arch: amd64
+            build_type: Release
+            gtest_repeat_times: 5
           - name: thread
             cmake_options: -DTSAN=on -DUSE_LIBCXX=on
             arch: amd64
@@ -128,5 +144,5 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          timeout 120m ./yass_test -logtostderr -v 1 --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure
+          timeout 120m ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure
           cd ..
