@@ -143,7 +143,10 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                    upstream_ssl_ctx,
                    ssl_ctx) {}
 
-  ~ContentProviderConnection() override { VLOG(1) << "Connection (content-provider) freed memory"; }
+  ~ContentProviderConnection() override {
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " freed memory";
+  }
 
   ContentProviderConnection(const ContentProviderConnection&) = delete;
   ContentProviderConnection& operator=(const ContentProviderConnection&) = delete;
@@ -154,20 +157,28 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void start() { do_io(); }
 
   void close() {
-    VLOG(1) << "Connection (content-provider) disconnected";
+    if (closed_) {
+      return;
+    }
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " disconnected";
     asio::error_code ec;
-    downlink_->socket_.close(ec);
+    closed_ = true;
+    downlink_->close(ec);
     on_disconnect();
   }
 
  private:
+  bool closed_ = false;
+
   void do_io() {
     done_[0] = false;
     done_[1] = false;
     start_ = std::chrono::high_resolution_clock::now();
     ec_ = asio::error_code();
 
-    VLOG(1) << "Connection (content-provider) start to do IO";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+            << " start to do IO";
     scoped_refptr<ContentProviderConnection> self(this);
 
     g_in_provider_mutex.lock();
@@ -181,9 +192,11 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                           goto done;
                         }
                         if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                          LOG(WARNING) << "Connection (content-provider) Failed to transfer data: " << ec;
+                          LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                       << " Id " << connection_id() << " Failed to transfer data: " << ec;
                         } else {
-                          VLOG(1) << "Connection (content-provider) written: " << bytes_transferred << " bytes";
+                          VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                                  << connection_id() << " written: " << bytes_transferred << " bytes";
                         }
                       done:
                         if (done_[0]) {
@@ -202,9 +215,11 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
                          goto done;
                        }
                        if (ec || (int)bytes_transferred != g_send_buffer->size()) {
-                         LOG(WARNING) << "Connection (content-provider) Failed to transfer data: " << ec;
+                         LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                                      << " Id " << connection_id() << " Failed to transfer data: " << ec;
                        } else {
-                         VLOG(1) << "Connection (content-provider) read: " << bytes_transferred << " bytes";
+                         VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+                                 << connection_id() << " read: " << bytes_transferred << " bytes";
                        }
                        g_recv_buffer->set_offset(g_recv_buffer->offset() + bytes_transferred);
                      done:
@@ -218,7 +233,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
   void shutdown(asio::error_code ec) {
     if (ec) {
-      LOG(WARNING) << "Connection (content-provider) stopped with error: " << ec;
+      LOG(WARNING) << "Connection (content-provider) " << "Tag " << local_config_.server_tag
+                   << " Id " << connection_id() << " stopped with error: " << ec;
       /* early return */
       done_[0] = true;
       done_[1] = true;
@@ -235,7 +251,8 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
 
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end_ - start_);
 
-    VLOG(1) << "Connection (content-provider) done IO in " << elapsed_seconds.count() * 1000 * 1000 << " us";
+    VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id "
+            << connection_id() << " done IO in " << elapsed_seconds.count() * 1000 * 1000 << " us";
 
     if (ec_) {
       return;

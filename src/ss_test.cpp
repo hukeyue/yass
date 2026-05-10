@@ -178,15 +178,20 @@ class ContentProviderConnection : public gurl_base::RefCountedThreadSafe<Content
   void start() { do_io(); }
 
   void close() {
+    if (closed_) {
+      return;
+    }
     VLOG(1) << "Connection (content-provider) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
             << " disconnected";
     asio::error_code ec;
-    downlink_->socket_.close(ec);
+    closed_ = true;
+    downlink_->close(ec);
     on_disconnect();
   }
 
  private:
   asio::streambuf recv_buff_hdr;
+  bool closed_ = false;
 
   void read_http_request() {
     scoped_refptr<ContentProviderConnection> self(this);
