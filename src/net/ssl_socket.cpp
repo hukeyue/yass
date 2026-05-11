@@ -218,6 +218,8 @@ int SSLSocket::Connect(CompletionOnceCallback callback) {
   int rv = DoHandshakeLoop(OK, SSL_ERROR_NONE);
   if (rv == ERR_IO_PENDING) {
     user_connect_callback_ = std::move(callback);
+  } else {
+    callback(rv > OK ? OK : rv);
   }
 
   return rv > OK ? OK : rv;
