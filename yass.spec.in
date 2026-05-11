@@ -350,6 +350,8 @@ for embedded devices and low end boxes.
 /usr/include/%{name}/*.h
 
 %changelog
+* Mon May 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.11-1
+  - introduce CPU affinity pin for concurrent mode with TBB
 * Mon May 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.10-1
   - introduce more bugfixes for concurrent mode with TBB
 * Sat May 9 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.9-1
