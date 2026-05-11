@@ -362,10 +362,10 @@ class SsEndToEndBM : public benchmark::Fixture {
       work_guard_ =
           std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
       io_context_.run();
-      io_context_.restart();
       local_server_.reset();
       server_server_.reset();
       content_provider_server_.reset();
+      io_context_.restart();
       VLOG(1) << "background thread stopped";
     });
   }
