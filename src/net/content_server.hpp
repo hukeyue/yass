@@ -48,6 +48,7 @@
 #include <vector>
 
 #include <base/memory/scoped_refptr.h>
+#include <build/build_config.h>
 
 #include "config/config_tls.hpp"
 #include "core/logging.hpp"
@@ -994,9 +995,46 @@ class ContentServer {
       }
 #endif
 
+#if BUILDFLAG(IS_LINUX)
+      do {
+        int ret;
+        auto self = pthread_self();
+        cpu_set_t affinity, previous_affinity;
+        ret = pthread_getaffinity_np(self, sizeof(previous_affinity), &previous_affinity);
+        if (ret != 0) {
+          PLOG(WARNING) << "wqthread: failed to get thread affinity";
+          break;
+        }
+        memcpy(&affinity, &previous_affinity, sizeof(affinity));
+        int j = -1;
+        for (int i = 0; i < CPU_SETSIZE; ++i) {
+          if (CPU_ISSET(i, &affinity)) {
+            ++j;
+            if (j != thread_id) {
+              CPU_CLR(i, &affinity);
+            }
+          }
+        }
+        if (j == -1) {
+          LOG(WARNING) << "wqthread: failed to set thread affinity" << " : no cpu available";
+          break;
+        }
+        DCHECK_EQ(1, CPU_COUNT(&affinity));
+        if (CPU_COUNT(&affinity) == 0) {
+          PLOG(WARNING) << "wqthread: failed to set thread affinity";
+          break;
+        }
+        ret = pthread_setaffinity_np(self, sizeof(affinity), &affinity);
+        if (ret != 0) {
+          PLOG(WARNING) << "wqthread: failed to set thread affinity";
+          break;
+        }
+      } while(false);
+#endif
       LOG(INFO) << "wqthread: " << tname << " started";
       io_context.run();
       LOG(INFO) << "wqthread: " << tname << " stopped";
+
     }) {}
     WQThreadCtx(const WQThreadCtx&) = delete;
     WQThreadCtx& operator=(const WQThreadCtx&) = delete;
