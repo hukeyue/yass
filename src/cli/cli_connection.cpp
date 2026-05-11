@@ -1151,9 +1151,7 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextDownstreamBuf(asio::error_
     return nullptr;
   }
 
-#ifdef HAVE_QUICHE
 try_again:
-#endif
   // RstStream might be sent in ProcessBytes
   if (channel_->eof()) {
     ec = asio::error::eof;
@@ -1212,6 +1210,9 @@ try_again:
       if (CIPHER_METHOD_IS_HTTPS(method())) {
     if (upstream_https_handshake_) {
       ReadUpstreamHttpsHandshake(buf.get(), ec);
+      if (buf->empty()) {
+        goto try_again;
+      }
       if (ec) {
         return nullptr;
       }
