@@ -436,7 +436,7 @@ int load_ca_to_ssl_ctx_from_directory(SSL_CTX* ssl_ctx, const std::string& dir_p
       std::string ca_bundle = SysWideToUTF8(wca_bundle);
       int result = load_ca_to_ssl_ctx_from_bundle(ssl_ctx, ca_bundle);
       if (result > 0) {
-        VLOG(1) << "Loaded cert from: " << ca_bundle << " with " << result << " certificates";
+        VLOG(2) << "Loaded cert from: " << ca_bundle << " with " << result << " certificates";
         count += result;
       }
     }
@@ -457,7 +457,7 @@ int load_ca_to_ssl_ctx_from_directory(SSL_CTX* ssl_ctx, const std::string& dir_p
       std::string ca_bundle = absl::StrCat(dir_path, "/", dent->d_name);
       int result = load_ca_to_ssl_ctx_from_bundle(ssl_ctx, ca_bundle);
       if (result > 0) {
-        VLOG(1) << "Loaded ca cert from: " << ca_bundle << " with " << result << " certificates";
+        VLOG(2) << "Loaded ca cert from: " << ca_bundle << " with " << result << " certificates";
         count += result;
       }
     }

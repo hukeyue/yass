@@ -234,6 +234,7 @@ void ServerConnection::Start() {
     adapter_->SubmitSettings(settings);
     SendIfNotProcessing();
 
+    WriteStreamInPipe();
     WriteUpstreamInPipe();
     OnUpstreamWriteFlush();
   } else
@@ -1668,7 +1669,7 @@ void ServerConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_co
 void ServerConnection::ProcessSentData(asio::error_code ec, size_t bytes_transferred) {
   wbytes_transferred_ += bytes_transferred;
 
-  VLOG(2) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+  VLOG(1) << "Connection (server) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
           << " sent data: " << bytes_transferred << " bytes."
           << " done: " << wbytes_transferred_ << " bytes."
           << " ec: " << ec;

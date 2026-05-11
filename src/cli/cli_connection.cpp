@@ -1176,7 +1176,7 @@ try_again:
     goto out;
   }
   if (read) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+    VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
             << " upstream: received reply (pipe): " << read << " bytes."
             << " done: " << channel_->rbytes_transferred() << " bytes.";
   } else {
@@ -1852,7 +1852,7 @@ scoped_refptr<GrowableIOBuffer> CliConnection::GetNextUpstreamBuf(asio::error_co
   ++total_rx_times;
   *bytes_transferred += read;
   if (read) {
-    VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+    VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
             << " received data (pipe): " << read << " bytes."
             << " done: " << rbytes_transferred_ << " bytes.";
   } else {
@@ -2050,7 +2050,7 @@ asio::error_code CliConnection::PerformCmdOpsHttp() {
 }
 
 void CliConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_code ec, size_t bytes_transferred) {
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
           << " received data: " << bytes_transferred << " bytes"
           << " done: " << rbytes_transferred_ << " bytes."
           << " ec: " << ec;
@@ -2129,7 +2129,7 @@ void CliConnection::ProcessSentData(asio::error_code ec, size_t bytes_transferre
   total_tx_bytes += bytes_transferred;
   ++total_tx_times;
 
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
           << " sent data: " << bytes_transferred << " bytes."
           << " done: " << wbytes_transferred_ << " bytes."
           << " ec: " << ec;
@@ -2392,7 +2392,7 @@ void CliConnection::OnUpstreamWrite(GrowableIOBuffer* buf) {
 
 void CliConnection::connected() {
   scoped_refptr<CliConnection> self(this);
-  VLOG(2) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
+  VLOG(1) << "Connection (client) " << "Tag " << local_config_.server_tag << " Id " << connection_id()
           << " remote: established upstream connection with: " << remote_domain();
 
   bool http2 = CIPHER_METHOD_IS_HTTP2(method());
