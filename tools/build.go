@@ -87,6 +87,7 @@ var clangTidyModeFlag bool
 
 var useComponentBuildFlag bool
 var useAllocatorFlag string
+var useTbbFlag bool
 
 var macosxVersionMinFlag string
 var macosxUniversalBuildFlag bool
@@ -222,6 +223,7 @@ func InitFlag() {
 
 	flag.BoolVar(&useComponentBuildFlag, "component-build", false, "Allow component build")
 	flag.StringVar(&useAllocatorFlag, "use-allocator", "system", "Use specified allocator such as system")
+	flag.BoolVar(&useTbbFlag, "use-tbb", false, "Enable Intel TBB mode")
 
 	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "10.14"), "Set Mac OS X deployment target, such as 10.15")
 	flag.BoolVar(&macosxUniversalBuildFlag, "macosx-universal-build", getEnvBool("ENABLE_OSX_UNIVERSAL_BUILD", false), "Enable Mac OS X Universal Build")
@@ -523,13 +525,22 @@ func getUseAllocatorSuffix() string {
 		return "-mimalloc"
 	} else if useAllocatorFlag == "jemalloc" {
 		return "-jemalloc"
-	} else if useAllocatorFlag == "tbb" {
-		return "-tbb"
 	} else if useAllocatorFlag == "system" {
 		return ""
 	}
 	glog.Fatalf("Unsupported allocator %s specified.", useAllocatorFlag)
 	return ""
+}
+
+func getUseTbbSuffix() string {
+	if useTbbFlag {
+		return "-tbb"
+	}
+	return ""
+}
+
+func getUseFeatureSuffix() string {
+	return getUseAllocatorSuffix() + getUseTbbSuffix()
 }
 
 func getLLVMTargetTripleMSVC(msvcTargetArch string) string {
@@ -933,12 +944,6 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=on")
-	} else if useAllocatorFlag == "tbb" {
-		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
-		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
-		cmakeArgs = append(cmakeArgs, "-DUSE_MIMALLOC=off")
-		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
-		cmakeArgs = append(cmakeArgs, "-DUSE_TBB=on")
 	} else if useAllocatorFlag == "system" {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBBMALLOC=off")
 		cmakeArgs = append(cmakeArgs, "-DUSE_TCMALLOC=off")
@@ -946,6 +951,11 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DUSE_JEMALLOC=off")
 	} else {
 		glog.Fatalf("Unsupported allocator %s specified.", useAllocatorFlag)
+	}
+	if useTbbFlag {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBB=on")
+	} else {
+		cmakeArgs = append(cmakeArgs, "-DUSE_TBB=off")
 	}
 	cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_BUILD_TYPE=%s", cmakeBuildTypeFlag))
 	if systemNameFlag == "ios" {
@@ -2708,7 +2718,7 @@ func postStateArchives() map[string][]string {
 				osName = "win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseAllocatorSuffix(), tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseFeatureSuffix(), tag)
 	} else if systemNameFlag == "mingw" {
 		osName := "mingw"
 		if mingwAllowXpFlag {
@@ -2718,22 +2728,22 @@ func postStateArchives() map[string][]string {
 				osName = "mingw-win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%%s%%s", osName, archFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s%s-%s%%s%%s", osName, archFlag, getUseFeatureSuffix(), tag)
 	} else if systemNameFlag == "darwin" {
 		osName := "macos"
 		arch := archFlag
 		if macosxUniversalBuildFlag {
 			arch = "universal"
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%%s%%s", osName, arch, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s%s-%s%%s%%s", osName, arch, getUseFeatureSuffix(), tag)
 	} else if systemNameFlag == "freebsd" {
-		archiveFormat = fmt.Sprintf("%%s-%s%d-release-%s-%s%%s%%s", systemNameFlag, freebsdAbiFlag, archFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s%d-release-%s%s-%s%%s%%s", systemNameFlag, freebsdAbiFlag, archFlag, getUseFeatureSuffix(), tag)
 	} else {
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%%s%%s", systemNameFlag, archFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s%s-%s%%s%%s", systemNameFlag, archFlag, getUseFeatureSuffix(), tag)
 		if subSystemNameFlag != "" {
-			archiveFormat = fmt.Sprintf("%%s-%s-%s-release-%s-%s%%s%%s", systemNameFlag, subSystemNameFlag, archFlag, tag)
+			archiveFormat = fmt.Sprintf("%%s-%s-%s-release-%s%s-%s%%s%%s", systemNameFlag, subSystemNameFlag, archFlag, getUseFeatureSuffix(), tag)
 			if armCpuFlag != "" {
-				archiveFormat = fmt.Sprintf("%%s-%s-%s-release-%s-%s-%s%%s%%s", systemNameFlag, subSystemNameFlag, archFlag, armCpuFlag, tag)
+				archiveFormat = fmt.Sprintf("%%s-%s-%s-release-%s-%s%s-%s%%s%%s", systemNameFlag, subSystemNameFlag, archFlag, armCpuFlag, getUseFeatureSuffix(), tag)
 			}
 		}
 	}
@@ -2931,7 +2941,7 @@ func postStateArchivesBuildMsi() map[string][]string {
 				osName = "win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseAllocatorSuffix(), tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%s-%s%%s%%s", osName, msvcTargetArchFlag, msvcCrtLinkageFlag, getUseFeatureSuffix(), tag)
 	} else if systemNameFlag == "mingw" {
 		osName := "mingw"
 		if mingwAllowXpFlag {
@@ -2941,7 +2951,7 @@ func postStateArchivesBuildMsi() map[string][]string {
 				osName = "mingw-win7"
 			}
 		}
-		archiveFormat = fmt.Sprintf("%%s-%s-release-%s-%s%%s%%s", osName, archFlag, tag)
+		archiveFormat = fmt.Sprintf("%%s-%s-release-%s%s-%s%%s%%s", osName, archFlag, getUseFeatureSuffix(), tag)
 	} else {
 		glog.Fatalf("Unsupported system: %s", systemNameFlag)
 	}
