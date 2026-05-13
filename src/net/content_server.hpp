@@ -166,9 +166,9 @@ class ContentServer {
 
   void JoinWQThreads() {
 #ifdef HAVE_TBB
-    for(int i = 0; i < wqthread_count_; ++i) {
+    tbb::parallel_for(0, wqthread_count_, [&](int i) {
       wqthreads_[i]->Join();
-    }
+    });
     DCHECK_EQ(0u, opened_connections_);
 #endif
   }
