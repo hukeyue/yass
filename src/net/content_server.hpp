@@ -50,6 +50,10 @@
 #include <base/memory/scoped_refptr.h>
 #include <build/build_config.h>
 
+#if BUILDFLAG(IS_FREEBSD)
+#include <pthread_np.h>
+#endif
+
 #include "config/config_tls.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
@@ -995,7 +999,7 @@ class ContentServer {
       }
 #endif
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_FREEBSD)
       do {
         int ret;
         auto self = pthread_self();
