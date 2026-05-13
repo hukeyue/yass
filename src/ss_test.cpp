@@ -951,6 +951,8 @@ int main(int argc, char** argv) {
   } else {
 #ifdef _WIN32
     ::SetErrorMode(SEM_FAILCRITICALERRORS);
+    // change the default value, allowed to override via --gtest_capture_exceptions=1
+    GTEST_FLAG_SET(catch_exceptions, false);
 #endif
   }
 
