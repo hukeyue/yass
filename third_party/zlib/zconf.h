@@ -383,14 +383,6 @@
 #      define ZEXPORTVA FAR CDECL
 #    endif
 #  endif
-#else
-#  ifdef ZLIB_DLL
-#    ifdef ZLIB_INTERNAL
-#      define ZEXTERN __attribute__((visibility("default")))
-#    else
-#      define ZEXTERN
-#    endif
-#  endif  /* ZLIB_DLL */
 #endif
 
 #if defined (__BEOS__)
