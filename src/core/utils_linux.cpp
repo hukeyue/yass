@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <pthread.h>
+#include <sched.h>
 #include <sys/prctl.h>
 #include <sys/resource.h>
 #include <syscall.h>  // For syscall.
@@ -182,14 +183,15 @@ bool SetCurrentThreadName(const std::string& name) {
 
 bool SetCurrentThreadAffinityToCpu(int cpuid) {
   int ret;
-  auto self = pthread_self();
+  int j = -1;
+  pid_t self = 0;
   cpu_set_t affinity, previous_affinity;
-  ret = pthread_getaffinity_np(self, sizeof(previous_affinity), &previous_affinity);
+
+  ret = sched_getaffinity(self, sizeof(previous_affinity), &previous_affinity);
   if (ret != 0) {
     return false;
   }
   memcpy(&affinity, &previous_affinity, sizeof(affinity));
-  int j = -1;
   for (int i = 0; i < CPU_SETSIZE; ++i) {
     if (CPU_ISSET(i, &affinity)) {
       ++j;
@@ -207,7 +209,7 @@ bool SetCurrentThreadAffinityToCpu(int cpuid) {
     errno = EINVAL;
     return false;
   }
-  ret = pthread_setaffinity_np(self, sizeof(affinity), &affinity);
+  ret = sched_setaffinity(self, sizeof(affinity), &affinity);
   if (ret != 0) {
     return false;
   }
