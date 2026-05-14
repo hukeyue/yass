@@ -140,7 +140,7 @@ func getAppName() string {
 
 	if systemNameFlag == "windows" {
 		return APPNAME + ".exe"
-	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" {
+	} else if systemNameFlag == "darwin" && variantFlag == "gui" || systemNameFlag == "ios" {
 		return APPNAME + ".app"
 	} else if systemNameFlag == "mingw" {
 		return APPNAME + ".exe"
@@ -1782,6 +1782,12 @@ func postStateCopyDependedLibraries() {
 			if len(matches) > 1 {
 				dllName := strings.Replace(matches[1], "@rpath/", "", 1)
 				dllPaths = append(dllPaths, dllName)
+				if isSymlink(dllName) {
+					destBinName, err := os.Readlink(dllName)
+					if err == nil {
+						dllPaths = append(dllPaths, destBinName)
+					}
+				}
 			}
 		}
 		/* find more coarsely
@@ -1806,6 +1812,7 @@ func postStateCopyDependedLibraries() {
 			dstPath := filepath.Join(dstDir, dllPath)
 			symlinkTarget, err := os.Readlink(dllPath)
 			if err == nil {
+				os.Remove(dstPath) // ignore error
 				err = os.Symlink(symlinkTarget, dstPath)
 			} else {
 				err = copyFile(dllPath, dstPath)
@@ -1911,6 +1918,14 @@ func postStateFixRPath() {
 }
 
 func gnuStripBinary(binName string, dbgName string) {
+	for i := 0; i < 2; i++ {
+		destBinName, err := os.Readlink(binName)
+		if err == nil {
+			binName = destBinName
+		} else {
+			break
+		}
+	}
 	objcopy := filepath.Join(clangPath, "bin", "llvm-objcopy")
 	binutilCOFFFallback := false
 	if runtime.GOOS == "windows" {
@@ -1947,6 +1962,14 @@ func gnuStripBinary(binName string, dbgName string) {
 }
 
 func darwinStripBinary(binName string, dSYMName string) {
+	for i := 0; i < 2; i++ {
+		destBinName, err := os.Readlink(binName)
+		if err == nil {
+			binName = destBinName
+		} else {
+			break
+		}
+	}
 	// export debugging info
 	cmdRun([]string{"dsymutil", binName, "--statistics", "--update", "-o", dSYMName}, false)
 	// strip debugging info
@@ -2013,7 +2036,7 @@ func postStateStripBinaries() {
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
-			if strings.HasSuffix(iname, ".dylib") {
+			if strings.HasSuffix(iname, ".dylib") && !isSymlink(name) {
 				gnuStripBinary(filepath.Join(frameworkPath, name), name+".dbg")
 			}
 		}
@@ -2039,7 +2062,7 @@ func postStateStripBinaries() {
 			if name == getAppName() {
 				continue
 			}
-			if strings.HasSuffix(iname, ".dylib") {
+			if strings.HasSuffix(iname, ".dylib") && !isSymlink(name) {
 				gnuStripBinary(name, name+".dbg")
 			}
 		}
@@ -2075,6 +2098,10 @@ func postStateCodeSign() {
 	if cmakeBuildTypeFlag != "Release" || (systemNameFlag != "darwin" && systemNameFlag != "ios") {
 		return
 	}
+	// TBD
+	if variantFlag != "gui" {
+		return
+	}
 	codesignCmd := []string{
 		"codesign", "-s", macosxCodeSignIdentityFlag,
 		"--deep", "--force", "--options=runtime", "--timestamp",
@@ -2090,7 +2117,7 @@ func postStateCodeSign() {
 	for _, entry := range entries {
 		name := entry.Name()
 		iname := strings.ToLower(name)
-		if strings.HasSuffix(iname, ".dylib") {
+		if strings.HasSuffix(iname, ".dylib") && !isSymlink(filepath.Join(frameworkPath, name)) {
 			codesignFinalCmd := append(codesignCmd, filepath.Join(frameworkPath, name))
 			cmdRun(codesignFinalCmd, true)
 		}
@@ -2301,6 +2328,17 @@ func postStateArchiveLicenses() []string {
 	return licenses
 }
 
+func isSymlink(path string) bool {
+	// Lstat returns info about the link itself, not the target
+	info, err := os.Lstat(path)
+	if err != nil {
+		return false
+	}
+
+	// Check if the ModeSymlink bit is set
+	return info.Mode()&os.ModeSymlink != 0
+}
+
 // add to zip writer
 func archiveFileToZip(zipWriter *zip.Writer, info os.FileInfo, prefix string, path string) error {
 	if info.Mode()&os.ModeSymlink == os.ModeSymlink {
@@ -2359,7 +2397,7 @@ func archiveFiles(output string, prefix string, paths []string) {
 		// cmd := []string{"tar", "caf", output, "--xform", fmt.Sprintf("s,^,%s/,", prefix)}
 		cmd := []string{"mkdir", "-p", prefix}
 		cmdRun(cmd, true)
-		cmd = []string{"cp", "-rf"}
+		cmd = []string{"cp", "-rfP"}
 		cmd = append(cmd, paths...)
 		cmd = append(cmd, prefix)
 		cmdRun(cmd, true)
@@ -2382,7 +2420,7 @@ func archiveFiles(output string, prefix string, paths []string) {
 	}(archive)
 	zipWriter := zip.NewWriter(archive)
 	for _, path := range paths {
-		info, err := os.Stat(path)
+		info, err := os.Lstat(path)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -2754,6 +2792,10 @@ func postStateArchives() map[string][]string {
 		ext = ".tgz"
 	}
 
+	if systemNameFlag == "darwin" && variantFlag != "gui" {
+		ext = ".tgz"
+	}
+
 	archive := fmt.Sprintf(archiveFormat, APPNAME, "", ext)
 	archivePrefix := fmt.Sprintf(archiveFormat, strings.Replace(APPNAME, "_", "-", 1), "", "")
 	archiveSuffix := fmt.Sprintf(archiveFormat, "", "", "")
@@ -2820,13 +2862,14 @@ func postStateArchives() map[string][]string {
 
 	if systemNameFlag == "harmony" || systemNameFlag == "linux" || systemNameFlag == "freebsd" || systemNameFlag == "android" {
 		entries, _ := ioutil.ReadDir(buildDir)
+		reSo := regexp.MustCompile(`.*\.so\.[0-9]+(\.[0-9]+)?`)
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
 			if name == getAppName() {
 				continue
 			}
-			if strings.HasSuffix(iname, ".so") {
+			if strings.HasSuffix(iname, ".so") || reSo.MatchString(iname) {
 				dllPaths = append(dllPaths, name)
 			}
 			if strings.HasSuffix(iname, ".dbg") {
@@ -2843,6 +2886,11 @@ func postStateArchives() map[string][]string {
 		for _, entry := range entries {
 			name := entry.Name()
 			iname := strings.ToLower(name)
+			if variantFlag != "gui" {
+				if strings.HasSuffix(iname, ".dylib") {
+					dllPaths = append(dllPaths, name)
+				}
+			}
 			if strings.HasSuffix(iname, ".dsym") {
 				dbgPaths = append(dbgPaths, name)
 			}
