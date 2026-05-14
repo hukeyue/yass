@@ -339,5 +339,7 @@ endif()
 
 if (APPLE)
   target_link_libraries(googleurl PUBLIC -Wl,-framework,Security)
-  target_link_libraries(googleurl PUBLIC -Wl,-framework,Carbon)
+  if (NOT IOS)
+    target_link_libraries(googleurl PUBLIC -Wl,-framework,Carbon)
+  endif()
 endif()
