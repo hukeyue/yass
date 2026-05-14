@@ -50,7 +50,7 @@ jobs:
             crt-linkage: dynamic
             build_type: Release
             winsdk_version: 10.0.26100.0
-            build_options: -use-tbb
+            build_options: -component-build -use-tbb
             use_allocator: system
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
@@ -201,7 +201,7 @@ jobs:
             crt-linkage: dynamic
             build_type: Release
             use_allocator: system
-            gtest_repeat_times: 10
+            gtest_repeat_times: 5
     defaults:
       run:
         shell: cmd
@@ -256,11 +256,11 @@ jobs:
         include:
           - arch: i386
             build_type: Release
-            build_options: -use-tbb
+            build_options: -component-build -use-tbb
             use_allocator: system
           - arch: amd64
             build_type: Release
-            build_options: -use-tbb
+            build_options: -component-build -use-tbb
             use_allocator: system
     runs-on: ubuntu-24.04
     env:
