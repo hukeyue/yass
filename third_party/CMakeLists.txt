@@ -336,3 +336,8 @@ else()
     googleurl/base/files/memory_mapped_file_posix.cc
   )
 endif()
+
+if (APPLE)
+  target_link_libraries(googleurl PUBLIC -Wl,-framework,Security)
+  target_link_libraries(googleurl PUBLIC -Wl,-framework,Carbon)
+endif()
