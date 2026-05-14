@@ -196,14 +196,16 @@ jobs:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: |
             build-linux-${{ matrix.arch }}/yass
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-linux-${{ matrix.arch }}/yass_cli
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
@@ -211,20 +213,23 @@ jobs:
           path: |
             build-linux-${{ matrix.arch }}/devel
             build-linux-${{ matrix.arch }}/yass.py
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-linux-${{ matrix.arch }}/yass_test
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:

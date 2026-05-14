@@ -193,27 +193,31 @@ jobs:
           path: |
             build-linux-openwrt-${{ matrix.arch }}/devel
             build-linux-openwrt-${{ matrix.arch }}/yass.py
-            build-linux-openwrt-${{ matrix.arch }}/*.so
+            build-linux-openwrt-${{ matrix.arch }}/*.so*
+            !build-linux-openwrt-${{ matrix.arch }}/*.dbg
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-cli
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_cli
-            build-linux-openwrt-${{ matrix.arch }}/*.so
+            build-linux-openwrt-${{ matrix.arch }}/*.so*
+            !build-linux-openwrt-${{ matrix.arch }}/*.dbg
             !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-test
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_test
-            build-linux-openwrt-${{ matrix.arch }}/*.so
+            build-linux-openwrt-${{ matrix.arch }}/*.so*
+            !build-linux-openwrt-${{ matrix.arch }}/*.dbg
             !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: openwrt-release-${{ matrix.build_type }}-${{ matrix.arch_name }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-openwrt-${{ matrix.arch }}/yass_benchmark
-            build-linux-openwrt-${{ matrix.arch }}/*.so
+            build-linux-openwrt-${{ matrix.arch }}/*.so*
+            !build-linux-openwrt-${{ matrix.arch }}/*.dbg
             !build-linux-openwrt-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:

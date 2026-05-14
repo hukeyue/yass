@@ -201,14 +201,16 @@ jobs:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-gui
           path: |
             build-linux-musl-${{ matrix.arch }}/yass
-            build-linux-musl-${{ matrix.arch }}/*.so
+            build-linux-musl-${{ matrix.arch }}/*.so*
+            !build-linux-musl-${{ matrix.arch }}/*.dbg
             !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-cli
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_cli
-            build-linux-musl-${{ matrix.arch }}/*.so
+            build-linux-musl-${{ matrix.arch }}/*.so*
+            !build-linux-musl-${{ matrix.arch }}/*.dbg
             !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
@@ -216,20 +218,23 @@ jobs:
           path: |
             build-linux-musl-${{ matrix.arch }}/devel
             build-linux-musl-${{ matrix.arch }}/yass.py
-            build-linux-musl-${{ matrix.arch }}/*.so
+            build-linux-musl-${{ matrix.arch }}/*.so*
+            !build-linux-musl-${{ matrix.arch }}/*.dbg
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-test
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_test
-            build-linux-musl-${{ matrix.arch }}/*.so
+            build-linux-musl-${{ matrix.arch }}/*.so*
+            !build-linux-musl-${{ matrix.arch }}/*.dbg
             !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: musl-release-${{ matrix.build_type }}-${{ matrix.container }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-musl-${{ matrix.arch }}/yass_benchmark
-            build-linux-musl-${{ matrix.arch }}/*.so
+            build-linux-musl-${{ matrix.arch }}/*.so*
+            !build-linux-musl-${{ matrix.arch }}/*.dbg
             !build-linux-musl-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:

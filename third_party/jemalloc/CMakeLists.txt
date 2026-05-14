@@ -147,6 +147,10 @@ add_library(jemalloc SHARED
   ${jemalloc_C_HDRS}
   ${jemalloc_C_SRCS})
 
+if(NOT CYGWIN)
+  set_target_properties(jemalloc PROPERTIES SOVERSION 2 VERSION 5.3.0)
+endif()
+
 target_include_directories(jemalloc PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_include_directories(jemalloc PRIVATE src/include)
 

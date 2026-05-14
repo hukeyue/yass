@@ -56,6 +56,10 @@ if (WIN32)
   target_sources(zlib PRIVATE win32/zlib1.rc)
 endif()
 
+if(NOT CYGWIN)
+  set_target_properties(zlib PROPERTIES VERSION 1.3.2)
+endif()
+
 target_include_directories(zlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (ZLIB_BUILD_SHARED_LIBS)

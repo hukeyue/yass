@@ -130,14 +130,16 @@ jobs:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-gui
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so*
+            !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
             !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-cli
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_cli
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so*
+            !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
             !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
@@ -145,20 +147,23 @@ jobs:
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/devel
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass.py
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so*
+            !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-test
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_test
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so*
+            !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
             !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: freebsd-release-${{ matrix.build_type }}-${{ matrix.abi}}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
           path: |
             build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/yass_benchmark
-            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so
+            build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.so*
+            !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/*.dbg
             !build-freebsd${{ matrix.abi }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:

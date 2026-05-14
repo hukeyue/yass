@@ -215,7 +215,8 @@ jobs:
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-gui
           path: |
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so*
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
             !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - name: Clean up libyass.so
         run: |
@@ -225,7 +226,8 @@ jobs:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-cli
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_cli
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so*
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
             !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
@@ -233,20 +235,23 @@ jobs:
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/devel
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass.py
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so*
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-test
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_test
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so*
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
             !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: android-release-${{ matrix.build_type }}-${{ matrix.arch }}-android${{ matrix.apilevel }}-ndk${{ matrix.ndk_version }}-${{ github.run_id }}-benchmark
           path: |
             build-android${{ matrix.apilevel }}-${{ matrix.arch }}/yass_benchmark
-            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so
+            build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.so*
+            !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/*.dbg
             !build-android${{ matrix.apilevel }}-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:

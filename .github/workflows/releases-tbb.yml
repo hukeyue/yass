@@ -331,28 +331,32 @@ jobs:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-cli
           path: |
             build-linux-${{ matrix.arch }}/yass_cli
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-server
           path: |
             build-linux-${{ matrix.arch }}/yass_server
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
           path: |
             build-linux-${{ matrix.arch }}/yass_test
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
           path: |
             build-linux-${{ matrix.arch }}/yass_benchmark
-            build-linux-${{ matrix.arch }}/*.so
+            build-linux-${{ matrix.arch }}/*.so*
+            !build-linux-${{ matrix.arch }}/*.dbg
             !build-linux-${{ matrix.arch }}/libYASS-C.so
       - uses: actions/upload-artifact@v6
         with:
