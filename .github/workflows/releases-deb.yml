@@ -22,7 +22,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [master, develop, debian]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'

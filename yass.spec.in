@@ -243,8 +243,6 @@ cd build
 rm -rf %{buildroot}
 ninja install
 rm -rf %{buildroot}/%{_datadir}/doc
-mkdir -p %{buildroot}/usr/libexec/%{name}
-touch %{buildroot}/usr/libexec/%{name}/placeholder
 cd ..
 desktop-file-validate %{buildroot}%{_datadir}/applications/io.github.chilledheart.yass.desktop
 %find_lang %{name}
@@ -332,10 +330,8 @@ for embedded devices and low end boxes.
 %files common
 %defattr(-,root,root)
 %license build/LICENSE
-%dir /usr/libexec/%{name}
-/usr/libexec/%{name}/*
 %dir /usr/lib64
-/usr/lib64/libYASS-C.so
+/usr/lib64/*
 
 %package devel
 Summary: Lightweight and Secure http/socks4/socks5 Proxy (Header Files)

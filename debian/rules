@@ -102,7 +102,7 @@ else
 endif
 
 override_dh_shlibdeps:
-	dh_shlibdeps -l $(shell pwd)/debian/yass-common/usr/libexec/yass -l /usr/$(DEB_HOST_GNU_TYPE)/lib -l /lib/$(DEB_HOST_GNU_TYPE)
+	dh_shlibdeps -Lyass-common -l /usr/libexec/yass -l /usr/$(DEB_HOST_GNU_TYPE)/lib -l /lib/$(DEB_HOST_GNU_TYPE)
 
 override_dh_strip:
 ifneq ($(filter qt6,$(DEB_BUILD_PROFILES)),)

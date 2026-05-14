@@ -458,7 +458,7 @@ if (NOT APPLE AND NOT WIN32)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
   set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_BUILD_RPATH "\$ORIGIN/.")
-  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBEXECDIR}/${YASS_APP_NAME};\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
   # Add directories from all libraries outside the build tree to the rpath.
   # This makes the dynamic linker able to find non system libraries that
   # our libraries require, in particular the Python one (from pyenv for
@@ -5949,9 +5949,9 @@ endif()
 # Configure Installable binaries
 foreach(lib ${YASS_SHARED_LIBS})
   if (NOT APPLE AND NOT WIN32)
-    install(TARGETS ${lib} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/${YASS_APP_NAME}")
-    set_target_properties(${lib} PROPERTIES INSTALL_RPATH
-      "\$ORIGIN/../../${CMAKE_INSTALL_LIBEXECDIR}/${YASS_APP_NAME};\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}")
+    install(TARGETS ${lib} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(${lib} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(${lib} PROPERTIES SUFFIX "_${YASS_APP_NAME}.so")
   elseif(APPLE)
     install(TARGETS ${lib} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
   elseif(MINGW AND NOT ${lib} MATCHES "mimalloc")
