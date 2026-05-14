@@ -180,6 +180,40 @@ bool SetCurrentThreadName(const std::string& name) {
   return err == 0;
 }
 
+bool SetCurrentThreadAffinityToCpu(int cpuid) {
+  int ret;
+  auto self = pthread_self();
+  cpu_set_t affinity, previous_affinity;
+  ret = pthread_getaffinity_np(self, sizeof(previous_affinity), &previous_affinity);
+  if (ret != 0) {
+    return false;
+  }
+  memcpy(&affinity, &previous_affinity, sizeof(affinity));
+  int j = -1;
+  for (int i = 0; i < CPU_SETSIZE; ++i) {
+    if (CPU_ISSET(i, &affinity)) {
+      ++j;
+      if (j != cpuid) {
+        CPU_CLR(i, &affinity);
+      }
+    }
+  }
+  if (j == -1) {
+    errno = EINVAL;
+    return false;
+  }
+  DCHECK_EQ(1, CPU_COUNT(&affinity));
+  if (CPU_COUNT(&affinity) == 0) {
+    errno = EINVAL;
+    return false;
+  }
+  ret = pthread_setaffinity_np(self, sizeof(affinity), &affinity);
+  if (ret != 0) {
+    return false;
+  }
+  return true;
+}
+
 uint64_t GetMonotonicTime() {
   static struct timespec start_ts;
   static std::once_flag started_flag;

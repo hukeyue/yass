@@ -189,6 +189,31 @@ bool SetCurrentThreadName(const std::string& name) {
   return SUCCEEDED(ret);
 }
 
+bool SetCurrentThreadAffinityToCpu(int cpuid) {
+  // Pin to current cpu group up to 64
+  HANDLE self = ::GetCurrentThread();
+  DWORD_PTR mask = static_cast<DWORD_PTR>(1) << (cpuid % 64);
+
+#if _WIN32_WINNT < 0x0601
+  // Basic API is supported
+  if (::SetThreadAffinityMask(self, mask) == 0) {
+    return false;
+  }
+#else
+  // Extended API is supported (require Windows 7)
+  PROCESSOR_NUMBER pnum;
+  ::GetCurrentProcessorNumberEx(&pnum);
+
+  GROUP_AFFINITY affinity {};
+  affinity.Mask = mask;
+  affinity.Group = pnum.Group;
+  if (!::SetThreadGroupAffinity(self, &affinity, nullptr)) {
+    return false;
+  }
+#endif
+  return true;
+}
+
 static inline uint64_t GetMonotonicTimeQPC() {
   static LARGE_INTEGER StartTime, Frequency;
   static std::once_flag started_flag;

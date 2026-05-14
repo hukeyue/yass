@@ -81,6 +81,10 @@ bool SetCurrentThreadName(const std::string& name) {
   return pthread_setname_np(name.c_str()) == 0;
 }
 
+bool SetCurrentThreadAffinityToCpu(int cpuid) {
+  return true; /* noop */
+}
+
 uint64_t GetMonotonicTime() {
   // https://www.manpagez.com/man/3/clock_gettime_nsec_np/
   // CLOCK_UPTIME_RAW is the same with mach_absolute_time();

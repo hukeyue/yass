@@ -63,6 +63,8 @@ bool SetCurrentThreadPriority(ThreadPriority priority);
 
 bool SetCurrentThreadName(const std::string& name);
 
+bool SetCurrentThreadAffinityToCpu(int cpuid);
+
 uint64_t GetMonotonicTime();
 
 #define NS_PER_SECOND (1000 * 1000 * 1000)
