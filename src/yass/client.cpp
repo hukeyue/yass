@@ -550,6 +550,13 @@ int YassClientPrivate::Run() {
       std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
 
   io_context_.run();
+  {
+    absl::ReaderMutexLock lk(server_mutex_);
+    for (auto& server : servers_)
+      server->join();
+  }
+  io_context_.restart();
+  io_context_.run(); // cleanup all exisitng events after wq thread join
   io_context_.restart();
 
   {

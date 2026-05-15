@@ -131,9 +131,8 @@ class ContentServer {
   ~ContentServer() {
     VLOG(1) << "ContentServer (" << T::Name << ") " << "Tag " << server_tag_ << " freed memory";
 
-    DCHECK_EQ(nullptr, work_guard_);
-    CancelWQThreads();
-    JoinWQThreads();
+    DCHECK_EQ(nullptr, work_guard_) << "Call shutdown() or stop() before free content server";
+    DCHECK_EQ(0, JoinableWQThreadsCount()) << "Call join() before free content server";
 
     CHECK_EQ(pending_next_listen_ctxes_.size(), 0u) << "ContentServer freed on pending listen ctx";
     CHECK_EQ(opened_connections_, 0u) << "ContentServer freed on non-closed connections";
@@ -167,6 +166,16 @@ class ContentServer {
     });
     DCHECK_EQ(0u, opened_connections_);
 #endif
+  }
+
+  int JoinableWQThreadsCount() {
+    int count = 0;
+#ifdef HAVE_TBB
+    for(int i = 0; i < wqthread_count_; ++i) {
+      count+= !!wqthreads_[i]->IsJoinable();
+    }
+#endif
+    return count;
   }
 
   // Retrieve last local endpoint
@@ -283,6 +292,7 @@ class ContentServer {
       }
     });
   }
+
   // Allow called from different threads
   void stop() {
     asio::post(io_context_, [this]() {
@@ -331,7 +341,8 @@ class ContentServer {
       for (auto [conn_id, conn] : connection_map) {
         VLOG(1) << "Connections (" << T::Name << ") " << "Tag " << server_tag_ << " closing Connection: " << conn_id;
         asio::io_context& io_context = wqthreads_[conn_id % wqthread_count_]->io_context;
-        asio::post(io_context, [conn]() { conn->close(); });
+        auto work_guard = std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
+        asio::post(io_context, [conn, work_guard]() { conn->close(); });
       }
 #else
       auto connection_map = std::move(connection_map_);
@@ -351,6 +362,10 @@ class ContentServer {
         work_guard_.reset();
       }
     });
+  }
+
+  void join() {
+    JoinWQThreads();
   }
 
   size_t num_of_connections() const { return opened_connections_; }
@@ -464,7 +479,9 @@ class ContentServer {
     }
     VLOG(1) << "Connection (" << T::Name << ") " << "Tag " << server_tag_ << " Id " << connection_id << " with "
             << conn->peer_endpoint() << " connected";
-    asio::post(io_context, [conn]() { conn->start(); });
+
+    auto work_guard = std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context.get_executor());
+    asio::post(io_context, [conn, work_guard]() { conn->start(); });
   }
 
   void on_disconnect(scoped_refptr<ConnectionType> conn) {
@@ -497,7 +514,9 @@ class ContentServer {
                    << opened_connections_;
       if (opened_connections_ == 0) {
         CancelWQThreads();
-        asio::post(io_context_, [this]() { work_guard_.reset(); } );
+        // delay main io_context's lifetime
+        auto work_guard = std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
+        asio::post(io_context_, [this, work_guard]() { work_guard_.reset(); } );
       }
     }
 #ifdef HAVE_TBB
@@ -975,8 +994,8 @@ class ContentServer {
 
       LOG(INFO) << "wqthread: " << tname << " started";
       io_context.run();
+      io_context.restart();
       LOG(INFO) << "wqthread: " << tname << " stopped";
-
     }) {}
     WQThreadCtx(const WQThreadCtx&) = delete;
     WQThreadCtx& operator=(const WQThreadCtx&) = delete;
@@ -987,6 +1006,9 @@ class ContentServer {
     }
     void Join() {
       t.join();
+    }
+    bool IsJoinable() {
+      return t.joinable();
     }
   };
   std::vector<std::unique_ptr<WQThreadCtx>> wqthreads_;

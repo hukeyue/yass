@@ -432,10 +432,15 @@ class EndToEndTest : public ::testing::TestWithParam<std::tuple<cipher_method, c
       work_guard_ =
           std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(io_context_.get_executor());
       io_context_.run();
+      local_server_->join();
+      server_server_->join();
+      content_provider_server_->join();
+      io_context_.restart();
+      io_context_.run(); // cleanup all exisitng events after wq thread join
+      io_context_.restart();
       local_server_.reset();
       server_server_.reset();
       content_provider_server_.reset();
-      io_context_.restart();
       VLOG(1) << "background thread stopped";
     });
   }
