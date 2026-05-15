@@ -254,11 +254,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: i386
+          - arch: i686
+            sysroot_arch: i386
             build_type: Release
             build_options: -component-build -use-tbb
             use_allocator: system
           - arch: amd64
+            sysroot_arch: amd64
             build_type: Release
             build_options: -component-build -use-tbb
             use_allocator: system
@@ -276,7 +278,7 @@ jobs:
           git submodule update --init --depth 1
       - name: Set SDK_ROOT
         run: |
-          echo "SDK_ROOT=${{ github.workspace }}/debian_bullseye_${{ matrix.arch }}-sysroot" >> $GITHUB_ENV
+          echo "SDK_ROOT=${{ github.workspace }}/debian_bullseye_${{ matrix.sysroot_arch }}-sysroot" >> $GITHUB_ENV
       - name: Cache toolchain
         id: toolchain-cache
         uses: actions/cache@v5
@@ -289,8 +291,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            ${{ github.workspace }}/debian_bullseye_${{ matrix.arch }}-sysroot
-          key: ${{ runner.os }}-sysroot-${{ matrix.arch }}-${{ hashFiles('scripts/sysroots.json') }}-v3
+            ${{ github.workspace }}/debian_bullseye_${{ matrix.sysroot_arch }}-sysroot
+          key: ${{ runner.os }}-sysroot-${{ matrix.sysroot_arch }}-${{ hashFiles('scripts/sysroots.json') }}-v3
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.20.0'
@@ -309,7 +311,7 @@ jobs:
       - name: "Install dependency: sysroot"
         if: ${{ steps.sysroot-cache.outputs.cache-hit != 'true' }}
         run: |
-          ./scripts/install-sysroot.py --arch ${{ matrix.arch }}
+          ./scripts/install-sysroot.py --arch ${{ matrix.sysroot_arch }}
       - name: Change ubuntu mirror
         run: |
           sudo sed -i 's/azure.archive.ubuntu.com/azure.archive.ubuntu.com/g' /etc/apt/sources.list
@@ -317,7 +319,7 @@ jobs:
       - name: Populate depedencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y pkgconf gettext bubblewrap
+          sudo apt-get install -y pkgconf gettext
           # libc6-i386 interferes with x86 build
           sudo apt remove libc6-i386
       - name: Build Binary (CLI)
@@ -364,27 +366,6 @@ jobs:
           path: |
             build-linux-${{ matrix.arch }}/*.dbg
           compression-level: 9 # maximum compression
-      - name: Disable AppArmor Restrictions (i386 and amd64)
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
-        run: |
-          # see https://github.com/DevToys-app/DevToys/issues/1373#issuecomment-2985518849
-          sudo apt-get install -y apparmor-profiles apparmor-profiles-extra
-          sudo ln -s /usr/share/apparmor/extra-profiles/bwrap-userns-restrict /etc/apparmor.d/bwrap
-          sudo apparmor_parser /etc/apparmor.d/bwrap
-      - name: Run tests (i386 and amd64)
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
-        run: |
-          rm -rf $SDK_ROOT/tmp
-          mkdir -p $SDK_ROOT/etc/ssl/certs $SDK_ROOT/dev $SDK_ROOT/proc $SDK_ROOT/tmp $SDK_ROOT/build
-          touch $SDK_ROOT/etc/resolv.conf
-          timeout 120 bwrap --die-with-parent --bind $SDK_ROOT / \
-            --ro-bind /sys /sys \
-            --ro-bind /etc/resolv.conf /etc/resolv.conf \
-            --ro-bind /etc/ssl/certs /etc/ssl/certs \
-            --proc /proc --dev /dev \
-            --unshare-all --share-net \
-            --bind $PWD/build-linux-${{ matrix.arch }} /tmp \
-            /tmp/yass_test
       - name: Upload dist tarball (including debuginfo)
         if: ${{ github.event_name == 'release' && matrix.build_type == 'Release' }}
         env:
@@ -398,32 +379,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: i386
+          - arch: i686
+            sysroot_arch: i386
             build_type: Release
             use_allocator: system
             gtest_repeat_times: 10
           - arch: amd64
+            sysroot_arch: amd64
             build_type: Release
             use_allocator: system
             gtest_repeat_times: 10
     steps:
       - name: Change ubuntu mirror
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'amd64' }}
         run: |
           sudo sed -i 's/azure.archive.ubuntu.com/azure.archive.ubuntu.com/g' /etc/apt/sources.list
           sudo apt-get update -qq
       - name: Populate depedencies (test purposes)
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'amd64' }}
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
-          sudo apt-get install -y libcurl4-gnutls-dev:${{ matrix.arch }} # based on sysroot's libcurl
+          sudo apt-get install -y libcurl4-gnutls-dev:${{ matrix.sysroot_arch }} # based on sysroot's libcurl
       - name: Download built executables
         uses: actions/download-artifact@v7
         with:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
       - name: Run tests
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'amd64' }}
         run: |
           chmod 755 yass_test
           ./yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4
@@ -442,10 +425,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: i386
+          - arch: i686
+            sysroot_arch: i386
             build_type: Release
             use_allocator: system
           - arch: amd64
+            sysroot_arch: amd64
             build_type: Release
             use_allocator: system
     steps:
@@ -454,7 +439,7 @@ jobs:
         with:
           name: tbb-linux-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
       - name: Run benchmarks
-        if: ${{ matrix.arch == 'i386' || matrix.arch == 'amd64' }}
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'amd64' }}
         run: |
           chmod 755 yass_benchmark
           ./yass_benchmark
