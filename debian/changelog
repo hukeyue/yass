@@ -1,6 +1,10 @@
+yass (1.24.13-1) UNRELEASED; urgency=medium
+
+  * promote linux release (i686) for concurrent mode with TBB.
+ -- Chilledheart <hukeyue@vip.163.com>  Sun, 17 May 2026 07:15:35 +0800
 yass (1.24.12-1) UNRELEASED; urgency=medium
 
-  * promote linux release for concurrent mode with TBB.
+  * promote linux release (amd64) for concurrent mode with TBB.
  -- Chilledheart <hukeyue@vip.163.com>  Thu, 14 May 2026 16:53:24 +0800
 yass (1.24.11-1) UNRELEASED; urgency=medium
 

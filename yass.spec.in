@@ -346,8 +346,10 @@ for embedded devices and low end boxes.
 /usr/include/%{name}/*.h
 
 %changelog
+* Sun May 17 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.13-1
+  - promote linux release (i686) for concurrent mode with TBB
 * Thu May 14 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.12-1
-  - promote linux release for concurrent mode with TBB
+  - promote linux release (amd64) for concurrent mode with TBB
 * Mon May 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.11-1
   - introduce CPU affinity pin for concurrent mode with TBB
 * Mon May 11 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.10-1
