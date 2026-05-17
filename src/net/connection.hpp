@@ -25,6 +25,7 @@
 #ifndef H_NET_CONNECTION
 #define H_NET_CONNECTION
 
+#include <concepts>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -378,8 +379,6 @@ enum ConnectionFactoryType {
   CONNECTION_FACTORY_CONTENT_PROVIDER,
 };
 
-#ifdef __cpp_concepts
-#include <concepts>
 template <typename T>
 concept BasicConnection = requires(T t) {
   /// require Name field
@@ -397,9 +396,6 @@ concept StartClosableConnection = BasicConnection<T> && requires(T t) {
   /// Close the socket and clean up
   { t.close() };
 };
-#else
-#define StartClosableConnection typename
-#endif
 
 template <StartClosableConnection T>
 class ConnectionFactory {
