@@ -948,25 +948,30 @@ class ContentServer {
   };
   std::array<ListenCtx, MAX_LISTEN_ADDRESSES> listen_ctxs_;
   int next_listen_ctx_ = 0;
+
 #ifdef HAVE_TBB
   absl::Mutex pending_next_listen_ctxes_mutex_;
   std::vector<int> pending_next_listen_ctxes_ ABSL_GUARDED_BY(pending_next_listen_ctxes_mutex_);
+  std::atomic<bool> in_shutdown_ = false;
 #else
   std::vector<int> pending_next_listen_ctxes_;
+  bool in_shutdown_ = false;
 #endif
-  std::atomic<bool> in_shutdown_ = false;
 
 #ifdef HAVE_TBB
   typedef tbb::concurrent_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
   absl::Mutex connection_map_mutex_;
   ConnectionMapType connection_map_ ABSL_GUARDED_BY(connection_map_mutex_);
-#else
-  typedef absl::flat_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
-  ConnectionMapType connection_map_;
-#endif
 
   std::atomic<int32_t> next_connection_id_ = 1;
   std::atomic<size_t> opened_connections_ = 0;
+#else
+  typedef absl::flat_hash_map<int, scoped_refptr<ConnectionType>> ConnectionMapType;
+  ConnectionMapType connection_map_;
+
+  int32_t next_connection_id_ = 1;
+  size_t opened_connections_ = 0;
+#endif
 
   const int wqthread_count_;
 
