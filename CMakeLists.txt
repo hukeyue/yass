@@ -4168,6 +4168,11 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   # gcc and clang warning
   add_compile_options(-Wno-unused-parameter -Wno-shadow)
 
+  # new gcc warning from 16.0
+  if (COMPILER_GCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
+    add_compile_options(-Wno-unused-but-set-variable)
+  endif()
+
   # apple clang warnings
   if (COMPILER_APPLE_CLANG)
     add_compile_options(-Wno-shorten-64-to-32)

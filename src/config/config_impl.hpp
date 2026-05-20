@@ -25,6 +25,7 @@
 #ifndef H_CONFIG_CONFIG_IMPL
 #define H_CONFIG_CONFIG_IMPL
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
