@@ -5635,16 +5635,13 @@ if (GUI)
 
         add_dependencies(${APP_NAME} network-extension)
 
-        # FIXME conflicts with XCTest bundle creation
-        if (SDK_NAME STREQUAL iphoneos)
-          # require Xcode 3.21 or later
-          # https://cmake.org/cmake/help/latest/prop_tgt/XCODE_EMBED_type.html
-          set_target_properties(${APP_NAME} PROPERTIES
-            XCODE_EMBED_APP_EXTENSIONS network-extension
-            XCODE_EMBED_APP_EXTENSIONS_REMOVE_HEADERS_ON_COPY "YES"
-            XCODE_EMBED_APP_EXTENSIONS_CODE_SIGN_ON_COPY "YES"
-          )
-        endif()
+        # require Xcode 3.21 or later
+        # https://cmake.org/cmake/help/latest/prop_tgt/XCODE_EMBED_type.html
+        set_target_properties(${APP_NAME} PROPERTIES
+          XCODE_EMBED_APP_EXTENSIONS network-extension
+          XCODE_EMBED_APP_EXTENSIONS_REMOVE_HEADERS_ON_COPY "YES"
+          XCODE_EMBED_APP_EXTENSIONS_CODE_SIGN_ON_COPY "YES"
+        )
 
         find_library(Security_LIBRARY Security REQUIRED)
         target_link_directories(network-extension PRIVATE ${TUN2PROXY_LIB_DIR})
