@@ -233,7 +233,7 @@ func InitFlag() {
 	flag.StringVar(&iosVersionMinFlag, "ios-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "15.0"), "Set iOS deployment target, such as 15.0")
 	flag.StringVar(&iosCodeSignIdentityFlag, "ios-codesign-identity", getEnv("IOS_CODESIGN_IDENTITY", "-"), "Set iOS CodeSign Identity")
 	flag.StringVar(&iosDevelopmentTeamFlag, "ios-development-team", getEnv("DEVELOPMENT_TEAM", ""), "Set iOS deployment team")
-	flag.StringVar(&iosTestDeviceNameFlag, "ios-test-device-name", getEnv("IPHONE_NAME", ""), "Set iOS test device name")
+	flag.StringVar(&iosTestDeviceNameFlag, "ios-test-device-name", getEnv("IPHONE_NAME", "iPhone"), "Set iOS test device name")
 
 	flag.StringVar(&msvcTargetArchFlag, "msvc-tgt-arch", getEnv("VSCMD_ARG_TGT_ARCH", "x64"), "Set Visual C++ Target Achitecture")
 	flag.StringVar(&msvcCrtLinkageFlag, "msvc-crt-linkage", getEnv("MSVC_CRT_LINKAGE", "dynamic"), "Set Visual C++ CRT Linkage")
@@ -1309,7 +1309,7 @@ func buildStageExecuteBuildScript() {
 		if systemNameFlag == "ios" && subSystemNameFlag == "simulator" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
-				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 17"}
+				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
 			if !runTestFlag {
 				cmdRun(xcodeCmd, true)
 			}
@@ -1341,7 +1341,7 @@ func buildStageExecuteBuildScript() {
 		if systemNameFlag == "ios" && subSystemNameFlag == "simulator" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
-				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 17"}
+				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
 			cmdRun(xcodeCmd, true)
 		} else if systemNameFlag == "ios" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
