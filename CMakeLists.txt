@@ -2217,9 +2217,12 @@ if (HAVE_FLOCK)
   add_compile_definitions(-DHAVE_FLOCK)
 endif()
 
-if (NOT WIN32 AND NOT APPLE)
+if (NOT WIN32)
   check_library_exists(c pipe2 "" HAVE_PIPE2)
   check_library_exists(c dup3 "" HAVE_DUP3)
+endif()
+
+if (NOT WIN32 AND NOT APPLE)
   check_library_exists(rt shm_open "" HAVE_LIB_RT)
   # for android mallinfo2 is alias to mallinfo
   check_symbol_exists(mallinfo malloc.h HAVE_MALLINFO)

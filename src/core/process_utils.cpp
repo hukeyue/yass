@@ -51,14 +51,20 @@
 #define ASIO_NO_SSL
 #include "net/asio.hpp"
 
+#define HAVE_PIPE2_RUNTIME __builtin_available(macOS 27.0, iOS 27.0, *)
+#define HAVE_DUP3_RUNTIME  __builtin_available(macOS 27.0, iOS 27.0, *)
+
 static int Pipe2(int pipe_fds[2]) {
   int ret;
 #ifdef HAVE_PIPE2
-  if ((ret = pipe2(pipe_fds, O_CLOEXEC))) {
-    PLOG(WARNING) << "pipe2 failure";
-    return ret;
+  if (HAVE_PIPE2_RUNTIME) {
+    if ((ret = pipe2(pipe_fds, O_CLOEXEC))) {
+      PLOG(WARNING) << "pipe2 failure";
+      return ret;
+    }
+    goto next;
   }
-#else
+#endif
   if ((ret = pipe(pipe_fds))) {
     PLOG(WARNING) << "pipe failure";
     return ret;
@@ -69,7 +75,9 @@ static int Pipe2(int pipe_fds[2]) {
     IGNORE_EINTR(close(pipe_fds[1]));
     return ret;
   }
-#endif
+  goto next;
+
+next:
   return ret;
 }
 
@@ -210,17 +218,21 @@ int ExecuteProcess(const std::vector<std::string>& params, std::string* output, 
   if (ret == 0) {
     // The two file descriptors do not share file descriptor flags (the close-on-exec flag)
 #ifdef HAVE_DUP3
-    if (dup3(stdin_pipe[0], STDIN_FILENO, 0) < 0 || dup3(stdout_pipe[1], STDOUT_FILENO, 0) < 0 ||
-        dup3(stderr_pipe[1], STDERR_FILENO, 0) < 0) {
-      LOG(FATAL) << "dup3 on std file descriptors failure";
+    if (HAVE_DUP3_RUNTIME) {
+      if (dup3(stdin_pipe[0], STDIN_FILENO, 0) < 0 || dup3(stdout_pipe[1], STDOUT_FILENO, 0) < 0 ||
+          dup3(stderr_pipe[1], STDERR_FILENO, 0) < 0) {
+        LOG(FATAL) << "dup3 on std file descriptors failure";
+      }
+      goto next;
     }
-#else
+#endif
     if (dup2(stdin_pipe[0], STDIN_FILENO) < 0 || dup2(stdout_pipe[1], STDOUT_FILENO) < 0 ||
         dup2(stderr_pipe[1], STDERR_FILENO) < 0) {
       LOG(FATAL) << "dup2 on std file descriptors failure";
     }
-#endif
+    goto next;
 
+next:
     std::vector<char*> _params;
     _params.reserve(params.size() + 1);
     for (const auto& param : params) {
