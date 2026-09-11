@@ -50,7 +50,9 @@
     <key>CSResourcesFileMapped</key>
     <true/>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
+    <key>MinimumOSVersion</key>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
     <key>UIMainStoryboardFile</key>
     <string>Main</string>
     <key>UILaunchStoryboardName</key>
