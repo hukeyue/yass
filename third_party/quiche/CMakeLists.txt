@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 20)
+
 set(quiche_SRCS
   overrides/quiche_platform_impl/quiche_command_line_flags_impl.h
   overrides/quiche_platform_impl/quiche_command_line_flags_impl.cc
