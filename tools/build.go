@@ -877,7 +877,7 @@ func buildStageGenerateBuildScript() {
 	var cmakeArgs []string
 	if os.Getenv("CC") != "" {
 		glog.Infof("Using overrided compiler %s", os.Getenv("CC"))
-	} else if systemNameFlag == "ios" {
+	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" {
 		glog.Infof("Using xcode's builtin compiler")
 	} else if clangPath != "" {
 		if systemNameFlag == "windows" {
