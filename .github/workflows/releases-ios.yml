@@ -39,7 +39,7 @@ env:
   GOPROXY: direct
 jobs:
   ios-simulator-release:
-    runs-on: macos-26
+    runs-on: macos-27
     permissions:
       contents: write
     strategy:
@@ -49,12 +49,12 @@ jobs:
           - arch: x64
             build_type: Release
             rust_target: x86_64-apple-ios
-            xcode_version: 26.3
+            xcode_version: 27.0
             build_options: -build-test -build-benchmark
           - arch: arm64
             build_type: Release
             rust_target: aarch64-apple-ios-sim
-            xcode_version: 26.3
+            xcode_version: 27.0
             build_options: -run-test
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
