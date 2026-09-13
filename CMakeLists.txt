@@ -1798,7 +1798,7 @@ endif()
 # C11/C++17 compiler flags setup.
 # --------------------------
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # that scanning is only performed if C++20 or higher is enabled for the target.
