@@ -51,8 +51,13 @@
 #define ASIO_NO_SSL
 #include "net/asio.hpp"
 
+#ifdef __clang__
 #define HAVE_PIPE2_RUNTIME __builtin_available(macOS 27.0, iOS 27.0, *)
 #define HAVE_DUP3_RUNTIME  __builtin_available(macOS 27.0, iOS 27.0, *)
+#else
+#define HAVE_PIPE2_RUNTIME false
+#define HAVE_DUP3_RUNTIME  false
+#endif
 
 static int Pipe2(int pipe_fds[2]) {
   int ret;
