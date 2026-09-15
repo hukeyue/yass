@@ -48,11 +48,9 @@ jobs:
         include:
           - arch: x64
             build_type: Release
-            xcode_version: 27.0
             build_options: -use-allocator=system
           - arch: arm64
             build_type: Release
-            xcode_version: 27.0
             build_options: -use-allocator=system
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
@@ -85,9 +83,6 @@ jobs:
         run: |
           ./scripts/download-clang-prebuilt-binaries.py
           rm -f third_party/llvm-build/Release+Asserts/*.tgz
-      - name: Set up Xcode version
-        run: |
-          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode_version }}.app
       - name: Install the Apple certificate
         if: ${{ false && github.event_name == 'release' }}
         env:

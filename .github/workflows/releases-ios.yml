@@ -49,12 +49,10 @@ jobs:
           - arch: x64
             build_type: Release
             rust_target: x86_64-apple-ios
-            xcode_version: 27.0
             build_options: -build-test -build-benchmark
           - arch: arm64
             build_type: Release
             rust_target: aarch64-apple-ios-sim
-            xcode_version: 27.0
             build_options: -run-test
     env:
       BUILD_TYPE: '${{ matrix.build_type }}'
@@ -93,9 +91,6 @@ jobs:
           source "$HOME/.cargo/env"
           ./scripts/setup-ios-rust.sh
           WITH_OS=ios-sim WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
-      - name: Set up Xcode version
-        run: |
-          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode_version }}.app
       - name: Build Binary (GUI)
         run: |
           ./tools/build --system ios --subsystem simulator --arch ${{ matrix.arch }} -nc ${{ matrix.build_options }}
