@@ -43,13 +43,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - abi: 13
+          - abi: 14
             arch: amd64
             build_type: Release
-          - abi: 13
+          - abi: 14
             arch: i386
             build_type: Release
-          - abi: 13
+          - abi: 14
             arch: aarch64
             build_type: Release
     runs-on: ubuntu-24.04

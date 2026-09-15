@@ -124,8 +124,8 @@ def usage():
 
 def main(args):
   if not args:
-    print("no abi specified, setting to freebsd 13 amd64")
-    abi = '13'
+    print("no abi specified, setting to freebsd 14 amd64")
+    abi = '14'
     arch = 'amd64'
   elif args and len(args) == 2 and str.isdecimal(args[0]) and args[1] in ['amd64', 'i386', 'aarch64']:
     abi = args[0]
@@ -139,14 +139,11 @@ def main(args):
   sys_arch = arch if arch != 'aarch64' else 'arm64'
 
   # not all tarbars exist in public sever
-  if abi == '13':
+  if abi == '14':
     release = '5'
-    is_zstd = False
-  elif abi == '14':
-    release = '3'
     is_zstd = True
   elif abi == '15':
-    release = '0'
+    release = '1'
     is_zstd = True
   else:
     usage()
@@ -172,9 +169,9 @@ def main(args):
   print(f'Extracting sysroot (gtk3)...')
   base_url = f'{FREEBSD_PKG_SITE}/FreeBSD%3A{abi}%3A{arch}/release_{release}'
   if is_zstd:
-    download_url(f'{base_url}/packagesite.tzst', 'packagesite.tzst')
-    name = 'packagesite.tzst'
-    tar = name.replace('.tzst', '.tar')
+    download_url(f'{base_url}/packagesite.pkg', 'packagesite.pkg')
+    name = 'packagesite.pkg'
+    tar = name.replace('.pkg', '.tar')
     print(check_string_output(['zstd', '-d', name, '-o', tar, '-f']))
     extract_tarfile(tar)
     os.unlink(tar)
