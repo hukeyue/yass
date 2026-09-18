@@ -1,4 +1,4 @@
-name: Build Artifacts (FreeBSD Binary)
+name: OnDemand FreeBSD Build
 on:
   workflow_dispatch:
     inputs:
@@ -16,21 +16,19 @@ on:
         required: false
         type: boolean
   pull_request:
-    branches: [master, develop]
+    branches: [freebsd]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [freebsd]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
     - '.cirrus.yml'
-  release:
-    types: [published]
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '0 17 * * *'
 concurrency:
   group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}

@@ -12,20 +12,21 @@
 
 [![MSVC+VS2026 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows.yml)
 [![MinGW Build](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-mingw-new.yml)
-[![Linux Build](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml)
 [![macOS Build](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-macos.yml)
 [![Android Build](https://github.com/hukeyue/yass/actions/workflows/releases-android-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-android-binary.yml)
 [![iOS Build](https://github.com/hukeyue/yass/actions/workflows/releases-ios.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-ios.yml)
-[![OpenWRT Build](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml)
-[![FreeBSD Build](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml)
 [![RPM Build](https://github.com/hukeyue/yass/actions/workflows/releases-rpm.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-rpm.yml)
 [![DEB Build](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-deb.yml)
 [![Flatpak Build](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-flatpak.yml)
-[![MSVC+XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
-[![Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
-[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=CircleCI%20Meta%20Bots)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
-[![MUSL Build](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml)
 [![TBB Build](https://github.com/hukeyue/yass/actions/workflows/releases-tbb.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-tbb.yml)
+
+[![CircleCI](https://img.shields.io/circleci/build/github/hukeyue/yass/develop?logo=circleci&&label=CircleCI%20Meta%20Bots)](https://circleci.com/gh/hukeyue/yass/?branch=develop)
+[![OnDemand Linux Build](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-linux-binary.yml)
+[![OnDemand OpenWRT Build](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-openwrt-binary.yml)
+[![OnDemand FreeBSD Build](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-freebsd-binary.yml)
+[![OnDemand XPSP3 Build](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-windows-vs2017.yml)
+[![OnDemand Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
+[![OnDemand MUSL Build](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml)
 
 ## Build from Source
 Take a look at [build instructions](BUILDING.md).

@@ -16,13 +16,13 @@ on:
         required: false
         type: boolean
   pull_request:
-    branches: [master, develop]
+    branches: [master, develop, flatpak]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'
     - '.cirrus.yml'
   push:
-    branches: [master, develop]
+    branches: [master, develop, flatpak]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'

@@ -1,4 +1,4 @@
-name: OnDemand Build Artifacts (MUSL)
+name: OnDemand Linux/MUSL Build
 on:
   workflow_dispatch:
     inputs:
@@ -28,7 +28,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '0 17 * * *'
 concurrency:
   group: ${{ github.workflow }} / ${{ startsWith(github.event_name, 'pull') && github.ref_name || github.run_id }}
   cancel-in-progress: ${{ startsWith(github.event_name, 'pull') }}

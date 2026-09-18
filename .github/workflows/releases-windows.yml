@@ -16,7 +16,7 @@ on:
         required: false
         type: boolean
   pull_request:
-    branches: [master, develop]
+    branches: [master, develop, vs2026]
     paths-ignore:
     - '**/*.md'
     - '.circleci/**'

@@ -1,4 +1,4 @@
-name: OnDemand Sanitizers Bots
+name: OnDemand Linux/Sanitizers Bots
 on:
   workflow_dispatch:
     inputs:

@@ -22,7 +22,7 @@ on:
     - '.circleci/**'
     - '.cirrus.yml'
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '0 17 * * *'
 env:
   CACHE_EPOCH: 148-2
   GOPROXY: direct
