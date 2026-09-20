@@ -23,6 +23,7 @@
 /* Copyright (c) 2023-2026 Chilledheart  */
 
 #import "ios/YassSplitViewController.h"
+#import "ios/SidebarTableViewController.h"
 #import "ios/YassViewController.h"
 
 @interface YassSplitViewController ()
@@ -35,6 +36,13 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+}
+
+- (void)UpdateStatusBar {
+  SidebarTableViewController* pvc = (SidebarTableViewController*)[self viewControllerForColumn:UISplitViewControllerColumnPrimary];
+  [pvc UpdateStatusBar];
+  YassViewController* svc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
+  [svc UpdateStatusBar];
 }
 
 @end

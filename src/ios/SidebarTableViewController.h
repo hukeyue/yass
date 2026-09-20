@@ -28,6 +28,7 @@
 #import <UIKit/UIKit.h>
 
 @interface SidebarTableViewController : UITableViewController
+- (void)UpdateStatusBar;
 @end
 
 #endif  // YASS_IOS_SIDEBAR_VIEW_CONTROLLER

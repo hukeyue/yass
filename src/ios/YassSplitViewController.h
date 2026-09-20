@@ -28,6 +28,7 @@
 #import <UIKit/UIKit.h>
 
 @interface YassSplitViewController : UISplitViewController
+- (void)UpdateStatusBar;
 @end
 
 #endif  // YASS_IOS_SPLIT_VIEW_CONTROLLER

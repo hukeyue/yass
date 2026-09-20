@@ -135,7 +135,7 @@
   return state_;
 }
 
-- (YassViewController*)getRootViewController {
+- (YassSplitViewController*)getSplitViewController {
   NSSet<UIScene*>* scenes = [[UIApplication sharedApplication] connectedScenes];
   for (UIScene* scene : scenes) {
     if (![scene isKindOfClass:[UIWindowScene class]]) {
@@ -158,9 +158,14 @@
     if (![rootViewController isKindOfClass:[YassSplitViewController class]]) {
       continue;
     }
-    return [rootViewController viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    return rootViewController;
   }
   return nil;
+}
+
+- (YassViewController*)getRootViewController {
+  return [[self getSplitViewController] viewControllerForColumn:UISplitViewControllerColumnSecondary];
+
 }
 
 - (NSString*)getStatus {
@@ -246,8 +251,8 @@
                      // non atomic write
                      self.total_rx_bytes = total_rx_bytes;
                      self.total_tx_bytes = total_tx_bytes;
-                     YassViewController* viewController = [self getRootViewController];
-                     [viewController UpdateStatusBar];
+                     YassSplitViewController* svc = [self getSplitViewController];
+                     [svc UpdateStatusBar];
                    });
                  }];
     if (error) {
