@@ -5169,6 +5169,10 @@ if (GUI)
         list(APPEND SRC_FILES
           src/ios/YassAppDelegate.mm
           src/ios/YassAppDelegate.h
+          src/ios/SidebarTableViewController.mm
+          src/ios/SidebarTableViewController.h
+          src/ios/YassSplitViewController.mm
+          src/ios/YassSplitViewController.h
           src/ios/YassViewController.mm
           src/ios/YassViewController.h
           src/ios/YassSceneDelegate.h

@@ -37,6 +37,7 @@
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
+#include "ios/YassSplitViewController.h"
 #include "ios/YassViewController.h"
 #include "ios/utils.h"
 #include "yass/feature.h"
@@ -153,11 +154,11 @@
         }
       }
     }
-    UIViewController* viewController = keyWindow.rootViewController;
-    if (![viewController isKindOfClass:[YassViewController class]]) {
+    YassSplitViewController* rootViewController = (YassSplitViewController*)keyWindow.rootViewController;
+    if (![rootViewController isKindOfClass:[YassSplitViewController class]]) {
       continue;
     }
-    return (YassViewController*)viewController;
+    return [rootViewController viewControllerForColumn:UISplitViewControllerColumnSecondary];
   }
   return nil;
 }
