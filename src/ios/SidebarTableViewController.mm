@@ -42,12 +42,10 @@
 }
 
 - (void)viewDidLoad {
+  [super viewDidLoad];
   if (@available(iOS 15.0, *)) {
     self.tableView.sectionHeaderHeight = 0;
   }
-}
-
-- (void)viewWillAppear:(BOOL)animated {
 }
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {

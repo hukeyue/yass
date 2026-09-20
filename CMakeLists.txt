@@ -5173,6 +5173,8 @@ if (GUI)
           src/ios/SidebarTableViewController.h
           src/ios/YassSplitViewController.mm
           src/ios/YassSplitViewController.h
+          src/ios/YassNavigationController.mm
+          src/ios/YassNavigationController.h
           src/ios/YassViewController.mm
           src/ios/YassViewController.h
           src/ios/YassSceneDelegate.h

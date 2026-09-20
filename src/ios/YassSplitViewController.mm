@@ -33,9 +33,13 @@
 }
 
 - (void)viewDidLoad {
-}
-
-- (void)viewWillAppear:(BOOL)animated {
+  [super viewDidLoad];
+  // Disable Sidebar for iPhone now
+  if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
+    self.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+    self.preferredPrimaryColumnWidthFraction = 1.0f;
+    [self setViewController:nil forColumn:UISplitViewControllerColumnPrimary];
+  }
 }
 
 - (void)UpdateStatusBar {
