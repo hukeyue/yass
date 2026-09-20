@@ -27,3 +27,7 @@
 "START_FAILED" = "Échec du démarrage";
 
 "OK" = "Confirmation";
+
+"RX" = "Recevoir du trafic:";
+
+"TX" = "Envoyer du trafic:";

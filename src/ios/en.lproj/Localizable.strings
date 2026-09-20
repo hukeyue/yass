@@ -42,3 +42,9 @@
 
 /* OK */
 "OK" = "OK";
+
+/*  rx rate:  */
+"RX" = "Receive traffic:";
+
+/*  tx rate: */
+"TX" = "Send traffic:";

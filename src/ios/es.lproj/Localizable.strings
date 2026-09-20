@@ -27,3 +27,7 @@
 "START_FAILED" = "Error de inicio";
 
 "OK" = "Confirmación";
+
+"RX" = "Recibir tráfico:";
+
+"TX" = "Enviar tráfico:";
