@@ -164,8 +164,8 @@
 }
 
 - (YassViewController*)getRootViewController {
-  return [[self getSplitViewController] viewControllerForColumn:UISplitViewControllerColumnSecondary];
-
+  YassSplitViewController* svc = [self getSplitViewController];
+  return [svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
 }
 
 - (NSString*)getStatus {

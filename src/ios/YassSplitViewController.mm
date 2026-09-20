@@ -39,8 +39,11 @@
 }
 
 - (void)UpdateStatusBar {
-  SidebarTableViewController* pvc = (SidebarTableViewController*)[self viewControllerForColumn:UISplitViewControllerColumnPrimary];
-  [pvc UpdateStatusBar];
+  UINavigationController* nvc = (UINavigationController*)[self viewControllerForColumn:UISplitViewControllerColumnPrimary];
+  SidebarTableViewController* pvc = (SidebarTableViewController*)[nvc topViewController];
+  if ([pvc isKindOfClass:[SidebarTableViewController class]]) {
+    [pvc UpdateStatusBar];
+  }
   YassViewController* svc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
   [svc UpdateStatusBar];
 }
