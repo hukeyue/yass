@@ -48,6 +48,17 @@
   }
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+  [super viewWillAppear:animated];
+  [self UpdateStatusBar];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+  UISplitViewController *svc = self.splitViewController;
+  UIViewController *vc = [svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
+  [self.splitViewController showDetailViewController:vc sender:self];
+}
+
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indexPath.row == 0 ? @"title" : @"default" forIndexPath:indexPath];
