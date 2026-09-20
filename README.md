@@ -28,8 +28,11 @@
 [![OnDemand Clang Tidy](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/clang-tidy.yml)
 [![OnDemand MUSL Build](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml/badge.svg)](https://github.com/hukeyue/yass/actions/workflows/releases-musl.yml)
 
-## Build from Source
-Take a look at [build instructions](BUILDING.md).
+## Edge Builds for iOS devices
+https://testflight.apple.com/join/GjBfT836
+
+## Edge Builds for Android devices
+Give it a look at Github Action Page.
 
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
