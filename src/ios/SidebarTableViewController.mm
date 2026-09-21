@@ -25,20 +25,10 @@
 #import "ios/SidebarTableViewController.h"
 #import "ios/YassAppDelegate.h"
 
-#include "core/logging.hpp"
-#include "core/utils.hpp"
-
 @interface SidebarTableViewController () <UITableViewDelegate, UITableViewDataSource>
 @end
 
 @implementation SidebarTableViewController {
-  uint64_t last_sync_time_;
-  uint64_t last_rx_bytes_;
-  uint64_t last_tx_bytes_;
-  uint64_t rx_rate_;
-  uint64_t tx_rate_;
-  uint64_t rx_bytes_;
-  uint64_t tx_bytes_;
 }
 
 - (void)viewDidLoad {
@@ -68,14 +58,15 @@
 }
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   if (indexPath.row == 0) {
-    return [self getPaneMessage:indexPath.section != 0];
+    return [appDelegate getPaneMessage:indexPath.section != 0];
   }
   if (indexPath.row == 1) {
-    return [self getRateMessage:indexPath.section != 0];
+    return [appDelegate getRateMessage:indexPath.section != 0];
   }
   if (indexPath.row == 2) {
-    return [self getTotalMessage:indexPath.section != 0];
+    return [appDelegate getTotalMessage:indexPath.section != 0];
   }
   return @"text";
 }
@@ -95,64 +86,7 @@
 }
 
 - (void)UpdateStatusBar {
-  [self UpdateStatusInternalStage];
   [self.tableView reloadData];
-}
-
-- (void)UpdateStatusInternalStage {
-  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-  if ([appDelegate getState] != STARTED) {
-    return;
-  }
-  uint64_t sync_time = GetMonotonicTime();
-  uint64_t delta_time = sync_time - last_sync_time_;
-  if (delta_time > NS_PER_SECOND) {
-    uint64_t rx_bytes = appDelegate.total_rx_bytes;
-    uint64_t tx_bytes = appDelegate.total_tx_bytes;
-    rx_rate_ = static_cast<double>(rx_bytes - last_rx_bytes_) / delta_time * NS_PER_SECOND;
-    tx_rate_ = static_cast<double>(tx_bytes - last_tx_bytes_) / delta_time * NS_PER_SECOND;
-    last_sync_time_ = sync_time;
-    last_rx_bytes_ = rx_bytes;
-    last_tx_bytes_ = tx_bytes;
-    rx_bytes_ = rx_bytes;
-    tx_bytes_ = tx_bytes;
-  }
-}
-
-- (NSString*)getPaneMessage:(BOOL)isReceiveSide {
-  return !isReceiveSide ? NSLocalizedString(@"TX Pane", @"Send Pane") : NSLocalizedString(@"RX Pane", @"Receive Pane");
-}
-
-- (NSString*)getRateMessage:(BOOL)isReceiveSide {
-  std::ostringstream ss;
-  NSString *message;
-  if (!isReceiveSide) {
-    message = NSLocalizedString(@"TXRATE", @"tx rate:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
-    HumanReadableByteCountBin(&ss, rx_rate_);
-    ss << "/s";
-  } else {
-    message = NSLocalizedString(@"RXRATE", @"rx rate:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
-    HumanReadableByteCountBin(&ss, tx_rate_);
-    ss << "/s";
-  }
-  return SysUTF8ToNSString(ss.str());
-}
-
-- (NSString*)getTotalMessage:(BOOL)isReceiveSide {
-  std::ostringstream ss;
-  NSString *message;
-  if (!isReceiveSide) {
-    message = NSLocalizedString(@"TX", @"tx:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
-    HumanReadableByteCountBin(&ss, rx_bytes_);
-  } else {
-    message = NSLocalizedString(@"RX", @"rx:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
-    HumanReadableByteCountBin(&ss, tx_bytes_);
-  }
-  return SysUTF8ToNSString(ss.str());
 }
 
 @end

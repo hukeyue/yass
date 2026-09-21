@@ -44,11 +44,6 @@
 
 @implementation YassViewController {
   NSArray* cipher_methods_;
-  uint64_t last_sync_time_;
-  uint64_t last_rx_bytes_;
-  uint64_t last_tx_bytes_;
-  uint64_t rx_rate_;
-  uint64_t tx_rate_;
 }
 
 - (void)viewDidLoad {
@@ -305,40 +300,9 @@
   [self.stopButton setEnabled:FALSE];
 }
 
-- (NSString*)getStatusMessage {
-  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-  if ([appDelegate getState] != STARTED) {
-    return [appDelegate getStatus];
-  }
-  uint64_t sync_time = GetMonotonicTime();
-  uint64_t delta_time = sync_time - last_sync_time_;
-  if (delta_time > NS_PER_SECOND) {
-    uint64_t rx_bytes = appDelegate.total_rx_bytes;
-    uint64_t tx_bytes = appDelegate.total_tx_bytes;
-    rx_rate_ = static_cast<double>(rx_bytes - last_rx_bytes_) / delta_time * NS_PER_SECOND;
-    tx_rate_ = static_cast<double>(tx_bytes - last_tx_bytes_) / delta_time * NS_PER_SECOND;
-    last_sync_time_ = sync_time;
-    last_rx_bytes_ = rx_bytes;
-    last_tx_bytes_ = tx_bytes;
-  }
-
-  std::ostringstream ss;
-  NSString* message = [appDelegate getStatus];
-  ss << SysNSStringToUTF8(message);
-  message = NSLocalizedString(@"TXRATE", @"tx rate:");
-  ss << " " << SysNSStringToUTF8(message) << " ";
-  HumanReadableByteCountBin(&ss, rx_rate_);
-  ss << "/s";
-  message = NSLocalizedString(@"RXRATE", @"rx rate:");
-  ss << " " << SysNSStringToUTF8(message) << " ";
-  HumanReadableByteCountBin(&ss, tx_rate_);
-  ss << "/s";
-
-  return SysUTF8ToNSString(ss.str());
-}
-
 - (void)UpdateStatusBar {
-  self.status.text = [self getStatusMessage];
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  self.status.text = [appDelegate getStatusMessage];
 }
 
 - (void)LoadChanges {

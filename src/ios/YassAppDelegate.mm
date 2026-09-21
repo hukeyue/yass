@@ -72,6 +72,8 @@
   NSString* limit_rate_;
   NSString* connect_timeout_;
   BOOL enable_post_quantum_kyber_;
+
+  struct TelemetryObserver telemetry_observer_;
 }
 
 - (BOOL)application:(UIApplication*)application
@@ -249,8 +251,7 @@
                    }
                    dispatch_async(dispatch_get_main_queue(), ^{
                      // non atomic write
-                     self.total_rx_bytes = total_rx_bytes;
-                     self.total_tx_bytes = total_tx_bytes;
+                     updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
                      YassSplitViewController* svc = [self getSplitViewController];
                      [svc UpdateStatusBar];
                    });
@@ -468,6 +469,61 @@
 
   return config::ReadConfigFromArgument(server_host, server_sni, server_port, username, password, method_string,
                                         "127.0.0.1", "0", doh_url, dot_host, limit_rate, connect_timeout);
+}
+
+- (NSString*)getPaneMessage:(BOOL)isReceiveSide {
+  return !isReceiveSide ? NSLocalizedString(@"TX Pane", @"Send Pane") : NSLocalizedString(@"RX Pane", @"Receive Pane");
+}
+
+- (NSString*)getRateMessage:(BOOL)isReceiveSide {
+  std::ostringstream ss;
+  NSString *message;
+  if (!isReceiveSide) {
+    message = NSLocalizedString(@"TXRATE", @"tx rate:");
+    ss << " " << SysNSStringToUTF8(message) << " ";
+    HumanReadableByteCountBin(&ss, telemetry_observer_.rx_rate_);
+    ss << "/s";
+  } else {
+    message = NSLocalizedString(@"RXRATE", @"rx rate:");
+    ss << " " << SysNSStringToUTF8(message) << " ";
+    HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
+    ss << "/s";
+  }
+  return SysUTF8ToNSString(ss.str());
+}
+
+- (NSString*)getTotalMessage:(BOOL)isReceiveSide {
+  std::ostringstream ss;
+  NSString *message;
+  if (!isReceiveSide) {
+    message = NSLocalizedString(@"TX", @"tx:");
+    ss << " " << SysNSStringToUTF8(message) << " ";
+    HumanReadableByteCountBin(&ss, telemetry_observer_.rx_bytes_);
+  } else {
+    message = NSLocalizedString(@"RX", @"rx:");
+    ss << " " << SysNSStringToUTF8(message) << " ";
+    HumanReadableByteCountBin(&ss, telemetry_observer_.tx_bytes_);
+  }
+  return SysUTF8ToNSString(ss.str());
+}
+
+- (NSString*)getStatusMessage {
+  if ([self getState] != STARTED) {
+    return [self getStatus];
+  }
+  std::ostringstream ss;
+  NSString* message = [self getStatus];
+  ss << SysNSStringToUTF8(message);
+  message = NSLocalizedString(@"TXRATE", @"tx rate:");
+  ss << " " << SysNSStringToUTF8(message) << " ";
+  HumanReadableByteCountBin(&ss, telemetry_observer_.rx_rate_);
+  ss << "/s";
+  message = NSLocalizedString(@"RXRATE", @"rx rate:");
+  ss << " " << SysNSStringToUTF8(message) << " ";
+  HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
+  ss << "/s";
+
+  return SysUTF8ToNSString(ss.str());
 }
 
 @end

@@ -35,8 +35,10 @@ enum YASSState { STARTED, STARTING, START_FAILED, STOPPING, STOPPED };
 - (NSString*)getStatus;
 - (void)OnStart:(BOOL)quiet;
 - (void)OnStop:(BOOL)quiet;
-@property(assign, nonatomic) uint64_t total_rx_bytes;
-@property(assign, nonatomic) uint64_t total_tx_bytes;
+- (NSString*)getPaneMessage:(BOOL)isReceiveSide;
+- (NSString*)getRateMessage:(BOOL)isReceiveSide;
+- (NSString*)getTotalMessage:(BOOL)isReceiveSide;
+- (NSString*)getStatusMessage;
 @end
 
 #endif  // YASS_IOS_APP_DELEGATE

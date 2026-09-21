@@ -32,6 +32,9 @@
 
 #include <json/json.h>
 
+#include "core/logging.hpp"
+#include "core/utils.hpp"
+
 std::string serializeTelemetryJson(uint64_t total_rx_bytes, uint64_t total_tx_bytes) {
   Json::Value j = Json::objectValue;
   j["total_rx_bytes"] = total_rx_bytes;
@@ -63,4 +66,20 @@ bool parseTelemetryJson(std::string_view resp, uint64_t* total_rx_bytes, uint64_
     *total_tx_bytes = root["total_tx_bytes"].asUInt64();
   }
   return true;
+}
+
+void updateTelemetryObserver(struct TelemetryObserver *observer, uint64_t total_rx_bytes, uint64_t total_tx_bytes) {
+  uint64_t sync_time = GetMonotonicTime();
+  uint64_t delta_time = sync_time - observer->last_sync_time_;
+  if (delta_time > NS_PER_SECOND) {
+    uint64_t rx_bytes = total_rx_bytes;
+    uint64_t tx_bytes = total_tx_bytes;
+    observer->rx_rate_ = static_cast<double>(rx_bytes - observer->last_rx_bytes_) / delta_time * NS_PER_SECOND;
+    observer->tx_rate_ = static_cast<double>(tx_bytes - observer->last_tx_bytes_) / delta_time * NS_PER_SECOND;
+    observer->last_sync_time_ = sync_time;
+    observer->last_rx_bytes_ = rx_bytes;
+    observer->last_tx_bytes_ = tx_bytes;
+    observer->rx_bytes_ = rx_bytes;
+    observer->tx_bytes_ = tx_bytes;
+  }
 }
