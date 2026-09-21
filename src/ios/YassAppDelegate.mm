@@ -250,10 +250,7 @@
                      return;
                    }
                    dispatch_async(dispatch_get_main_queue(), ^{
-                     // non atomic write
-                     updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
-                     YassSplitViewController* svc = [self getSplitViewController];
-                     [svc UpdateStatusBar];
+                     [self UpdateTelemetryObserver:total_rx_bytes with:total_tx_bytes];
                    });
                  }];
     if (error) {
@@ -261,6 +258,16 @@
       LOG(WARNING) << "telemetry: send Request failed: " << err_msg;
     }
   }
+}
+
+- (void)UpdateTelemetryObserver:(uint64_t)total_rx_bytes with:(uint64_t)total_tx_bytes {
+  if ([self getState] != STARTED) {
+    finalizeTelemetryObserver(&telemetry_observer_);
+  } else {
+    updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
+  }
+  YassSplitViewController* svc = [self getSplitViewController];
+  [svc UpdateStatusBar];
 }
 
 - (void)OnStartSaveAndLoadInstance:(NETunnelProviderManager*)vpn_manager {
@@ -436,11 +443,16 @@
 - (void)OnStopped {
   state_ = STOPPED;
 
-  YassViewController* viewController = [self getRootViewController];
-  [viewController Stopped];
-
   [refresh_timer_ invalidate];
   refresh_timer_ = nil;
+
+  finalizeTelemetryObserver(&telemetry_observer_);
+    
+  YassSplitViewController* vc = [self getSplitViewController];
+  [vc UpdateStatusBar];
+    
+  YassViewController* svc = [self getRootViewController];
+  [svc Stopped];
 }
 
 - (std::string)SaveConfig {

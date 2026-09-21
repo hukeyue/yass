@@ -39,8 +39,8 @@ bool parseTelemetryJson(std::string_view resp, uint64_t* total_rx_bytes, uint64_
 
 struct TelemetryObserver {
   uint64_t last_sync_time_;
-  uint64_t last_rx_bytes_;
-  uint64_t last_tx_bytes_;
+  uint64_t last_sync_rx_bytes_;
+  uint64_t last_sync_tx_bytes_;
   uint64_t rx_rate_;
   uint64_t tx_rate_;
   uint64_t rx_bytes_;
@@ -48,6 +48,8 @@ struct TelemetryObserver {
 };
 
 void updateTelemetryObserver(TelemetryObserver *observer, uint64_t total_rx_bytes, uint64_t total_tx_bytes);
+
+void finalizeTelemetryObserver(TelemetryObserver *observer);
 
 constexpr const char kAppMessageGetTelemetry[] = "__get_telemetry";
 

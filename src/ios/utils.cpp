@@ -71,15 +71,30 @@ bool parseTelemetryJson(std::string_view resp, uint64_t* total_rx_bytes, uint64_
 void updateTelemetryObserver(struct TelemetryObserver *observer, uint64_t total_rx_bytes, uint64_t total_tx_bytes) {
   uint64_t sync_time = GetMonotonicTime();
   uint64_t delta_time = sync_time - observer->last_sync_time_;
+
+  observer->rx_bytes_ = total_rx_bytes;
+  observer->tx_bytes_ = total_tx_bytes;
   if (delta_time > NS_PER_SECOND) {
     uint64_t rx_bytes = total_rx_bytes;
     uint64_t tx_bytes = total_tx_bytes;
-    observer->rx_rate_ = static_cast<double>(rx_bytes - observer->last_rx_bytes_) / delta_time * NS_PER_SECOND;
-    observer->tx_rate_ = static_cast<double>(tx_bytes - observer->last_tx_bytes_) / delta_time * NS_PER_SECOND;
+    observer->rx_rate_ = static_cast<double>(rx_bytes - observer->last_sync_rx_bytes_) / delta_time * NS_PER_SECOND;
+    observer->tx_rate_ = static_cast<double>(tx_bytes - observer->last_sync_tx_bytes_) / delta_time * NS_PER_SECOND;
     observer->last_sync_time_ = sync_time;
-    observer->last_rx_bytes_ = rx_bytes;
-    observer->last_tx_bytes_ = tx_bytes;
-    observer->rx_bytes_ = rx_bytes;
-    observer->tx_bytes_ = tx_bytes;
+    observer->last_sync_rx_bytes_ = rx_bytes;
+    observer->last_sync_tx_bytes_ = tx_bytes;
   }
+}
+
+void finalizeTelemetryObserver(struct TelemetryObserver *observer) {
+#if 1
+  observer->rx_rate_ = observer->tx_rate_ = 0.0;
+#else
+  uint64_t sync_time = GetMonotonicTime();
+  uint64_t delta_time = sync_time - observer->last_sync_time_;
+
+  uint64_t rx_bytes = observer->rx_bytes_;
+  uint64_t tx_bytes = observer->tx_bytes_;
+  observer->rx_rate_ = static_cast<double>(rx_bytes - observer->last_sync_rx_bytes_) / delta_time * NS_PER_SECOND;
+  observer->tx_rate_ = static_cast<double>(tx_bytes - observer->last_sync_tx_bytes_) / delta_time * NS_PER_SECOND;
+#endif
 }
