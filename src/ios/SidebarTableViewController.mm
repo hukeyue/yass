@@ -33,9 +33,6 @@
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  if (@available(iOS 15.0, *)) {
-    self.tableView.sectionHeaderHeight = 0;
-  }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -49,24 +46,49 @@
   [self.splitViewController showDetailViewController:vc sender:self];
 }
 
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  NSString* text = [appDelegate getPaneMessage:section != 0 withLeft: NO];
+    return text;
+}
+
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indexPath.row == 0 ? @"title" : @"default" forIndexPath:indexPath];
+  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"default" forIndexPath:indexPath];
   NSString* text = [self textForRowAt:indexPath];
-  cell.textLabel.text = text;
+  NSString* secondaryText = [self secondaryTextForRowAt:indexPath];
+
+  UIListContentConfiguration* content = cell.defaultContentConfiguration;
+  if (indexPath.row == 0) {
+    content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
+  } else if (indexPath.row == 1) {
+    content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
+  }
+  content.text = text;
+  content.secondaryText = secondaryText;
+  cell.contentConfiguration = content;
+
   return cell;
 }
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   if (indexPath.row == 0) {
-    return [appDelegate getPaneMessage:indexPath.section != 0];
+    return [appDelegate getRateMessage:indexPath.section != 0 withLeft: YES];
   }
   if (indexPath.row == 1) {
-    return [appDelegate getRateMessage:indexPath.section != 0];
+    return [appDelegate getTotalMessage:indexPath.section != 0 withLeft: YES];
   }
-  if (indexPath.row == 2) {
-    return [appDelegate getTotalMessage:indexPath.section != 0];
+  return @"text";
+}
+
+- (NSString*)secondaryTextForRowAt:(NSIndexPath*)indexPath {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (indexPath.row == 0) {
+    return [appDelegate getRateMessage:indexPath.section != 0 withLeft: NO];
+  }
+  if (indexPath.row == 1) {
+    return [appDelegate getTotalMessage:indexPath.section != 0 withLeft: NO];
   }
   return @"text";
 }
@@ -76,13 +98,11 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  return 3;
+  return 2;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-  if (indexPath.row == 0)
-    return 28;
-  return 42;
+  return 52;
 }
 
 - (void)UpdateStatusBar {

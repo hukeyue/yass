@@ -447,10 +447,10 @@
   refresh_timer_ = nil;
 
   finalizeTelemetryObserver(&telemetry_observer_);
-    
+
   YassSplitViewController* vc = [self getSplitViewController];
   [vc UpdateStatusBar];
-    
+
   YassViewController* svc = [self getRootViewController];
   [svc Stopped];
 }
@@ -483,37 +483,39 @@
                                         "127.0.0.1", "0", doh_url, dot_host, limit_rate, connect_timeout);
 }
 
-- (NSString*)getPaneMessage:(BOOL)isReceiveSide {
+- (NSString*)getPaneMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
+  if (isLeft) {
+    return @"";
+  }
   return !isReceiveSide ? NSLocalizedString(@"TX Pane", @"Send Pane") : NSLocalizedString(@"RX Pane", @"Receive Pane");
 }
 
-- (NSString*)getRateMessage:(BOOL)isReceiveSide {
+- (NSString*)getRateMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
   std::ostringstream ss;
-  NSString *message;
+  if (isLeft) {
+    return !isReceiveSide ? NSLocalizedString(@"TXRATE", @"tx rate:") : NSLocalizedString(@"RXRATE", @"rx rate:");
+  }
+
   if (!isReceiveSide) {
-    message = NSLocalizedString(@"TXRATE", @"tx rate:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
     HumanReadableByteCountBin(&ss, telemetry_observer_.rx_rate_);
     ss << "/s";
   } else {
-    message = NSLocalizedString(@"RXRATE", @"rx rate:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
     HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
     ss << "/s";
   }
   return SysUTF8ToNSString(ss.str());
 }
 
-- (NSString*)getTotalMessage:(BOOL)isReceiveSide {
+- (NSString*)getTotalMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
   std::ostringstream ss;
-  NSString *message;
+
+  if (isLeft) {
+    return !isReceiveSide ? NSLocalizedString(@"TX", @"tx:") : NSLocalizedString(@"RX", @"rx:");
+  }
+
   if (!isReceiveSide) {
-    message = NSLocalizedString(@"TX", @"tx:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
     HumanReadableByteCountBin(&ss, telemetry_observer_.rx_bytes_);
   } else {
-    message = NSLocalizedString(@"RX", @"rx:");
-    ss << " " << SysNSStringToUTF8(message) << " ";
     HumanReadableByteCountBin(&ss, telemetry_observer_.tx_bytes_);
   }
   return SysUTF8ToNSString(ss.str());

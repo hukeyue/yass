@@ -35,9 +35,9 @@ enum YASSState { STARTED, STARTING, START_FAILED, STOPPING, STOPPED };
 - (NSString*)getStatus;
 - (void)OnStart:(BOOL)quiet;
 - (void)OnStop:(BOOL)quiet;
-- (NSString*)getPaneMessage:(BOOL)isReceiveSide;
-- (NSString*)getRateMessage:(BOOL)isReceiveSide;
-- (NSString*)getTotalMessage:(BOOL)isReceiveSide;
+- (NSString*)getPaneMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
+- (NSString*)getRateMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
+- (NSString*)getTotalMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getStatusMessage;
 @end
 

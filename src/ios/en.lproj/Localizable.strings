@@ -11,10 +11,10 @@
 "NETWORK_UNREACHABLE" = "Network unreachable";
 
 /*  rx rate:  */
-"RXRATE" = "rx rate:";
+"RXRATE" = "RX rate:";
 
 /*  tx rate: */
-"TXRATE" = "tx rate:";
+"TXRATE" = "TX rate:";
 
 /* Connecting */
 "CONNECTING" = "Connecting";
