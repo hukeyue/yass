@@ -5155,6 +5155,10 @@ if (GUI)
             src/ios/ja.lproj/Main.strings
             src/ios/ko.lproj/Localizable.strings
             src/ios/ko.lproj/Main.strings
+            src/ios/pt_BR.lproj/Localizable.strings
+            src/ios/pt_BR.lproj/Main.strings
+            src/ios/pt_PT.lproj/Localizable.strings
+            src/ios/pt_PT.lproj/Main.strings
             src/ios/ru.lproj/Localizable.strings
             src/ios/ru.lproj/Main.strings
             src/ios/zh-Hans.lproj/Localizable.strings

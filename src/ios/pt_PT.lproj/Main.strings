@@ -1,0 +1,39 @@
+/* Class = "UILabel"; text = "Password"; ObjectID = "9N4-Lw-6Ob"; */
+"bEh-We-3bh.text" = "Palavra-passe";
+
+/* Class = "UIButton"; text = "Stop"; ObjectID = "JYa-MA-4KH"; */
+"MGs-Nl-c5G.normalTitle" = "Parar";
+
+/* Class = "UIButton"; text = "Start"; ObjectID = "KPU-2Q-dN7"; */
+"mgH-S8-WUJ.normalTitle" = "Iniciar";
+
+/* Class = "UILabel"; text = "Username"; ObjectID = "QRy-PK-jJT"; */
+"dFn-KS-gx8.text" = "Nome de utilizador";
+
+/* Class = "UILabel"; text = "Server Host"; ObjectID = "g3k-Ab-Oin"; */
+"1EK-58-4Tb.text" = "Hospedeiro do Servidor";
+
+/* Class = "UILabel"; text = "Server SNI"; ObjectID = "g3k-Ab-Oin"; */
+"cQD-Db-bXg.text" = "Servidor SNI";
+
+/* Class = "UILabel"; text = "Server Port"; ObjectID = "mcp-Vm-U1E"; */
+"h37-oZ-p8D.text" = "Porta do servidor";
+
+/* Class = "UILabel"; text = "Cipher/Method"; ObjectID = "tOi-q9-yJY"; */
+"ENX-yq-A0k.text" = "Cifra/Método";
+
+/* Class = "UILabel"; text = "DNS over HTTPS URL"; ObjectID = ""; */
+"Nki-Be-f2P.text" = "URL de DNS sobre HTTPS (DoH)";
+
+/* Class = "UILabel"; text = "DNS over TLS Host"; ObjectID = ""; */
+"bm9-gV-Cny.text" = "Host de DNS sobre TLS";
+
+/* Class = "UILabel"; text = "Limit Rate"; ObjectID = ""; */
+"1tx-Ul-6iU.text" = "Taxa Limite";
+
+/* Class = "UILabel"; text = "Timeout"; ObjectID = "zY6-tD-aUd"; */
+"3S5-0B-efx.text" = "Tempo esgotado";
+
+"fG1-mA-QS7.title" = "Detalhes";
+
+"b3L-Qg-iac.title" = "Ver detalhes";

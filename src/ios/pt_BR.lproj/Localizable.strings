@@ -1,0 +1,50 @@
+/* Connected with conns:  */
+"CONNECTED_WITH_CONNS" = "Conectado com conexões:";
+
+/* Disconnected with  */
+"DISCONNECTED_WITH" = "Desconectado de";
+
+/* Failed to connect due to  */
+"FAILED_TO_CONNECT_DUE_TO" = "Falha na conexão devido a";
+
+/* Network unreachable */
+"NETWORK_UNREACHABLE" = "Rede inacessível";
+
+/*  rx rate:  */
+"RXRATE" = "taxa de recepção:";
+
+/*  tx rate: */
+"TXRATE" = "taxa de transmissão:";
+
+/* Connecting */
+"CONNECTING" = "Conectando";
+
+/* Connected */
+"CONNECTED" = "Conectada";
+
+/* Disconnecting */
+"DISCONNECTING" = "Desconectando";
+
+/* Disconnected */
+"DISCONNECTED" = "Desconectado";
+
+/* Invalid */
+"INVALID" = "Inválida";
+
+/* Reasserting */
+"REASSERTING" = "Reafirmando";
+
+/* Unknown */
+"UNKNOWN" = "Desconhecida";
+
+/* Start Failed */
+"START_FAILED" = "Falha ao iniciar";
+
+/* OK */
+"OK" = "OK";
+
+/*  rx rate:  */
+"RX" = "Receber tráfego:";
+
+/*  tx rate: */
+"TX" = "Enviar tráfego:";
