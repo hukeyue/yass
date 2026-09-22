@@ -59,13 +59,13 @@
   NSString* secondaryText = [self secondaryTextForRowAt:indexPath];
 
   UIListContentConfiguration* content = cell.defaultContentConfiguration;
+  content.text = text;
+  content.secondaryText = secondaryText;
   if (indexPath.row == 0) {
     content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
   } else if (indexPath.row == 1) {
     content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
   }
-  content.text = text;
-  content.secondaryText = secondaryText;
   cell.contentConfiguration = content;
 
   return cell;
