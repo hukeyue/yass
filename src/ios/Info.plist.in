@@ -40,6 +40,8 @@
     <false/>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>LSHasLocalizedDisplayName</key>
+    <true/>
     <key>UISupportedInterfaceOrientations</key>
     <array>
          <string>UIInterfaceOrientationPortraitUpsideDown</string>

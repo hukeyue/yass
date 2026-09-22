@@ -5145,6 +5145,7 @@ if (GUI)
             ${LAUNCH_STORYBOARD}
             ${SETTINGS_BUNDLE}
             src/ios/PrivacyInfo.xcprivacy
+            src/ios/en.lproj/InfoPlist.strings
             src/ios/en.lproj/Localizable.strings
             src/ios/en.lproj/Main.strings
             src/ios/es.lproj/Localizable.strings
@@ -5161,8 +5162,10 @@ if (GUI)
             src/ios/pt_PT.lproj/Main.strings
             src/ios/ru.lproj/Localizable.strings
             src/ios/ru.lproj/Main.strings
+            src/ios/zh-Hans.lproj/InfoPlist.strings
             src/ios/zh-Hans.lproj/Localizable.strings
             src/ios/zh-Hans.lproj/Main.strings
+            src/ios/zh-Hant.lproj/InfoPlist.strings
             src/ios/zh-Hant.lproj/Localizable.strings
             src/ios/zh-Hant.lproj/Main.strings)
         endif()
