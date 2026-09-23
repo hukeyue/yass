@@ -6,10 +6,6 @@
 
 "NETWORK_UNREACHABLE" = "Réseau inaccessible";
 
-"RXRATE" = "Vitesse de téléchargement:";
-
-"TXRATE" = "Vitesse d'envoi:";
-
 "CONNECTING" = "Connexion en cours";
 
 "CONNECTED" = "Connecté";
@@ -28,6 +24,10 @@
 
 "OK" = "Confirmation";
 
-"RX" = "Recevoir du trafic:";
+"RXRATE" = "Taux de réception :";
 
-"TX" = "Envoyer du trafic:";
+"TXRATE" = "Taux d'envoi :";
+
+"RX" = "Recevoir du trafic :";
+
+"TX" = "Envoyer du trafic :";

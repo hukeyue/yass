@@ -6,10 +6,6 @@
 
 "NETWORK_UNREACHABLE" = "網路無法存取";
 
-"RXRATE" = "下載速率:";
-
-"TXRATE" = "上傳速率:";
-
 "CONNECTING" = "連接中";
 
 "CONNECTED" = "已連線";
@@ -28,6 +24,10 @@
 
 "OK" = "確認";
 
-"RX" = "下載:";
+"RXRATE" = "下載速率：";
 
-"TX" = "上傳:";
+"TXRATE" = "上傳速率：";
+
+"RX" = "下載流量：";
+
+"TX" = "上傳流量：";

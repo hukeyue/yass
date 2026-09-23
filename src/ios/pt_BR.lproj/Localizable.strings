@@ -10,12 +10,6 @@
 /* Network unreachable */
 "NETWORK_UNREACHABLE" = "Rede inacessível";
 
-/*  rx rate:  */
-"RXRATE" = "Taxa de recebimento de tráfego:";
-
-/*  tx rate: */
-"TXRATE" = "Taxa de envio de tráfego:";
-
 /* Connecting */
 "CONNECTING" = "Conectando";
 
@@ -42,6 +36,12 @@
 
 /* OK */
 "OK" = "OK";
+
+/*  rx rate:  */
+"RXRATE" = "Taxa de recebimento:";
+
+/*  tx rate: */
+"TXRATE" = "Taxa de envio:";
 
 /*  rx rate:  */
 "RX" = "Receber tráfego:";

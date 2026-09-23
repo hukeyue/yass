@@ -6,10 +6,6 @@
 
 "NETWORK_UNREACHABLE" = "网络无法访问";
 
-"RXRATE" = "下载速率:";
-
-"TXRATE" = "上传速率:";
-
 "CONNECTING" = "连接中";
 
 "CONNECTED" = "已连接";
@@ -28,6 +24,10 @@
 
 "OK" = "确认";
 
-"RX" = "下载:";
+"RXRATE" = "下载速率:";
 
-"TX" = "上传:";
+"TXRATE" = "上传速率:";
+
+"RX" = "下载流量:";
+
+"TX" = "上传流量:";

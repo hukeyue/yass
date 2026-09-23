@@ -6,10 +6,6 @@
 
 "NETWORK_UNREACHABLE" = "Red inaccesible";
 
-"RXRATE" = "Velocidad de descarga:";
-
-"TXRATE" = "Velocidad de subida:";
-
 "CONNECTING" = "Conectando";
 
 "CONNECTED" = "Conectado";
@@ -27,6 +23,10 @@
 "START_FAILED" = "Error de inicio";
 
 "OK" = "Confirmación";
+
+"RXRATE" = "Tasa de recepción:";
+
+"TXRATE" = "Tasa de envío:";
 
 "RX" = "Recibir tráfico:";
 

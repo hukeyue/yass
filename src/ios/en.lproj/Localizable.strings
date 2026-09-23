@@ -10,12 +10,6 @@
 /* Network unreachable */
 "NETWORK_UNREACHABLE" = "Network unreachable";
 
-/*  rx rate:  */
-"RXRATE" = "RX rate:";
-
-/*  tx rate: */
-"TXRATE" = "TX rate:";
-
 /* Connecting */
 "CONNECTING" = "Connecting";
 
@@ -42,6 +36,12 @@
 
 /* OK */
 "OK" = "OK";
+
+/*  rx rate:  */
+"RXRATE" = "Receive rate:";
+
+/*  tx rate: */
+"TXRATE" = "Send rate:";
 
 /*  rx rate:  */
 "RX" = "Receive traffic:";
