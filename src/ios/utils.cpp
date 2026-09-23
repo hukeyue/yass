@@ -86,7 +86,7 @@ void updateTelemetryObserver(struct TelemetryObserver *observer, uint64_t total_
 }
 
 void finalizeTelemetryObserver(struct TelemetryObserver *observer) {
-#if 1
+#if 0
   observer->rx_rate_ = observer->tx_rate_ = 0.0;
 #else
   uint64_t sync_time = GetMonotonicTime();

@@ -43,6 +43,8 @@
 #include "yass/feature.h"
 #include "yass/version.h"
 
+#define PI_DOUBLE 3.14159265357
+
 @interface YassAppDelegate ()
 - (std::string)SaveConfig;
 - (void)OnStartSaveAndLoadInstance:(NETunnelProviderManager*)vpn_manager;
@@ -402,7 +404,7 @@
   YassViewController* viewController = [self getRootViewController];
   [viewController Started];
 
-  refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0)
+  refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
                                                     target:self
                                                   selector:@selector(FetchTelemetryData)
                                                   userInfo:nil
