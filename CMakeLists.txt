@@ -5162,11 +5162,13 @@ if (GUI)
             src/ios/pt_PT.lproj/Main.strings
             src/ios/ru.lproj/Localizable.strings
             src/ios/ru.lproj/Main.strings
-            src/ios/zh-Hans.lproj/InfoPlist.strings
+            src/ios/zh-Hans.lproj/LaunchScreen.strings
             src/ios/zh-Hans.lproj/Localizable.strings
+            src/ios/zh-Hans.lproj/InfoPlist.strings
             src/ios/zh-Hans.lproj/Main.strings
-            src/ios/zh-Hant.lproj/InfoPlist.strings
+            src/ios/zh-Hant.lproj/LaunchScreen.strings
             src/ios/zh-Hant.lproj/Localizable.strings
+            src/ios/zh-Hant.lproj/InfoPlist.strings
             src/ios/zh-Hant.lproj/Main.strings)
         endif()
         set(ASSET_CATALOG src/ios/Assets.xcassets)
