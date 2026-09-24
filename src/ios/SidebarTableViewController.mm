@@ -62,7 +62,7 @@
   content.text = text;
   content.secondaryText = secondaryText;
   if (indexPath.row == 0) {
-    if (@available(macOS 14.0, iOS 17.0, *)) {
+    if (@available(macOS 15.0, iOS 18.0, *)) {
       content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
     } else {
       content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle" : @"arrow.down.circle"];
