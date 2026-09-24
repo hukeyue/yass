@@ -72,6 +72,18 @@
   [self UpdateStatusBar];
   [self.startButton setEnabled:TRUE];
   [self.stopButton setEnabled:FALSE];
+
+  UIButtonConfiguration* bbConfig = [UIButtonConfiguration borderedButtonConfiguration];
+  bbConfig.title = self.startButton.configuration.title;
+  bbConfig.image = [UIImage systemImageNamed:@"play.fill"];
+  bbConfig.imagePadding = 9;
+  self.startButton.configuration = bbConfig;
+
+  bbConfig = [UIButtonConfiguration borderedButtonConfiguration];
+  bbConfig.title = self.stopButton.configuration.title;
+  bbConfig.image = [UIImage systemImageNamed:@"stop.fill"];
+  bbConfig.imagePadding = 9;
+  self.stopButton.configuration = bbConfig;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
