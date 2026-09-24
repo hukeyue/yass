@@ -167,9 +167,9 @@
   return nil;
 }
 
-- (YassViewController*)getRootViewController {
-  YassSplitViewController* svc = [self getSplitViewController];
-  return [svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
+- (YassViewController*)getSecondaryViewController {
+  YassSplitViewController* spvc = [self getSplitViewController];
+  return [spvc viewControllerForColumn:UISplitViewControllerColumnSecondary];
 }
 
 - (NSString*)getStatus {
@@ -394,15 +394,15 @@
 - (void)OnStarting {
   state_ = STARTING;
 
-  YassViewController* viewController = [self getRootViewController];
-  [viewController Starting];
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Starting];
 }
 
 - (void)OnStarted {
   state_ = STARTED;
 
-  YassViewController* viewController = [self getRootViewController];
-  [viewController Started];
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Started];
 
   refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
                                                     target:self
@@ -420,10 +420,12 @@
   state_ = START_FAILED;
   error_msg_ = error_msg;  // required by viewController
 
-  YassViewController* viewController = [self getRootViewController];
-  [viewController StartFailed];
+  YassSplitViewController* vc = [self getSplitViewController];
 
-  UIAlertController* alert =
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc StartFailed];
+
+  UIAlertController* aController =
       [UIAlertController alertControllerWithTitle:NSLocalizedString(@"START_FAILED", @"Start Failed")
                                           message:@(error_msg.c_str())
                                    preferredStyle:UIAlertControllerStyleAlert];
@@ -431,15 +433,19 @@
                                                    style:UIAlertActionStyleDefault
                                                  handler:^(UIAlertAction* action){
                                                  }];
-  [alert addAction:action];
-  [viewController presentViewController:alert animated:YES completion:nil];
+  if (@available(iOS 16.0, *)) {
+    aController.severity = UIAlertControllerSeverityCritical;
+  }
+
+  [aController addAction:action];
+  [vc presentViewController:aController animated:YES completion:nil];
 }
 
 - (void)OnStopping {
   state_ = STOPPING;
 
-  YassViewController* viewController = [self getRootViewController];
-  [viewController Stopping];
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Stopping];
 }
 
 - (void)OnStopped {
@@ -453,12 +459,12 @@
   YassSplitViewController* vc = [self getSplitViewController];
   [vc UpdateStatusBar];
 
-  YassViewController* svc = [self getRootViewController];
+  YassViewController* svc = [self getSecondaryViewController];
   [svc Stopped];
 }
 
 - (std::string)SaveConfig {
-  YassViewController* viewController = [self getRootViewController];
+  YassViewController* viewController = [self getSecondaryViewController];
   server_host_ = viewController.serverHost.text;
   server_sni_ = viewController.serverSNI.text;
   server_port_ = viewController.serverPort.text;
@@ -483,6 +489,13 @@
 
   return config::ReadConfigFromArgument(server_host, server_sni, server_port, username, password, method_string,
                                         "127.0.0.1", "0", doh_url, dot_host, limit_rate, connect_timeout);
+}
+
+- (NSString*)getConfigurationMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
+  if (!isLeft) {
+    return @">";
+  }
+  return NSLocalizedString(@"TOTAL_CONFIGURATION", @"Total Configuration");
 }
 
 - (NSString*)getPaneMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {

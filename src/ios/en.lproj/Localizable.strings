@@ -48,3 +48,5 @@
 
 /*  tx rate: */
 "TX" = "Send traffic:";
+
+"TOTAL_CONFIGURATION" = "Total Configuration";

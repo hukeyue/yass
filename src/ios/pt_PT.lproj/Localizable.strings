@@ -48,3 +48,5 @@
 
 /*  tx rate: */
 "TX" = "Enviar tráfego:";
+
+"TOTAL_CONFIGURATION" = "Todas as opções de configuração";

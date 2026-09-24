@@ -41,15 +41,20 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+  if (indexPath.section != 0) {
+    return;
+  }
   UISplitViewController *svc = self.splitViewController;
   UIViewController *vc = [svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
   [self.splitViewController showDetailViewController:vc sender:self];
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-  NSString* text = [appDelegate getPaneMessage:section != 0 withLeft: NO];
-    return text;
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (section == 0)
+    return nil;
+  NSString* text = [appDelegate getPaneMessage:section == 2 withLeft: NO];
+  return text;
 }
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -61,14 +66,24 @@
   UIListContentConfiguration* content = cell.defaultContentConfiguration;
   content.text = text;
   content.secondaryText = secondaryText;
-  if (indexPath.row == 0) {
-    if (@available(macOS 15.0, iOS 18.0, *)) {
-      content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
+  if (indexPath.section == 0) {
+#if 0
+    content.image = [UIImage systemImageNamed:@"gear"];
+#else
+    if (@available(macOS 26.0, iOS 26.0, *)) {
+      content.image = [UIImage systemImageNamed:@"cellularbars.circle.fill"];
     } else {
-      content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle" : @"arrow.down.circle"];
+      content.image = [UIImage systemImageNamed:@"antenna.radiowaves.left.and.right"];
+    }
+#endif
+  } else if (indexPath.row == 0) {
+    if (@available(macOS 15.0, iOS 18.0, *)) {
+      content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
+    } else {
+      content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle" : @"arrow.down.circle"];
     }
   } else if (indexPath.row == 1) {
-    content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
+    content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
   }
   cell.contentConfiguration = content;
 
@@ -77,31 +92,39 @@
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (indexPath.section == 0) {
+    return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: YES];
+  }
   if (indexPath.row == 0) {
-    return [appDelegate getRateMessage:indexPath.section != 0 withLeft: YES];
+    return [appDelegate getRateMessage:indexPath.section == 2 withLeft: YES];
   }
   if (indexPath.row == 1) {
-    return [appDelegate getTotalMessage:indexPath.section != 0 withLeft: YES];
+    return [appDelegate getTotalMessage:indexPath.section == 2 withLeft: YES];
   }
   return @"text";
 }
 
 - (NSString*)secondaryTextForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (indexPath.section == 0) {
+    return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: NO];
+  }
   if (indexPath.row == 0) {
-    return [appDelegate getRateMessage:indexPath.section != 0 withLeft: NO];
+    return [appDelegate getRateMessage:indexPath.section == 2 withLeft: NO];
   }
   if (indexPath.row == 1) {
-    return [appDelegate getTotalMessage:indexPath.section != 0 withLeft: NO];
+    return [appDelegate getTotalMessage:indexPath.section == 2 withLeft: NO];
   }
   return @"text";
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  return 2;
+  return 3;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+  if (section == 0)
+    return 1;
   return 2;
 }
 

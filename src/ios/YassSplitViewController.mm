@@ -42,8 +42,8 @@
   if ([sbvc isKindOfClass:[SidebarTableViewController class]]) {
     [sbvc UpdateStatusBar];
   }
-  YassViewController* yvc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
-  [yvc UpdateStatusBar];
+  YassViewController* svc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
+  [svc UpdateStatusBar];
 }
 
 @end
