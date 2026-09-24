@@ -62,7 +62,11 @@
   content.text = text;
   content.secondaryText = secondaryText;
   if (indexPath.row == 0) {
-    content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
+    if (@available(macOS 14.0, iOS 17.0, *)) {
+      content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
+    } else {
+      content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle" : @"arrow.down.circle"];
+    }
   } else if (indexPath.row == 1) {
     content.image = [UIImage systemImageNamed:indexPath.section == 0 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
   }
