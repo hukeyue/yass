@@ -47,6 +47,7 @@ static YassWindowController* __weak _instance;
 @implementation YassWindowController {
   NSStatusItem* y_status_bar_item_;
   NSStatusItem* status_bar_item_;
+  enum YASSState y_status_bar_state_;
   NSString* status_bar_text_;
   NSTimer* refresh_timer_;
   uint64_t last_sync_time_;
@@ -69,8 +70,9 @@ static YassWindowController* __weak _instance;
 
   y_status_bar_item_ = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
 
+  y_status_bar_state_ = STOPPING;
   if (@available(macOS 11.0, iOS 14.0, *)) {
-    y_status_bar_item_.button.image = [NSImage imageWithSystemSymbolName:@"network" accessibilityDescription:nil];
+    // noop
   } else {
     y_status_bar_item_.button.title = @"Y";
   }
@@ -78,6 +80,7 @@ static YassWindowController* __weak _instance;
   y_status_bar_item_.button.action = @selector(statusItemClicked);
   [y_status_bar_item_.button
       sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown | NSEventMaskOtherMouseDown];
+  [self UpdateStatusYBar];
 
   bool enable_status_bar = absl::GetFlag(FLAGS_ui_display_realtime_status);
   [self toggleDisplayStatusInternal:enable_status_bar];
@@ -111,7 +114,31 @@ static YassWindowController* __weak _instance;
   }
 }
 
+- (void)UpdateStatusYBar {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
+  enum YASSState state = [appDelegate getState];
+  if (state == y_status_bar_state_) {
+    return;
+  }
+  if (@available(macOS 11.0, iOS 14.0, *)) {
+    NSImage* imageToReplaced;
+    if (state == STARTED) {
+      imageToReplaced = [NSImage imageWithSystemSymbolName:@"network" accessibilityDescription:nil];
+    } else {
+      imageToReplaced = [NSImage imageWithSystemSymbolName:@"network.slash" accessibilityDescription:nil];
+    }
+    if (imageToReplaced != nil) {
+      y_status_bar_item_.button.title = @"";
+      y_status_bar_item_.button.image = imageToReplaced;
+    } else {
+      y_status_bar_item_.button.title = @"Y";
+    }
+  }
+  y_status_bar_state_ = state;
+}
+
 - (void)UpdateStatusBar {
+  [self UpdateStatusYBar];
   if (status_bar_item_ == nil) {
     status_bar_text_ = nil;
     return;
