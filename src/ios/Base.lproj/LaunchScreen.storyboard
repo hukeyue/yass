@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="25098" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Y6W-OH-hqX">
-    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="25073"/>
@@ -15,11 +15,11 @@
             <objects>
                 <viewController id="Y6W-OH-hqX" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3b7-wk-4Bg">
-                                <rect key="frame" x="183.66666666666666" y="377.33333333333331" width="25.666666666666657" height="25.666666666666686"/>
+                                <rect key="frame" x="61" y="424" width="26" height="26"/>
                                 <imageReference key="image" image="network" catalog="system" symbolScale="large" renderingMode="hierarchical">
                                     <hierarchicalColors>
                                         <color systemColor="labelColor"/>
@@ -29,7 +29,7 @@
                                 </imageReference>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Yet Another Shadow Socket" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="O2r-Rf-Vu3">
-                                <rect key="frame" x="90.666666666666686" y="415.66666666666669" width="212" height="21"/>
+                                <rect key="frame" x="95" y="426.66666666666669" width="212" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -40,8 +40,8 @@
                         <constraints>
                             <constraint firstItem="O2r-Rf-Vu3" firstAttribute="centerY" secondItem="5EZ-qb-Rvc" secondAttribute="centerY" id="6SE-X2-NjM"/>
                             <constraint firstItem="O2r-Rf-Vu3" firstAttribute="centerX" secondItem="5EZ-qb-Rvc" secondAttribute="centerX" id="BMF-zF-OiS"/>
-                            <constraint firstItem="3b7-wk-4Bg" firstAttribute="centerX" secondItem="O2r-Rf-Vu3" secondAttribute="centerX" id="GDf-iX-iJb"/>
-                            <constraint firstItem="3b7-wk-4Bg" firstAttribute="centerY" secondItem="O2r-Rf-Vu3" secondAttribute="centerY" constant="-36" id="qdD-8F-ULG"/>
+                            <constraint firstItem="3b7-wk-4Bg" firstAttribute="centerY" secondItem="O2r-Rf-Vu3" secondAttribute="centerY" id="Cm3-6I-yqA"/>
+                            <constraint firstItem="3b7-wk-4Bg" firstAttribute="trailingMargin" secondItem="O2r-Rf-Vu3" secondAttribute="leadingMargin" constant="-24" id="eKr-Q6-9u0"/>
                         </constraints>
                     </view>
                 </viewController>
