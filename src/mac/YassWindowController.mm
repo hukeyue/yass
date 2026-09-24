@@ -69,7 +69,11 @@ static YassWindowController* __weak _instance;
 
   y_status_bar_item_ = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
 
-  y_status_bar_item_.button.title = @"Y";
+  if (@available(macOS 11.0, iOS 14.0, *)) {
+    y_status_bar_item_.button.image = [NSImage imageWithSystemSymbolName:@"network" accessibilityDescription:nil];
+  } else {
+    y_status_bar_item_.button.title = @"Y";
+  }
   y_status_bar_item_.button.target = self;
   y_status_bar_item_.button.action = @selector(statusItemClicked);
   [y_status_bar_item_.button
