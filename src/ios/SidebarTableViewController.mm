@@ -66,6 +66,8 @@
   UIListContentConfiguration* content = cell.defaultContentConfiguration;
   content.text = text;
   content.secondaryText = secondaryText;
+  cell.selectionStyle = UITableViewCellSelectionStyleNone;
+  cell.accessoryType = UITableViewCellAccessoryNone;
   if (indexPath.section == 0) {
 #if 0
     NSTextAttachment* cRight = [[NSTextAttachment alloc] init];
