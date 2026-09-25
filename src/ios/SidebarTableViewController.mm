@@ -68,6 +68,16 @@
   content.secondaryText = secondaryText;
   if (indexPath.section == 0) {
 #if 0
+    NSTextAttachment* cRight = [[NSTextAttachment alloc] init];
+    cRight.image = [UIImage systemImageNamed:@"chevron.right"];
+
+    NSAttributedString *secondaryDText = [NSAttributedString attributedStringWithAttachment:cRight];
+    content.secondaryAttributedText = secondaryDText;
+#else
+    content.secondaryText = @"";
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+#endif
+#if 0
     content.image = [UIImage systemImageNamed:@"gear"];
 #else
     if (@available(macOS 26.0, iOS 26.0, *)) {
