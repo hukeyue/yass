@@ -295,7 +295,7 @@
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="EMh-aI-fmy" firstAttribute="top" secondItem="SS9-hV-cEA" secondAttribute="top" id="VSc-gG-K6V"/>
-                                    <constraint firstAttribute="trailing" secondItem="EMh-aI-fmy" secondAttribute="trailing" constant="40" id="aoh-Rm-bme"/>
+                                    <constraint firstAttribute="trailing" secondItem="EMh-aI-fmy" secondAttribute="trailing" id="aoh-Rm-bme"/>
                                     <constraint firstItem="EMh-aI-fmy" firstAttribute="leading" secondItem="SS9-hV-cEA" secondAttribute="leading" id="iyy-rX-wqk"/>
                                     <constraint firstAttribute="bottom" secondItem="EMh-aI-fmy" secondAttribute="bottom" id="pnl-h6-fqL"/>
                                     <constraint firstItem="EMh-aI-fmy" firstAttribute="width" secondItem="SS9-hV-cEA" secondAttribute="width" id="qIJ-9z-pvd"/>
@@ -307,8 +307,8 @@
                         <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="SS9-hV-cEA" firstAttribute="leading" secondItem="5EZ-qb-Rvc" secondAttribute="leadingMargin" id="8UO-aG-6AF"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="SS9-hV-cEA" secondAttribute="trailing" id="Wss-ET-7wQ"/>
+                            <constraint firstItem="SS9-hV-cEA" firstAttribute="leading" secondItem="5EZ-qb-Rvc" secondAttribute="leading" constant="20" id="8UO-aG-6AF"/>
+                            <constraint firstAttribute="trailing" secondItem="SS9-hV-cEA" secondAttribute="trailing" constant="20" id="Wss-ET-7wQ"/>
                             <constraint firstAttribute="bottom" secondItem="SS9-hV-cEA" secondAttribute="bottomMargin" constant="20" id="jt2-ZP-qgJ"/>
                             <constraint firstItem="SS9-hV-cEA" firstAttribute="top" secondItem="5EZ-qb-Rvc" secondAttribute="topMargin" id="s0s-iQ-2Ie"/>
                         </constraints>
