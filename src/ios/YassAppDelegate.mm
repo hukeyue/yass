@@ -421,6 +421,7 @@
   error_msg_ = error_msg;  // required by viewController
 
   YassSplitViewController* vc = [self getSplitViewController];
+  [vc UpdateStatusBar];
 
   YassViewController* svc = [self getSecondaryViewController];
   [svc StartFailed];
@@ -489,6 +490,13 @@
 
   return config::ReadConfigFromArgument(server_host, server_sni, server_port, username, password, method_string,
                                         "127.0.0.1", "0", doh_url, dot_host, limit_rate, connect_timeout);
+}
+
+- (NSString*)getSwitchMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
+  if (!isLeft) {
+    return @">-";
+  }
+  return NSLocalizedString(@"TURN_ON", @"Turn On");
 }
 
 - (NSString*)getConfigurationMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {

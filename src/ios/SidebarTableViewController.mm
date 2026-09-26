@@ -25,6 +25,8 @@
 #import "ios/SidebarTableViewController.h"
 #import "ios/YassAppDelegate.h"
 
+#include "core/logging.hpp"
+
 @interface SidebarTableViewController () <UITableViewDelegate, UITableViewDataSource>
 @end
 
@@ -51,6 +53,8 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (section == 3)
+    return nil;
   if (section == 0)
     return nil;
   NSString* text = [appDelegate getPaneMessage:section == 2 withLeft: NO];
@@ -68,7 +72,14 @@
   content.secondaryText = secondaryText;
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.accessoryType = UITableViewCellAccessoryNone;
-  if (indexPath.section == 0) {
+  if (indexPath.section == 3) {
+    content.secondaryText = @"";
+    content.image = [UIImage systemImageNamed:@"bonjour"];
+    UISwitch* sw = [[UISwitch alloc] init];
+    [self swUpdate:sw];
+    [sw addTarget:self action:@selector(swChanged:) forControlEvents:UIControlEventValueChanged];
+    cell.accessoryView = sw;
+  } else if (indexPath.section == 0) {
 #if 0
     NSTextAttachment* cRight = [[NSTextAttachment alloc] init];
     cRight.image = [UIImage systemImageNamed:@"chevron.right"];
@@ -104,6 +115,9 @@
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (indexPath.section == 3) {
+    return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: YES];
+  }
   if (indexPath.section == 0) {
     return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: YES];
   }
@@ -118,6 +132,9 @@
 
 - (NSString*)secondaryTextForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  if (indexPath.section == 3) {
+    return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: NO];
+  }
   if (indexPath.section == 0) {
     return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: NO];
   }
@@ -131,11 +148,13 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  return 3;
+  return 4;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   if (section == 0)
+    return 1;
+  if (section == 3)
     return 1;
   return 2;
 }
@@ -146,6 +165,41 @@
 
 - (void)UpdateStatusBar {
   [self.tableView reloadData];
+}
+
+- (void)swUpdate:(UISwitch*)sw {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  enum YASSState state = [appDelegate getState];
+  switch (state) {
+    case STARTED:
+      sw.enabled = YES;
+      [sw setOn:YES];
+    break;
+    case STOPPED:
+    case START_FAILED:
+      sw.enabled = YES;
+      [sw setOn:NO];
+    break;
+    default:
+      sw.enabled = NO;
+      [sw setOn:NO];
+    break;
+  }
+}
+
+- (void)swChanged:(id)sender {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  enum YASSState state = [appDelegate getState];
+  UISwitch* sw = sender;
+  if (sw.isOn) {
+    if (state == STOPPED || state == START_FAILED) {
+      [appDelegate OnStart:FALSE];
+    }
+  } else {
+    if (state == STARTED) {
+      [appDelegate OnStop:FALSE];
+    }
+  }
 }
 
 @end
