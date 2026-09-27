@@ -31,3 +31,7 @@
 "RX" = "Recibir tráfico:";
 
 "TX" = "Enviar tráfico:";
+
+"TOTAL_CONFIGURATION" = "Todas las opciones de configuración";
+
+"TURN_ON" = "Encender";

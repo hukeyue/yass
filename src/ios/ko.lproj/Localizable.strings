@@ -31,3 +31,7 @@
 "RX" = "트래픽 수신:";
 
 "TX" = "트래픽 전송:";
+
+"TOTAL_CONFIGURATION" = "모든 구성 옵션";
+
+"TURN_ON" = "켜기";
