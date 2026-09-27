@@ -5145,8 +5145,9 @@ if (GUI)
             ${LAUNCH_STORYBOARD}
             ${SETTINGS_BUNDLE}
             src/ios/PrivacyInfo.xcprivacy
-            src/ios/en.lproj/InfoPlist.strings
+            src/ios/en.lproj/LaunchScreen.strings
             src/ios/en.lproj/Localizable.strings
+            src/ios/en.lproj/InfoPlist.strings
             src/ios/en.lproj/Main.strings
             src/ios/es.lproj/Localizable.strings
             src/ios/es.lproj/Main.strings
