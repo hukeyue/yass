@@ -163,6 +163,26 @@
   return 52;
 }
 
+- (void)Starting {
+  [self.tableView reloadData];
+}
+
+- (void)Started {
+  [self.tableView reloadData];
+}
+
+- (void)StartFailed {
+  [self.tableView reloadData];
+}
+
+- (void)Stopping {
+  [self.tableView reloadData];
+}
+
+- (void)Stopped {
+  [self.tableView reloadData];
+}
+
 - (void)UpdateStatusBar {
   [self.tableView reloadData];
 }
@@ -174,16 +194,18 @@
     case STARTED:
       sw.enabled = YES;
       [sw setOn:YES];
-    break;
+      break;
     case STOPPED:
     case START_FAILED:
       sw.enabled = YES;
       [sw setOn:NO];
-    break;
+      break;
+    case STARTING:
+    case STOPPING:
     default:
       sw.enabled = NO;
       [sw setOn:NO];
-    break;
+      break;
   }
 }
 

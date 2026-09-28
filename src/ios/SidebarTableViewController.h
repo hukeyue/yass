@@ -28,6 +28,11 @@
 #import <UIKit/UIKit.h>
 
 @interface SidebarTableViewController : UITableViewController
+- (void)Starting;
+- (void)Started;
+- (void)StartFailed;
+- (void)Stopping;
+- (void)Stopped;
 - (void)UpdateStatusBar;
 @end
 

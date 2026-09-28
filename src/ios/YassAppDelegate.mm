@@ -167,11 +167,6 @@
   return nil;
 }
 
-- (YassViewController*)getSecondaryViewController {
-  YassSplitViewController* spvc = [self getSplitViewController];
-  return [spvc viewControllerForColumn:UISplitViewControllerColumnSecondary];
-}
-
 - (NSString*)getStatus {
   std::ostringstream ss;
   if (state_ == STARTED) {
@@ -268,8 +263,8 @@
   } else {
     updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
   }
-  YassSplitViewController* svc = [self getSplitViewController];
-  [svc UpdateStatusBar];
+  YassSplitViewController* vc = [self getSplitViewController];
+  [vc UpdateStatusBar];
 }
 
 - (void)OnStartSaveAndLoadInstance:(NETunnelProviderManager*)vpn_manager {
@@ -394,15 +389,15 @@
 - (void)OnStarting {
   state_ = STARTING;
 
-  YassViewController* svc = [self getSecondaryViewController];
-  [svc Starting];
+  YassSplitViewController* vc = [self getSplitViewController];
+  [vc Starting];
 }
 
 - (void)OnStarted {
   state_ = STARTED;
 
-  YassViewController* svc = [self getSecondaryViewController];
-  [svc Started];
+  YassSplitViewController* vc = [self getSplitViewController];
+  [vc Started];
 
   refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
                                                     target:self
@@ -421,10 +416,7 @@
   error_msg_ = error_msg;  // required by viewController
 
   YassSplitViewController* vc = [self getSplitViewController];
-  [vc UpdateStatusBar];
-
-  YassViewController* svc = [self getSecondaryViewController];
-  [svc StartFailed];
+  [vc StartFailed];
 
   UIAlertController* aController =
       [UIAlertController alertControllerWithTitle:NSLocalizedString(@"START_FAILED", @"Start Failed")
@@ -445,8 +437,8 @@
 - (void)OnStopping {
   state_ = STOPPING;
 
-  YassViewController* svc = [self getSecondaryViewController];
-  [svc Stopping];
+  YassSplitViewController* vc = [self getSplitViewController];
+  [vc Stopping];
 }
 
 - (void)OnStopped {
@@ -458,10 +450,12 @@
   finalizeTelemetryObserver(&telemetry_observer_);
 
   YassSplitViewController* vc = [self getSplitViewController];
-  [vc UpdateStatusBar];
+  [vc Stopped];
+}
 
-  YassViewController* svc = [self getSecondaryViewController];
-  [svc Stopped];
+- (YassViewController*)getSecondaryViewController {
+  YassSplitViewController* vc = [self getSplitViewController];
+  return [vc viewControllerForColumn:UISplitViewControllerColumnSecondary];
 }
 
 - (std::string)SaveConfig {

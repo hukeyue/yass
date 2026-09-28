@@ -28,6 +28,11 @@
 #import <UIKit/UIKit.h>
 
 @interface YassSplitViewController : UISplitViewController
+- (void)Starting;
+- (void)Started;
+- (void)StartFailed;
+- (void)Stopping;
+- (void)Stopped;
 - (void)UpdateStatusBar;
 @end
 

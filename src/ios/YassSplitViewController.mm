@@ -32,17 +32,69 @@
 @implementation YassSplitViewController {
 }
 
+- (SidebarTableViewController*)getSidebarViewController {
+  UINavigationController* nvc = (UINavigationController*)[self viewControllerForColumn:UISplitViewControllerColumnPrimary];
+  SidebarTableViewController* sbvc = (SidebarTableViewController*)[nvc topViewController];
+  if ([sbvc isKindOfClass:[SidebarTableViewController class]]) {
+    return sbvc;
+  }
+  return nil;
+}
+
+- (YassViewController*)getSecondaryViewController {
+  YassViewController* svc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
+  return svc;
+}
+
 - (void)viewDidLoad {
   [super viewDidLoad];
 }
 
+- (void)Starting {
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc Starting];
+
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Starting];
+}
+
+- (void)Started {
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc Started];
+
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Started];
+}
+
+- (void)StartFailed {
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc StartFailed];
+
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc StartFailed];
+}
+
+- (void)Stopping {
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc Stopping];
+
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Stopping];
+}
+
+- (void)Stopped {
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc Stopped];
+
+  YassViewController* svc = [self getSecondaryViewController];
+  [svc Stopped];
+}
+
 - (void)UpdateStatusBar {
-  UINavigationController* nvc = (UINavigationController*)[self viewControllerForColumn:UISplitViewControllerColumnPrimary];
-  SidebarTableViewController* sbvc = (SidebarTableViewController*)[nvc topViewController];
-  if ([sbvc isKindOfClass:[SidebarTableViewController class]]) {
-    [sbvc UpdateStatusBar];
-  }
-  YassViewController* svc = (YassViewController*)[self viewControllerForColumn:UISplitViewControllerColumnSecondary];
+  SidebarTableViewController* sbvc = [self getSidebarViewController];
+  [sbvc UpdateStatusBar];
+
+  YassViewController* svc = [self getSecondaryViewController];
   [svc UpdateStatusBar];
 }
 
