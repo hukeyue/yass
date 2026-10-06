@@ -1143,11 +1143,11 @@ func buildStageGenerateBuildScript() {
 		platform := "OS"
 		glog.Warning("No Packaging supported for ios, disabling...")
 		noPackagingFlag = true
-		suffixFlag := ""
-		if systemNameFlag == "tvos" {
-			suffixFlag = "_TVOS"
-		}
 		if subSystemNameFlag == "simulator" {
+			suffixFlag := ""
+			if systemNameFlag == "tvos" {
+				suffixFlag = "_TVOS"
+			}
 			if archFlag == "x86" {
 				platform = "SIMULATOR" + suffixFlag
 			} else if archFlag == "x64" || archFlag == "x86_64" || archFlag == "amd64" {
