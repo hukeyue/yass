@@ -5593,6 +5593,10 @@ if (GUI)
           set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "$(inherited)")
         endif()
 
+        if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
+          set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3")
+        endif()
+
         # =======================
         # YassPacketTunnel extensions
         # =======================
@@ -5652,6 +5656,9 @@ if (GUI)
 
         if (IOS_XCODE_DSYM_FOLDER_FIX)
           set_target_properties(network-extension PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "$(inherited)")
+        endif()
+        if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
+          set_target_properties(network-extension PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3")
         endif()
 
         add_dependencies(${APP_NAME} network-extension)
