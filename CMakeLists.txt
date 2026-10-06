@@ -3321,11 +3321,11 @@ if (OHOS)
 endif()
 
 if (IOS)
-  if (SDK_NAME STREQUAL iphoneos)
+  if (SDK_NAME STREQUAL iphoneos OR SDK_NAME STREQUAL appletvos)
     if (CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
       set(_TUN2PROXY_TARGET "aarch64-apple-ios")
     endif()
-  elseif (SDK_NAME STREQUAL iphonesimulator)
+  elseif (SDK_NAME STREQUAL iphonesimulator OR SDK_NAME STREQUAL appletvsimulator)
     if (CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
       set(_TUN2PROXY_TARGET "aarch64-apple-ios-sim")
     endif()
@@ -5557,6 +5557,11 @@ if (GUI)
         set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
 
+        if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
+          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass.tvos")
+        else()
+          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass")
+        endif()
         set_target_properties(${APP_NAME} PROPERTIES
           RESOURCE "${ALLRESOURCES}"
           OUTPUT_NAME "${APP_NAME}"
@@ -5565,12 +5570,12 @@ if (GUI)
           MACOSX_BUNDLE_BUNDLE_NAME ${PACKAGE_FULL_NAME}
           MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
           MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
-          MACOSX_BUNDLE_GUI_IDENTIFIER "it.gui.ios.yass"
+          MACOSX_BUNDLE_GUI_IDENTIFIER "${IOS_GUI_IDENTIFIER}"
           MACOSX_BUNDLE_INFO_STRING "${APP_NAME}"
           MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
           MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
           MACOSX_BUNDLE_ICON_FILE "AppIcon"
-          XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "it.gui.ios.yass"
+          XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}"
           XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/yass.entitlements
           XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
           XCODE_ATTRIBUTE_PRODUCT_NAME "${PACKAGE_NAME}"
@@ -5630,11 +5635,11 @@ if (GUI)
           MACOSX_BUNDLE_BUNDLE_NAME "YassPacketTunnel"
           MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
           MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
-          MACOSX_BUNDLE_GUI_IDENTIFIER "it.gui.ios.yass.network-extension"
+          MACOSX_BUNDLE_GUI_IDENTIFIER "${IOS_GUI_IDENTIFIER}.network-extension"
           MACOSX_BUNDLE_INFO_STRING "YassPacketTunnel"
           MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
           MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
-          XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "it.gui.ios.yass.network-extension"
+          XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}.network-extension"
           XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/PacketTunnel.entitlements
           XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
           XCODE_ATTRIBUTE_PRODUCT_NAME "YassPacketTunnel"
