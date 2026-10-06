@@ -49,7 +49,7 @@ void initNetworkPathMonitor() {
   // monitor = nw_path_monitor_create_with_type(nw_interface_type_wifi);
   monitor = nw_path_monitor_create();
   nw_path_monitor_set_queue(monitor, monitorQueue);
-  if (@available(iOS 14, *)) {
+  if (@available(iOS 14, tvOS 14, *)) {
     nw_path_monitor_prohibit_interface_type(monitor, nw_interface_type_loopback);
   }
   nw_path_monitor_set_update_handler(monitor, ^(nw_path_t _Nonnull path) {

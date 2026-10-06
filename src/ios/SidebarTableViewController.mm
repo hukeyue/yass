@@ -93,14 +93,14 @@
 #if 0
     content.image = [UIImage systemImageNamed:@"gear"];
 #else
-    if (@available(macOS 26.0, iOS 26.0, *)) {
+    if (@available(macOS 26.0, iOS 26.0, tvOS 26.0, *)) {
       content.image = [UIImage systemImageNamed:@"cellularbars.circle.fill"];
     } else {
       content.image = [UIImage systemImageNamed:@"antenna.radiowaves.left.and.right"];
     }
 #endif
   } else if (indexPath.row == 0) {
-    if (@available(macOS 15.0, iOS 18.0, *)) {
+    if (@available(macOS 15.0, iOS 18.0, tvOS 18.0, *)) {
       content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle.dotted" : @"arrow.down.circle.dotted"];
     } else {
       content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle" : @"arrow.down.circle"];
