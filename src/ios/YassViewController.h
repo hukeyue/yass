@@ -43,7 +43,12 @@
 @property(weak, nonatomic) IBOutlet UITextField* serverPort;
 @property(weak, nonatomic) IBOutlet UITextField* username;
 @property(weak, nonatomic) IBOutlet UITextField* password;
-@property(weak, nonatomic) IBOutlet UIPickerView* cipherMethod;
+@property (weak, nonatomic) IBOutlet UIStackView *cipherMethodStack;
+#if defined(TARGET_OS_TV) && TARGET_OS_TV
+@property(strong, nonatomic) UILabel* cipherMethod;
+#else
+@property(strong, nonatomic) UIPickerView* cipherMethod;
+#endif
 @property(weak, nonatomic) IBOutlet UITextField* dohURL;
 @property(weak, nonatomic) IBOutlet UITextField* dotHost;
 @property(weak, nonatomic) IBOutlet UITextField* limitRate;

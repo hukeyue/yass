@@ -72,6 +72,7 @@
   content.secondaryText = secondaryText;
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.accessoryType = UITableViewCellAccessoryNone;
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
     content.secondaryText = @"";
     content.image = [UIImage systemImageNamed:@"bonjour"];
@@ -79,7 +80,9 @@
     [self swUpdate:sw];
     [sw addTarget:self action:@selector(swChanged:) forControlEvents:UIControlEventValueChanged];
     cell.accessoryView = sw;
-  } else if (indexPath.section == 0) {
+  } else
+#endif
+  if (indexPath.section == 0) {
 #if 0
     NSTextAttachment* cRight = [[NSTextAttachment alloc] init];
     cRight.image = [UIImage systemImageNamed:@"chevron.right"];
@@ -115,9 +118,11 @@
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
     return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: YES];
   }
+#endif
   if (indexPath.section == 0) {
     return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: YES];
   }
@@ -132,9 +137,11 @@
 
 - (NSString*)secondaryTextForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
     return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: NO];
   }
+#endif
   if (indexPath.section == 0) {
     return [appDelegate getConfigurationMessage:indexPath.section == 2 withLeft: NO];
   }
@@ -148,14 +155,20 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   return 4;
+#else
+  return 3;
+#endif
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   if (section == 0)
     return 1;
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (section == 3)
     return 1;
+#endif
   return 2;
 }
 
@@ -187,6 +200,7 @@
   [self.tableView reloadData];
 }
 
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
 - (void)swUpdate:(UISwitch*)sw {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   enum YASSState state = [appDelegate getState];
@@ -223,5 +237,6 @@
     }
   }
 }
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 
 @end

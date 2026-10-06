@@ -59,6 +59,7 @@
 #define HAVE_DUP3_RUNTIME  false
 #endif
 
+[[maybe_unused]]
 static int Pipe2(int pipe_fds[2]) {
   int ret;
 #ifdef HAVE_PIPE2
@@ -187,6 +188,11 @@ class ProcessInOutReader {
 
 }  // namespace
 
+#if BUILDFLAG(IS_IOS_TVOS)
+int ExecuteProcess(const std::vector<std::string>& params, std::string* output, std::string* error) {
+  return -1;
+}
+#else
 int ExecuteProcess(const std::vector<std::string>& params, std::string* output, std::string* error) {
   DCHECK(!params.empty()) << "ExecuteProcess empty parameters";
   output->clear();
@@ -289,5 +295,6 @@ next:
   }
   return ret;
 }
+#endif
 
 #endif  // _WIN32

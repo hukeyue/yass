@@ -38,9 +38,13 @@
 #ifndef TLSEXT_MAXLEN_host_name
 #define TLSEXT_MAXLEN_host_name 255
 #endif
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
 @interface YassViewController () <UIPickerViewDataSource, UIPickerViewDelegate, UITextFieldDelegate>
 @end
+#else
+@interface YassViewController () <UITextFieldDelegate>
+@end
+#endif
 
 @implementation YassViewController {
   NSArray* cipher_methods_;
@@ -55,9 +59,15 @@
 #undef XX
   ];
   self.currentCiphermethod = @(CRYPTO_DEFAULT_CSTR);
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  self.cipherMethod = [[UIPickerView alloc] init];
   [self.cipherMethod setDelegate:self];
   [self.cipherMethod setDataSource:self];
   [self.cipherMethod reloadAllComponents];
+#else
+  self.cipherMethod = [[UILabel alloc] init];
+#endif
+  [self.cipherMethodStack addArrangedSubview:self.cipherMethod];
   [self.serverHost setDelegate:self];
   [self.serverSNI setDelegate:self];
   [self.serverPort setDelegate:self];
@@ -89,6 +99,7 @@
 - (void)viewWillAppear:(BOOL)animated {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [[NSNotificationCenter defaultCenter]
       addObserverForName:UIKeyboardWillShowNotification
                   object:nil
@@ -123,6 +134,7 @@
                                                                      [self.view layoutIfNeeded];
                                                                    }];
                                                 }];
+#endif
   [super viewWillAppear:animated];
 }
 
@@ -198,6 +210,7 @@
   return YES;
 }
 
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView*)pickerView {
   return 1;
 }
@@ -213,6 +226,7 @@
 - (void)pickerView:(UIPickerView*)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
   self.currentCiphermethod = [cipher_methods_ objectAtIndex:row];
 }
+#endif
 
 - (IBAction)OnStartButtonClicked:(id)sender {
   [self OnStart];
@@ -323,13 +337,16 @@
   self.serverPort.text = SysUTF8ToNSString(std::to_string(absl::GetFlag(FLAGS_server_port)));
   self.username.text = SysUTF8ToNSString(absl::GetFlag(FLAGS_username));
   self.password.text = SysUTF8ToNSString(absl::GetFlag(FLAGS_password));
-
   NSString* cipherMethod = SysUTF8ToNSString(std::string_view(absl::GetFlag(FLAGS_method)));
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   NSUInteger row = [cipher_methods_ indexOfObject:cipherMethod];
   if (row != NSNotFound) {
     self.currentCiphermethod = cipherMethod;
     [self.cipherMethod selectRow:row inComponent:0 animated:NO];
   }
+#else
+  self.cipherMethod.text = cipherMethod;
+#endif
 
   self.dohURL.text = SysUTF8ToNSString(absl::GetFlag(FLAGS_doh_url));
   self.dotHost.text = SysUTF8ToNSString(absl::GetFlag(FLAGS_dot_host));
