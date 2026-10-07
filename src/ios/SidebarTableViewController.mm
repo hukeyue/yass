@@ -176,6 +176,14 @@
   return 52;
 }
 
+#if defined(TARGET_OS_TV) && TARGET_OS_TV
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+  if (section == 1 || section == 2)
+    return 52;
+  return 0;
+}
+#endif // defined(TARGET_OS_TV) && TARGET_OS_TV
+
 - (void)Starting {
   [self.tableView reloadData];
 }
