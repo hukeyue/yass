@@ -64,12 +64,15 @@
   [self.cipherMethod setDelegate:self];
   [self.cipherMethod setDataSource:self];
   [self.cipherMethod reloadAllComponents];
+  CGFloat multiplier = 0.333333f;
 #else
   self.cipherMethod = [[UILabel alloc] init];
+  CGFloat multiplier = 1.0f;
+  [self.cipherMethod setTextAlignment:NSTextAlignmentCenter];
 #endif
   [self.cipherMethod setContentMode:UIViewContentModeScaleToFill];
   [self.cipherMethodStack addArrangedSubview:self.cipherMethod];
-  NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self.cipherMethodStack.arrangedSubviews[0] attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.cipherMethodStack.arrangedSubviews[1] attribute:NSLayoutAttributeWidth multiplier:0.333333f constant:20.0f];
+  NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self.cipherMethodStack.arrangedSubviews[0] attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.cipherMethodStack.arrangedSubviews[1] attribute:NSLayoutAttributeWidth multiplier:multiplier constant:20.0f];
   [NSLayoutConstraint activateConstraints:@[constraint]];
   [self.serverHost setDelegate:self];
   [self.serverSNI setDelegate:self];
