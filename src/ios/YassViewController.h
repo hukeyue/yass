@@ -49,7 +49,6 @@
 #else
 @property(strong, nonatomic) UIPickerView* cipherMethod;
 #endif
-@property(strong, nonatomic) NSLayoutConstraint* cipherMethodConstraint;
 @property(weak, nonatomic) IBOutlet UITextField* dohURL;
 @property(weak, nonatomic) IBOutlet UITextField* dotHost;
 @property(weak, nonatomic) IBOutlet UITextField* limitRate;

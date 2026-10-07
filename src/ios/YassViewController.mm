@@ -69,8 +69,8 @@
 #endif
   [self.cipherMethod setContentMode:UIViewContentModeScaleToFill];
   [self.cipherMethodStack addArrangedSubview:self.cipherMethod];
-  self.cipherMethodConstraint = [NSLayoutConstraint constraintWithItem:self.cipherMethodStack.arrangedSubviews[0] attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.cipherMethodStack.arrangedSubviews[1] attribute:NSLayoutAttributeWidth multiplier:0.333333f constant:20.0f];
-  [NSLayoutConstraint activateConstraints:@[self.cipherMethodConstraint]];
+  NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self.cipherMethodStack.arrangedSubviews[0] attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.cipherMethodStack.arrangedSubviews[1] attribute:NSLayoutAttributeWidth multiplier:0.333333f constant:20.0f];
+  [NSLayoutConstraint activateConstraints:@[constraint]];
   [self.serverHost setDelegate:self];
   [self.serverSNI setDelegate:self];
   [self.serverPort setDelegate:self];
