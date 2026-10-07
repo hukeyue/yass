@@ -33,6 +33,33 @@ case "$WITH_CPU" in
 esac
 }
 
+function build_tvos {
+case "$WITH_CPU" in
+  arm64)
+    cargo build --target aarch64-apple-tvos --release --lib
+    ;;
+  *)
+    echo "Invalid WITH_CPU: $WITH_CPU"
+    exit -1
+    ;;
+esac
+}
+
+function build_tvos_sim {
+case "$WITH_CPU" in
+  x64)
+    cargo build --target x86_64-apple-tvos --release --lib
+    ;;
+  arm64)
+    cargo build --target aarch64-apple-tvos-sim --release --lib
+    ;;
+  *)
+    echo "Invalid WITH_CPU: $WITH_CPU"
+    exit -1
+    ;;
+esac
+}
+
 function build_android {
 case "$WITH_CPU" in
   x86)
@@ -100,6 +127,12 @@ case "$WITH_OS" in
     ;;
   ios-sim)
     build_ios_sim
+    ;;
+  tvos)
+    build_tvos
+    ;;
+  tvos-sim)
+    build_tvos_sim
     ;;
   android)
     build_android

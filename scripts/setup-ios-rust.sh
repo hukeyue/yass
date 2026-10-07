@@ -23,3 +23,9 @@ echo "Adding rustup ios target..."
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
 
 echo "Adding rustup ios target...done"
+
+echo "Adding rustup tvos target..."
+
+rustup target add aarch64-apple-tvos aarch64-apple-tvos-sim #x86_64-apple-tvos
+
+echo "Adding rustup tvos target...done"
