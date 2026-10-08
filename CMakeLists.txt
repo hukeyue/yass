@@ -46,6 +46,13 @@ if(POLICY CMP0118)
   cmake_policy(SET CMP0118 NEW)
 endif()
 
+# CMake policy CMP0138 (introduced in 3.24) ensures that flags like optimization levels and flags
+# passed to the compiler are correctly mirrored over to the CheckIPOSupported test block.
+# If this policy is missing or set to OLD, the internal test fails to validate.
+if (POLICY CMP0138)
+  cmake_policy(SET CMP0138 NEW)
+endif()
+
 # https://docs.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?redirectedfrom=MSDN&view=msvc-170
 set(MSVC_CRT_LINKAGE "dynamic" CACHE STRING "")
 if (NOT MSVC_CRT_LINKAGE STREQUAL "static" AND NOT MSVC_CRT_LINKAGE STREQUAL "dynamic")
