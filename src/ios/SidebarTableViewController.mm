@@ -111,6 +111,9 @@
   } else if (indexPath.row == 1) {
     content.image = [UIImage systemImageNamed:indexPath.section == 1 ? @"arrow.up.circle.fill" : @"arrow.down.circle.fill"];
   }
+#if defined(TARGET_OS_TV) && TARGET_OS_TV
+  content.image = nil;
+#endif
   cell.contentConfiguration = content;
 
   return cell;
