@@ -154,6 +154,7 @@
 }
 #endif
 
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
 - (BOOL)textFieldShouldReturn:(UITextField*)textField {
   if (textField == self.serverHost) {
     [textField resignFirstResponder];
@@ -166,16 +167,9 @@
     [self.username becomeFirstResponder];
   } else if (textField == self.username) {
     [textField resignFirstResponder];
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
     [self.password becomeFirstResponder];
-#else
-    // To safely bring up the system keyboard for a secure text field on tvOS,
-    // you must combine Focus Engine redirection with minor execution delay to accommodate the tvOS system animation loop.
-    [self.password performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0];
-#endif
   } else if (textField == self.password) {
     [textField resignFirstResponder];
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
     [self.dohURL becomeFirstResponder];
   } else if (textField == self.dohURL) {
     [textField resignFirstResponder];
@@ -188,12 +182,12 @@
     [self.timeout becomeFirstResponder];
   } else if (textField == self.timeout) {
     [textField resignFirstResponder];
-#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
     [self OnStart];
   }
 
   return NO;
 }
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 
 - (BOOL)textFieldShouldEndEditing:(UITextField*)textField {
   if (textField == self.serverHost) {
