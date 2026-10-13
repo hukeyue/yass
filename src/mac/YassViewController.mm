@@ -66,8 +66,18 @@ static YassViewController* __weak _instance;
   }
   self.cipherMethod.numberOfVisibleItems = sizeof(methodStrings) / sizeof(methodStrings[0]);
   should_startup_at_app_load = CheckLoginItemStatus(nullptr);
+
+#ifdef BUILD_NETWORK_EXTENSION
+  [self.localHost setEnabled:FALSE];
+  [self.localPort setEnabled:FALSE];
+  [self.autoStart setEnabled:FALSE];
+  [self.autoStart setState:NSControlStateValueOff];
+  [self.systemProxy setState:NSControlStateValueOff];
+  [self.systemProxy setEnabled:NO];
+#else
   [self.autoStart setState:(should_startup_at_app_load ? NSControlStateValueOn : NSControlStateValueOff)];
   [self.systemProxy setState:(GetSystemProxy() ? NSControlStateValueOn : NSControlStateValueOff)];
+#endif
   [self LoadChanges];
 }
 
@@ -155,8 +165,10 @@ static YassViewController* __weak _instance;
   [self.username setEnabled:FALSE];
   [self.password setEnabled:FALSE];
   [self.cipherMethod setEnabled:FALSE];
+#ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
   [self.localPort setEnabled:FALSE];
+#endif
   [self.dohURL setEnabled:FALSE];
   [self.dotHost setEnabled:FALSE];
   [self.limitRate setEnabled:FALSE];
@@ -178,8 +190,10 @@ static YassViewController* __weak _instance;
   [self.username setEnabled:TRUE];
   [self.password setEnabled:TRUE];
   [self.cipherMethod setEnabled:TRUE];
+#ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:TRUE];
   [self.localPort setEnabled:TRUE];
+#endif
   [self.dohURL setEnabled:TRUE];
   [self.dotHost setEnabled:TRUE];
   [self.limitRate setEnabled:TRUE];
@@ -196,8 +210,10 @@ static YassViewController* __weak _instance;
   [self.username setEnabled:FALSE];
   [self.password setEnabled:FALSE];
   [self.cipherMethod setEnabled:FALSE];
+#ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
   [self.localPort setEnabled:FALSE];
+#endif
   [self.dohURL setEnabled:FALSE];
   [self.dotHost setEnabled:FALSE];
   [self.limitRate setEnabled:FALSE];
@@ -214,8 +230,10 @@ static YassViewController* __weak _instance;
   [self.username setEnabled:TRUE];
   [self.password setEnabled:TRUE];
   [self.cipherMethod setEnabled:TRUE];
+#ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:TRUE];
   [self.localPort setEnabled:TRUE];
+#endif
   [self.dohURL setEnabled:TRUE];
   [self.dotHost setEnabled:TRUE];
   [self.limitRate setEnabled:TRUE];
@@ -229,8 +247,14 @@ static YassViewController* __weak _instance;
   self.username.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_username));
   self.password.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_password));
   self.cipherMethod.stringValue = SysUTF8ToNSString(std::string_view(absl::GetFlag(FLAGS_method)));
+#ifdef BUILD_NETWORK_EXTENSION
+  // Hardcoded in PacketTunnelProvider
+  self.localHost.stringValue = @"127.0.0.1";
+  self.localPort.intValue = 0;
+#else
   self.localHost.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_local_host));
   self.localPort.intValue = absl::GetFlag(FLAGS_local_port);
+#endif
   self.dohURL.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_doh_url));
   self.dotHost.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_dot_host));
   self.limitRate.stringValue = SysUTF8ToNSString(std::string(absl::GetFlag(FLAGS_limit_rate)));
