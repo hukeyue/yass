@@ -22,7 +22,7 @@
 
 /* Copyright (c) 2023-2026 Chilledheart  */
 
-#include "ios/utils.h"
+#include "apple/utils.h"
 
 #include <arpa/inet.h>
 #include <ifaddrs.h>

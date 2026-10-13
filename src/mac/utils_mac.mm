@@ -42,6 +42,7 @@
 #include "core/logging.hpp"
 #include "core/process_utils.hpp"
 #include "core/utils.hpp"
+#define ASIO_NO_SSL
 #include "net/asio.hpp"
 
 #include <absl/strings/str_split.h>

@@ -33,13 +33,13 @@
 #include <absl/flags/flag.h>
 #include <base/strings/sys_string_conversions.h>
 
+#include "apple/utils.h"
 #include "config/config.hpp"
 #include "core/logging.hpp"
 #include "core/utils.hpp"
 #include "crypto/crypter_export.hpp"
 #include "ios/YassSplitViewController.h"
 #include "ios/YassViewController.h"
-#include "ios/utils.h"
 #include "yass/feature.h"
 #include "yass/version.h"
 

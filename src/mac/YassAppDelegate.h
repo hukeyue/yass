@@ -30,11 +30,12 @@
 enum YASSState { STOPPED, STARTED, STARTING, START_FAILED, STOPPING };
 
 @interface YassAppDelegate : NSObject <NSApplicationDelegate>
+- (void)reloadState;
 - (enum YASSState)getState;
 - (NSString*)getStatus;
-- (void)OnStart;
+- (void)OnStart:(BOOL)quiet;
 - (void)OnStop:(BOOL)quiet;
-
+- (NSString*)getStatusMessage;
 @end
 
 #endif  // YASS_MAC_APP_DELEGATE

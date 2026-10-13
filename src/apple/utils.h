@@ -22,8 +22,8 @@
 
 /* Copyright (c) 2023-2026 Chilledheart  */
 
-#ifndef YASS_IOS_UTILS
-#define YASS_IOS_UTILS
+#ifndef YASS_APPLE_UTILS
+#define YASS_APPLE_UTILS
 
 #include <string>
 #include <string_view>
@@ -66,4 +66,4 @@ constexpr const char kConnectTimeoutFieldName[] = "connect_timeout";
 
 constexpr const char kEnablePostQuantumKyberKey[] = "ENABLE_POST_QUANTUM_KYBER";
 
-#endif  //  YASS_IOS_UTILS
+#endif  //  YASS_APPLE_UTILS

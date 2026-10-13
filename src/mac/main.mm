@@ -35,7 +35,6 @@
 #include <absl/debugging/symbolize.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
-#include "third_party/boringssl/src/include/openssl/crypto.h"
 
 #include "config/config.hpp"
 #include "core/logging.hpp"

@@ -30,8 +30,10 @@
 @interface YassViewController : NSViewController
 - (void)OnStart;
 - (void)OnStop;
+- (void)Starting;
 - (void)Started;
 - (void)StartFailed;
+- (void)Stopping;
 - (void)Stopped;
 @property(weak) IBOutlet NSButton* startButton;
 @property(weak) IBOutlet NSButton* stopButton;

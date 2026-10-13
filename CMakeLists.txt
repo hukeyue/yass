@@ -1832,6 +1832,10 @@ if (${CMAKE_GENERATOR} MATCHES "^Xcode.*" AND NOT IOS)
   option(MACOS_BUILD_NETWORK_EXTENSION "Build against NetworkExtension (require code sign)" OFF)
 endif()
 
+if (IOS OR MACOS_BUILD_NETWORK_EXTENSION)
+  set(BUILD_NETWORK_EXTENSION TRUE)
+endif()
+
 # https://chromium.googlesource.com/chromium/src/build/config/+/refs/heads/main/compiler/BUILD.gn
 if (LINUX OR ANDROID)
   # Since we build with -std=c* and not -std=gnu*, _GNU_SOURCE will not be
@@ -2532,7 +2536,7 @@ set(GUI_VARIANT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/gui_variant.h"
 configure_file("src/gui_variant.h.in" "${GUI_VARIANT_HEADER}" @ONLY)
 
 if (APPLE)
-  if (IOS OR MACOS_BUILD_NETWORK_EXTENSION)
+  if (BUILD_NETWORK_EXTENSION)
     list(APPEND YASS_APP_FEATURES "network-extension")
   endif()
 endif()
@@ -5176,6 +5180,9 @@ if (GUI)
           src/mac/OptionViewController.h
           src/mac/utils.h
           src/mac/utils_mac.mm
+          src/apple/utils.h
+          src/apple/utils.mm
+          src/apple/utils.cpp
           src/mac/main.mm)
     elseif (GUI_FLAVOUR STREQUAL "ios")
         set(MAIN_STORYBOARD ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/Base.lproj/Main.storyboard)
@@ -5237,9 +5244,9 @@ if (GUI)
           src/ios/YassViewController.h
           src/ios/YassSceneDelegate.h
           src/ios/YassSceneDelegate.mm
-          src/ios/utils.h
-          src/ios/utils.mm
-          src/ios/utils.cpp
+          src/apple/utils.h
+          src/apple/utils.mm
+          src/apple/utils.cpp
           src/ios/main.mm)
     elseif(GUI_FLAVOUR STREQUAL "qt6" OR GUI_FLAVOUR STREQUAL "qt5")
         file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/qt6/yass.qrc
@@ -5417,7 +5424,7 @@ if (GUI)
 
     target_link_options(${APP_NAME} PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
-    if (NOT (IOS OR MACOS_BUILD_NETWORK_EXTENSION))
+    if (NOT BUILD_NETWORK_EXTENSION)
       target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
     endif()
 
@@ -5459,6 +5466,10 @@ if (GUI)
         # see https://reviews.llvm.org/D84565
         if (LTO)
           target_link_options(${APP_NAME} PRIVATE "-Wl,-object_path_lto,${CMAKE_BINARY_DIR}/lto_tmp")
+        endif()
+        if (USE_LTO_CMAKE)
+          set_property(TARGET ${APP_NAME}
+            PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
         endif()
         # handle with rpath
         set_property(TARGET ${APP_NAME}
@@ -5566,9 +5577,9 @@ if (GUI)
         # YassPacketTunnel extensions
         # =======================
         set(PLUGIN_SRC
-          src/ios/utils.h
-          src/ios/utils.mm
-          src/ios/utils.cpp
+          src/apple/utils.h
+          src/apple/utils.mm
+          src/apple/utils.cpp
           src/ios/extensions/tun2proxy.h
           src/ios/extensions/tun2proxy.mm
           src/ios/extensions/YassPacketTunnelProvider.h
@@ -5743,9 +5754,9 @@ if (GUI)
         # YassPacketTunnel extensions
         # =======================
         set(PLUGIN_SRC
-          src/ios/utils.h
-          src/ios/utils.mm
-          src/ios/utils.cpp
+          src/apple/utils.h
+          src/apple/utils.mm
+          src/apple/utils.cpp
           src/ios/extensions/tun2proxy.h
           src/ios/extensions/tun2proxy.mm
           src/ios/extensions/YassPacketTunnelProvider.h

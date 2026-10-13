@@ -31,11 +31,13 @@
 @interface YassWindowController : NSWindowController <NSWindowDelegate>
 - (void)OnStart;
 - (void)OnStop;
+- (void)Starting;
 - (void)Started;
 - (void)StartFailed;
+- (void)Stopping;
 - (void)Stopped;
 - (void)toggleDisplayStatus:(bool)enable;
-
+- (void)UpdateStatusBar;
 + (YassWindowController* __weak)instance;
 @end
 

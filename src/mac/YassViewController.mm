@@ -136,6 +136,16 @@ static YassViewController* __weak _instance;
 }
 
 - (void)OnStart {
+  YassWindowController* windowController = [YassWindowController instance];
+  [windowController OnStart];
+}
+
+- (void)OnStop {
+  YassWindowController* windowController = [YassWindowController instance];
+  [windowController OnStop];
+}
+
+- (void)Starting {
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:FALSE];
 
@@ -151,17 +161,6 @@ static YassViewController* __weak _instance;
   [self.dotHost setEnabled:FALSE];
   [self.limitRate setEnabled:FALSE];
   [self.timeout setEnabled:FALSE];
-
-  YassWindowController* windowController = [YassWindowController instance];
-  [windowController OnStart];
-}
-
-- (void)OnStop {
-  [self.startButton setEnabled:FALSE];
-  [self.stopButton setEnabled:FALSE];
-
-  YassWindowController* windowController = [YassWindowController instance];
-  [windowController OnStop];
 }
 
 - (void)Started {
@@ -185,6 +184,24 @@ static YassViewController* __weak _instance;
   [self.dotHost setEnabled:TRUE];
   [self.limitRate setEnabled:TRUE];
   [self.timeout setEnabled:TRUE];
+}
+
+- (void)Stopping {
+  [self.startButton setEnabled:FALSE];
+  [self.stopButton setEnabled:FALSE];
+
+  [self.serverHost setEnabled:FALSE];
+  [self.serverSNI setEnabled:FALSE];
+  [self.serverPort setEnabled:FALSE];
+  [self.username setEnabled:FALSE];
+  [self.password setEnabled:FALSE];
+  [self.cipherMethod setEnabled:FALSE];
+  [self.localHost setEnabled:FALSE];
+  [self.localPort setEnabled:FALSE];
+  [self.dohURL setEnabled:FALSE];
+  [self.dotHost setEnabled:FALSE];
+  [self.limitRate setEnabled:FALSE];
+  [self.timeout setEnabled:FALSE];
 }
 
 - (void)Stopped {
