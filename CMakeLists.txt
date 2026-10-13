@@ -5590,7 +5590,6 @@ if (GUI)
           src/ios/extensions/PacketTunnel.entitlements
 
           src/ios/extensions/PrivacyInfo.xcprivacy
-          src/mac/extensions/main.mm
           )
         if (MACOS_BUILD_NETWORK_EXTENSION)
           add_executable(network-extension MACOSX_BUNDLE ${PLUGIN_SRC})
@@ -5612,11 +5611,10 @@ if (GUI)
 
           set_target_properties(network-extension PROPERTIES
             OUTPUT_NAME "YassPacketTunnel"
-            XCODE_PRODUCT_TYPE com.apple.product-type.system-extension
-            XCODE_EXPLICIT_FILE_TYPE "wrapper.system-extension"
-            BUNDLE_EXTENSION systemextension
+            XCODE_PRODUCT_TYPE com.apple.product-type.app-extension
+            BUNDLE_EXTENSION appex
             MACOSX_BUNDLE ON
-            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/extensions/Info.plist.in
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/Info.plist.in
             MACOSX_BUNDLE_BUNDLE_NAME "YassPacketTunnel"
             MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
             MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
@@ -5633,7 +5631,6 @@ if (GUI)
             XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER ""
             XCODE_ATTRIBUTE_APPLICATION_EXTENSION_API_ONLY "YES"
             XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../../Frameworks"
-            XCODE_ATTRIBUTE_SYSTEM_EXTENSION_TYPE "NetworkExtension"
             )
 
           if (IOS_XCODE_DSYM_FOLDER_FIX)
@@ -5648,7 +5645,6 @@ if (GUI)
             XCODE_EMBED_APP_EXTENSIONS network-extension
             XCODE_EMBED_APP_EXTENSIONS_REMOVE_HEADERS_ON_COPY "YES"
             XCODE_EMBED_APP_EXTENSIONS_CODE_SIGN_ON_COPY "YES"
-            XCODE_EMBED_APP_EXTENSIONS_PATH "../Library/SystemExtensions"
           )
 
           target_link_directories(network-extension PRIVATE ${TUN2PROXY_LIB_DIR})
