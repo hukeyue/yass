@@ -634,7 +634,7 @@ void SetDockIconStyle(bool hidden) {
 }
 
 static std::string pluginPath() {
-  return SysNSStringToUTF8([[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Contents/PlugIns/YassPacketTunnel.appex"]);
+  return SysNSStringToUTF8([[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Contents/Library/SystemExtensions/YassPacketTunnel.systemextension"]);
 }
 
 static std::string installedPluginPath() {
