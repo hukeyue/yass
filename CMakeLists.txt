@@ -5568,9 +5568,10 @@ if (GUI)
 
         if (MACOS_BUILD_NETWORK_EXTENSION)
           set_target_properties(${APP_NAME} PROPERTIES
-            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/yass.entitlements
+            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/extensions/yass.entitlements
           )
           target_compile_definitions(${APP_NAME} PRIVATE BUILD_NETWORK_EXTENSION=1)
+          target_sources(${APP_NAME} PRIVATE src/ios/extensions/PacketTunnel.entitlements)
         endif()
 
         target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,Network)
@@ -5622,7 +5623,7 @@ if (GUI)
             MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
             MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
             XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}.network-extension"
-            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/PacketTunnel.entitlements
+            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/extensions/PacketTunnel.entitlements
             XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
             XCODE_ATTRIBUTE_PRODUCT_NAME "YassPacketTunnel"
             XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES "YES"

@@ -73,8 +73,6 @@
   std::string error_msg_;
   struct TelemetryObserver telemetry_observer_;
   NSTimer* refresh_timer_;
-#ifdef BUILD_NETWORK_EXTENSION
-  NETunnelProviderManager* vpn_manager_;
 
   NSString* server_host_;
   NSString* server_sni_;
@@ -82,11 +80,15 @@
   NSString* username_;
   NSString* password_;
   NSString* method_string_;
+  NSString* local_host_;
+  NSString* local_port_;
   NSString* doh_url_;
   NSString* dot_host_;
   NSString* limit_rate_;
   NSString* connect_timeout_;
   BOOL enable_post_quantum_kyber_;
+#ifdef BUILD_NETWORK_EXTENSION
+  NETunnelProviderManager* vpn_manager_;
 #else
   Worker worker_;
 #endif
@@ -640,18 +642,31 @@
 - (std::string)SaveConfig {
   YassViewController* viewController = [YassViewController instance];
 
-  auto server_host = SysNSStringToUTF8(viewController.serverHost.stringValue);
-  auto server_sni = SysNSStringToUTF8(viewController.serverSNI.stringValue);
-  auto server_port = SysNSStringToUTF8(viewController.serverPort.stringValue);
-  auto username = SysNSStringToUTF8(viewController.username.stringValue);
-  auto password = SysNSStringToUTF8(viewController.password.stringValue);
-  auto method_string = SysNSStringToUTF8(viewController.cipherMethod.stringValue);
-  auto local_host = SysNSStringToUTF8(viewController.localHost.stringValue);
-  auto local_port = SysNSStringToUTF8(viewController.localPort.stringValue);
-  auto doh_url = SysNSStringToUTF8(viewController.dohURL.stringValue);
-  auto dot_host = SysNSStringToUTF8(viewController.dotHost.stringValue);
-  auto limit_rate = SysNSStringToUTF8(viewController.limitRate.stringValue);
-  auto connect_timeout = SysNSStringToUTF8(viewController.timeout.stringValue);
+  server_host_ = viewController.serverHost.stringValue;
+  server_sni_ = viewController.serverSNI.stringValue;
+  server_port_ = viewController.serverPort.stringValue;
+  username_ = viewController.username.stringValue;
+  password_ = viewController.password.stringValue;
+  method_string_ = viewController.cipherMethod.stringValue;
+  local_host_ = viewController.localHost.stringValue;
+  local_port_ = viewController.localPort.stringValue;
+  doh_url_ = viewController.dohURL.stringValue;
+  dot_host_ = viewController.dotHost.stringValue;
+  limit_rate_ = viewController.limitRate.stringValue;
+  connect_timeout_ = viewController.timeout.stringValue;
+
+  auto server_host = SysNSStringToUTF8(server_host_);
+  auto server_sni = SysNSStringToUTF8(server_sni_);
+  auto server_port = SysNSStringToUTF8(server_port_);
+  auto username = SysNSStringToUTF8(username_);
+  auto password = SysNSStringToUTF8(password_);
+  auto method_string = SysNSStringToUTF8(method_string_);
+  auto local_host = SysNSStringToUTF8(local_host_);
+  auto local_port = SysNSStringToUTF8(local_port_);
+  auto doh_url = SysNSStringToUTF8(doh_url_);
+  auto dot_host = SysNSStringToUTF8(dot_host_);
+  auto limit_rate = SysNSStringToUTF8(limit_rate_);
+  auto connect_timeout = SysNSStringToUTF8(connect_timeout_);
 
   return config::ReadConfigFromArgument(server_host, server_sni, server_port, username, password, method_string,
                                         local_host, local_port, doh_url, dot_host, limit_rate, connect_timeout);
