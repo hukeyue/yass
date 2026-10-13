@@ -613,7 +613,7 @@ option(ENABLE_FORTIFY "Enable build with Fortify Source (linux only)" OFF)
 # https://discourse.cmake.org/t/dsym-file-not-copied-when-archiving/7691/2
 cmake_dependent_option(
   IOS_XCODE_DSYM_FOLDER_FIX "Build with xcode dsym folder fixes" OFF
-  "IOS AND NOT BUILD_TESTS" OFF)
+  "APPLE AND NOT BUILD_TESTS" OFF)
 
 cmake_dependent_option(USE_CET "Build with CET support" OFF
   "LINUX OR MSVC; OS_X64 OR OS_X86" OFF)
@@ -5564,6 +5564,10 @@ if (GUI)
           XCODE_ATTRIBUTE_PRODUCT_NAME "${PACKAGE_NAME}"
           #XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS "NO"
           #XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME ${ASSET_CATALOG_ASSETS}
+          # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/15183
+          # Apps must have install step enabled
+          XCODE_ATTRIBUTE_INSTALL_PATH  "$(LOCAL_APPS_DIR)"
+          XCODE_ATTRIBUTE_SKIP_INSTALL  NO
           )
 
         if (MACOS_BUILD_NETWORK_EXTENSION)
@@ -5575,6 +5579,10 @@ if (GUI)
         endif()
 
         target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,Network)
+
+        if (IOS_XCODE_DSYM_FOLDER_FIX)
+          set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "$(inherited)")
+        endif()
 
         # =======================
         # YassPacketTunnel extensions
