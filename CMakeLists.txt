@@ -5573,6 +5573,8 @@ if (GUI)
           target_compile_definitions(${APP_NAME} PRIVATE BUILD_NETWORK_EXTENSION=1)
         endif()
 
+        target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,Network)
+
         # =======================
         # YassPacketTunnel extensions
         # =======================
