@@ -227,4 +227,6 @@ bool hasBundledPlugin();
 
 bool reinstallPlugin(bool force = false);
 
+bool uninstallPlugin();
+
 #endif  // YASS_MAC_UTILS

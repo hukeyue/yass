@@ -119,6 +119,9 @@
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
   LOG(WARNING) << "Application exiting";
   [self OnStop:TRUE];
+#ifdef BUILD_NETWORK_EXTENSION
+  uninstallPlugin();
+#endif
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {

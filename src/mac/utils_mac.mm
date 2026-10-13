@@ -693,7 +693,7 @@ bool hasBundledPlugin() {
 
 bool reinstallPlugin(bool force) {
   std::string bundled_plugin_path = pluginPath();
-  if (!hasBundledPlugin()) {
+  if (!IsDirectory(bundled_plugin_path)) {
     LOG(WARNING) << "No plugin bundle found at " << bundled_plugin_path;
     return false;
   }
@@ -721,5 +721,22 @@ bool reinstallPlugin(bool force) {
     return false;
   }
   LOG(INFO) << "Installed plugin: " << bundled_plugin_path;
+  return true;
+}
+
+bool uninstallPlugin() {
+  std::string bundled_plugin_path = pluginPath();
+  if (!IsDirectory(bundled_plugin_path)) {
+    LOG(WARNING) << "No plugin bundle found at " << bundled_plugin_path;
+    return false;
+  }
+
+  std::string output, _;
+  std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-r", bundled_plugin_path};
+  if (ExecuteProcess(params, &output, &_) != 0) {
+    LOG(WARNING) << "Failed to remove existing plugin: " << bundled_plugin_path;
+    return false;
+  }
+  LOG(INFO) << "Removed existing plugin: " << bundled_plugin_path;
   return true;
 }
