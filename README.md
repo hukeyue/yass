@@ -34,5 +34,8 @@ https://testflight.apple.com/join/GjBfT836
 ## Edge Builds for Android devices
 Give it a look at Github Action Page.
 
+## Edge Builds for macOS devices
+https://testflight.apple.com/join/CWFPRnmT
+
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
