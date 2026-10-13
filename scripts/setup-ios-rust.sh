@@ -18,6 +18,12 @@ rustup default $RUST_VER
 
 echo "Adding rustup toolchain...done"
 
+echo "Adding rustup darwin target..."
+
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+echo "Adding rustup darwin target...done"
+
 echo "Adding rustup ios target..."
 
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios

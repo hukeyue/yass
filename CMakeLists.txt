@@ -1828,6 +1828,10 @@ if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
   endif()
 endif()
 
+if (${CMAKE_GENERATOR} MATCHES "^Xcode.*" AND NOT IOS)
+  option(MACOS_BUILD_NETWORK_EXTENSION "Build against NetworkExtension (require code sign)" OFF)
+endif()
+
 # https://chromium.googlesource.com/chromium/src/build/config/+/refs/heads/main/compiler/BUILD.gn
 if (LINUX OR ANDROID)
   # Since we build with -std=c* and not -std=gnu*, _GNU_SOURCE will not be
@@ -2526,6 +2530,12 @@ endif()
 
 set(GUI_VARIANT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/_yass/gui_variant.h")
 configure_file("src/gui_variant.h.in" "${GUI_VARIANT_HEADER}" @ONLY)
+
+if (APPLE)
+  if (IOS OR MACOS_BUILD_NETWORK_EXTENSION)
+    list(APPEND YASS_APP_FEATURES "network-extension")
+  endif()
+endif()
 
 # *****************************************************************************************
 #           Compiler compiler and link flags (common)
@@ -3350,6 +3360,19 @@ if (IOS)
     if (CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
       set(_TUN2PROXY_TARGET "x86_64-apple-tvos")
     endif()
+  endif()
+  if (_TUN2PROXY_TARGET)
+    set(TUN2PROXY_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tun2proxy/target/${_TUN2PROXY_TARGET}/release)
+    set(TUN2PROXY_LIB ${TUN2PROXY_LIB_DIR}/libtun2proxy.a)
+  endif()
+endif()
+
+if (APPLE AND NOT IOS AND MACOS_BUILD_NETWORK_EXTENSION)
+  if (CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL arm64)
+    set(_TUN2PROXY_TARGET "aarch64-apple-darwin")
+  endif()
+  if (CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
+    set(_TUN2PROXY_TARGET "x86_64-apple-darwin")
   endif()
   if (_TUN2PROXY_TARGET)
     set(TUN2PROXY_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tun2proxy/target/${_TUN2PROXY_TARGET}/release)
@@ -5394,7 +5417,7 @@ if (GUI)
 
     target_link_options(${APP_NAME} PRIVATE ${DEFAULT_MALLOC_LINK_OPTIONS})
 
-    if (NOT IOS)
+    if (NOT (IOS OR MACOS_BUILD_NETWORK_EXTENSION))
       target_link_libraries(${APP_NAME} PUBLIC yass_cli_lib yass_net)
     endif()
 
@@ -5427,6 +5450,11 @@ if (GUI)
     endif()
 
     if (GUI_FLAVOUR STREQUAL "cocoa")
+        if (MACOS_BUILD_NETWORK_EXTENSION)
+          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass.macos")
+        else()
+          set(IOS_GUI_IDENTIFIER "it.gui.yass")
+        endif()
         # handle with empty dsymutil output
         # see https://reviews.llvm.org/D84565
         if (LTO)
@@ -5514,15 +5542,104 @@ if (GUI)
           MACOSX_BUNDLE_BUNDLE_NAME ${PACKAGE_FULL_NAME}
           MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
           MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
-          MACOSX_BUNDLE_GUI_IDENTIFIER "it.gui.yass"
+          MACOSX_BUNDLE_GUI_IDENTIFIER "${IOS_GUI_IDENTIFIER}"
           MACOSX_BUNDLE_INFO_STRING "${APP_NAME}"
           MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
           MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
           MACOSX_BUNDLE_ICON_FILE yass.icns
           XCODE_GENERATE_SCHEME "TRUE"
+          XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}"
+          XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
+          XCODE_ATTRIBUTE_PRODUCT_NAME "${PACKAGE_NAME}"
           #XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS "NO"
           #XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME ${ASSET_CATALOG_ASSETS}
           )
+
+        if (MACOS_BUILD_NETWORK_EXTENSION)
+          set_target_properties(${APP_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/yass.entitlements
+          )
+          target_compile_definitions(${APP_NAME} PRIVATE BUILD_NETWORK_EXTENSION=1)
+        endif()
+
+        # =======================
+        # YassPacketTunnel extensions
+        # =======================
+        set(PLUGIN_SRC
+          src/ios/utils.h
+          src/ios/utils.mm
+          src/ios/utils.cpp
+          src/ios/extensions/tun2proxy.h
+          src/ios/extensions/tun2proxy.mm
+          src/ios/extensions/YassPacketTunnelProvider.h
+          src/ios/extensions/YassPacketTunnelProvider.mm
+          src/ios/extensions/PacketTunnel.entitlements
+
+          src/ios/extensions/PrivacyInfo.xcprivacy
+          )
+        if (MACOS_BUILD_NETWORK_EXTENSION)
+          add_executable(network-extension MACOSX_BUNDLE ${PLUGIN_SRC})
+
+          set_source_files_properties("src/ios/extensions/PrivacyInfo.xcprivacy" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+
+          if (USE_LTO_CMAKE)
+            set_property(TARGET network-extension
+              PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+          endif()
+
+          target_include_directories(network-extension PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions)
+          target_compile_options(network-extension PRIVATE -fapplication-extension -fmodules -gmodules -fobjc-arc --start-no-unused-arguments -fobjc-weak --end-no-unused-arguments)
+          target_link_libraries(network-extension PRIVATE -Wl,-framework,NetworkExtension)
+          set_target_properties(network-extension PROPERTIES LINK_OPTIONS -fapplication-extension -e _NSExtensionMain -fobjc-arc -fobjc-link-runtime)
+
+          set_target_properties(network-extension PROPERTIES
+            OUTPUT_NAME "YassPacketTunnel"
+            XCODE_PRODUCT_TYPE com.apple.product-type.app-extension
+            BUNDLE_EXTENSION appex
+            MACOSX_BUNDLE ON
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/Info.plist.in
+            MACOSX_BUNDLE_BUNDLE_NAME "YassPacketTunnel"
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
+            MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "${IOS_GUI_IDENTIFIER}.network-extension"
+            MACOSX_BUNDLE_INFO_STRING "YassPacketTunnel"
+            MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}.network-extension"
+            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/PacketTunnel.entitlements
+            XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
+            XCODE_ATTRIBUTE_PRODUCT_NAME "YassPacketTunnel"
+            XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES "YES"
+            XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK "YES"
+            XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER ""
+            XCODE_ATTRIBUTE_APPLICATION_EXTENSION_API_ONLY "YES"
+            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../../Frameworks"
+            )
+
+          if (IOS_XCODE_DSYM_FOLDER_FIX)
+            set_target_properties(network-extension PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "$(inherited)")
+          endif()
+
+          add_dependencies(${APP_NAME} network-extension)
+
+          # require Xcode 3.21 or later
+          # https://cmake.org/cmake/help/latest/prop_tgt/XCODE_EMBED_type.html
+          set_target_properties(${APP_NAME} PROPERTIES
+            XCODE_EMBED_APP_EXTENSIONS network-extension
+            XCODE_EMBED_APP_EXTENSIONS_REMOVE_HEADERS_ON_COPY "YES"
+            XCODE_EMBED_APP_EXTENSIONS_CODE_SIGN_ON_COPY "YES"
+          )
+
+          target_link_directories(network-extension PRIVATE ${TUN2PROXY_LIB_DIR})
+          target_link_libraries(network-extension PRIVATE -Wl,-hidden-ltun2proxy)
+          target_link_libraries(network-extension PRIVATE -Wl,-framework,Security)
+          target_link_libraries(network-extension PRIVATE yass_cli_lib yass_support)
+
+          target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,NetworkExtension)
+        endif()
     elseif(GUI_FLAVOUR STREQUAL "ios")
         if(NOT ${CMAKE_GENERATOR} MATCHES "^Xcode.*")
           # Compile the storyboard file with the ibtool.

@@ -60,6 +60,22 @@ case "$WITH_CPU" in
 esac
 }
 
+function build_darwin {
+case "$WITH_CPU" in
+  x64)
+    cargo build --target x86_64-apple-darwin --release --lib
+    ;;
+  arm64)
+    cargo build --target aarch64-apple-darwin --release --lib
+    ;;
+  *)
+    echo "Invalid WITH_CPU: $WITH_CPU"
+    exit -1
+    ;;
+esac
+}
+
+
 function build_android {
 case "$WITH_CPU" in
   x86)
@@ -133,6 +149,9 @@ case "$WITH_OS" in
     ;;
   tvos-sim)
     build_tvos_sim
+    ;;
+  darwin)
+    build_darwin
     ;;
   android)
     build_android
