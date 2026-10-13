@@ -3615,8 +3615,7 @@ target_link_libraries(asio_ssl PUBLIC
   ${boringssl_LIBS})
 
 if (APPLE)
-  find_library(SECURITY_FRAMEWORK Security REQUIRED)
-  target_link_libraries(asio_ssl PRIVATE ${SECURITY_FRAMEWORK})
+  target_link_libraries(asio_ssl PRIVATE -Wl,-framework,Security)
 endif()
 
 #
@@ -5697,10 +5696,9 @@ if (GUI)
           XCODE_EMBED_APP_EXTENSIONS_CODE_SIGN_ON_COPY "YES"
         )
 
-        find_library(Security_LIBRARY Security REQUIRED)
         target_link_directories(network-extension PRIVATE ${TUN2PROXY_LIB_DIR})
         target_link_libraries(network-extension PRIVATE -Wl,-hidden-ltun2proxy)
-        target_link_libraries(network-extension PRIVATE ${Security_LIBRARY})
+        target_link_libraries(network-extension PRIVATE -Wl,-framework,Security)
         target_link_libraries(network-extension PRIVATE yass_cli_lib yass_support)
 
         target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,NetworkExtension)
