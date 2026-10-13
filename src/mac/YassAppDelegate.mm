@@ -97,6 +97,7 @@
   initNetworkPathMonitor();
 
 #ifdef BUILD_NETWORK_EXTENSION
+  reinstallPlugin();
   [self didDefaultsChanged:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(didDefaultsChanged:)

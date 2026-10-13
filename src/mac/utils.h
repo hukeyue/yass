@@ -219,4 +219,12 @@ bool SetSystemProxy(bool enable, const std::string& server_addr, int32_t server_
 
 void SetDockIconStyle(bool hidden);
 
+bool isInstalledPlugin();
+
+bool isEnabledPlugin();
+
+bool hasBundledPlugin();
+
+bool reinstallPlugin(bool force = false);
+
 #endif  // YASS_MAC_UTILS

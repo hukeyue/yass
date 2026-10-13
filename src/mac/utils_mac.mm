@@ -41,6 +41,7 @@
 #include "core/compiler_specific.hpp"
 #include "core/logging.hpp"
 #include "core/process_utils.hpp"
+#include "core/utils_fs.hpp"
 #include "core/utils.hpp"
 #define ASIO_NO_SSL
 #include "net/asio.hpp"
@@ -56,6 +57,11 @@ using namespace std::string_literals;
 
 using namespace gurl_base;
 using namespace gurl_base::apple;
+
+using namespace yass;
+
+static const char* kApplePluginkitBinary = "/usr/bin/pluginkit";
+static const char* kNetworkExtensionBundleIdentifier = "it.gui.ios.yass.macos.network-extension";
 
 namespace {
 
@@ -625,4 +631,95 @@ void SetDockIconStyle(bool hidden) {
     NSError* error = [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil];
     LOG(WARNING) << "SetDockIconStyle failed: " << SysNSStringToUTF8([error localizedDescription]);
   }
+}
+
+static std::string pluginPath() {
+  return SysNSStringToUTF8([[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Contents/PlugIns/YassPacketTunnel.appex"]);
+}
+
+static std::string installedPluginPath() {
+  std::string output, _;
+  std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-m", "-v", "-i", kNetworkExtensionBundleIdentifier};
+  if (ExecuteProcess(params, &output, &_) != 0) {
+    return {};
+  }
+  if (output.empty()) {
+    return {};
+  }
+  size_t begin = output.find_first_of("/");
+  if (begin == std::string::npos)
+    return {};
+  size_t end = output.find_first_of("\n", begin);
+  if (end == std::string::npos || end < begin)
+    return {};
+  std::string path = output.substr(begin, end - begin);
+
+  LOG(INFO) << "Found NetworkExtension at " << path;
+
+  return path;
+}
+
+bool isInstalledPlugin() {
+  std::string output, _;
+  std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-m", "-i", kNetworkExtensionBundleIdentifier};
+  if (ExecuteProcess(params, &output, &_) != 0) {
+    return false;
+  }
+  if (output.empty()) {
+    return false;
+  }
+  return true;
+}
+
+bool isEnabledPlugin() {
+  std::string output, _;
+  std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-m", "-i", kNetworkExtensionBundleIdentifier};
+  if (ExecuteProcess(params, &output, &_) != 0) {
+    return false;
+  }
+  if (output.empty()) {
+    return false;
+  }
+  if (output[0] != '+' && output[0] != '?') {
+    return false;
+  }
+  return true;
+}
+
+bool hasBundledPlugin() {
+  std::string path = pluginPath();
+  return IsDirectory(path);
+}
+
+bool reinstallPlugin(bool force) {
+  std::string bundled_plugin_path = pluginPath();
+  if (!hasBundledPlugin()) {
+    LOG(WARNING) << "No plugin bundle found at " << bundled_plugin_path;
+    return false;
+  }
+  while (true) {
+    std::string path = installedPluginPath();
+    if (path.empty())
+      break;
+    if (!force && path == bundled_plugin_path) {
+      LOG(INFO) << "Reuse existing plugin: " << bundled_plugin_path;
+      return true;
+    }
+    std::string output, _;
+    std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-r", path};
+    if (ExecuteProcess(params, &output, &_) != 0) {
+      LOG(WARNING) << "Failed to remove existing plugin: " << path;
+      return false;
+    }
+    LOG(INFO) << "Removed existing plugin: " << path;
+  }
+
+  std::string output, _;
+  std::vector<std::string> params = {std::string(kApplePluginkitBinary), "-a", bundled_plugin_path};
+  if (ExecuteProcess(params, &output, &_) != 0) {
+    LOG(WARNING) << "Failed to install existing plugin: " << bundled_plugin_path;
+    return false;
+  }
+  LOG(INFO) << "Installed plugin: " << bundled_plugin_path;
+  return true;
 }
