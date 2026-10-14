@@ -24,6 +24,8 @@
     <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
     <key>NSHumanReadableCopyright</key>
     <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>CFBundleIconFile</key>
     <string>yass</string>
     <key>CFBundleSignature</key>
@@ -35,11 +37,13 @@
     <key>CSResourcesFileMapped</key>
     <true/>
     <key>LSMinimumSystemVersion</key>
-    <string>10.14</string>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
+    <key>MinimumOSVersion</key>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
     <key>LSMinimumSystemVersionByArchitecture</key>
     <dict>
         <key>x86_64</key>
-        <string>10.14.0</string>
+        <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
     </dict>
     <key>NSAppleScriptEnabled</key>
     <false/>

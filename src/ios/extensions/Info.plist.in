@@ -30,8 +30,6 @@
     <array>
         <string>arm64</string>
     </array>
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionPointIdentifier</key>

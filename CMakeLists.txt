@@ -5622,7 +5622,7 @@ if (GUI)
             XCODE_PRODUCT_TYPE com.apple.product-type.app-extension
             BUNDLE_EXTENSION appex
             MACOSX_BUNDLE ON
-            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/extensions/Info.plist.in
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/extensions/Info.plist.in
             MACOSX_BUNDLE_BUNDLE_NAME "YassPacketTunnel"
             MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
             MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
