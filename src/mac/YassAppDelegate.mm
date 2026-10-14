@@ -623,6 +623,24 @@
 
 #endif
 
+- (NSString*)getPaneMessage:(BOOL)isReceiveSide {
+  return !isReceiveSide ? NSLocalizedString(@"TXRATE", @"tx rate:") : NSLocalizedString(@"RXRATE", @"rx rate:");
+}
+
+- (NSString*)getRateMessage:(BOOL)isReceiveSide {
+  std::ostringstream ss;
+
+  if (!isReceiveSide) {
+    HumanReadableByteCountBin(&ss, telemetry_observer_.rx_rate_);
+    ss << "/s";
+  } else {
+    HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
+    ss << "/s";
+  }
+  return SysUTF8ToNSString(ss.str());
+}
+
+
 - (NSString*)getStatusMessage {
   if ([self getState] != STARTED) {
     return [self getStatus];

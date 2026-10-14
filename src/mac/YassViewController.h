@@ -35,6 +35,7 @@
 - (void)StartFailed;
 - (void)Stopping;
 - (void)Stopped;
+- (void)UpdateStatusBar;
 @property(weak) IBOutlet NSButton* startButton;
 @property(weak) IBOutlet NSButton* stopButton;
 @property(weak) IBOutlet NSTextField* serverHost;
@@ -52,6 +53,10 @@
 @property(weak) IBOutlet NSButton* autoStart;
 @property(weak) IBOutlet NSButton* systemProxy;
 @property(weak) IBOutlet NSButton* displayStatus;
+@property(weak) IBOutlet NSTextField *txRateLabel;
+@property(weak) IBOutlet NSTextField *txRate;
+@property(weak) IBOutlet NSTextField *rxRateLabel;
+@property(weak) IBOutlet NSTextField *rxRate;
 
 + (YassViewController* __weak)instance;
 @end

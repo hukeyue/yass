@@ -55,6 +55,10 @@ static YassViewController* __weak _instance;
   [super viewDidLoad];
   _instance = self;
 
+  YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
+  self.txRateLabel.stringValue = [appDelegate getPaneMessage:NO];
+  self.rxRateLabel.stringValue = [appDelegate getPaneMessage:YES];
+
   [self.cipherMethod removeAllItems];
   NSString* methodStrings[] = {
 #define XX(num, name, string) @string,
@@ -262,6 +266,12 @@ static YassViewController* __weak _instance;
 
   BOOL enable_status_bar = absl::GetFlag(FLAGS_ui_display_realtime_status) ? TRUE : FALSE;
   self.displayStatus.state = enable_status_bar ? NSControlStateValueOn : NSControlStateValueOff;
+}
+
+- (void)UpdateStatusBar {
+  YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
+  self.txRate.stringValue = [appDelegate getRateMessage:NO];
+  self.rxRate.stringValue = [appDelegate getRateMessage:YES];
 }
 
 @end

@@ -129,6 +129,9 @@ static YassWindowController* __weak _instance;
 }
 
 - (void)UpdateStatusBar {
+  YassViewController* viewController = [YassViewController instance];
+  [viewController UpdateStatusBar];
+
   [self UpdateStatusYBar];
   if (status_bar_item_ == nil) {
     status_bar_text_ = nil;
