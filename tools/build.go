@@ -131,7 +131,7 @@ func getAppName() string {
 	if variantFlag == "dylib" {
 		if systemNameFlag == "windows" || systemNameFlag == "mingw" {
 			return APPNAME + ".dll"
-		} else if systemNameFlag == "darwin" || systemNameFlag == "ios" || systemNameFlag == "tvos" {
+		} else if systemNameFlag == "darwin" || systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 			return "lib" + APPNAME + ".dylib"
 		} else {
 			return "lib" + APPNAME + ".so"
@@ -140,7 +140,7 @@ func getAppName() string {
 
 	if systemNameFlag == "windows" {
 		return APPNAME + ".exe"
-	} else if systemNameFlag == "darwin" && variantFlag == "gui" || systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "darwin" && variantFlag == "gui" || systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		return APPNAME + ".app"
 	} else if systemNameFlag == "mingw" {
 		return APPNAME + ".exe"
@@ -225,7 +225,7 @@ func InitFlag() {
 	flag.StringVar(&useAllocatorFlag, "use-allocator", "system", "Use specified allocator such as system")
 	flag.BoolVar(&useTbbFlag, "use-tbb", false, "Enable Intel TBB mode")
 
-	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "11.0"), "Set Mac OS X deployment target, such as 11.0")
+	flag.StringVar(&macosxVersionMinFlag, "macosx-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "12.0"), "Set Mac OS X deployment target, such as 11.0")
 	flag.BoolVar(&macosxUniversalBuildFlag, "macosx-universal-build", getEnvBool("ENABLE_OSX_UNIVERSAL_BUILD", false), "Enable Mac OS X Universal Build")
 	flag.StringVar(&macosxKeychainPathFlag, "macosx-keychain-path", getEnv("KEYCHAIN_PATH", ""), "During signing, only search for the signing identity in the keychain file specified")
 	flag.StringVar(&macosxCodeSignIdentityFlag, "macosx-codesign-identity", getEnv("MAC_CODESIGN_IDENTITY", "-"), "Set Mac OS X CodeSign Identity")
@@ -414,7 +414,7 @@ func prebuildFindSourceDirectory() {
 		buildDir = fmt.Sprintf("build-%s%d-%s", systemNameFlag, freebsdAbiFlag, archFlag)
 	} else if systemNameFlag == "android" {
 		buildDir = fmt.Sprintf("build-%s%d-%s", systemNameFlag, androidApiLevel, archFlag)
-	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		buildDir = fmt.Sprintf("build-%s-%s", systemNameFlag, archFlag)
 		if subSystemNameFlag != "" {
 			buildDir = fmt.Sprintf("build-%s-%s-%s", systemNameFlag, subSystemNameFlag, archFlag)
@@ -877,7 +877,7 @@ func buildStageGenerateBuildScript() {
 	var cmakeArgs []string
 	if os.Getenv("CC") != "" {
 		glog.Infof("Using overrided compiler %s", os.Getenv("CC"))
-	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		glog.Infof("Using xcode's builtin compiler")
 	} else if clangPath != "" {
 		if systemNameFlag == "windows" {
@@ -955,7 +955,7 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DUSE_TBB=off")
 	}
 	cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_BUILD_TYPE=%s", cmakeBuildTypeFlag))
-	if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		cmakeArgs = append(cmakeArgs, "-G", "Xcode")
 	} else {
 		cmakeArgs = append(cmakeArgs, "-G", "Ninja")
@@ -1187,6 +1187,27 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DENABLE_STRICT_TRY_COMPILE=on")
 	}
 
+	if systemNameFlag == "ios-mac" {
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_OSX_DEPLOYMENT_TARGET=%s", macosxVersionMinFlag))
+		glog.Warning("No Packaging supported for ios-mac, disabling...")
+		noPackagingFlag = true
+
+		arch := "arm64"
+		if archFlag == "x64" || archFlag == "x86_64" || archFlag == "amd64" {
+			arch = "x86_64"
+		} else if archFlag == "aarch64" || archFlag == "arm64" {
+			arch = "arm64"
+		} else {
+			glog.Fatalf("Invalid archFlag: %s", archFlag)
+		}
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_CODESIGN_IDENTITY=%s", iosCodeSignIdentityFlag))
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_DEPLOYMENT_TEAM=%s", iosDevelopmentTeamFlag))
+		cmakeArgs = append(cmakeArgs, "-DMACOS_BUILD_NETWORK_EXTENSION=on")
+		cmakeArgs = append(cmakeArgs, "-DIOS_XCODE_DSYM_FOLDER_FIX=on")
+
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_OSX_ARCHITECTURES=%s", arch))
+	}
+
 	if systemNameFlag == "android" {
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DUSE_CARES=%s", "ON"))
 		glog.Infof("Using android ndk version %s", androidNdkVer)
@@ -1306,7 +1327,7 @@ func buildStageExecuteBuildScript() {
 		"--config", cmakeBuildTypeFlag,
 		"--parallel", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 		"--target", APPNAME}
-	if !((systemNameFlag == "ios" || systemNameFlag == "tvos") && (runBenchmarkFlag || runTestFlag)) {
+	if !((systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac") && (runBenchmarkFlag || runTestFlag)) {
 		cmdRun(cmakeCmd, true)
 	}
 	if buildBenchmarkFlag || runBenchmarkFlag {
@@ -1314,19 +1335,19 @@ func buildStageExecuteBuildScript() {
 			"--config", cmakeBuildTypeFlag,
 			"--parallel", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 			"--target", "yass_benchmark"}
-		if !((systemNameFlag == "ios" || systemNameFlag == "tvos") && runBenchmarkFlag) {
+		if !((systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac") && runBenchmarkFlag) {
 			cmdRun(cmakeCmd, true)
 		}
 	}
 	if runBenchmarkFlag {
-		if (systemNameFlag == "ios" || systemNameFlag == "tvos") && subSystemNameFlag == "simulator" {
+		if (systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac") && subSystemNameFlag == "simulator" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
 			if !runTestFlag {
 				cmdRun(xcodeCmd, true)
 			}
-		} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+		} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS,name=" + iosTestDeviceNameFlag}
@@ -1346,17 +1367,17 @@ func buildStageExecuteBuildScript() {
 			"--config", cmakeBuildTypeFlag,
 			"--parallel", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 			"--target", "yass_test"}
-		if !((systemNameFlag == "ios" || systemNameFlag == "tvos") && runTestFlag) {
+		if !((systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac") && runTestFlag) {
 			cmdRun(cmakeCmd, true)
 		}
 	}
 	if runTestFlag {
-		if (systemNameFlag == "ios" || systemNameFlag == "tvos") && subSystemNameFlag == "simulator" {
+		if (systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac") && subSystemNameFlag == "simulator" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
 			cmdRun(xcodeCmd, true)
-		} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+		} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS,name=" + iosTestDeviceNameFlag}
@@ -1992,7 +2013,7 @@ func postStateStripBinaries() {
 	if systemNameFlag == "windows" {
 		return
 	}
-	if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		glog.Info("Done in xcodebuild")
 		return
 	}
@@ -2089,7 +2110,7 @@ func postStateStripBinaries() {
 		if buildBenchmarkFlag {
 			gnuStripBinary("yass_benchmark", "yass_benchmark.dbg")
 		}
-	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		// strip main binary
 		execPath := filepath.Join(getAppName(), "Contents", "MacOS", APPNAME)
 		darwinStripBinary(execPath, getAppName()+".dSYM")
@@ -2101,11 +2122,11 @@ func postStateStripBinaries() {
 func postStateCodeSign() {
 	glog.Info("PostState -- Code Sign")
 	glog.Info("======================================================================")
-	if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		glog.Info("Done in xcodebuild")
 		return
 	}
-	if cmakeBuildTypeFlag != "Release" || (systemNameFlag != "darwin" && systemNameFlag != "ios" && systemNameFlag != "tvos") {
+	if cmakeBuildTypeFlag != "Release" || (systemNameFlag != "darwin" && systemNameFlag != "ios" && systemNameFlag != "tvos" && systemNameFlag != "ios-mac") {
 		return
 	}
 	// TBD
@@ -2515,7 +2536,7 @@ func archiveMainFile(output string, prefix string, paths []string, dllPaths []st
 			"--copy", "../macos/.DS_Store:/.DS_Store",
 			"--copy", "../macos/.background:/",
 			"--symlink", "/Applications:/Applications"}, true)
-	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		cmdRun([]string{"xcodebuild", "archive",
 			"-archivePath", cmakeBuildTypeFlag + ".xcarchive",
 			"-configuration", cmakeBuildTypeFlag,
@@ -2820,7 +2841,7 @@ func postStateArchives() map[string][]string {
 	if systemNameFlag == "darwin" && variantFlag == "gui" {
 		archive = fmt.Sprintf(archiveFormat, APPNAME, "-unsigned", ".dmg")
 	}
-	if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		archive = fmt.Sprintf(archiveFormat, APPNAME, "", ".ipa")
 	}
 	if systemNameFlag == "harmony" {
@@ -2957,7 +2978,7 @@ func postStateArchives() map[string][]string {
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
 	} else if systemNameFlag == "darwin" {
 		archiveFiles(debugArchive, archivePrefix, dbgPaths)
-	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		cmdRun([]string{"rm", "-rf", getAppName() + ".dSYM"}, true)
 		buildSubdir := cmakeBuildTypeFlag + "-iphoneos"
 		if subSystemNameFlag == "simulator" {
