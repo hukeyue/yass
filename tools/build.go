@@ -99,6 +99,8 @@ var iosCodeSignIdentityFlag string
 var iosDevelopmentTeamFlag string
 var iosTestDeviceNameFlag string
 
+var tvosVersionMinFlag string
+
 var msvcTargetArchFlag string
 var msvcCrtLinkageFlag string
 var msvcAllowXpFlag bool
@@ -234,6 +236,8 @@ func InitFlag() {
 	flag.StringVar(&iosCodeSignIdentityFlag, "ios-codesign-identity", getEnv("IOS_CODESIGN_IDENTITY", "-"), "Set iOS CodeSign Identity")
 	flag.StringVar(&iosDevelopmentTeamFlag, "ios-development-team", getEnv("DEVELOPMENT_TEAM", ""), "Set iOS deployment team")
 	flag.StringVar(&iosTestDeviceNameFlag, "ios-test-device-name", getEnv("IPHONE_NAME", "iPhone"), "Set iOS test device name")
+
+	flag.StringVar(&tvosVersionMinFlag, "tvos-version-min", getEnv("MACOSX_DEPLOYMENT_TARGET", "17.0"), "Set tvOS deployment target, such as 17.0")
 
 	flag.StringVar(&msvcTargetArchFlag, "msvc-tgt-arch", getEnv("VSCMD_ARG_TGT_ARCH", "x64"), "Set Visual C++ Target Achitecture")
 	flag.StringVar(&msvcCrtLinkageFlag, "msvc-crt-linkage", getEnv("MSVC_CRT_LINKAGE", "dynamic"), "Set Visual C++ CRT Linkage")
@@ -1137,23 +1141,19 @@ func buildStageGenerateBuildScript() {
 		cmakeArgs = append(cmakeArgs, "-DUSE_NGHTTP2=off") // FIXME See #49
 	}
 
-	if systemNameFlag == "ios" || systemNameFlag == "tvos" {
+	if systemNameFlag == "ios" {
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_TOOLCHAIN_FILE=%s/../cmake/platforms/ios.toolchain.cmake", buildDir))
 		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DDEPLOYMENT_TARGET=%s", iosVersionMinFlag))
 		platform := "OS"
 		glog.Warning("No Packaging supported for ios, disabling...")
 		noPackagingFlag = true
 		if subSystemNameFlag == "simulator" {
-			suffixFlag := ""
-			if systemNameFlag == "tvos" {
-				suffixFlag = "_TVOS"
-			}
 			if archFlag == "x86" {
-				platform = "SIMULATOR" + suffixFlag
+				platform = "SIMULATOR"
 			} else if archFlag == "x64" || archFlag == "x86_64" || archFlag == "amd64" {
-				platform = "SIMULATOR64" + suffixFlag
+				platform = "SIMULATOR64"
 			} else if archFlag == "arm64" {
-				platform = "SIMULATORARM64" + suffixFlag
+				platform = "SIMULATORARM64"
 			} else {
 				glog.Fatalf("Invalid archFlag: %s", archFlag)
 			}
@@ -1161,20 +1161,44 @@ func buildStageGenerateBuildScript() {
 			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_DEPLOYMENT_TEAM=%s", iosDevelopmentTeamFlag))
 		} else if subSystemNameFlag != "" {
 			glog.Fatalf("Invalid subSystemNameFlag: %s", subSystemNameFlag)
-		} else if systemNameFlag == "tvos" {
-			if archFlag == "arm64" {
-				platform = "TVOS"
+		} else {
+			if archFlag == "arm" {
+				platform = "OS"
+			} else if archFlag == "arm64" {
+				platform = "OS64"
 			} else {
 				glog.Fatalf("Invalid archFlag: %s", archFlag)
 			}
 			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_CODESIGN_IDENTITY=%s", iosCodeSignIdentityFlag))
 			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_DEPLOYMENT_TEAM=%s", iosDevelopmentTeamFlag))
 			cmakeArgs = append(cmakeArgs, "-DIOS_XCODE_DSYM_FOLDER_FIX=on")
-		} else {
-			if archFlag == "arm" {
-				platform = "OS"
+		}
+
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DPLATFORM=%s", platform))
+		cmakeArgs = append(cmakeArgs, "-DENABLE_STRICT_TRY_COMPILE=on")
+	}
+
+	if systemNameFlag == "tvos" {
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DCMAKE_TOOLCHAIN_FILE=%s/../cmake/platforms/ios.toolchain.cmake", buildDir))
+		cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DDEPLOYMENT_TARGET=%s", tvosVersionMinFlag))
+		platform := "TVOS"
+		glog.Warning("No Packaging supported for tvos, disabling...")
+		noPackagingFlag = true
+		if subSystemNameFlag == "simulator" {
+			if archFlag == "x64" || archFlag == "x86_64" || archFlag == "amd64" {
+				platform = "SIMULATOR_TVOS"
 			} else if archFlag == "arm64" {
-				platform = "OS64"
+				platform = "SIMULATORARM64_TVOS"
+			} else {
+				glog.Fatalf("Invalid archFlag: %s", archFlag)
+			}
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_CODESIGN_IDENTITY=%s", iosCodeSignIdentityFlag))
+			cmakeArgs = append(cmakeArgs, fmt.Sprintf("-DXCODE_DEPLOYMENT_TEAM=%s", iosDevelopmentTeamFlag))
+		} else if subSystemNameFlag != "" {
+			glog.Fatalf("Invalid subSystemNameFlag: %s", subSystemNameFlag)
+		} else {
+			if archFlag == "arm64" {
+				platform = "TVOS"
 			} else {
 				glog.Fatalf("Invalid archFlag: %s", archFlag)
 			}
