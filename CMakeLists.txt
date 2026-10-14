@@ -5228,7 +5228,11 @@ if (GUI)
             src/ios/zh-Hant.lproj/Main.strings)
         endif()
         set(ASSET_CATALOG src/ios/Assets.xcassets)
-        set(ASSET_CATALOG_ASSETS AppIcon)
+        if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
+          set(ASSET_CATALOG_ASSETS "Brand Assets")
+        else()
+          set(ASSET_CATALOG_ASSETS AppIcon)
+        endif()
         list(APPEND SRC_FILES ${ALLRESOURCES})
         list(APPEND SRC_FILES ${ASSET_CATALOG})
         list(APPEND SRC_FILES
@@ -5723,14 +5727,16 @@ if (GUI)
 
         if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
           set(IOS_GUI_IDENTIFIER "it.gui.ios.yass.tvos")
+          set(IOS_GUI_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/src/ios/tvos/Info.plist.in")
         else()
           set(IOS_GUI_IDENTIFIER "it.gui.ios.yass")
+          set(IOS_GUI_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/src/ios/Info.plist.in")
         endif()
         set_target_properties(${APP_NAME} PROPERTIES
           RESOURCE "${ALLRESOURCES}"
           OUTPUT_NAME "${APP_NAME}"
           MACOSX_BUNDLE ON
-          MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/ios/Info.plist.in
+          MACOSX_BUNDLE_INFO_PLIST "${IOS_GUI_INFO_PLIST}"
           MACOSX_BUNDLE_BUNDLE_NAME ${PACKAGE_FULL_NAME}
           MACOSX_BUNDLE_BUNDLE_VERSION ${PACKAGE_VERSION}
           MACOSX_BUNDLE_COPYRIGHT "${YASS_APP_COPYRIGHT}"
