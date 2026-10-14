@@ -169,7 +169,7 @@ endif()
 
 if (APPLE AND NOT IOS AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   if (USE_LIBCXX)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0") # required by Xcode 27
   else()
     set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0") # required by to_chars implementation
   endif()
