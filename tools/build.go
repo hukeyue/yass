@@ -1368,6 +1368,11 @@ func buildStageExecuteBuildScript() {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
+			if systemNameFlag == "tvos" {
+				xcodeCmd = []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
+					"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
+					"-scheme", "yass", "-destination", "platform=tvOS Simulator,name=Apple TV 4K (3rd generation) (at 1080p)"}
+			}
 			if !runTestFlag {
 				cmdRun(xcodeCmd, true)
 			}
@@ -1400,6 +1405,11 @@ func buildStageExecuteBuildScript() {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
 				"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
 				"-scheme", "yass", "-destination", "platform=iOS Simulator,name=iPhone 18 Pro"}
+			if systemNameFlag == "tvos" {
+				xcodeCmd = []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
+					"-jobs", fmt.Sprintf("%d", cmakeBuildConcurrencyFlag),
+					"-scheme", "yass", "-destination", "platform=tvOS Simulator,name=Apple TV 4K (3rd generation) (at 1080p)"}
+			}
 			cmdRun(xcodeCmd, true)
 		} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 			xcodeCmd := []string{"xcodebuild", "test", "-configuration", cmakeBuildTypeFlag,
