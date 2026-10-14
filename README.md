@@ -37,5 +37,8 @@ Give it a look at Github Action Page.
 ## Edge Builds for macOS devices
 https://testflight.apple.com/join/CWFPRnmT
 
+## Edge Builds for tvOS devices
+https://testflight.apple.com/join/HcCE1hDv
+
 [YASS]: https://letshack.info
 [flathub_url]: https://flathub.org/apps/io.github.chilledheart.yass
