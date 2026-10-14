@@ -120,7 +120,9 @@
   LOG(WARNING) << "Application exiting";
   [self OnStop:TRUE];
 #ifdef BUILD_NETWORK_EXTENSION
+#ifndef NDEBUG
   uninstallPlugin();
+#endif
 #endif
 }
 
