@@ -5138,7 +5138,7 @@ if (GUI)
           src/win32/utils_win.cpp)
     elseif (GUI_FLAVOUR STREQUAL "cocoa")
         set(MAIN_STORYBOARD ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/Base.lproj/Main.storyboard)
-        set(ALLRESOURCES src/mac/yass.icns)
+        set(ALLRESOURCES)
         if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
           set(ALLRESOURCES
             ${ALLRESOURCES}
@@ -5160,15 +5160,18 @@ if (GUI)
             src/mac/zh-Hant.lproj/Localizable.strings
             src/mac/zh-Hant.lproj/Main.strings
           )
+        else()
+          list(APPEND ALLRESOURCES src/mac/yass.icns)
         endif()
-        set(ASSET_CATALOG src/mac/Assets.xcassets)
-        set(ASSET_CATALOG_ASSETS Assets)
-        list(APPEND SRC_FILES ${ALLRESOURCES})
-        list(APPEND SRC_FILES
-          ${ASSET_CATALOG})
-        list(APPEND SRC_FILES
-          src/mac/yass.icns)
+        if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
+          set(ASSET_CATALOG src/mac/Assets.xcassets)
+          set(ASSET_CATALOG_ASSETS AppIcon)
+          list(APPEND SRC_FILES ${ASSET_CATALOG})
+        else()
+          set(ASSET_CATALOG_ASSETS yass.icns)
+        endif()
 
+        list(APPEND SRC_FILES ${ALLRESOURCES})
         list(APPEND SRC_FILES
           src/mac/YassAppDelegate.mm
           src/mac/YassAppDelegate.h
@@ -5506,6 +5509,9 @@ if (GUI)
               COMMENT "Copying language file: ${_LANG}")
             endif()
           endforeach()
+
+          set_source_files_properties("src/mac/yass.icns" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
         else()
           set_source_files_properties("${MAIN_STORYBOARD}" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources/Base.lproj")
@@ -5544,8 +5550,6 @@ if (GUI)
         endif()
 
         # adds to Copy Bundle Resources build phase
-        set_source_files_properties("src/mac/yass.icns" PROPERTIES
-          MACOSX_PACKAGE_LOCATION "Resources")
         set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
 
@@ -5561,18 +5565,24 @@ if (GUI)
           MACOSX_BUNDLE_INFO_STRING "${APP_NAME}"
           MACOSX_BUNDLE_LONG_VERSION_STRING "${YASS_APP_TAG}-${YASS_APP_SUBTAG}"
           MACOSX_BUNDLE_SHORT_VERSION_STRING "${YASS_APP_TAG}"
-          MACOSX_BUNDLE_ICON_FILE yass.icns
+          MACOSX_BUNDLE_ICON_FILE ${ASSET_CATALOG_ASSETS}
           XCODE_GENERATE_SCHEME "TRUE"
           XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_GUI_IDENTIFIER}"
           XCODE_ATTRIBUTE_MARKETING_VERSION "${YASS_APP_VERSION}"
           XCODE_ATTRIBUTE_PRODUCT_NAME "${PACKAGE_NAME}"
           #XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS "NO"
-          #XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME ${ASSET_CATALOG_ASSETS}
           # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/15183
           # Apps must have install step enabled
           XCODE_ATTRIBUTE_INSTALL_PATH  "$(LOCAL_APPS_DIR)"
           XCODE_ATTRIBUTE_SKIP_INSTALL  NO
           )
+
+        if (${CMAKE_GENERATOR} MATCHES "^Xcode.*")
+          set_target_properties(${APP_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME ${ASSET_CATALOG_ASSETS}
+            XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES YES
+          )
+        endif()
 
         if (MACOS_BUILD_NETWORK_EXTENSION)
           set_target_properties(${APP_NAME} PROPERTIES
