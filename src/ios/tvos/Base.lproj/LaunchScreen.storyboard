@@ -22,7 +22,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3b7-wk-4Bg">
-                                <rect key="frame" x="820" y="527" width="26" height="26"/>
+                                <rect key="frame" x="693" y="527" width="26" height="26"/>
                                 <imageReference key="image" image="network" catalog="system" symbolScale="large" renderingMode="hierarchical">
                                     <hierarchicalColors>
                                         <color systemColor="labelColor"/>
@@ -32,8 +32,8 @@
                                 </imageReference>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Yet Another Shadow Socket" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="O2r-Rf-Vu3">
-                                <rect key="frame" x="854" y="529.5" width="212" height="21"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <rect key="frame" x="727" y="517" width="466" height="46"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
