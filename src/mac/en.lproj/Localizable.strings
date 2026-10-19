@@ -17,8 +17,8 @@
 "FAILED_TO_CONNECT_DUE_TO" = "Failed to connect due to";
 
 /*  rx rate:  */
-"RXRATE" = "rx rate:";
+"RXRATE" = "Receive rate:";
 
 /*  tx rate: */
-"TXRATE" = "tx rate:";
+"TXRATE" = "Send rate:";
 
