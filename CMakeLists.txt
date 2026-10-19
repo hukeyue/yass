@@ -5589,7 +5589,7 @@ if (GUI)
             XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_CURRENT_SOURCE_DIR}/src/mac/extensions/yass.entitlements
           )
           target_compile_definitions(${APP_NAME} PRIVATE BUILD_NETWORK_EXTENSION=1)
-          target_sources(${APP_NAME} PRIVATE src/ios/extensions/PacketTunnel.entitlements)
+          target_sources(${APP_NAME} PRIVATE src/mac/extensions/yass.entitlements)
         endif()
 
         target_link_libraries(${APP_NAME} PRIVATE -Wl,-framework,Network)
@@ -5776,6 +5776,8 @@ if (GUI)
         if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
           set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3")
         endif()
+
+        target_sources(${APP_NAME} PRIVATE src/ios/yass.entitlements)
 
         # =======================
         # YassPacketTunnel extensions
