@@ -1,0 +1,37 @@
+"CONNECTED_WITH_CONNS" = "Spojení navázáno:";
+
+"DISCONNECTED_WITH" = "Odpojit od serveru";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Nelze se připojit, protože";
+
+"NETWORK_UNREACHABLE" = "Síť je nedostupná";
+
+"CONNECTING" = "Spojovací";
+
+"CONNECTED" = "Připojeno";
+
+"DISCONNECTING" = "Odpojování";
+
+"DISCONNECTED" = "Odpojeno";
+
+"INVALID" = "Neplatný odkaz";
+
+"REASSERTING" = "Znovu se připojuje";
+
+"UNKNOWN" = "Neznámý stav";
+
+"START_FAILED" = "Spuštění selhalo";
+
+"OK" = "OK";
+
+"RXRATE" = "Rychlost stahování:";
+
+"TXRATE" = "Rychlost odesílání:";
+
+"RX" = "Provoz při stahování:";
+
+"TX" = "Odchozí provoz:";
+
+"TOTAL_CONFIGURATION" = "Všechny možnosti konfigurace";
+
+"TURN_ON" = "Zapnout";

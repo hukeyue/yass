@@ -5203,6 +5203,8 @@ if (GUI)
             ${LAUNCH_STORYBOARD}
             ${SETTINGS_BUNDLE}
             src/ios/PrivacyInfo.xcprivacy
+            src/ios/cs_CZ.lproj/Localizable.strings
+            src/ios/cs_CZ.lproj/Main.strings
             src/ios/en.lproj/LaunchScreen.strings
             src/ios/en.lproj/Localizable.strings
             src/ios/en.lproj/InfoPlist.strings
