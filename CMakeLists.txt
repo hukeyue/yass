@@ -5223,6 +5223,8 @@ if (GUI)
             src/ios/pt_PT.lproj/Main.strings
             src/ios/ru.lproj/Localizable.strings
             src/ios/ru.lproj/Main.strings
+            src/ios/sk_SK.lproj/Localizable.strings
+            src/ios/sk_SK.lproj/Main.strings
             src/ios/zh-Hans.lproj/LaunchScreen.strings
             src/ios/zh-Hans.lproj/Localizable.strings
             src/ios/zh-Hans.lproj/InfoPlist.strings
