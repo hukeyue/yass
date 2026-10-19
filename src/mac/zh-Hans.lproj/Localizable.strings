@@ -1,3 +1,5 @@
+"NETWORK_UNREACHABLE" = "网络无法访问";
+
 "CONNECTING" = "连接中";
 
 "CONNECTED" = "已连接";

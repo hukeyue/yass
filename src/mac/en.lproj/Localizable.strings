@@ -1,3 +1,6 @@
+/* Network unreachable */
+"NETWORK_UNREACHABLE" = "Network unreachable";
+
 /* Connecting */
 "CONNECTING" = "Connecting";
 
