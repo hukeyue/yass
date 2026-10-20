@@ -192,7 +192,28 @@
     vpn_manager_ = vpn_manager.enabled ? vpn_manager : nil;
     [self didChangeVpnStatus:nil];
   }];
-#endif
+#else
+  YassWindowController* windowController = [YassWindowController instance];
+  switch ([self getState]) {
+    case STARTING:
+      [windowController Starting];
+      break;
+    case STARTED:
+      [windowController Started];
+      break;
+    case START_FAILED:
+      [windowController StartFailed];
+      break;
+    case STOPPING:
+      [windowController Stopping];
+      break;
+    case STOPPED:
+      [windowController Stopped];
+      break;
+    default:
+      break;
+  }
+#endif // BUILD_NETWORK_EXTENSION
 }
 
 - (enum YASSState)getState {

@@ -89,19 +89,7 @@ static YassViewController* __weak _instance;
   [super viewWillAppear];
   // vc might be dismissed in starting/stopping state, refresh the state
   YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
-  switch ([appDelegate getState]) {
-    case STARTED:
-      [self Started];
-      break;
-    case START_FAILED:
-      [self StartFailed];
-      break;
-    case STOPPED:
-      [self Stopped];
-      break;
-    default:
-      break;
-  }
+  [appDelegate reloadState];
 
   [self.view.window center];
 }
