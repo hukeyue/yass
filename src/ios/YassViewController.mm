@@ -107,8 +107,10 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+  [super viewWillAppear:animated];
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
+  [self UpdateStatusBar];
 #if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [[NSNotificationCenter defaultCenter]
       addObserverForName:UIKeyboardWillShowNotification
@@ -145,7 +147,6 @@
                                                                    }];
                                                 }];
 #endif
-  [super viewWillAppear:animated];
 }
 
 #if defined(TARGET_OS_TV) && TARGET_OS_TV

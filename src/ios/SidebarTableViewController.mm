@@ -39,6 +39,8 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  [appDelegate reloadState];
   [self UpdateStatusBar];
 }
 
