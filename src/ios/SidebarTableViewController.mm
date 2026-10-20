@@ -74,6 +74,7 @@
   content.secondaryText = secondaryText;
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.accessoryType = UITableViewCellAccessoryNone;
+  cell.accessoryView = nil;
 #if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
     content.secondaryText = @"";
