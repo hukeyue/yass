@@ -130,16 +130,24 @@ int Tun2Proxy_Run(Tun2Proxy_InitContext* context) {
   return tun2proxy_run(context->tun2proxy_ptr);
 }
 
-void Tun2Proxy_ForwardReadPackets(Tun2Proxy_InitContext* context, NSArray<NEPacket*>* packets) {
+int Tun2Proxy_ForwardReadPackets(Tun2Proxy_InitContext* context, NSArray<NEPacket*>* packets) {
   DCHECK(context);
+  int bytes = 0;
   for (NEPacket* packet in packets) {
     ReadPacketContext* p = new ReadPacketContext;
     p->data = packet.data;
     int ret = HANDLE_EINTR(write(context->read_fd, &p, sizeof(p)));
     if (ret < 0) {
-      break;
+      delete p;
+      return -errno;
     }
+    if (ret != sizeof(p)) {
+      delete p;
+      return -EIO;
+    }
+    bytes += packet.data.length;
   }
+  return bytes;
 }
 
 void Tun2Proxy_Shutdown(Tun2Proxy_InitContext* context) {

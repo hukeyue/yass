@@ -290,7 +290,17 @@ static constexpr const uint32_t kYieldConcurrencyOfConnections = 12u;
     if (strongSelf->stopped_) {
       return;
     }
-    Tun2Proxy_ForwardReadPackets(strongSelf->context_, packets);
+    int ret = Tun2Proxy_ForwardReadPackets(strongSelf->context_, packets);
+    if (ret /*-errno*/ < 0) {
+      NSError* err = [[NSError alloc] initWithDomain:NSPOSIXErrorDomain code:-ret userInfo:nil];
+      NSLog(@"tunnel: encountered non-fatal error: %@ when transfering IP packet flow", err.localizedDescription);
+#if 0 /* it is non-fatal error, safe to ignore */
+      [strongSelf cancelTunnelWithError:err];
+      return;
+#else
+      sched_yield();  // wait for up to 10ms
+#endif
+    }
     if (worker_->currentConnections() > kYieldConcurrencyOfConnections) {
       NSLog(@"tunnel: about to yield after %zu connection", worker_->currentConnections());
       sched_yield();  // wait for up to 10ms
