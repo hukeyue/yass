@@ -1,0 +1,74 @@
+
+"1Xt-HY-uBw.title" = "YASS";
+
+"3bJ-wb-xnh.title" = "Локальний порт";
+
+"4sb-4s-VLi.title" = "Кинь YASS";
+
+"5kV-Vb-QxS.title" = "Про YASS";
+
+"8hL-Qd-hQU.title" = "Автозапуск";
+
+"9N4-Lw-6Ob.title" = "Пароль";
+
+"AYu-sK-qS6.title" = "Меню гри";
+
+"z0q-m8-6KJ.title" = "TCP Keep-Alive";
+
+"IpF-Ur-Zlh.title" = "Увімкнути";
+
+"DwU-MU-ncE.title" = "Кількість TCP Keep-Alive запитів";
+
+"EnC-Oa-kda.title" = "Тайм-аут простою для TCP Keep-Alive";
+
+"EY5-8C-G6C.title" = "Уможливлює постквантове узгодження ключів у з’єднаннях TLS 1.3";
+
+"aFJ-Zj-eao.title" = "Увімкнути";
+
+"IQv-IB-iLA.title" = "YASS (Ще один Shadow Socket)";
+
+"JYa-MA-4KH.title" = "СТІЙ";
+
+"Jw2-My-hmB.title" = "Увімкнути";
+
+"KPU-2Q-dN7.title" = "Початок";
+
+"Mei-lK-JLB.title" = "Скасувати";
+
+"QRy-PK-jJT.title" = "Ім’я користувача";
+
+"dCR-E3-G0W.title" = "Інтервал TCP Keep-Alive";
+
+"g0k-mZ-0JW.title" = "Системний проксі";
+
+"g3k-Ab-Oin.title" = "Хост сервера";
+
+"hei-7a-ZHr.title" = "Увімкнути";
+
+"mcp-Vm-U1E.title" = "Порт сервера";
+
+"n7v-aO-ITf.title" = "Варіант";
+
+"qHI-jj-mpI.ibShadowedObjectValues[0]" = "Item";
+
+"rim-zj-Iub.title" = "Локальний хост";
+
+"tOi-q9-yJY.title" = "Шифр/Метод";
+
+"uQy-DD-JDr.title" = "YASS";
+
+"yzs-Gu-p7Y.title" = "Гаразд";
+
+"yxt-ql-TD8.title" = "URL-адреса для DNS через HTTPS";
+
+"PXx-nB-Hn1.title" = "Хост DNS-over-TLS";
+
+"Ux8-IL-FUS.title" = "Гранична ставка";
+
+"zY6-tD-aUd.title" = "Тайм-аут";
+
+"bxG-gg-LTc.title" = "Індикація імені сервера";
+
+"mw5-nB-ary.title" = "Відображати стан у реальному часі";
+
+"71A-aG-Rt6.title" = "Увімкнути";

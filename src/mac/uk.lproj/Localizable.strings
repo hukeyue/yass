@@ -1,0 +1,29 @@
+"NETWORK_UNREACHABLE" = "Мережа недоступна";
+
+"CONNECTING" = "Підключення";
+
+"CONNECTED" = "Підключено";
+
+"DISCONNECTING" = "Відключення";
+
+"DISCONNECTED_WITH" = "Відключений від";
+
+"DISCONNECTED" = "Відключено";
+
+"INVALID" = "Недійсне посилання";
+
+"REASSERTING" = "Відновлення з’єднання";
+
+"UNKNOWN" = "Невідомий стан";
+
+"START_FAILED" = "Запуск не вдався";
+
+"OK" = "Гаразд";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Не вдалося підключитися через";
+
+"RXRATE" = "Швидкість отримання:";
+
+"TXRATE" = "Швидкість надсилання:";
+
+"PORT" = "Порт:";
