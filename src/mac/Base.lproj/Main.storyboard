@@ -425,7 +425,7 @@
                                     <gridCell row="e6X-BZ-bV8" column="XrQ-Tc-XCS" id="pI2-ba-pFT">
                                         <button key="contentView" verticalHuggingPriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="Cu9-FF-7Of">
                                             <rect key="frame" x="308" y="102" width="63" height="16"/>
-                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="hei-7a-ZHr">
+                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" inset="2" id="hei-7a-ZHr">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
@@ -448,7 +448,7 @@
                                     <gridCell row="1cJ-xv-Xd3" column="XrQ-Tc-XCS" id="IsN-Qi-s8F">
                                         <button key="contentView" verticalHuggingPriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="fIt-Cr-IJG">
                                             <rect key="frame" x="308" y="72" width="63" height="16"/>
-                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="Jw2-My-hmB">
+                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Jw2-My-hmB">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
@@ -460,7 +460,7 @@
                                     <gridCell row="5W6-I1-Kdw" column="LO3-Dh-mOI" id="IWF-nA-7ND"/>
                                     <gridCell row="5W6-I1-Kdw" column="a9F-Xp-86m" id="U8v-2F-4PA">
                                         <textField key="contentView" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="A2J-ZA-fvT">
-                                            <rect key="frame" x="94" y="44" width="147" height="16"/>
+                                            <rect key="frame" x="94" y="50" width="147" height="16"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Display Realtime Status" id="mw5-nB-ary">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -470,8 +470,8 @@
                                     </gridCell>
                                     <gridCell row="5W6-I1-Kdw" column="XrQ-Tc-XCS" id="VcC-w3-Z6W">
                                         <button key="contentView" verticalHuggingPriority="749" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Buv-bm-Z3l">
-                                            <rect key="frame" x="308" y="44" width="188" height="16"/>
-                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="71A-aG-Rt6">
+                                            <rect key="frame" x="308" y="50" width="188" height="16"/>
+                                            <buttonCell key="cell" type="check" title="Enable" bezelStyle="regularSquare" imagePosition="left" inset="2" id="71A-aG-Rt6">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>

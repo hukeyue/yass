@@ -62,16 +62,15 @@
     [self.cipherMethod addItemWithObjectValue:methodString];
   }
   self.cipherMethod.numberOfVisibleItems = sizeof(methodStrings) / sizeof(methodStrings[0]);
-  should_startup_at_app_load = CheckLoginItemStatus(nullptr);
 
 #ifdef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
   [self.localPort setEnabled:FALSE];
   [self.autoStart setEnabled:FALSE];
-  [self.autoStart setState:NSControlStateValueOff];
-  [self.systemProxy setState:NSControlStateValueOff];
+  [self.systemProxy setState:NSControlStateValueOn];
   [self.systemProxy setEnabled:NO];
 #else
+  should_startup_at_app_load = CheckLoginItemStatus(nullptr);
   [self.autoStart setState:(should_startup_at_app_load ? NSControlStateValueOn : NSControlStateValueOff)];
   [self.systemProxy setState:(GetSystemProxy() ? NSControlStateValueOn : NSControlStateValueOff)];
 #endif
