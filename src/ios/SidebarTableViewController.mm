@@ -54,13 +54,13 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-  if (section == 3)
-    return nil;
-  if (section == 0)
-    return nil;
-  NSString* text = [appDelegate getPaneMessage:section == 2 withLeft: NO];
-  return text;
+
+  if (section == 1 || section == 2) {
+    YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+    return [appDelegate getPaneMessage:section == 2 withLeft: NO];
+  }
+
+  return nil;
 }
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -75,8 +75,11 @@
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.accessoryType = UITableViewCellAccessoryNone;
   cell.accessoryView = nil;
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
+    content.image = [UIImage systemImageNamed:@"waveform"];
+  } else
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  if (indexPath.section == 4) {
     content.secondaryText = @"";
     content.image = [UIImage systemImageNamed:@"bonjour"];
     UISwitch* sw = [[UISwitch alloc] init];
@@ -124,8 +127,11 @@
 
 - (NSString*)textForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
+    return [appDelegate getPortMessage:indexPath.section == 2 withLeft: YES];
+  }
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  if (indexPath.section == 4) {
     return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: YES];
   }
 #endif
@@ -143,8 +149,11 @@
 
 - (NSString*)secondaryTextForRowAt:(NSIndexPath*)indexPath {
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   if (indexPath.section == 3) {
+    return [appDelegate getPortMessage:indexPath.section == 2 withLeft: NO];
+  }
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  if (indexPath.section == 4) {
     return [appDelegate getSwitchMessage:indexPath.section == 2 withLeft: NO];
   }
 #endif
@@ -157,25 +166,21 @@
   if (indexPath.row == 1) {
     return [appDelegate getTotalMessage:indexPath.section == 2 withLeft: NO];
   }
-  return @"text";
+  return @"secondary-text";
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
 #if defined(TARGET_OS_TV) && !TARGET_OS_TV
-  return 4;
+  return 5;
 #else
-  return 3;
+  return 4;
 #endif
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  if (section == 0)
-    return 1;
-#if defined(TARGET_OS_TV) && !TARGET_OS_TV
-  if (section == 3)
-    return 1;
-#endif
-  return 2;
+  if (section == 1 || section == 2)
+    return 2;
+  return 1;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {

@@ -602,7 +602,7 @@
     return NSLocalizedString(@"PORT", @"port:");
   }
 
-  return [@(effective_port_) stringValue];
+  return effective_port_ == -1 ? NSLocalizedString(@"INVALID", @"Invalid") : [@(effective_port_) stringValue];
 }
 
 - (NSString*)getStatusMessage {
