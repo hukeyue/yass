@@ -224,18 +224,17 @@
 }
 
 - (YassWindowController*)getWindowController {
-  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
-  NSWindowController *windowController = [keyWindow windowController];
-  if (![windowController isKindOfClass:[YassWindowController class]]) {
-    NSLog(@"windowController mismatched");
-    return nil;
+  for (NSWindow *window in NSApplication.sharedApplication.windows) {
+    NSWindowController *windowController = [window windowController];
+    if ([windowController isKindOfClass:[YassWindowController class]]) {
+      return (YassWindowController*)windowController;
+    }
   }
-  return (YassWindowController*)windowController;
+  return nil;
 }
 
 - (YassViewController*)getViewController {
-  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
-  NSWindowController *windowController = [keyWindow windowController];
+  NSWindowController *windowController = [self getWindowController];
   NSViewController *viewController = [windowController contentViewController];
   if (![viewController isKindOfClass:[YassViewController class]]) {
     NSLog(@"viewController mismatched");
@@ -302,10 +301,12 @@
 }
 
 - (void)OnStop:(BOOL)quiet {
+  [self OnStopping];
+
   if (vpn_manager_ != nil) {
     // state will reflect in NEVPNStatusDidChangeNotification
     [vpn_manager_.connection stopVPNTunnel];
-    [self didChangeVpnStatus:nil];
+    // [self didChangeVpnStatus:nil];
   } else {
     [self OnStopped];
   }
@@ -456,7 +457,7 @@
       if (ret == TRUE) {
         vpn_manager_ = vpn_manager;
         // state will reflect in NEVPNStatusDidChangeNotification
-        [self didChangeVpnStatus:nil];
+        // [self didChangeVpnStatus:nil];
       } else {
         [self OnStartFailedWithNSError:error];
       }
@@ -556,7 +557,8 @@
   YassWindowController* windowController = [self getWindowController];
   [windowController StartFailed];
   NSAlert* alert = [[NSAlert alloc] init];
-  alert.messageText = @(error_msg.c_str());
+  alert.messageText = NSLocalizedString(@"START_FAILED", @"Start Failed");
+  alert.informativeText = @(error_msg.c_str());
   alert.icon = [NSImage imageNamed:NSImageNameCaution];
   alert.alertStyle = NSAlertStyleWarning;
   [alert runModal];
@@ -702,7 +704,8 @@
   YassWindowController* windowController = [self getWindowController];
   [windowController StartFailed];
   NSAlert* alert = [[NSAlert alloc] init];
-  alert.messageText = @(error_msg.c_str());
+  alert.messageText = NSLocalizedString(@"START_FAILED", @"Start Failed");
+  alert.informativeText = @(error_msg.c_str());
   alert.icon = [NSImage imageNamed:NSImageNameCaution];
   alert.alertStyle = NSAlertStyleWarning;
   [alert runModal];

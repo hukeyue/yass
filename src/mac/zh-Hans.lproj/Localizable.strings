@@ -8,6 +8,18 @@
 
 "DISCONNECTED_WITH" = "断开连接于服务器";
 
+"DISCONNECTED" = "已断开连接";
+
+"INVALID" = "无效链接";
+
+"REASSERTING" = "重新连接中";
+
+"UNKNOWN" = "未知状态";
+
+"START_FAILED" = "启动失败";
+
+"OK" = "确认";
+
 "FAILED_TO_CONNECT_DUE_TO" = "无法连接因为";
 
 "RXRATE" = "下载速率:";

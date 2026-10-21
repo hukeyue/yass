@@ -13,6 +13,24 @@
 /* Disconnected with  */
 "DISCONNECTED_WITH" = "Disconnected with";
 
+/* Disconnected */
+"DISCONNECTED" = "Disconnected";
+
+/* Invalid */
+"INVALID" = "Invalid";
+
+/* Reasserting */
+"REASSERTING" = "Reasserting";
+
+/* Unknown */
+"UNKNOWN" = "Unknown";
+
+/* Start Failed */
+"START_FAILED" = "Start Failed";
+
+/* OK */
+"OK" = "OK";
+
 /* Failed to connect due to  */
 "FAILED_TO_CONNECT_DUE_TO" = "Failed to connect due to";
 

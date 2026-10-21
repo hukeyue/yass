@@ -8,6 +8,18 @@
 
 "DISCONNECTED_WITH" = "サーバーから切断されました";
 
+"DISCONNECTED" = "切断済み";
+
+"INVALID" = "無効なリンク";
+
+"REASSERTING" = "再接続中";
+
+"UNKNOWN" = "不明な状態";
+
+"START_FAILED" = "起動に失敗しました";
+
+"OK" = "確認しました";
+
 "FAILED_TO_CONNECT_DUE_TO" = "接続できません。理由";
 
 "RXRATE" = "ダウンロード速度:";

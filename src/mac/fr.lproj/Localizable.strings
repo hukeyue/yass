@@ -8,6 +8,18 @@
 
 "DISCONNECTED_WITH" = "Déconnecté du serveur";
 
+"DISCONNECTED" = "Déconnecté";
+
+"INVALID" = "Lien invalide";
+
+"REASSERTING" = "Reconnexion en cours";
+
+"UNKNOWN" = "Statut inconnu";
+
+"START_FAILED" = "Échec du démarrage";
+
+"OK" = "Confirmation";
+
 "FAILED_TO_CONNECT_DUE_TO" = "Impossible de se connecter car";
 
 "RXRATE" = "Débit de téléchargement:";
