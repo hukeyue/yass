@@ -147,7 +147,7 @@
 
 - (void)OnStop {
   YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
-  [appDelegate OnStart:FALSE];
+  [appDelegate OnStop:FALSE];
 }
 
 - (void)Starting {
