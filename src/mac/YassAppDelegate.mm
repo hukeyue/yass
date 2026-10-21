@@ -383,6 +383,8 @@
     @(kServerPortFieldName) : server_port_,
     @(kUsernameFieldName) : username_,
     @(kPasswordFieldName) : password_,
+    @(kLocalHostFieldName) : local_host_,
+    @(kLocalPortFieldName) : local_port_,
     @(kMethodStringFieldName) : method_string_,
     @(kDoHURLFieldName) : doh_url_,
     @(kDoTHostFieldName) : dot_host_,

@@ -64,6 +64,9 @@ constexpr const char kDoTHostFieldName[] = "dot_host";
 constexpr const char kLimitRateFieldName[] = "limit_rate";
 constexpr const char kConnectTimeoutFieldName[] = "connect_timeout";
 
+constexpr const char kLocalHostFieldName[] = "local_host";
+constexpr const char kLocalPortFieldName[] = "local_port";
+
 constexpr const char kEnablePostQuantumKyberKey[] = "ENABLE_POST_QUANTUM_KYBER";
 
 #endif  //  YASS_APPLE_UTILS

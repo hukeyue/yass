@@ -68,6 +68,8 @@
   NSString* server_port_;
   NSString* username_;
   NSString* password_;
+  NSString* local_host_;
+  NSString* local_port_;
   NSString* method_string_;
   NSString* doh_url_;
   NSString* dot_host_;
@@ -300,6 +302,8 @@
     @(kServerPortFieldName) : server_port_,
     @(kUsernameFieldName) : username_,
     @(kPasswordFieldName) : password_,
+    @(kLocalHostFieldName) : local_host_,
+    @(kLocalPortFieldName) : local_port_,
     @(kMethodStringFieldName) : method_string_,
     @(kDoHURLFieldName) : doh_url_,
     @(kDoTHostFieldName) : dot_host_,
@@ -469,6 +473,8 @@
   server_port_ = viewController.serverPort.text;
   username_ = viewController.username.text;
   password_ = viewController.password.text;
+  local_host_ = @"127.0.0.1"; // FIXME hardcoded for now
+  local_port_ = @"0";
   method_string_ = viewController.currentCiphermethod;
   doh_url_ = viewController.dohURL.text;
   dot_host_ = viewController.dotHost.text;

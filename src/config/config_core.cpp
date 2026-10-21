@@ -179,7 +179,7 @@ ABSL_FLAG(PortFlag, server_port, PortFlag(443), "Remote server on given port");
 ABSL_FLAG(std::string, local_host, "127.0.0.1", "Local proxy server on given host (Client Only)");
 ABSL_FLAG(PortFlag,
           local_port,
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS) || defined(BUILD_NETWORK_EXTENSION)
           PortFlag(0),
 #else
           PortFlag(1080),

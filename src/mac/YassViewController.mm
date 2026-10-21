@@ -65,7 +65,6 @@
 
 #ifdef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
-  [self.localPort setEnabled:FALSE];
   [self.autoStart setEnabled:FALSE];
   [self.systemProxy setState:NSControlStateValueOn];
   [self.systemProxy setEnabled:NO];
@@ -160,8 +159,8 @@
   [self.cipherMethod setEnabled:FALSE];
 #ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
-  [self.localPort setEnabled:FALSE];
 #endif
+  [self.localPort setEnabled:FALSE];
   [self.dohURL setEnabled:FALSE];
   [self.dotHost setEnabled:FALSE];
   [self.limitRate setEnabled:FALSE];
@@ -185,8 +184,8 @@
   [self.cipherMethod setEnabled:TRUE];
 #ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:TRUE];
-  [self.localPort setEnabled:TRUE];
 #endif
+  [self.localPort setEnabled:TRUE];
   [self.dohURL setEnabled:TRUE];
   [self.dotHost setEnabled:TRUE];
   [self.limitRate setEnabled:TRUE];
@@ -205,8 +204,8 @@
   [self.cipherMethod setEnabled:FALSE];
 #ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:FALSE];
-  [self.localPort setEnabled:FALSE];
 #endif
+  [self.localPort setEnabled:FALSE];
   [self.dohURL setEnabled:FALSE];
   [self.dotHost setEnabled:FALSE];
   [self.limitRate setEnabled:FALSE];
@@ -225,8 +224,8 @@
   [self.cipherMethod setEnabled:TRUE];
 #ifndef BUILD_NETWORK_EXTENSION
   [self.localHost setEnabled:TRUE];
-  [self.localPort setEnabled:TRUE];
 #endif
+  [self.localPort setEnabled:TRUE];
   [self.dohURL setEnabled:TRUE];
   [self.dotHost setEnabled:TRUE];
   [self.limitRate setEnabled:TRUE];
@@ -243,11 +242,10 @@
 #ifdef BUILD_NETWORK_EXTENSION
   // Hardcoded in PacketTunnelProvider
   self.localHost.stringValue = @"127.0.0.1";
-  self.localPort.intValue = 0;
 #else
   self.localHost.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_local_host));
-  self.localPort.intValue = absl::GetFlag(FLAGS_local_port);
 #endif
+  self.localPort.intValue = absl::GetFlag(FLAGS_local_port);
   self.dohURL.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_doh_url));
   self.dotHost.stringValue = SysUTF8ToNSString(absl::GetFlag(FLAGS_dot_host));
   self.limitRate.stringValue = SysUTF8ToNSString(std::string(absl::GetFlag(FLAGS_limit_rate)));
