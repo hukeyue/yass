@@ -35,11 +35,12 @@ enum YASSState { STARTED, STARTING, START_FAILED, STOPPING, STOPPED };
 - (NSString*)getStatus;
 - (void)OnStart:(BOOL)quiet;
 - (void)OnStop:(BOOL)quiet;
-- (NSString*)getSwitchMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getConfigurationMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getPaneMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getRateMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getTotalMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
+- (NSString*)getSwitchMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
+- (NSString*)getPortMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft;
 - (NSString*)getStatusMessage;
 @end
 

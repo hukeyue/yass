@@ -92,11 +92,13 @@
 #else
   Worker worker_;
 #endif
+  NSInteger effective_port_;
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
   SetDockIconStyle(false);
   initNetworkPathMonitor();
+  effective_port_ = -1;
 
 #ifdef BUILD_NETWORK_EXTENSION
   reinstallPlugin();
@@ -346,6 +348,48 @@
   }
   YassWindowController* windowController = [self getWindowController];
   [windowController UpdateStatusBar];
+
+#ifndef NDEBUG
+  NSLog(@"status message: %@", [self getStatusMessage]);
+#endif
+}
+
+- (void)FetchListenPortData {
+  if (vpn_manager_ != nil && state_ == STARTED) {
+    NETunnelProviderSession* session = (NETunnelProviderSession*)vpn_manager_.connection;
+    NSData* requestData = [@(kAppMessageGetEffectivePort) dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    [session sendProviderMessage:requestData
+                     returnError:&error
+                 responseHandler:^(NSData* _Nullable responseData) {
+                   if (!responseData) {
+                     NSLog(@"empty response from %s", __func__);
+                     return;
+                   }
+                   if (responseData.length != sizeof(NSInteger)) {
+                     NSLog(@"bad response from %s", __func__);
+                   }
+                   NSInteger effective_port;
+                   memcpy(&effective_port, (const char*)responseData.bytes, responseData.length);
+                   NSLog(@"listen port response %ld from rpc", effective_port);
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                      [self UpdateEffectivePort:effective_port];
+                   });
+                 }];
+    if (error) {
+      std::string err_msg = SysNSStringToUTF8([error localizedDescription]);
+      LOG(WARNING) << "listen port: send Request failed: " << err_msg;
+    }
+  }
+}
+
+- (void)UpdateEffectivePort:(NSInteger)effective_port {
+  if ([self getState] == STARTED) {
+    effective_port_ = effective_port;
+    YassWindowController* windowController = [self getWindowController];
+    [windowController UpdateStatusBar];
+    LOG(WARNING) << "listen port: " << effective_port;
+  }
 }
 
 - (void)OnStartSaveAndLoadInstance:(NETunnelProviderManager*)vpn_manager {
@@ -477,6 +521,7 @@
 
 - (void)OnStarting {
   state_ = STARTING;
+  effective_port_ = -1;
 
   YassWindowController* windowController = [self getWindowController];
   [windowController Starting];
@@ -484,6 +529,9 @@
 
 - (void)OnStarted {
   state_ = STARTED;
+  effective_port_ = -1;
+
+  [self FetchListenPortData];
 
   YassWindowController* windowController = [self getWindowController];
   [windowController Started];
@@ -503,6 +551,7 @@
 - (void)OnStartFailed:(std::string)error_msg {
   state_ = START_FAILED;
   error_msg_ = error_msg;  // required by viewController
+  effective_port_ = -1;
 
   YassWindowController* windowController = [self getWindowController];
   [windowController StartFailed];
@@ -515,6 +564,7 @@
 
 - (void)OnStopping {
   state_ = STOPPING;
+  effective_port_ = -1;
 
   YassWindowController* windowController = [self getWindowController];
   [windowController Stopping];
@@ -522,6 +572,7 @@
 
 - (void)OnStopped {
   state_ = STOPPED;
+  effective_port_ = -1;
 
   [refresh_timer_ invalidate];
   refresh_timer_ = nil;
@@ -613,10 +664,15 @@
   }
   YassWindowController* windowController = [self getWindowController];
   [windowController UpdateStatusBar];
+
+#ifndef NDEBUG
+  NSLog(@"status message: %@", [self getStatusMessage]);
+#endif
 }
 
 - (void)OnStarting {
   state_ = STARTING;
+  effective_port_ = -1;
 
   YassWindowController* windowController = [self getWindowController];
   [windowController Starting];
@@ -624,6 +680,8 @@
 
 - (void)OnStarted {
   state_ = STARTED;
+  effective_port_ = worker_.GetLocalPort();
+
   config::SaveConfig();
 
   YassWindowController* windowController = [self getWindowController];
@@ -638,6 +696,7 @@
 
 - (void)OnStartFailed:(std::string)error_msg {
   state_ = START_FAILED;
+  effective_port_ = -1;
 
   error_msg_ = error_msg;
   YassWindowController* windowController = [self getWindowController];
@@ -651,6 +710,7 @@
 
 - (void)OnStopping {
   state_ = STOPPING;
+  effective_port_ = -1;
 
   YassWindowController* windowController = [self getWindowController];
   [windowController Stopping];
@@ -658,6 +718,7 @@
 
 - (void)OnStopped {
   state_ = STOPPED;
+  effective_port_ = -1;
 
   [refresh_timer_ invalidate];
   refresh_timer_ = nil;
@@ -703,6 +764,11 @@
   ss << " " << SysNSStringToUTF8(message) << " ";
   HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
   ss << "/s";
+
+  if (effective_port_ != -1) {
+    message = NSLocalizedString(@"PORT", @"port:");
+    ss << " " << SysNSStringToUTF8(message) << " " << effective_port_;
+  }
 
   return SysUTF8ToNSString(ss.str());
 }

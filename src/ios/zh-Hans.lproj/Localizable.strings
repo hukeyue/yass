@@ -35,3 +35,5 @@
 "TOTAL_CONFIGURATION" = "所有配置选项";
 
 "TURN_ON" = "启用";
+
+"PORT" = "端口:";

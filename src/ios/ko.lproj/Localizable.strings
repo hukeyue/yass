@@ -35,3 +35,5 @@
 "TOTAL_CONFIGURATION" = "모든 구성 옵션";
 
 "TURN_ON" = "켜기";
+
+"PORT" = "포트:";

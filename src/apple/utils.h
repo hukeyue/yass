@@ -52,6 +52,7 @@ void updateTelemetryObserver(TelemetryObserver *observer, uint64_t total_rx_byte
 void finalizeTelemetryObserver(TelemetryObserver *observer);
 
 constexpr const char kAppMessageGetTelemetry[] = "__get_telemetry";
+constexpr const char kAppMessageGetEffectivePort[] = "__get_effective_port";
 
 constexpr const char kServerHostFieldName[] = "server_host";
 constexpr const char kServerSNIFieldName[] = "server_sni";

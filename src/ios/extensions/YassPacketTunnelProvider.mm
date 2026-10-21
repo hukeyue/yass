@@ -347,6 +347,13 @@ static constexpr const uint32_t kYieldConcurrencyOfConnections = 12u;
     std::string response = serializeTelemetryJson(net::cli::total_rx_bytes, net::cli::total_tx_bytes);
     NSData* responseData = [NSData dataWithBytes:response.c_str() length:response.size()];
     completionHandler(responseData);
+  } else if ([request isEqualToString:@(kAppMessageGetEffectivePort)]) {
+    NSInteger effective_port = -1;
+    if (!stopped_ && worker_) {
+      effective_port = worker_->GetLocalPort();
+    }
+    NSData* responseData = [NSData dataWithBytes:&effective_port length:sizeof(effective_port)];
+    completionHandler(responseData);
   } else {
     // If this parameter (completionHandler) is nil then the method implementation should
     // treat this as an indication that the container app is not expecting a response.

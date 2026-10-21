@@ -198,6 +198,7 @@ void Worker::Stop(absl::AnyInvocable<void()>&& callback) {
   callback_mutex_.unlock();
   /// stop in the worker thread
   private_->Stop();
+  local_port_ = 0;
 }
 
 size_t Worker::currentConnections() const {

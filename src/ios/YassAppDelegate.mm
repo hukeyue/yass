@@ -78,6 +78,7 @@
   BOOL enable_post_quantum_kyber_;
 
   struct TelemetryObserver telemetry_observer_;
+  NSInteger effective_port_;
 }
 
 - (BOOL)application:(UIApplication*)application
@@ -267,6 +268,48 @@
   }
   YassSplitViewController* vc = [self getSplitViewController];
   [vc UpdateStatusBar];
+
+#ifndef NDEBUG
+  NSLog(@"status message: %@", [self getStatusMessage]);
+#endif
+}
+
+- (void)FetchListenPortData {
+  if (vpn_manager_ != nil && state_ == STARTED) {
+    NETunnelProviderSession* session = (NETunnelProviderSession*)vpn_manager_.connection;
+    NSData* requestData = [@(kAppMessageGetEffectivePort) dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    [session sendProviderMessage:requestData
+                     returnError:&error
+                 responseHandler:^(NSData* _Nullable responseData) {
+                   if (!responseData) {
+                     NSLog(@"empty response from %s", __func__);
+                     return;
+                   }
+                   if (responseData.length != sizeof(NSInteger)) {
+                     NSLog(@"bad response from %s", __func__);
+                   }
+                   NSInteger effective_port;
+                   memcpy(&effective_port, (const char*)responseData.bytes, responseData.length);
+                   NSLog(@"listen port response %ld from rpc", effective_port);
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                      [self UpdateEffectivePort:effective_port];
+                   });
+                 }];
+    if (error) {
+      std::string err_msg = SysNSStringToUTF8([error localizedDescription]);
+      LOG(WARNING) << "listen port: send Request failed: " << err_msg;
+    }
+  }
+}
+
+- (void)UpdateEffectivePort:(NSInteger)effective_port {
+  if ([self getState] == STARTED) {
+    effective_port_ = effective_port;
+    YassSplitViewController* vc = [self getSplitViewController];
+    [vc UpdateStatusBar];
+    LOG(WARNING) << "listen port: " << effective_port;
+  }
 }
 
 - (void)OnStartSaveAndLoadInstance:(NETunnelProviderManager*)vpn_manager {
@@ -396,6 +439,7 @@
 
 - (void)OnStarting {
   state_ = STARTING;
+  effective_port_ = -1;
 
   YassSplitViewController* vc = [self getSplitViewController];
   [vc Starting];
@@ -403,6 +447,8 @@
 
 - (void)OnStarted {
   state_ = STARTED;
+  effective_port_ = -1;
+  [self FetchListenPortData];
 
   YassSplitViewController* vc = [self getSplitViewController];
   [vc Started];
@@ -422,6 +468,7 @@
 - (void)OnStartFailed:(std::string)error_msg {
   state_ = START_FAILED;
   error_msg_ = error_msg;  // required by viewController
+  effective_port_ = -1;
 
   YassSplitViewController* vc = [self getSplitViewController];
   [vc StartFailed];
@@ -444,6 +491,7 @@
 
 - (void)OnStopping {
   state_ = STOPPING;
+  effective_port_ = -1;
 
   YassSplitViewController* vc = [self getSplitViewController];
   [vc Stopping];
@@ -451,6 +499,7 @@
 
 - (void)OnStopped {
   state_ = STOPPED;
+  effective_port_ = -1;
 
   [refresh_timer_ invalidate];
   refresh_timer_ = nil;
@@ -494,13 +543,6 @@
 
   return config::ReadConfigFromArgument(server_host, server_sni, server_port, username, password, method_string,
                                         "127.0.0.1", "0", doh_url, dot_host, limit_rate, connect_timeout);
-}
-
-- (NSString*)getSwitchMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
-  if (!isLeft) {
-    return @">-";
-  }
-  return NSLocalizedString(@"TURN_ON", @"Turn On");
 }
 
 - (NSString*)getConfigurationMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
@@ -548,6 +590,21 @@
   return SysUTF8ToNSString(ss.str());
 }
 
+- (NSString*)getSwitchMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
+  if (!isLeft) {
+    return @">-";
+  }
+  return NSLocalizedString(@"TURN_ON", @"Turn On");
+}
+
+- (NSString*)getPortMessage:(BOOL)isReceiveSide withLeft:(BOOL)isLeft {
+  if (isLeft) {
+    return NSLocalizedString(@"PORT", @"port:");
+  }
+
+  return [@(effective_port_) stringValue];
+}
+
 - (NSString*)getStatusMessage {
   if ([self getState] != STARTED) {
     return [self getStatus];
@@ -563,6 +620,11 @@
   ss << " " << SysNSStringToUTF8(message) << " ";
   HumanReadableByteCountBin(&ss, telemetry_observer_.tx_rate_);
   ss << "/s";
+
+  if (effective_port_ != -1) {
+    message = NSLocalizedString(@"PORT", @"port:");
+    ss << " " << SysNSStringToUTF8(message) << " " << effective_port_;
+  }
 
   return SysUTF8ToNSString(ss.str());
 }
