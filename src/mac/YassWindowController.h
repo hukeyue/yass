@@ -38,7 +38,6 @@
 - (void)Stopped;
 - (void)toggleDisplayStatus:(bool)enable;
 - (void)UpdateStatusBar;
-+ (YassWindowController* __weak)instance;
 @end
 
 #endif  // YASS_MAC_WINDOW_CONTROLLER

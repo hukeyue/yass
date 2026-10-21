@@ -119,6 +119,7 @@
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
   LOG(WARNING) << "Application exiting";
   [self OnStop:TRUE];
+  deinitNetworkPathMonitor();
 #ifdef BUILD_NETWORK_EXTENSION
 #ifndef NDEBUG
   uninstallPlugin();
@@ -162,7 +163,7 @@
   NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
   OptionViewController* optionViewController =
       (OptionViewController*)[storyboard instantiateControllerWithIdentifier:@"OptionViewController"];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController presentViewControllerAsModalWindow:optionViewController];
 }
 
@@ -193,7 +194,7 @@
     [self didChangeVpnStatus:nil];
   }];
 #else
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   switch ([self getState]) {
     case STARTING:
       [windowController Starting];
@@ -218,6 +219,27 @@
 
 - (enum YASSState)getState {
   return state_;
+}
+
+- (YassWindowController*)getWindowController {
+  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
+  NSWindowController *windowController = [keyWindow windowController];
+  if (![windowController isKindOfClass:[YassWindowController class]]) {
+    NSLog(@"windowController mismatched");
+    return nil;
+  }
+  return (YassWindowController*)windowController;
+}
+
+- (YassViewController*)getViewController {
+  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
+  NSWindowController *windowController = [keyWindow windowController];
+  NSViewController *viewController = [windowController contentViewController];
+  if (![viewController isKindOfClass:[YassViewController class]]) {
+    NSLog(@"viewController mismatched");
+    return nil;
+  }
+  return (YassViewController*)viewController;
 }
 
 - (NSString*)getStatus {
@@ -322,7 +344,7 @@
   } else {
     updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
   }
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController UpdateStatusBar];
 }
 
@@ -454,14 +476,14 @@
 - (void)OnStarting {
   state_ = STARTING;
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Starting];
 }
 
 - (void)OnStarted {
   state_ = STARTED;
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Started];
 
   refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
@@ -480,7 +502,7 @@
   state_ = START_FAILED;
   error_msg_ = error_msg;  // required by viewController
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController StartFailed];
   NSAlert* alert = [[NSAlert alloc] init];
   alert.messageText = @(error_msg.c_str());
@@ -492,7 +514,7 @@
 - (void)OnStopping {
   state_ = STOPPING;
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Stopping];
 }
 
@@ -504,7 +526,7 @@
 
   finalizeTelemetryObserver(&telemetry_observer_);
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Stopped];
 }
 
@@ -587,14 +609,14 @@
   } else {
     updateTelemetryObserver(&telemetry_observer_, total_rx_bytes, total_tx_bytes);
   }
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController UpdateStatusBar];
 }
 
 - (void)OnStarting {
   state_ = STARTING;
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Starting];
 }
 
@@ -602,7 +624,7 @@
   state_ = STARTED;
   config::SaveConfig();
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Started];
 
   refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
@@ -616,7 +638,7 @@
   state_ = START_FAILED;
 
   error_msg_ = error_msg;
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController StartFailed];
   NSAlert* alert = [[NSAlert alloc] init];
   alert.messageText = @(error_msg.c_str());
@@ -628,7 +650,7 @@
 - (void)OnStopping {
   state_ = STOPPING;
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Stopping];
 }
 
@@ -640,7 +662,7 @@
 
   finalizeTelemetryObserver(&telemetry_observer_);
 
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   [windowController Stopped];
 }
 
@@ -684,7 +706,7 @@
 }
 
 - (std::string)SaveConfig {
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
 
   server_host_ = viewController.serverHost.stringValue;
   server_sni_ = viewController.serverSNI.stringValue;

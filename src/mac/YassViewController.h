@@ -57,8 +57,6 @@
 @property(weak) IBOutlet NSTextField *txRate;
 @property(weak) IBOutlet NSTextField *rxRateLabel;
 @property(weak) IBOutlet NSTextField *rxRate;
-
-+ (YassViewController* __weak)instance;
 @end
 
 #endif  // YASS_MAC_VIEW_CONTROLLER

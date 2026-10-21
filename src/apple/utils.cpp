@@ -24,15 +24,8 @@
 
 #include "apple/utils.h"
 
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <sys/socket.h>
-
 #include <json/json.h>
 
-#include "core/logging.hpp"
 #include "core/utils.hpp"
 
 std::string serializeTelemetryJson(uint64_t total_rx_bytes, uint64_t total_tx_bytes) {

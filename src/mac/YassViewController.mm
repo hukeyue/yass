@@ -38,8 +38,6 @@
 #include "mac/YassWindowController.h"
 #include "mac/utils.h"
 
-static YassViewController* __weak _instance;
-
 @interface YassViewController ()
 @end
 
@@ -47,13 +45,8 @@ static YassViewController* __weak _instance;
   bool should_startup_at_app_load;
 }
 
-+ (YassViewController* __weak)instance {
-  return _instance;
-}
-
 - (void)viewDidLoad {
   [super viewDidLoad];
-  _instance = self;
 
   YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
   self.txRateLabel.stringValue = [appDelegate getPaneMessage:NO];
@@ -102,6 +95,16 @@ static YassViewController* __weak _instance;
   }
 }
 
+- (YassWindowController*)getWindowController {
+  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
+  NSWindowController *windowController = [keyWindow windowController];
+  if (![windowController isKindOfClass:[YassWindowController class]]) {
+    NSLog(@"windowController mismatched");
+    return nil;
+  }
+  return (YassWindowController*)windowController;
+}
+
 - (IBAction)OnStartButtonClicked:(id)sender {
   [self OnStart];
 }
@@ -132,19 +135,19 @@ static YassViewController* __weak _instance;
 }
 
 - (IBAction)OnDisplayStatusClicked:(id)sender {
-  YassWindowController* windowController = [YassWindowController instance];
+  YassWindowController* windowController = [self getWindowController];
   bool enable = self.displayStatus.state == NSControlStateValueOn;
   [windowController toggleDisplayStatus:enable];
 }
 
 - (void)OnStart {
-  YassWindowController* windowController = [YassWindowController instance];
-  [windowController OnStart];
+  YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
+  [appDelegate OnStart:FALSE];
 }
 
 - (void)OnStop {
-  YassWindowController* windowController = [YassWindowController instance];
-  [windowController OnStop];
+  YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
+  [appDelegate OnStart:FALSE];
 }
 
 - (void)Starting {

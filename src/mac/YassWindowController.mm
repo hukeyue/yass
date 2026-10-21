@@ -37,8 +37,6 @@
 #import "mac/YassViewController.h"
 #include "mac/utils.h"
 
-static YassWindowController* __weak _instance;
-
 @interface YassWindowController ()
 - (void)toggleDisplayStatusInternal:(bool)enable;
 @end
@@ -51,13 +49,8 @@ static YassWindowController* __weak _instance;
   BOOL hide_on_closed_;
 }
 
-+ (YassWindowController* __weak)instance {
-  return _instance;
-}
-
 - (void)windowDidLoad {
   [super windowDidLoad];
-  _instance = self;
 
   y_status_bar_item_ = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
 
@@ -88,6 +81,15 @@ static YassWindowController* __weak _instance;
 
   [self.window orderOut:nil];
   return FALSE;
+}
+
+- (YassViewController*)getViewController {
+  NSViewController *viewController = [self contentViewController];
+  if (![viewController isKindOfClass:[YassViewController class]]) {
+    NSLog(@"viewController mismatched");
+    return nil;
+  }
+  return (YassViewController*)viewController;
 }
 
 - (void)statusItemClicked {
@@ -129,7 +131,7 @@ static YassWindowController* __weak _instance;
 }
 
 - (void)UpdateStatusBar {
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController UpdateStatusBar];
 
   [self UpdateStatusYBar];
@@ -149,7 +151,6 @@ static YassWindowController* __weak _instance;
 
 - (void)OnStart {
   YassAppDelegate* appDelegate = (YassAppDelegate*)NSApplication.sharedApplication.delegate;
-
   [appDelegate OnStart:FALSE];
 }
 
@@ -160,31 +161,31 @@ static YassWindowController* __weak _instance;
 
 - (void)Starting {
   [self UpdateStatusBar];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController Starting];
 }
 
 - (void)Started {
   [self UpdateStatusBar];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController Started];
 }
 
 - (void)StartFailed {
   [self UpdateStatusBar];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController StartFailed];
 }
 
 - (void)Stopping {
   [self UpdateStatusBar];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController Stopping];
 }
 
 - (void)Stopped {
   [self UpdateStatusBar];
-  YassViewController* viewController = [YassViewController instance];
+  YassViewController* viewController = [self getViewController];
   [viewController Stopped];
 }
 
