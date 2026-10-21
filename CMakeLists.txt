@@ -4631,6 +4631,10 @@ target_compile_definitions(yass_core PUBLIC
 target_link_libraries(yass_core PUBLIC
   ${CORE_LIBS})
 
+if (BUILD_NETWORK_EXTENSION)
+  target_compile_definitions(yass_core PRIVATE BUILD_NETWORK_EXTENSION=1)
+endif()
+
 set(SUPPORT_LIBS
   yass_core
   ${CORE_LIBS}
