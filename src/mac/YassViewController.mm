@@ -96,8 +96,7 @@
 }
 
 - (YassWindowController*)getWindowController {
-  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
-  NSWindowController *windowController = [keyWindow windowController];
+  NSWindowController *windowController = [[[self view] window] windowController];
   if (![windowController isKindOfClass:[YassWindowController class]]) {
     NSLog(@"windowController mismatched");
     return nil;
