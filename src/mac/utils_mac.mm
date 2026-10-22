@@ -61,7 +61,7 @@ using namespace gurl_base::apple;
 using namespace yass;
 
 static const char* kApplePluginkitBinary = "/usr/bin/pluginkit";
-static const char* kNetworkExtensionBundleIdentifier = "it.gui.ios.yass.macos.network-extension";
+static const char* kNetworkExtensionBundleIdentifier = "it.gui.ios.yass.network-extension";
 
 namespace {
 

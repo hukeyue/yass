@@ -5482,9 +5482,9 @@ if (GUI)
 
     if (GUI_FLAVOUR STREQUAL "cocoa")
         if (MACOS_BUILD_NETWORK_EXTENSION)
-          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass.macos")
+          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass")
         else()
-          set(IOS_GUI_IDENTIFIER "it.gui.yass")
+          set(IOS_GUI_IDENTIFIER "it.gui.yass") # for compatible with old distribution
         endif()
         # handle with empty dsymutil output
         # see https://reviews.llvm.org/D84565
@@ -5766,11 +5766,10 @@ if (GUI)
         set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
 
+        set(IOS_GUI_IDENTIFIER "it.gui.ios.yass")
         if (SDK_NAME STREQUAL appletvsimulator OR SDK_NAME STREQUAL appletvos)
-          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass.tvos")
           set(IOS_GUI_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/src/ios/tvos/Info.plist.in")
         else()
-          set(IOS_GUI_IDENTIFIER "it.gui.ios.yass")
           set(IOS_GUI_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/src/ios/Info.plist.in")
         endif()
         set_target_properties(${APP_NAME} PROPERTIES

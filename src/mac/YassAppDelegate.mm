@@ -401,13 +401,7 @@
     tunnelProtocol = (NETunnelProviderProtocol*)vpn_manager.protocolConfiguration;
   }
 
-#if defined(TARGET_OS_TV) && TARGET_OS_TV
-  tunnelProtocol.providerBundleIdentifier = @"it.gui.ios.yass.tvos.network-extension";
-#elif defined(TARGET_OS_MAC) && TARGET_OS_MAC
-  tunnelProtocol.providerBundleIdentifier = @"it.gui.ios.yass.macos.network-extension";
-#else
   tunnelProtocol.providerBundleIdentifier = @"it.gui.ios.yass.network-extension";
-#endif
   tunnelProtocol.disconnectOnSleep = FALSE;
   tunnelProtocol.serverAddress = @"Yet Another Shadow Socket";
 #if 0
