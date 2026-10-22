@@ -5161,6 +5161,8 @@ if (GUI)
             src/mac/ko.lproj/Main.strings
             src/mac/ru.lproj/Localizable.strings
             src/mac/ru.lproj/Main.strings
+            src/mac/sk_SK.lproj/Localizable.strings
+            src/mac/sk_SK.lproj/Main.strings
             src/mac/uk.lproj/Localizable.strings
             src/mac/uk.lproj/Main.strings
             src/mac/zh-Hans.lproj/Localizable.strings
@@ -5556,6 +5558,10 @@ if (GUI)
           set_source_files_properties("src/mac/ru.lproj/Localizable.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/ru.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/sk_SK.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/sk_SK.lproj/Main.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/uk.lproj/Localizable.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")

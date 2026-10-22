@@ -1,0 +1,29 @@
+"NETWORK_UNREACHABLE" = "Sieť je nedostupná";
+
+"CONNECTING" = "Pripájanie";
+
+"CONNECTED" = "Pripojené";
+
+"DISCONNECTING" = "Odpájanie";
+
+"DISCONNECTED_WITH" = "Odpojený od";
+
+"DISCONNECTED" = "Odpojené";
+
+"INVALID" = "Neplatný odkaz";
+
+"REASSERTING" = "Opätovné pripájanie";
+
+"UNKNOWN" = "Neznámy stav";
+
+"START_FAILED" = "Spustenie zlyhalo";
+
+"OK" = "V poriadku";
+
+"FAILED_TO_CONNECT_DUE_TO" = "Nepodarilo sa pripojiť z dôvodu";
+
+"RXRATE" = "Miera prijímania:";
+
+"TXRATE" = "Rýchlosť odosielania:";
+
+"PORT" = "Prístav:";
