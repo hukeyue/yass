@@ -282,6 +282,102 @@ BEGIN
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON        "Початок"
+    IDS_STOP_BUTTON         "СТІЙ"
+    IDS_SERVER_HOST_LABEL   "Хост сервера"
+    IDS_SERVER_SNI_LABEL    "Індикація імені сервера"
+    IDS_SERVER_PORT_LABEL   "Порт сервера"
+    IDS_USERNAME_LABEL      "Ім’я користувача"
+    IDS_PASSWORD_LABEL      "Пароль"
+    IDS_METHOD_LABEL        "Шифр/Метод"
+    IDS_LOCAL_HOST_LABEL    "Локальний хост"
+    IDS_LOCAL_PORT_LABEL    "Локальний порт"
+    IDS_DOH_URL_LABEL       "URL-адреса для DNS через HTTPS"
+    IDS_DOT_HOST_LABEL      "Хост DNS-over-TLS"
+    IDS_LIMIT_RATE_LABEL    "Гранична ставка"
+    IDS_TIMEOUT_LABEL       "Тайм-аут"
+    IDS_AUTOSTART_LABEL     "Автозапуск"
+    IDS_SYSTEMPROXY_LABEL   "Системний проксі"
+    IDS_ENABLE_LABEL        "Увімкнути"
+    IDS_SHOW_YASS_TIP       "Показати YASS"
+    IDS_HIDE_YASS_TIP       "Приховати YASS"
+    IDS_START_FAILED_MESSAGE            "Не вдалося запустити"
+    IDS_STATUS_CONNECTING               "Підключення"
+    IDS_STATUS_CONNECTED_WITH_CONNS     "Пов’язано з conns:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Не вдалося підключитися через"
+    IDS_STATUS_DISCONNECTING            "Відключення"
+    IDS_STATUS_DISCONNECTED_WITH        "Відключений від"
+    IDS_STATUS_TX_RATE      "швидкість передачі:"
+    IDS_STATUS_RX_RATE      "швидкість прийому:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON        "Start"
+    IDS_STOP_BUTTON         "Zastávka"
+    IDS_SERVER_HOST_LABEL   "Hostitel serveru"
+    IDS_SERVER_SNI_LABEL    "Indikace názvu serveru"
+    IDS_SERVER_PORT_LABEL   "Port serveru"
+    IDS_USERNAME_LABEL      "Uživatelské jméno"
+    IDS_PASSWORD_LABEL      "Heslo"
+    IDS_METHOD_LABEL        "Šifra/metoda"
+    IDS_LOCAL_HOST_LABEL    "Místní hostitel"
+    IDS_LOCAL_PORT_LABEL    "Místní port"
+    IDS_DOH_URL_LABEL       "URL adresa pro DNS přes HTTPS"
+    IDS_DOT_HOST_LABEL      "Hostitel DNS over TLS"
+    IDS_LIMIT_RATE_LABEL    "Limitní sazba"
+    IDS_TIMEOUT_LABEL       "Časový limit"
+    IDS_AUTOSTART_LABEL     "Automatické spuštění"
+    IDS_SYSTEMPROXY_LABEL   "Systémová proxy"
+    IDS_ENABLE_LABEL        "Zapnout"
+    IDS_SHOW_YASS_TIP       "Zobrazit YASS"
+    IDS_HIDE_YASS_TIP       "Skrýt YASS"
+    IDS_START_FAILED_MESSAGE            "Spuštění selhalo"
+    IDS_STATUS_CONNECTING               "Spojení"
+    IDS_STATUS_CONNECTED_WITH_CONNS     "Vztahující se ke spojením:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Nepodařilo se připojit přes"
+    IDS_STATUS_DISCONNECTING            "Odpojení"
+    IDS_STATUS_DISCONNECTED_WITH        "Odpojeno od"
+    IDS_STATUS_TX_RATE      "rychlost přenosu:"
+    IDS_STATUS_RX_RATE      "rychlost příjmu:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    IDS_START_BUTTON        "Začať"
+    IDS_STOP_BUTTON         "Zastaviť"
+    IDS_SERVER_HOST_LABEL   "Hostiteľ servera"
+    IDS_SERVER_SNI_LABEL    "Indikácia názvu servera"
+    IDS_SERVER_PORT_LABEL   "Port servera"
+    IDS_USERNAME_LABEL      "Používateľské meno"
+    IDS_PASSWORD_LABEL      "Heslo"
+    IDS_METHOD_LABEL        "Šifra/Metóda"
+    IDS_LOCAL_HOST_LABEL    "Miestny hostiteľ"
+    IDS_LOCAL_PORT_LABEL    "Miestny port"
+    IDS_DOH_URL_LABEL       "URL adresa pre DNS cez HTTPS"
+    IDS_DOT_HOST_LABEL      "Hostiteľ DNS cez TLS"
+    IDS_LIMIT_RATE_LABEL    "Limitná sadzba"
+    IDS_TIMEOUT_LABEL       "Časový limit"
+    IDS_AUTOSTART_LABEL     "Automatické spustenie"
+    IDS_SYSTEMPROXY_LABEL   "Systémový proxy"
+    IDS_ENABLE_LABEL        "Zapnúť"
+    IDS_SHOW_YASS_TIP       "Zobraziť YASS"
+    IDS_HIDE_YASS_TIP       "Skryť YASS"
+    IDS_START_FAILED_MESSAGE            "Spustenie zlyhalo"
+    IDS_STATUS_CONNECTING               "Pripájanie"
+    IDS_STATUS_CONNECTED_WITH_CONNS     "Súvisiace s pripojeniami:"
+    IDS_STATUS_FAILED_TO_CONNECT_DUE_TO "Nepodarilo sa pripojiť z dôvodu"
+    IDS_STATUS_DISCONNECTING            "Odpájanie"
+    IDS_STATUS_DISCONNECTED_WITH        "Odpojený od"
+    IDS_STATUS_TX_RATE      "rýchlosť prenosu:"
+    IDS_STATUS_RX_RATE      "rýchlosť príjmu:"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
     IDS_ABOUTBOX            "&About..."
@@ -333,8 +429,29 @@ END
 STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 BEGIN
-    IDS_ABOUTBOX            "정보 (&A)"
+    IDS_ABOUTBOX            "정보 (&A)..."
     IDS_OPTIONBOX           "옵션 (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "Інформація (&A)..."
+    IDS_OPTIONBOX           "Параметри (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "O (&A)..."
+    IDS_OPTIONBOX           "Volba (&O)..."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    IDS_ABOUTBOX            "O nás (&A)..."
+    IDS_OPTIONBOX           "Možnosť (&O)..."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
@@ -394,6 +511,27 @@ BEGIN
 END
 
 STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS (Ще один Shadow Socket)"
+    IDS_IDLEMESSAGE     "ГОТОВО"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS (Další Shadow Socket)"
+    IDS_IDLEMESSAGE     "PŘIPRAVEN"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    IDS_APP_TITLE       "YASS (Ďalší Shadow Socket)"
+    IDS_IDLEMESSAGE     "PRIPRAVENÝ"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
     ID_APP_MSG             "STATUS BAR"
@@ -439,6 +577,24 @@ STRINGTABLE PRELOAD DISCARDABLE
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 BEGIN
     ID_APP_MSG             "상태 표시줄"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "РЯДОК СТАНУ"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "STAVOVÝ ŘÁDEK"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    ID_APP_MSG             "STAVOVÝ RIADOK"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -566,6 +722,51 @@ BEGIN
     END
 END
 
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP "Файл (&F)"
+    BEGIN
+        MENUITEM "Параметри (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Вихід (&X)",                   ID_APP_EXIT
+    END
+    POPUP "Довідка (&H)"
+    BEGIN
+        MENUITEM "Інформація YASS (&A)...",      ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    POPUP "Soubor(&F)"
+    BEGIN
+        MENUITEM "Možnosti (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Výstup (&X)",                 ID_APP_EXIT
+    END
+    POPUP "Pomoc(&H)"
+    BEGIN
+        MENUITEM "O YASS(&A)...",               ID_APP_ABOUT
+    END
+END
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    POPUP "Súbor(&F)"
+    BEGIN
+        MENUITEM "Možnosti (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "VÝCHOD (&X)",                 ID_APP_EXIT
+    END
+    POPUP "Pomoc(&H)"
+    BEGIN
+        MENUITEM "O YASS(&A)...",               ID_APP_ABOUT
+    END
+END
+
 IDC_CONTEXTMENU MENU
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 BEGIN
@@ -654,6 +855,38 @@ BEGIN
     END
 END
 
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Параметри (&O)...",            ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Вихід (&X)",                   ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Možnosti (&O)...",             ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Výstup (&X)",                  ID_APP_EXIT
+    END
+END
+
+IDC_CONTEXTMENU MENU
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Možnosti (&O)...",             ID_APP_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "VÝCHOD (&X)",                  ID_APP_EXIT
+    END
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //
