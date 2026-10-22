@@ -5147,6 +5147,7 @@ if (GUI)
           set(ALLRESOURCES
             ${ALLRESOURCES}
             ${MAIN_STORYBOARD}
+            src/ios/PrivacyInfo.xcprivacy
             src/mac/cs_CZ.lproj/Localizable.strings
             src/mac/cs_CZ.lproj/Main.strings
             src/mac/en.lproj/Localizable.strings
@@ -5578,6 +5579,8 @@ if (GUI)
         endif()
 
         # adds to Copy Bundle Resources build phase
+        set_source_files_properties("src/ios/PrivacyInfo.xcprivacy" PROPERTIES
+          MACOSX_PACKAGE_LOCATION "Resources")
         set_source_files_properties("${ASSET_CATALOG}" PROPERTIES
           MACOSX_PACKAGE_LOCATION "Resources")
 
