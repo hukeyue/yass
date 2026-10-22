@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Další Shadow Socket</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">Hostitel serveru</string>
+    <string name="label_server_port">Port serveru</string>
+    <string name="label_username">Uživatelské jméno</string>
+    <string name="label_password">Heslo</string>
+    <string name="label_cipher">Šifra/metoda</string>
+    <string name="status_stopped">Odpojeno od %s:%d</string>
+    <string name="status_started">Připojeno s: 0</string>
+    <string name="status_stopping">Odpojování</string>
+    <string name="status_starting">Spojovací</string>
+    <string name="status_started_with_rate">Připojeno (počet spojení: %d), rychlost odesílání: %s, rychlost příjmu: %s</string>
+    <string name="button_start">Start</string>
+    <string name="button_stop">Zastávka</string>
+    <string name="status_ready">PŘIPRAVEN</string>
+    <string name="label_timeout" >Časový limit</string>
+    <string name="status_current_ip_address">Místní IP adresa: %s:%d</string>
+    <string name="status_started_with_error_msg">Připojení se nezdařilo z důvodu: %s</string>
+    <string name="label_server_sni">Indikace názvu serveru</string>
+    <string name="label_doh_url">URL adresa pro DNS přes HTTPS</string>
+    <string name="label_dot_host">Hostitel DNS over TLS</string>
+    <string name="status_start_failed">Spuštění selhalo</string>
+    <string name="post_quantum_kyber">Umožňuje postkvantové dojednávání klíčů v připojeních TLS 1.3</string>
+    <string name="button_options">Možnosti</string>
+    <string name="title_options">Možnosti</string>
+    <string name="label_limit_rate">Limitní sazba</string>
+    <string name="label_local_port">Místní port</string>
+    <string name="hint_local_port">0 (0 znamená náhodný port)</string>
+</resources>

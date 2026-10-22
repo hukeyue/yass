@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">YASS</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="label_server_host">Хост сервера</string>
+    <string name="label_server_port">Порт сервера</string>
+    <string name="label_username">Ім’я користувача</string>
+    <string name="label_password">Пароль</string>
+    <string name="label_cipher">Шифр/Метод</string>
+    <string name="status_stopped">Від’єднано від %s:%d</string>
+    <string name="status_started">Підключено до: 0</string>
+    <string name="status_stopping">Відключення</string>
+    <string name="status_starting">Підключення</string>
+    <string name="status_started_with_rate">Підключені з’єднання: %d, швидкість передачі: %s, швидкість отримання: %s</string>
+    <string name="button_start">Початок</string>
+    <string name="button_stop">СТІЙ</string>
+    <string name="status_ready">ГОТОВО</string>
+    <string name="label_timeout" >Тайм-аут</string>
+    <string name="status_current_ip_address">Локальна IP-адреса: %s:%d</string>
+    <string name="status_started_with_error_msg">Не вдалося підключитися через %s</string>
+    <string name="label_server_sni">Індикація імені сервера</string>
+    <string name="label_doh_url">URL-адреса для DNS через HTTPS</string>
+    <string name="label_dot_host">Хост DNS-over-TLS</string>
+    <string name="status_start_failed">Не вдалося запустити</string>
+    <string name="post_quantum_kyber">Уможливлює постквантове узгодження ключів у з’єднаннях TLS 1.3</string>
+    <string name="button_options">Параметри</string>
+    <string name="title_options">Параметри</string>
+    <string name="label_limit_rate">Гранична ставка</string>
+    <string name="label_local_port">Локальний порт</string>
+    <string name="hint_local_port">0 (0 означає випадковий порт)</string>
+</resources>
