@@ -5147,6 +5147,8 @@ if (GUI)
           set(ALLRESOURCES
             ${ALLRESOURCES}
             ${MAIN_STORYBOARD}
+            src/mac/cs_CZ.lproj/Localizable.strings
+            src/mac/cs_CZ.lproj/Main.strings
             src/mac/en.lproj/Localizable.strings
             src/mac/en.lproj/Main.strings
             src/mac/es.lproj/Localizable.strings
@@ -5527,6 +5529,10 @@ if (GUI)
         else()
           set_source_files_properties("${MAIN_STORYBOARD}" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources/Base.lproj")
+          set_source_files_properties("src/mac/cs_CZ.lproj/Localizable.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
+          set_source_files_properties("src/mac/cs_CZ.lproj/Main.strings" PROPERTIES
+            MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/en.lproj/Localizable.strings" PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources")
           set_source_files_properties("src/mac/en.lproj/Main.strings" PROPERTIES
