@@ -85,6 +85,8 @@ static bool found_gts_root_r4 = false;
 
 static bool blacklisted_emsign_ecc_root_ca_c3 = false;
 static bool blacklisted_emsign_root_ca_c1 = false;
+static bool blacklisted_emsign_ecc_root_ca_g3 = false;
+static bool blacklisted_emsign_root_ca_g1 = false;
 
 static bool load_ca_to_x509_store_from_cert(X509_STORE* store, bssl::UniquePtr<X509> cert) {
   char buf[4096] = {};
@@ -121,18 +123,28 @@ static bool load_ca_to_x509_store_from_cert(X509_STORE* store, bssl::UniquePtr<X
         VLOG(1) << "Loading GTS Root R4 CA";
         found_gts_root_r4 = true;
       }
-      /* "B6:AF:43:C2:9B:81:53:7D:F6:EF:6B:C3:1F:1F:60:15:0C:EE:48:66" */
       if (commonName == "emSign ECC Root CA - C3"sv) {
         VLOG(1) << "Skipping emSign ECC Root CA - C3 CA";
         blacklisted_emsign_ecc_root_ca_c3 = true;
         return false;
       }
-      /* "E7:2E:F1:DF:FC:B2:09:28:CF:5D:D4:D5:67:37:B1:51:CB:86:4F:01" */
       if (commonName == "emSign Root CA - C1"sv) {
         VLOG(1) << "Skipping emSign Root CA - C1 CA";
         blacklisted_emsign_root_ca_c1 = true;
         return false;
       }
+    }
+
+    using std::string_literals::operator""s;
+    if (subject_name == "/C=IN/OU=emSign PKI/O=eMudhra Technologies Limited/CN=emSign ECC Root CA - G3"s) {
+      VLOG(1) << "Skipping emSign ECC Root CA - G3 CA";
+      blacklisted_emsign_ecc_root_ca_g3 = true;
+      return false;
+    }
+    if (subject_name == "/C=IN/OU=emSign PKI/O=eMudhra Technologies Limited/CN=emSign Root CA - G1"s) {
+      VLOG(1) << "Skipping emSign Root CA - G1 CA";
+      blacklisted_emsign_root_ca_g1 = true;
+      return false;
     }
 
     if (X509_STORE_add_cert(store, cert.get()) == 1) {
@@ -956,6 +968,8 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   found_gts_root_r4 = false;
   blacklisted_emsign_ecc_root_ca_c3 = false;
   blacklisted_emsign_root_ca_c1 = false;
+  blacklisted_emsign_ecc_root_ca_g3 = false;
+  blacklisted_emsign_root_ca_g1 = false;
   if (load_ca_to_ssl_ctx_cacert(ssl_ctx) || load_ca_to_ssl_ctx_yass_ca_bundle(ssl_ctx)) {
     goto done;
   }
@@ -992,10 +1006,16 @@ done:
     LOG(INFO) << "Loaded supplementary ca bundle with " << result << " certificates";
   }
   if (blacklisted_emsign_ecc_root_ca_c3) {
-    LOG(WARNING) << "Skiped emSign ECC Root CA - C3 CA";
+    LOG(WARNING) << "Skipped subject=C = US, OU = emSign PKI, O = eMudhra Inc, CN = emSign ECC Root CA - C3";
   }
   if (blacklisted_emsign_root_ca_c1) {
-    LOG(WARNING) << "Skiped emSign Root CA - C1 CA";
+    LOG(WARNING) << "Skipped subject=C = US, OU = emSign PKI, O = eMudhra Inc, CN = emSign Root CA - C1";
+  }
+  if (blacklisted_emsign_ecc_root_ca_g3) {
+    LOG(WARNING) << "Skipped subject=C = IN, OU = emSign PKI, O = eMudhra Technologies Limited, CN = emSign ECC Root CA - G3";
+  }
+  if (blacklisted_emsign_root_ca_g1) {
+    LOG(WARNING) << "Skipped subject=C = IN, OU = emSign PKI, O = eMudhra Technologies Limited, CN = emSign Root CA - G1";
   }
 }
 
