@@ -449,11 +449,16 @@
   YassSplitViewController* vc = [self getSplitViewController];
   [vc Started];
 
+  __weak __typeof__(self) weakSelf = self;
   refresh_timer_ = [NSTimer scheduledTimerWithTimeInterval:NSTimeInterval(1.0/PI_DOUBLE)
-                                                    target:self
-                                                  selector:@selector(FetchTelemetryData)
-                                                  userInfo:nil
-                                                   repeats:YES];
+                                                   repeats:YES
+                                                     block:^(NSTimer* _Nonnull timer) {
+                                                       __strong __typeof__(self) strongSelf = weakSelf;
+                                                       if (!strongSelf) {
+                                                         return;
+                                                       }
+                                                       [strongSelf FetchTelemetryData];
+                                                     }];
 }
 
 - (void)OnStartFailedWithNSError:(NSError* _Nullable)error {
