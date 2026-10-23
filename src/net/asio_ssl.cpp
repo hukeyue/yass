@@ -83,6 +83,9 @@ static bool found_isrg_root_x2 = false;
 static bool found_digicert_root_g2 = false;
 static bool found_gts_root_r4 = false;
 
+static bool blacklisted_emsign_ecc_root_ca_c3 = false;
+static bool blacklisted_emsign_root_ca_c1 = false;
+
 static bool load_ca_to_x509_store_from_cert(X509_STORE* store, bssl::UniquePtr<X509> cert) {
   char buf[4096] = {};
   const char* const subject_name = X509_NAME_oneline(X509_get_subject_name(cert.get()), buf, sizeof(buf));
@@ -117,6 +120,18 @@ static bool load_ca_to_x509_store_from_cert(X509_STORE* store, bssl::UniquePtr<X
       if (commonName == "GTS Root R4"sv) {
         VLOG(1) << "Loading GTS Root R4 CA";
         found_gts_root_r4 = true;
+      }
+      /* "B6:AF:43:C2:9B:81:53:7D:F6:EF:6B:C3:1F:1F:60:15:0C:EE:48:66" */
+      if (commonName == "emSign ECC Root CA - C3"sv) {
+        VLOG(1) << "Skipping emSign ECC Root CA - C3 CA";
+        blacklisted_emsign_ecc_root_ca_c3 = true;
+        return false;
+      }
+      /* "E7:2E:F1:DF:FC:B2:09:28:CF:5D:D4:D5:67:37:B1:51:CB:86:4F:01" */
+      if (commonName == "emSign Root CA - C1"sv) {
+        VLOG(1) << "Skipping emSign Root CA - C1 CA";
+        blacklisted_emsign_root_ca_c1 = true;
+        return false;
       }
     }
 
@@ -939,6 +954,8 @@ void load_ca_to_ssl_ctx(SSL_CTX* ssl_ctx) {
   found_isrg_root_x2 = false;
   found_digicert_root_g2 = false;
   found_gts_root_r4 = false;
+  blacklisted_emsign_ecc_root_ca_c3 = false;
+  blacklisted_emsign_root_ca_c1 = false;
   if (load_ca_to_ssl_ctx_cacert(ssl_ctx) || load_ca_to_ssl_ctx_yass_ca_bundle(ssl_ctx)) {
     goto done;
   }
@@ -973,6 +990,12 @@ done:
     CHECK_EQ(0, get_binary_supplementary_ca_bundle(&ca_content));
     int result = load_ca_to_ssl_ctx_from_mem(ssl_ctx, ca_content);
     LOG(INFO) << "Loaded supplementary ca bundle with " << result << " certificates";
+  }
+  if (blacklisted_emsign_ecc_root_ca_c3) {
+    LOG(WARNING) << "Skiped emSign ECC Root CA - C3 CA";
+  }
+  if (blacklisted_emsign_root_ca_c1) {
+    LOG(WARNING) << "Skiped emSign Root CA - C1 CA";
   }
 }
 
