@@ -89,7 +89,9 @@
   [super viewDidAppear];
   if (should_startup_at_app_load) {
     should_startup_at_app_load = false;
-    [self OnStart];
+
+    // delay network start
+    [self performSelector:@selector(OnStart) withObject:nil afterDelay:0.50];
   }
 }
 
