@@ -133,18 +133,16 @@ static bool load_ca_to_x509_store_from_cert(X509_STORE* store, bssl::UniquePtr<X
         blacklisted_emsign_root_ca_c1 = true;
         return false;
       }
-    }
-
-    using std::string_literals::operator""s;
-    if (subject_name == "/C=IN/OU=emSign PKI/O=eMudhra Technologies Limited/CN=emSign ECC Root CA - G3"s) {
-      VLOG(1) << "Skipping emSign ECC Root CA - G3 CA";
-      blacklisted_emsign_ecc_root_ca_g3 = true;
-      return false;
-    }
-    if (subject_name == "/C=IN/OU=emSign PKI/O=eMudhra Technologies Limited/CN=emSign Root CA - G1"s) {
-      VLOG(1) << "Skipping emSign Root CA - G1 CA";
-      blacklisted_emsign_root_ca_g1 = true;
-      return false;
+      if (commonName == "emSign ECC Root CA - G3"sv) {
+        VLOG(1) << "Skipping emSign ECC Root CA - G3 CA";
+        blacklisted_emsign_ecc_root_ca_g3 = true;
+        return false;
+      }
+      if (commonName == "emSign Root CA - G1"sv) {
+        VLOG(1) << "Skipping emSign Root CA - G1 CA";
+        blacklisted_emsign_root_ca_g1 = true;
+        return false;
+      }
     }
 
     if (X509_STORE_add_cert(store, cert.get()) == 1) {
