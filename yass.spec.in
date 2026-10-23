@@ -346,6 +346,8 @@ for embedded devices and low end boxes.
 /usr/include/%{name}/*.h
 
 %changelog
+* Fri Oct 23 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.14-1
+  - update ca-certificates store
 * Sun May 17 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.13-1
   - promote linux release (i686) for concurrent mode with TBB
 * Thu May 14 2026 Chilledheart <hukeyue@vip.163.com> - 1.24.12-1
