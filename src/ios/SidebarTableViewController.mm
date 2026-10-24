@@ -82,7 +82,7 @@
   if (indexPath.section == 4) {
     content.secondaryText = @"";
     content.image = [UIImage systemImageNamed:@"bonjour"];
-    UISwitch* sw = [[UISwitch alloc] init];
+    UISwitch* sw = [[UISwitch alloc] initWithFrame:CGRectZero];
     [self swUpdate:sw];
     [sw addTarget:self action:@selector(swChanged:) forControlEvents:UIControlEventValueChanged];
     cell.accessoryView = sw;
@@ -226,18 +226,18 @@
   switch (state) {
     case STARTED:
       sw.enabled = YES;
-      [sw setOn:YES];
+      [sw setOn:YES animated:NO]; // does not send action
       break;
     case STOPPED:
     case START_FAILED:
       sw.enabled = YES;
-      [sw setOn:NO];
+      [sw setOn:NO animated:NO]; // does not send action
       break;
     case STARTING:
     case STOPPING:
     default:
       sw.enabled = NO;
-      [sw setOn:NO];
+      [sw setOn:NO animated:NO]; // does not send action
       break;
   }
 }
@@ -246,6 +246,9 @@
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   enum YASSState state = [appDelegate getState];
   UISwitch* sw = sender;
+#ifndef NDEBUG
+  NSLog(@"UISwitch is %s state: %d", sw.isOn ? "ON" : "OFF", state);
+#endif
   if (sw.isOn) {
     if (state == STOPPED || state == START_FAILED) {
       [appDelegate OnStart:FALSE];

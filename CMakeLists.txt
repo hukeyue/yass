@@ -5809,6 +5809,8 @@ if (GUI)
 
         target_sources(${APP_NAME} PRIVATE src/ios/yass.entitlements)
 
+        target_link_libraries(${APP_NAME} PUBLIC -Wl,-framework,CoreGraphics)
+
         # =======================
         # YassPacketTunnel extensions
         # =======================
