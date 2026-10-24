@@ -86,9 +86,12 @@ jobs:
           # required by m1 runner
           # https://github.com/actions/runner-images/blob/main/images/macos/scripts/build/install-rust.sh
           rm -rf $HOME/.cargo
+          # https://github.com/actions/runner-images/commit/e6c9d969d9e1d96159033ddfc94ce17d4eccb6f8
           # brew install rustup
-          rustup-init -y --no-modify-path --default-toolchain=stable --profile=minimal
-          source "$HOME/.cargo/env"
+          export PATH="$(brew --prefix rustup)/bin:$PATH"
+          echo "export PATH=\"$(brew --prefix rustup)/bin:\$PATH\"" >> "$HOME/.bashrc"
+          rustup set profile minimal
+          rustup default stable
           ./scripts/setup-ios-rust.sh
           WITH_OS=ios-sim WITH_CPU=${{ matrix.arch }} ./scripts/build-tun2proxy.sh
       - name: Build Binary (GUI)
