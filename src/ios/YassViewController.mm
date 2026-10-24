@@ -48,6 +48,10 @@
 
 @implementation YassViewController {
   NSArray* cipher_methods_;
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  __weak UIBarButtonItem* startBarButton_;
+  __weak UIBarButtonItem* stopBarButton_;
+#endif
 }
 
 - (void)viewDidLoad {
@@ -106,8 +110,48 @@
   self.stopButton.configuration = bbConfig;
 }
 
+- (void)UpdateNavigationBar {
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  bool is_ios_duo_only = false;
+  bool is_compact_vc = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact;
+  if (@available(iOS 27.1, *)) {
+    is_ios_duo_only = true;
+  }
+  if (is_compact_vc && !is_ios_duo_only) {
+    self.navigationItem.rightBarButtonItems = nil;
+    return;
+  }
+  if (@available(iOS 16.0, *)) {
+    UIBarButtonItem* startBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Start", @"Start") style:UIBarButtonItemStylePlain target:self action:@selector(OnStartButtonClicked:)];
+    UIBarButtonItem* stopBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Stop", @"Stop") style:UIBarButtonItemStylePlain target:self action:@selector(OnStopButtonClicked:)];
+    /* currently iPhone Duo only */
+    if (@available(iOS 27.1, *)) {
+      startBarButton.image = [UIImage systemImageNamed:@"play.fill"];
+      stopBarButton.image = [UIImage systemImageNamed:@"stop.fill"];
+    }
+    self.navigationItem.trailingItemGroups = @[[[UIBarButtonItemGroup alloc] initWithBarButtonItems:@[startBarButton, stopBarButton] representativeItem:nil]];
+    startBarButton_ = startBarButton;
+    stopBarButton_ = stopBarButton;
+  }
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+  [super traitCollectionDidChange:previousTraitCollection];
+
+  // MUST be called before reloadState
+  [self UpdateNavigationBar];
+
+  YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
+  [appDelegate reloadState];
+}
+
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+
+  // MUST be called before reloadState
+  [self UpdateNavigationBar];
+
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
   [self UpdateStatusBar];
@@ -279,6 +323,9 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:FALSE];
+
+  [startBarButton_ setEnabled:FALSE];
+  [stopBarButton_ setEnabled:FALSE];
 }
 
 - (void)Started {
@@ -295,6 +342,9 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:TRUE];
+
+  [startBarButton_ setEnabled:FALSE];
+  [stopBarButton_ setEnabled:TRUE];
 }
 
 - (void)StartFailed {
@@ -311,6 +361,10 @@
   [self.timeout setUserInteractionEnabled:TRUE];
   [self.startButton setEnabled:TRUE];
   [self.stopButton setEnabled:FALSE];
+
+  [startBarButton_ setEnabled:TRUE];
+  [stopBarButton_ setEnabled:FALSE];
+
 }
 
 - (void)Stopping {
@@ -327,6 +381,9 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:FALSE];
+
+  [startBarButton_ setEnabled:FALSE];
+  [stopBarButton_ setEnabled:FALSE];
 }
 
 - (void)Stopped {
@@ -343,6 +400,9 @@
   [self.timeout setUserInteractionEnabled:TRUE];
   [self.startButton setEnabled:TRUE];
   [self.stopButton setEnabled:FALSE];
+
+  [startBarButton_ setEnabled:TRUE];
+  [stopBarButton_ setEnabled:FALSE];
 }
 
 - (void)UpdateStatusBar {
