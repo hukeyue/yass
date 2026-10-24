@@ -109,6 +109,7 @@
 #endif
   self.stopButton.configuration = bbConfig;
 
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   UIBarButtonItem* lBarButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
   UIBarButtonItem* startBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Start", @"Start") style:UIBarButtonItemStylePlain target:self action:@selector(OnStartButtonClicked:)];
   UIBarButtonItem* stopBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Stop", @"Stop") style:UIBarButtonItemStylePlain target:self action:@selector(OnStopButtonClicked:)];
@@ -124,6 +125,10 @@
 
   [startBarButton setEnabled:TRUE];
   [stopBarButton setEnabled:FALSE];
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
+  if (@available(iOS 17.0, tvOS 17.0, *)) {
+    [self registerForTraitChanges:@[[UITraitHorizontalSizeClass self]] withTarget:self action:@selector(horizontalSizeClassChanged:)];
+  }
 }
 
 - (void)UpdateNavigationBar {
@@ -145,12 +150,10 @@
 #endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-  [super traitCollectionDidChange:previousTraitCollection];
-
+- (void)horizontalSizeClassChanged:(id)sender {
+  NSLog(@"horizontalSizeClassChanged");
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
-
   [self UpdateNavigationBar];
 }
 
@@ -330,9 +333,10 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:FALSE];
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [startBarButton_ setEnabled:FALSE];
   [stopBarButton_ setEnabled:FALSE];
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
 - (void)Started {
@@ -349,9 +353,10 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:TRUE];
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [startBarButton_ setEnabled:FALSE];
   [stopBarButton_ setEnabled:TRUE];
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
 - (void)StartFailed {
@@ -368,10 +373,10 @@
   [self.timeout setUserInteractionEnabled:TRUE];
   [self.startButton setEnabled:TRUE];
   [self.stopButton setEnabled:FALSE];
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [startBarButton_ setEnabled:TRUE];
   [stopBarButton_ setEnabled:FALSE];
-
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
 - (void)Stopping {
@@ -388,9 +393,10 @@
   [self.timeout setUserInteractionEnabled:FALSE];
   [self.startButton setEnabled:FALSE];
   [self.stopButton setEnabled:FALSE];
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [startBarButton_ setEnabled:FALSE];
   [stopBarButton_ setEnabled:FALSE];
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
 - (void)Stopped {
@@ -407,9 +413,10 @@
   [self.timeout setUserInteractionEnabled:TRUE];
   [self.startButton setEnabled:TRUE];
   [self.stopButton setEnabled:FALSE];
-
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [startBarButton_ setEnabled:TRUE];
   [stopBarButton_ setEnabled:FALSE];
+#endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
 
 - (void)UpdateStatusBar {
