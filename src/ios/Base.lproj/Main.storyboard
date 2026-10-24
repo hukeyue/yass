@@ -311,6 +311,7 @@
                         <outlet property="bottomConstraint" destination="jt2-ZP-qgJ" id="nnY-MI-aZ1"/>
                         <outlet property="cipherMethodStack" destination="O8H-4C-Ga2" id="bEx-UM-Stc"/>
                         <outlet property="contentView" destination="SS9-hV-cEA" id="IGX-hT-btt"/>
+                        <outlet property="controlStackView" destination="paQ-LB-b98" id="i9g-wz-Ztc"/>
                         <outlet property="dohURL" destination="rzY-aY-W2X" id="Ast-yv-Gek"/>
                         <outlet property="dotHost" destination="y0Y-Zh-xJe" id="Ujj-re-v4a"/>
                         <outlet property="limitRate" destination="aZ5-qZ-mtz" id="rj9-Am-J24"/>

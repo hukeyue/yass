@@ -117,8 +117,10 @@
   if (@available(iOS 27.1, *)) {
     is_ios_duo_only = true;
   }
-  if (is_compact_vc && !is_ios_duo_only) {
+  if (!is_compact_vc && !is_ios_duo_only) {
     self.navigationItem.rightBarButtonItems = nil;
+    self.controlStackView.hidden = NO;
+    self.status.hidden = NO;
     return;
   }
   if (@available(iOS 16.0, *)) {
@@ -130,6 +132,8 @@
       stopBarButton.image = [UIImage systemImageNamed:@"stop.fill"];
     }
     self.navigationItem.trailingItemGroups = @[[[UIBarButtonItemGroup alloc] initWithBarButtonItems:@[startBarButton, stopBarButton] representativeItem:nil]];
+    self.controlStackView.hidden = YES;
+    self.status.hidden = YES;
     startBarButton_ = startBarButton;
     stopBarButton_ = stopBarButton;
   }

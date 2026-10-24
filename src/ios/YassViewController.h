@@ -36,6 +36,7 @@
 - (void)Stopping;
 - (void)Stopped;
 - (void)UpdateStatusBar;
+@property(weak, nonatomic) IBOutlet UIStackView *controlStackView;
 @property(weak, nonatomic) IBOutlet UIButton* startButton;
 @property(weak, nonatomic) IBOutlet UIButton* stopButton;
 @property(weak, nonatomic) IBOutlet UITextField* serverHost;
