@@ -108,6 +108,22 @@
   bbConfig.imagePadding = 9;
 #endif
   self.stopButton.configuration = bbConfig;
+
+  UIBarButtonItem* lBarButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
+  UIBarButtonItem* startBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Start", @"Start") style:UIBarButtonItemStylePlain target:self action:@selector(OnStartButtonClicked:)];
+  UIBarButtonItem* stopBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Stop", @"Stop") style:UIBarButtonItemStylePlain target:self action:@selector(OnStopButtonClicked:)];
+  UIBarButtonItem* rBarButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
+  /* currently iPhone Duo only */
+  if (@available(iOS 27.1, *)) {
+    startBarButton.image = [UIImage systemImageNamed:@"play.fill"];
+    stopBarButton.image = [UIImage systemImageNamed:@"stop.fill"];
+  }
+  self.toolbarItems = @[lBarButton, startBarButton, stopBarButton, rBarButton];
+  startBarButton_ = startBarButton;
+  stopBarButton_ = stopBarButton;
+
+  [startBarButton setEnabled:TRUE];
+  [stopBarButton setEnabled:FALSE];
 }
 
 - (void)UpdateNavigationBar {
@@ -118,24 +134,13 @@
     is_ios_duo_only = true;
   }
   if (!is_compact_vc && !is_ios_duo_only) {
-    self.navigationItem.rightBarButtonItems = nil;
+    self.navigationController.toolbarHidden = YES;
     self.controlStackView.hidden = NO;
     self.status.hidden = NO;
-    return;
-  }
-  if (@available(iOS 16.0, *)) {
-    UIBarButtonItem* startBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Start", @"Start") style:UIBarButtonItemStylePlain target:self action:@selector(OnStartButtonClicked:)];
-    UIBarButtonItem* stopBarButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Stop", @"Stop") style:UIBarButtonItemStylePlain target:self action:@selector(OnStopButtonClicked:)];
-    /* currently iPhone Duo only */
-    if (@available(iOS 27.1, *)) {
-      startBarButton.image = [UIImage systemImageNamed:@"play.fill"];
-      stopBarButton.image = [UIImage systemImageNamed:@"stop.fill"];
-    }
-    self.navigationItem.trailingItemGroups = @[[[UIBarButtonItemGroup alloc] initWithBarButtonItems:@[startBarButton, stopBarButton] representativeItem:nil]];
+  } else {
+    self.navigationController.toolbarHidden = NO;
     self.controlStackView.hidden = YES;
     self.status.hidden = YES;
-    startBarButton_ = startBarButton;
-    stopBarButton_ = stopBarButton;
   }
 #endif // defined(TARGET_OS_TV) && !TARGET_OS_TV
 }
@@ -143,22 +148,20 @@
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
   [super traitCollectionDidChange:previousTraitCollection];
 
-  // MUST be called before reloadState
-  [self UpdateNavigationBar];
-
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
+
+  [self UpdateNavigationBar];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  // MUST be called before reloadState
-  [self UpdateNavigationBar];
-
   YassAppDelegate* appDelegate = (YassAppDelegate*)UIApplication.sharedApplication.delegate;
   [appDelegate reloadState];
+
   [self UpdateStatusBar];
+  [self UpdateNavigationBar];
 #if defined(TARGET_OS_TV) && !TARGET_OS_TV
   [[NSNotificationCenter defaultCenter]
       addObserverForName:UIKeyboardWillShowNotification
