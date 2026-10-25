@@ -451,7 +451,7 @@
       if (ret == TRUE) {
         vpn_manager_ = vpn_manager;
         // state will reflect in NEVPNStatusDidChangeNotification
-        // [self didChangeVpnStatus:nil];
+        [self didChangeVpnStatus:nil];
       } else {
         [self OnStartFailedWithNSError:error];
       }

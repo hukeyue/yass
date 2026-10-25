@@ -225,7 +225,7 @@
   if (vpn_manager_ != nil) {
     // state will reflect in NEVPNStatusDidChangeNotification
     [vpn_manager_.connection stopVPNTunnel];
-    [self didChangeVpnStatus:nil];
+    // [self didChangeVpnStatus:nil];
   } else {
     [self OnStopped];
   }
