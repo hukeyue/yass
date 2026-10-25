@@ -881,7 +881,7 @@ func buildStageGenerateBuildScript() {
 	var cmakeArgs []string
 	if os.Getenv("CC") != "" {
 		glog.Infof("Using overrided compiler %s", os.Getenv("CC"))
-	} else if systemNameFlag == "darwin" || systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
+	} else if systemNameFlag == "ios" || systemNameFlag == "tvos" || systemNameFlag == "ios-mac" {
 		glog.Infof("Using xcode's builtin compiler")
 	} else if clangPath != "" {
 		if systemNameFlag == "windows" {
@@ -919,7 +919,10 @@ func buildStageGenerateBuildScript() {
 	} else {
 		cmakeArgs = append(cmakeArgs, "-DOFFICIAL_BUILD=off")
 	}
-	cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
+	// FIXME disabled lld on darwin due to linkage issue with xcode 27
+	if systemNameFlag != "darwin" {
+		cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
+	}
 	cmakeArgs = append(cmakeArgs, "-DUSE_ZLIB=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_JSONCPP=on")
 	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON", "-DBUILD_DYLIB=on")
