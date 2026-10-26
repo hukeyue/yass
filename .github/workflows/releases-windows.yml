@@ -293,3 +293,53 @@ jobs:
         if: ${{ matrix.arch == 'x86' || matrix.arch == 'x64' }}
         run: |
           yass_benchmark || exit /b
+  windows-vs2026-release-arm64-test:
+    runs-on: windows-11-arm
+    needs: windows-vs2026-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            crt-linkage: dynamic
+            build_type: Release
+            use_allocator: mimalloc
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v7
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-test
+      - name: Download debuginfo
+        uses: actions/download-artifact@v7
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-pdb
+      - name: Run tests
+        run: |
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks4a --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5 --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type socks5h --ipv6_mode || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http --ipv6_mode || exit /b
+  windows-vs2026-release-arm64-benchmark:
+    runs-on: windows-11-arm
+    needs: windows-vs2026-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            crt-linkage: dynamic
+            build_type: Release
+            use_allocator: mimalloc
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v7
+        with:
+          name: msvc-vc18-release-${{ matrix.build_type }}-${{ matrix.arch }}-${{ matrix.crt-linkage }}-${{ matrix.use_allocator }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        run: |
+          yass_benchmark || exit /b
