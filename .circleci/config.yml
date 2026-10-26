@@ -16,10 +16,10 @@ commands:
           command: |
             sudo apt-get update -qq
             sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y build-essential libstdc++-14-dev
-            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz
-            tar -C third_party -xvf LLVM-20.1.8-Linux-X64.tar.xz \
-              LLVM-20.1.8-Linux-X64/lib/clang/20/include \
-              LLVM-20.1.8-Linux-X64/bin/{clang,clang++,clang-20,ld.lld,lld,llvm-ar,llvm-ranlib}
+            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/LLVM-21.1.8-Linux-X64.tar.xz
+            tar -C third_party -xvf LLVM-21.1.8-Linux-X64.tar.xz \
+              LLVM-21.1.8-Linux-X64/lib/clang/21/include \
+              LLVM-21.1.8-Linux-X64/bin/{clang,clang++,clang-21,ld.lld,lld,llvm-ar,llvm-ranlib}
             rm -f *.xz
 
   download-toolchain-gcc:
@@ -35,10 +35,10 @@ commands:
           command: |
             sudo apt-get update -qq
             sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y build-essential libstdc++-14-dev
-            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-ARM64.tar.xz
-            tar -C third_party -xvf LLVM-20.1.8-Linux-ARM64.tar.xz \
-              LLVM-20.1.8-Linux-ARM64/lib/clang/20/include \
-              LLVM-20.1.8-Linux-ARM64/bin/{clang,clang++,clang-20,ld.lld,lld,llvm-ar,llvm-ranlib}
+            curl -L -O https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/LLVM-21.1.8-Linux-ARM64.tar.xz
+            tar -C third_party -xvf LLVM-21.1.8-Linux-ARM64.tar.xz \
+              LLVM-21.1.8-Linux-ARM64/lib/clang/21/include \
+              LLVM-21.1.8-Linux-ARM64/bin/{clang,clang++,clang-21,ld.lld,lld,llvm-ar,llvm-ranlib}
             rm -f *.xz
 
   install-deps-gtk3:
@@ -83,8 +83,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
@@ -93,8 +93,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Debug -DUSE_LIBCXX=on ..
@@ -123,8 +123,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DUSE_QT6=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
@@ -133,8 +133,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-X64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-21.1.8-Linux-X64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=off ..
@@ -143,8 +143,8 @@ commands:
     steps:
       - run:
           command: |
-            export "CC=$PWD/third_party/LLVM-20.1.8-Linux-ARM64/bin/clang"
-            export "CXX=$PWD/third_party/LLVM-20.1.8-Linux-ARM64/bin/clang++"
+            export "CC=$PWD/third_party/LLVM-21.1.8-Linux-ARM64/bin/clang"
+            export "CXX=$PWD/third_party/LLVM-21.1.8-Linux-ARM64/bin/clang++"
             mkdir build
             cd build
             cmake -G Ninja -DGUI=on -DBUILD_TESTS=on -DBUILD_BENCHMARKS=on -DBORINGSSL_BUILD_TESTS=on -DCMAKE_BUILD_TYPE=Release -DUSE_LIBCXX=on ..
