@@ -57,7 +57,7 @@ foreach(CompilerFlag ${CompilerFlags})
   string(REPLACE "-stdlib=libc++" "" ${CompilerFlag} "${${CompilerFlag}}")
 endforeach()
 
-set(libcxx_CR "7ab65651aed6802d2599dcb7a73b1f82d5179d05")
+set(libcxx_CR "97b436da4c33663581d394f4ee0a5977fc38c2f4")
 # Fixed libc++ configuration macros are in
 # buildtools/third_party/libc++/__config_site. This config only has defines
 # that vary depending on gn args, and non-define flags.
