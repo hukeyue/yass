@@ -4365,12 +4365,12 @@ if (COMPILER_GCC OR COMPILER_CLANG)
     add_compile_options(-Wno-unknown-pragmas)
   endif()
 
-  if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 23.0)
-    add_compile_options(-Wno-pragma-clang-attribute)
+  if (COMPILER_CLANG)
+    add_compile_options(-Wno-pragma-clang-attribute -Wno-ignored-attributes)
   endif()
 
-  if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 20.0)
-    add_compile_options(-Wno-nullability-completeness)
+  if (COMPILER_CLANG)
+    add_compile_options(-Wno-error=nullability-completeness)
   endif()
 endif()
 
