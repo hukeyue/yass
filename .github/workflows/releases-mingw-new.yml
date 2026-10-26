@@ -376,3 +376,50 @@ jobs:
         shell: cmd
         run: |
           yass_benchmark || exit /b
+  mingw64-release-arm64-test:
+    runs-on: windows-11-arm
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            build_type: Release
+            variant: ucrt
+            suffix:
+            gtest_repeat_times: 10
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v7
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-test
+      - name: Run tests
+        run: |
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http || exit /b
+          yass_test --gtest_shuffle --gtest_repeat=${{ matrix.gtest_repeat_times }} --gtest_throw_on_failure --proxy_type http --ipv6_mode || exit /b
+  mingw64-release-arm64-benchmark:
+    runs-on: windows-11-arm
+    needs: mingw64-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            build_type: Release
+            variant: ucrt
+            suffix:
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Download built executables
+        uses: actions/download-artifact@v7
+        with:
+          name: mingw64${{ matrix.suffix }}-release-${{ matrix.build_type }}-${{ matrix.variant }}-${{ matrix.arch }}-${{ github.run_id }}-benchmark
+      - name: Run benchmarks
+        shell: cmd
+        run: |
+          yass_benchmark || exit /b
