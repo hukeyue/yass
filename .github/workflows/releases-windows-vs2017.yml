@@ -36,7 +36,7 @@ defaults:
   run:
     shell: cmd
 env:
-  CACHE_EPOCH: 148-2
+  CACHE_EPOCH: 155-1
   GOPROXY: direct
 jobs:
   windows-xp-release:
@@ -117,6 +117,9 @@ jobs:
         shell: bash
         run: |
           pushd third_party/libc++/trunk
+          patch -p1 < ../winxp.patch
+          popd
+          pushd third_party/libc++abi/trunk
           patch -p1 < ../winxp.patch
           popd
       - name: Build Binary

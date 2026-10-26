@@ -65,7 +65,13 @@
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"default" forIndexPath:indexPath];
+  NSString* identifier = @"default";
+#if defined(TARGET_OS_TV) && !TARGET_OS_TV
+  if (indexPath.section == 4) {
+    identifier = @"switch";
+  }
+#endif
+  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier forIndexPath:indexPath];
   NSString* text = [self textForRowAt:indexPath];
   NSString* secondaryText = [self secondaryTextForRowAt:indexPath];
 
@@ -74,7 +80,7 @@
   content.secondaryText = secondaryText;
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.accessoryType = UITableViewCellAccessoryNone;
-  cell.accessoryView = nil;
+  // cell.accessoryView is handled properly.
   if (indexPath.section == 3) {
     content.image = [UIImage systemImageNamed:@"waveform"];
   } else
@@ -82,10 +88,15 @@
   if (indexPath.section == 4) {
     content.secondaryText = @"";
     content.image = [UIImage systemImageNamed:@"bonjour"];
-    UISwitch* sw = [[UISwitch alloc] initWithFrame:CGRectZero];
-    [self swUpdate:sw];
-    [sw addTarget:self action:@selector(swChanged:) forControlEvents:UIControlEventValueChanged];
-    cell.accessoryView = sw;
+    if (cell.accessoryView == nil) {
+      UISwitch* sw = [[UISwitch alloc] initWithFrame:CGRectZero];
+      [self swUpdate:sw];
+      [sw addTarget:self action:@selector(swChanged:) forControlEvents:UIControlEventValueChanged];
+      cell.accessoryView = sw;
+    } else {
+      UISwitch* sw = (UISwitch*)cell.accessoryView;
+      [self swUpdate:sw];
+    }
   } else
 #endif
   if (indexPath.section == 0) {
@@ -240,6 +251,9 @@
       [sw setOn:NO animated:NO]; // does not send action
       break;
   }
+#ifndef NDEBUG
+  NSLog(@"init - UISwitch is %s state: %d", sw.isOn ? "ON" : "OFF", state);
+#endif
 }
 
 - (void)swChanged:(id)sender {
@@ -247,7 +261,7 @@
   enum YASSState state = [appDelegate getState];
   UISwitch* sw = sender;
 #ifndef NDEBUG
-  NSLog(@"UISwitch is %s state: %d", sw.isOn ? "ON" : "OFF", state);
+  NSLog(@"update - UISwitch is %s state: %d", sw.isOn ? "ON" : "OFF", state);
 #endif
   if (sw.isOn) {
     if (state == STOPPED || state == START_FAILED) {

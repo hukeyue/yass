@@ -1641,7 +1641,7 @@ void ServerConnection::ProcessReceivedData(GrowableIOBuffer* buf, asio::error_co
         SetState(state_stream);
         OnConnect();
         DCHECK_EQ(buf->size(), (int)bytes_transferred);
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
         /* fall through */
       case state_stream:
         DCHECK_EQ(buf->size(), (int)bytes_transferred);

@@ -2019,8 +2019,9 @@ func gnuStripBinary(binName string, dbgName string) {
 	compressionOption := "--compress-debug-sections=zstd"
 	// FIXME migrate to llvm-objcopy once llvm supports COFF
 	// x86_64-w64-mingw32-objcopy: --compress-debug-sections=[zlib|zlib-gnu|zlib-gabi|zstd] is unsupported on `a.dll' ]
+	// above option is no longer supported since llvm 24
 	if binutilCOFFFallback {
-		compressionOption = "--compress-debug-sections"
+		compressionOption = "--verbose"
 	}
 	cmdRun([]string{objcopy, "--only-keep-debug", compressionOption, binName, dbgName}, false)
 	// stripped executable.

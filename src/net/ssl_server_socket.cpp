@@ -55,7 +55,7 @@ SSLServerSocket::SSLServerSocket(asio::io_context* io_context, asio::ip::tcp::so
     int ret = SSL_set1_group_ids(ssl_.get(), kGroups, std::size(kGroups));
     CHECK_EQ(ret, 1) << "SSL_set1_group_ids failure";
   } else if (absl::GetFlag(FLAGS_enable_post_quantum_kyber)) {
-    const uint16_t kGroups[] = {SSL_GROUP_X25519_MLKEM768, SSL_GROUP_X25519_KYBER768_DRAFT00, SSL_GROUP_X25519,
+    const uint16_t kGroups[] = {SSL_GROUP_X25519_MLKEM768, SSL_GROUP_X25519,
                                 SSL_GROUP_SECP256R1, SSL_GROUP_SECP384R1};
     int ret = SSL_set1_group_ids(ssl_.get(), kGroups, std::size(kGroups));
     CHECK_EQ(ret, 1) << "SSL_set1_group_ids failure";

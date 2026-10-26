@@ -679,6 +679,12 @@ if (BUILD_SHARED_LIBS AND WIN32 AND ENABLE_LTO)
   set(THIN_LTO_ENABLE_CACHE OFF)
 endif()
 
+if (WIN32 AND USE_TCMALLOC AND OS_X86 AND ENABLE_LTO)
+  message(WARNING "Failure might happen with lto enabled windows x86 build, disabling lto...")
+  set(ENABLE_LTO OFF)
+  set(THIN_LTO_ENABLE_CACHE OFF)
+endif()
+
 if (USE_MOLD OR USE_LLD)
   set(USE_ICF ON)
 else()
@@ -4363,6 +4369,10 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   # silence some mingw compiler warnings
   if (WIN32 AND NOT MSVC AND COMPILER_CLANG)
     add_compile_options(-Wno-unknown-pragmas)
+  endif()
+
+  if (COMPILER_CLANG)
+    add_compile_options(-Wno-error=nullability-completeness)
   endif()
 endif()
 
