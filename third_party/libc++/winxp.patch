@@ -393,6 +393,18 @@ index aa0f78fafe..fd648e6e27 100644
    __libcpp_mutex_lock(&__rs_mut);
  #endif
    __c_ = 1;
+diff --git a/src/support/runtime/exception_pointer_msvc.ipp b/src/support/runtime/exception_pointer_msvc.ipp
+index 4b877deeec..ecb7b8069d 100644
+--- a/src/support/runtime/exception_pointer_msvc.ipp
++++ b/src/support/runtime/exception_pointer_msvc.ipp
+@@ -14,6 +14,7 @@ _LIBCPP_CLANG_DIAGNOSTIC_IGNORED("-Wmultichar")
+ #include <cstdlib>
+ #include <cstring>
+ 
++struct IUnknown;
+ #include <unknwn.h>
+ #include <windows.h>
+ struct _ThrowInfo;
 diff --git a/src/support/win32/locale_win32.cpp b/src/support/win32/locale_win32.cpp
 index c511756443..462c0f103a 100644
 --- a/src/support/win32/locale_win32.cpp
