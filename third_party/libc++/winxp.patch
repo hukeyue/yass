@@ -393,6 +393,31 @@ index aa0f78fafe..fd648e6e27 100644
    __libcpp_mutex_lock(&__rs_mut);
  #endif
    __c_ = 1;
+diff --git a/src/support/win32/locale_win32.cpp b/src/support/win32/locale_win32.cpp
+index c511756443..462c0f103a 100644
+--- a/src/support/win32/locale_win32.cpp
++++ b/src/support/win32/locale_win32.cpp
+@@ -265,7 +265,7 @@ const char* __get_locale_encoding(__locale_t loc) {
+     if (std::isdigit(__code_page[0])) {
+       unsigned int __cpage{};
+       auto __res = std::from_chars(__code_page.data(), __code_page.data() + __code_page.size(), __cpage);
+-      if (__res) {
++      if (__res.ec == std::errc{}) {
+         return __codepage_name(__cpage);
+       }
+     } else { // POSIX-style name
+@@ -286,7 +286,11 @@ const char* __get_locale_encoding(__locale_t loc) {
+ 
+   // The below function fills the string with the number in text.
+   auto lctype = is_ansi ? LOCALE_IDEFAULTANSICODEPAGE : LOCALE_IDEFAULTCODEPAGE;
++#if _WIN32_WINNT < 0x0600
++  int result  = 0;
++#else
+   int result  = ::GetLocaleInfoEx(locale_wbuffer, lctype, number_buffer, 10);
++#endif
+ 
+   if (result <= 0)
+     return nullptr;
 diff --git a/src/support/win32/thread_win32.cpp b/src/support/win32/thread_win32.cpp
 index 606104e32b..289a06848b 100644
 --- a/src/support/win32/thread_win32.cpp

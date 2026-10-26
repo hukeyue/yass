@@ -4364,6 +4364,10 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   if (WIN32 AND NOT MSVC AND COMPILER_CLANG)
     add_compile_options(-Wno-unknown-pragmas)
   endif()
+
+  if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 23.0)
+    add_compile_options(-Wno-pragma-clang-attribute)
+  endif()
 endif()
 
 # *****************************************************************************************
