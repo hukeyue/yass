@@ -112,6 +112,10 @@ if (USE_MUSL)
     "_LIBCPP_HAS_MUSL_LIBC")
 endif()
 
+if (COMPILER_CLANG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pragma-clang-attribute -Wno-ignored-attributes")
+endif()
+
 if (MSVC)
   # Intentionally not using libc++abi on Windows because libc++abi only
   # implements the Itanium C++ ABI, and not the Microsoft ABI which we use on

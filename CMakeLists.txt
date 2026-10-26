@@ -4372,10 +4372,6 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   endif()
 
   if (COMPILER_CLANG)
-    add_compile_options(-Wno-pragma-clang-attribute -Wno-ignored-attributes)
-  endif()
-
-  if (COMPILER_CLANG)
     add_compile_options(-Wno-error=nullability-completeness)
   endif()
 endif()
