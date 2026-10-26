@@ -4368,6 +4368,10 @@ if (COMPILER_GCC OR COMPILER_CLANG)
   if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 23.0)
     add_compile_options(-Wno-pragma-clang-attribute)
   endif()
+
+  if (COMPILER_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 20.0)
+    add_compile_options(-Wno-nullability-completeness)
+  endif()
 endif()
 
 # *****************************************************************************************
