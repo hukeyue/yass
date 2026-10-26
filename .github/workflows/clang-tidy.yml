@@ -73,6 +73,15 @@ jobs:
         if: ${{ steps.toolchain-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-toolchain.bat
+      - name: Patch libcxx for windows xp
+        shell: bash
+        run: |
+          pushd third_party/libc++/trunk
+          patch -p1 < ../winxp.patch
+          popd
+          pushd third_party/libc++abi/trunk
+          patch -p1 < ../winxp.patch
+          popd
       - name: Build Binary
         run: |
           set VCToolsVersion=
@@ -163,7 +172,6 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y nasm zip nsis locales-all
       - name: Patch libcxx for windows xp
-        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
         run: |
           pushd third_party/libc++/trunk
           patch -p1 < ../winxp.patch
@@ -171,6 +179,9 @@ jobs:
           pushd third_party/libc++abi/trunk
           patch -p1 < ../winxp.patch
           popd
+      - name: Patch libcxx for windows xp
+        if: ${{ matrix.arch == 'i686' || matrix.arch == 'x86_64' }}
+        run: |
           echo "BUILD_OPTIONS=-mingw-allow-xp" >> $GITHUB_ENV
       - name: Build Binary
         run: |

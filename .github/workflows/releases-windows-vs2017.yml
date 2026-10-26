@@ -119,6 +119,9 @@ jobs:
           pushd third_party/libc++/trunk
           patch -p1 < ../winxp.patch
           popd
+          pushd third_party/libc++abi/trunk
+          patch -p1 < ../winxp.patch
+          popd
       - name: Build Binary
         run: |
           set VCToolsVersion=14.16.27012

@@ -125,6 +125,15 @@ jobs:
         if: ${{ steps.curl-cache.outputs.cache-hit != 'true' }}
         run: |
           scripts\download-curl-msvc.bat ${{ matrix.arch }}
+      - name: Patch libcxx for windows xp
+        shell: bash
+        run: |
+          pushd third_party/libc++/trunk
+          patch -p1 < ../winxp.patch
+          popd
+          pushd third_party/libc++abi/trunk
+          patch -p1 < ../winxp.patch
+          popd
       - name: Build Binary
         run: |
           set VCToolsVersion=
