@@ -716,6 +716,7 @@ endif()
 
 if (MSVC)
   target_compile_options(cxx PRIVATE "/GR")
+  target_compile_options(cxx PRIVATE "/EHsc")
   if (${CMAKE_BUILD_TYPE} MATCHES Debug)
     set(DLL_SUFFIX "d")
   endif()
