@@ -919,10 +919,7 @@ func buildStageGenerateBuildScript() {
 	} else {
 		cmakeArgs = append(cmakeArgs, "-DOFFICIAL_BUILD=off")
 	}
-	// FIXME disabled lld on darwin due to linkage issue with xcode 27
-	if systemNameFlag != "darwin" {
-		cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
-	}
+	cmakeArgs = append(cmakeArgs, "-DENABLE_LLD=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_ZLIB=on")
 	cmakeArgs = append(cmakeArgs, "-DUSE_JSONCPP=on")
 	cmakeArgs = append(cmakeArgs, "-DGUI=ON", "-DCLI=ON", "-DSERVER=ON", "-DBUILD_DYLIB=on")
