@@ -304,6 +304,7 @@ jobs:
             crt-linkage: dynamic
             build_type: Release
             use_allocator: mimalloc
+            gtest_repeat_times: 10
     steps:
       - name: Download built executables
         uses: actions/download-artifact@v7
