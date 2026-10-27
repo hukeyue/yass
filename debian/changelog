@@ -1,3 +1,7 @@
+yass (1.31.0-1) UNRELEASED; urgency=medium
+
+  * bump to chromium 155 dependents.
+ -- Chilledheart <hukeyue@vip.163.com>  Tue, 27 Oct 2026 12:56:19 +0800
 yass (1.24.14-1) UNRELEASED; urgency=medium
 
   * update ca-certificates store.
